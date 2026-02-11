@@ -1,10 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\DocumentoExcepcionalController;
 
-// Rutas para documentos excepcionales
-Route::post('cancelaciones-excepcionales', [DocumentoExcepcionalController::class, 'insertar']);
-Route::get('cancelaciones-excepcionales/{id}', [DocumentoExcepcionalController::class, 'obtener']);
-Route::delete('cancelaciones-excepcionales/{id}', [DocumentoExcepcionalController::class, 'eliminar']);
+// Rutas de API agrupadas
+Route::prefix('api')->group(function () {
+    Route::post('cancelaciones/crear', [DocumentoExcepcionalController::class, 'subir']);
+    Route::get('cancelaciones/todas', [DocumentoExcepcionalController::class, 'obtenerTodos']);
+    Route::get('cancelaciones/detalle/{id}', [DocumentoExcepcionalController::class, 'obtenerCancelacion']);
+    Route::delete('cancelaciones/eliminar/{id}', [DocumentoExcepcionalController::class, 'eliminar']);
+});
+
+// Rutas web
+Auth::routes();
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
