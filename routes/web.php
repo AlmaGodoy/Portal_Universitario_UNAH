@@ -24,6 +24,11 @@ Route::prefix('api')->group(function () {
     Route::put('historial/actualizar/{id_persona}', [HistorialAcademicoController::class, 'actualizar']);
     Route::delete('historial/eliminar/{id_historial}', [HistorialAcademicoController::class, 'eliminar']);
 
+    // Rutas Usuario
+    Route::post('/usuarios', [UsuarioController::class, 'crear'])->name('usuarios.store');
+    Route::post('/usuarios/{id_persona}/activar', [UsuarioController::class, 'activar'])->name('usuarios.activar');
+    Route::post('/usuarios/{id_persona}/desactivar', [UsuarioController::class, 'desactivar'])->name('usuarios.desactivar');
+    Route::post('/usuarios/{id_usuario}/rol', [UsuarioController::class, 'asignarRol'])->name('usuarios.rol');
 
 
 });
