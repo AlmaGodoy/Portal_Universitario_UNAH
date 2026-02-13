@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DocumentoExcepcionalController;
 use App\Http\Controllers\CambioCarreraController;
 use App\Http\Controllers\HistorialAcademicoController;
+use App\Http\Controllers\UsuarioController;
 
 
 // Rutas de API agrupadas
