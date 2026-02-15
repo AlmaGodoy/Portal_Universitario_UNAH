@@ -31,4 +31,5 @@ class Auditoria extends Model
     {
         return $this->belongsTo(Objeto::class, 'id_objeto', 'id_objeto');
     }
+
 }
