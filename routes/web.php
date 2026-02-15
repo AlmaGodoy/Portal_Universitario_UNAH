@@ -15,7 +15,7 @@ Route::prefix('api')->group(function () {
     Route::delete('cancelaciones/eliminar/{id}', [DocumentoExcepcionalController::class, 'eliminar']);
     // CAMBIO DE CARRERA
     Route::post('cambio-carrera/crear', [CambioCarreraController::class, 'crear']);
-    Route::get('cambio-carrera/detalle/{codigo}', [CambioCarreraController::class, 'detalle']);
+    Route::get('cambio-carrera/ver/{codigo}', [CambioCarreraController::class, 'ver']);
     Route::put('cambio-carrera/estado/{id_tramite}', [CambioCarreraController::class, 'actualizarEstado']);
     Route::delete('cambio-carrera/eliminar/{id_tramite}', [CambioCarreraController::class, 'eliminar']);
 

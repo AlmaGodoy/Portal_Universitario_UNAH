@@ -33,7 +33,7 @@ class CambioCarreraController extends Controller
     }
 
     // Consultar (según tu SP: por id_tramite o id_persona) con accion='tramite'
-    public function detalle($codigo)
+    public function ver($codigo)
     {
         try {
             $data = DB::select('CALL SEL_CAMBIO_CARRERA(?, ?)', [
