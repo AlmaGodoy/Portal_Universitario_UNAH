@@ -3,38 +3,66 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use App\Models\User; // ✅ AGREGAR
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
-    use AuthenticatesUsers;
-
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/home';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function login(Request $request)
     {
-        $this->middleware('guest')->except('logout');
-        $this->middleware('auth')->only('logout');
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        try {
+
+            $res = DB::select('CALL SEL_LOGIN(?, ?)', [
+                $request->email,
+                $request->password
+            ]);
+
+            if (empty($res) || !isset($res[0]->resultado)) {
+                return back()->withErrors([
+                    'email' => 'Credenciales inválidas'
+                ]);
+            }
+
+            $r = $res[0];
+
+            if ($r->resultado !== 'OK') {
+                return back()->withErrors([
+                    'email' => $r->resultado
+                ]);
+            }
+
+            // ✅ LOGIN REAL CON AUTH (NO session manual)
+            $user = User::find($r->id_usuario);
+
+            if (!$user) {
+                return back()->withErrors([
+                    'email' => 'Usuario no encontrado en tbl_usuario'
+                ]);
+            }
+
+            Auth::login($user);
+            $request->session()->regenerate();
+
+            // ✅ Si quieres seguir usando estos datos, GUÁRDALOS DESPUÉS del Auth::login
+            session([
+                'persona_id' => $r->id_persona,
+                'rol' => $r->rol,
+                'tipo_usuario' => $r->tipo_usuario
+            ]);
+
+            return redirect('/home');
+
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'email' => $e->getMessage()
+            ]);
+        }
     }
 }
