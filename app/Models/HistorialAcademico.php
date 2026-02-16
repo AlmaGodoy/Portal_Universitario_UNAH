@@ -14,7 +14,7 @@ class HistorialAcademico extends Model
         'id_persona',
         'clases_aprobadas',
         'fecha_cambio',
-        'registro_cancelacion',
+        'estado',
         'ultima_actualizacion'
     ];
 }

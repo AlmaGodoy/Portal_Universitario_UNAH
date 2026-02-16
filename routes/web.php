@@ -5,6 +5,7 @@ use App\Http\Controllers\DocumentoExcepcionalController;
 use App\Http\Controllers\CambioCarreraController;
 use App\Http\Controllers\HistorialAcademicoController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\PagoController;
 
 
 // Rutas de API agrupadas
@@ -30,6 +31,11 @@ Route::prefix('api')->group(function () {
     Route::post('/usuarios/{id_persona}/activar', [UsuarioController::class, 'activar'])->name('usuarios.activar');
     Route::post('/usuarios/{id_persona}/desactivar', [UsuarioController::class, 'desactivar'])->name('usuarios.desactivar');
     Route::post('/usuarios/{id_usuario}/rol', [UsuarioController::class, 'asignarRol'])->name('usuarios.rol');
+
+    // Rutas pago
+    Route::post('pagos/crear', [PagoController::class, 'crear']);
+    Route::get('pagos/ver/{id_tramite}', [PagoController::class, 'verPorTramite']);
+    Route::put('pagos/estado/{id_pago}', [PagoController::class, 'actualizarEstado']);
 
 
 });
