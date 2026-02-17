@@ -9,7 +9,7 @@ use App\Models\Auditoria; // Importamos el modelo de la bitacora
 class AuditoriaController extends Controller
 {
     // 1. Consulta
-    public function Consulta($fecha_inicial, $fecha_final)
+    public function ver($fecha_inicial, $fecha_final)
     {
         try {
             $resultado = DB::select('CALL SEL_AUDITORIA_SISTEMA(?, ?)', [$fecha_inicial,$fecha_final]);

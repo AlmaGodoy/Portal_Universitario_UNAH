@@ -8,6 +8,7 @@ use App\Http\Controllers\HistorialAcademicoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DocumentoController;
+use App\Http\Controllers\AuditoriaController;
 
 
 // Rutas de API agrupadas
@@ -47,7 +48,8 @@ Route::prefix('api')->group(function () {
     Route::put('documentos/actualizar/{id_documento}', [DocumentoController::class, 'actualizar']);
     Route::delete('documentos/eliminar/{id_documento}', [DocumentoController::class, 'eliminar']);
 
-
+    //Ruta para consulta de bitácora
+    Route::get('bitacora/ver/{fecha_inicial, fecha_final}', [AuditoriaController::class, 'ver']);
 
 
 });
