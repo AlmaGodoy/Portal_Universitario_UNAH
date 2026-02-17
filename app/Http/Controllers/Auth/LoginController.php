@@ -65,4 +65,27 @@ class LoginController extends Controller
             ]);
         }
     }
+//Controlador de Autenticacion
+public function __construct()
+{
+$this->middleware('guest')->except('logout');
+}
+
+public function showLoginForm()
+{
+return view('auth.login');
+}
+
+// función de Cerrar Sesión
+public function logout(Request $request)
+{
+    Auth::logout();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/login');
+}
+
+
 }

@@ -14,8 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
      // ✅ Quitar CSRF solo para probar en Postman estas rutas web
         $middleware->validateCsrfTokens(except: [
     'api/*',
-    'login',
-    'logout',
+
 ]);})
     ->withExceptions(function (Exceptions $exceptions): void {
         //

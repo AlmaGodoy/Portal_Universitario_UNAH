@@ -35,5 +35,11 @@ Route::prefix('api')->group(function () {
 });
 
 // Rutas web
-Auth::routes();
+Auth::routes([
+    'register' => false,
+    'reset' => false,
+    'verify' => false,
+]);
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
+Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
