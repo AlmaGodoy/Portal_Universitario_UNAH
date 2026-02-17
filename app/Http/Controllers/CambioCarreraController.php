@@ -7,23 +7,25 @@ use Illuminate\Support\Facades\DB;
 
 class CambioCarreraController extends Controller
 {
-    // Crear solicitud de cambio de carrera
     public function crear(Request $request)
     {
         $request->validate([
-            'id_persona'    => 'required|integer',
-            'id_calendario' => 'required|integer',
-            'direccion'     => 'required|string|max:255',
+            'id_persona'         => 'required|integer',
+            'id_calendario'      => 'required|integer',
+            'id_carrera_destino' => 'required|integer',
+            'direccion'          => 'required|string|max:255',
         ]);
 
         try {
-            $data = DB::select('CALL INS_CAMBIO_CARRERA(?, ?, ?)', [
+            $data = DB::select('CALL INS_CAMBIO_CARRERA(?, ?, ?, ?)', [
                 $request->id_persona,
                 $request->id_calendario,
+                $request->id_carrera_destino,
                 $request->direccion
             ]);
 
             return response()->json($data[0] ?? $data, 201);
+
         } catch (\Throwable $e) {
             return response()->json([
                 'resultado' => 'ERROR',
@@ -33,7 +35,7 @@ class CambioCarreraController extends Controller
     }
 
     // Consultar (según tu SP: por id_tramite o id_persona) con accion='tramite'
-    public function detalle($codigo)
+    public function ver($codigo)
     {
         try {
             $data = DB::select('CALL SEL_CAMBIO_CARRERA(?, ?)', [
