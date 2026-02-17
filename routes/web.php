@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DocumentoExcepcionalController;
 use App\Http\Controllers\CambioCarreraController;
 use App\Http\Controllers\HistorialAcademicoController;
@@ -15,7 +16,8 @@ Route::prefix('api')->group(function () {
     Route::get('cancelaciones/todas', [DocumentoExcepcionalController::class, 'obtenerTodos']);
     Route::get('cancelaciones/detalle/{id}', [DocumentoExcepcionalController::class, 'obtenerCancelacion']);
     Route::delete('cancelaciones/eliminar/{id}', [DocumentoExcepcionalController::class, 'eliminar']);
-
+    Route::post('cancelaciones/guardar-documento', [DocumentoExcepcionalController::class, 'guardarDocumento']);
+    Route::put('cancelaciones/actualizar/{id}', [DocumentoExcepcionalController::class, 'actualizar']);
     // CAMBIO DE CARRERA
     Route::post('cambio-carrera/crear', [CambioCarreraController::class, 'crear']);
     Route::get('cambio-carrera/ver/{codigo}', [CambioCarreraController::class, 'ver']);
@@ -44,8 +46,8 @@ Route::prefix('api')->group(function () {
     Route::get('documentos/ver/{id_tramite}', [DocumentoController::class, 'ver']);
     Route::put('documentos/actualizar/{id_documento}', [DocumentoController::class, 'actualizar']);
     Route::delete('documentos/eliminar/{id_documento}', [DocumentoController::class, 'eliminar']);
-    
-    
+
+
 
 
 });
