@@ -8,7 +8,10 @@ use App\Http\Controllers\HistorialAcademicoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DocumentoController;
-
+use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\Emitir_ResolucionesController;
+use App\Http\Controllers\ValidarDocumentoController;
 
 // Rutas de API agrupadas
 Route::prefix('api')->group(function () {
@@ -18,10 +21,12 @@ Route::prefix('api')->group(function () {
     Route::delete('cancelaciones/eliminar/{id}', [DocumentoExcepcionalController::class, 'eliminar']);
     Route::post('cancelaciones/guardar-documento', [DocumentoExcepcionalController::class, 'guardarDocumento']);
     Route::put('cancelaciones/actualizar/{id}', [DocumentoExcepcionalController::class, 'actualizar']);
-    //VALIDAR DOCUMENTO
+
+    // VALIDAR DOCUMENTO
     Route::get('pendientes', [ValidarDocumentoController::class, 'listarPendientes']);
     Route::post('aprobar', [ValidarDocumentoController::class, 'aprobar']);
     Route::post('devolver', [ValidarDocumentoController::class, 'devolver']);
+
     // CAMBIO DE CARRERA
     Route::post('cambio-carrera/crear', [CambioCarreraController::class, 'crear']);
     Route::get('cambio-carrera/ver/{codigo}', [CambioCarreraController::class, 'ver']);
@@ -45,15 +50,21 @@ Route::prefix('api')->group(function () {
     Route::get('pagos/ver/{id_tramite}', [PagoController::class, 'verPorTramite']);
     Route::put('pagos/estado/{id_pago}', [PagoController::class, 'actualizarEstado']);
 
-    //Rutas para Subir Documento
+    // Rutas para Subir Documento
     Route::post('documentos/crear', [DocumentoController::class, 'crear']);
     Route::get('documentos/ver/{id_tramite}', [DocumentoController::class, 'ver']);
     Route::put('documentos/actualizar/{id_documento}', [DocumentoController::class, 'actualizar']);
     Route::delete('documentos/eliminar/{id_documento}', [DocumentoController::class, 'eliminar']);
 
+    // RUTAS GESTIONAR PERSONA
+    Route::post('/persona', [PersonaController::class, 'gestionarPersona']);
+    Route::get('/persona/{id}', [PersonaController::class, 'obtenerPersona']);
+    Route::delete('/persona/{id}', [PersonaController::class, 'eliminarPersona']);
 
-
-
+    // RUTAS EMITIR RESOLUCION
+    Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
+    Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
+    Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
 });
 
 // Rutas web
@@ -62,6 +73,7 @@ Auth::routes([
     'reset' => false,
     'verify' => false,
 ]);
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
 Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
