@@ -9,7 +9,7 @@ use Illuminate\Database\QueryException;
 
 class DocumentoExcepcionalController extends Controller
 {
-    // El alumno crea su solicitud
+    // El alumno crea su solicitud inicial
     public function subir(Request $request)
     {
         try {
