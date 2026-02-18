@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Documento extends Model
 {
+
     protected $table = 'tbl_documento';
+
+    // Definimos la llave primaria
     protected $primaryKey = 'id_documento';
+
 
     protected $fillable = [
         'id_tramite',
@@ -16,12 +20,14 @@ class Documento extends Model
         'hash_contenido',
         'ruta_archivo',
         'fecha_carga',
-        'autenticidad_documento'
+        'autenticidad_documento', // Usado por ValidarDocumentoController
+        'numero_folio',           // Usado por el procedimiento VAL_TRAMITE_ANTIFRAUDE
+        'estado'                  // Controla si el documento está activo (1) o eliminado (0)
     ];
 
     public $timestamps = false;
 
-    // Relación con Tramite
+    // Relación con el Trámite (Un documento pertenece a un trámite)
     public function tramite()
     {
         return $this->belongsTo(Tramite::class, 'id_tramite', 'id_tramite');
