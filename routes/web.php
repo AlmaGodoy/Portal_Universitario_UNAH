@@ -9,6 +9,8 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\Emitir_ResolucionesController;
 
 
 // Rutas de API agrupadas
@@ -51,6 +53,15 @@ Route::prefix('api')->group(function () {
     //Ruta para consulta de bitácora
     Route::get('bitacora/ver/{fecha_inicial, fecha_final}', [AuditoriaController::class, 'ver']);
 
+    // RUTAS GESTIONAR PERSONA
+    Route::post('/persona', [PersonaController::class, 'gestionarPersona']);
+    Route::get('/persona/{id}', [PersonaController::class, 'obtenerPersona']);
+    Route::delete('/persona/{id}', [PersonaController::class, 'eliminarPersona']);
+
+    // RUTAS EMITIR RESOLUCION
+    Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
+    Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
+    Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
 
 });
 
