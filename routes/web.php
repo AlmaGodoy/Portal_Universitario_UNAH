@@ -10,7 +10,7 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\PersonaController;
-use App\Http\Controllers\Emitir_ResolucionesController;
+use App\Http\Controllers\Emitir_ResolucionController;
 use App\Http\Controllers\ValidarDocumentoController;
 
 // Rutas de API agrupadas
@@ -57,14 +57,14 @@ Route::prefix('api')->group(function () {
     Route::delete('documentos/eliminar/{id_documento}', [DocumentoController::class, 'eliminar']);
 
     // RUTAS GESTIONAR PERSONA
-    Route::post('/persona', [PersonaController::class, 'gestionarPersona']);
+    Route::post('/persona', [PersonaController::class, 'gestionar']);
     Route::get('/persona/{id}', [PersonaController::class, 'obtenerPersona']);
-    Route::delete('/persona/{id}', [PersonaController::class, 'eliminarPersona']);
+    Route::delete('/persona/{id}', [PersonaController::class, 'eliminar']);
 
     // RUTAS EMITIR RESOLUCION
-    Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
-    Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
-    Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
+    Route::post('/resolucion', [Emitir_ResolucionController::class, 'emitir']);
+    Route::get('/resolucion/{id}', [Emitir_ResolucionController::class, 'obtenerResolucion']);
+    Route::delete('/resolucion/{id}', [Emitir_ResolucionController::class, 'eliminar']);
 });
 
 // Rutas web
