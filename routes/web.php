@@ -66,7 +66,7 @@ Route::prefix('api')->group(function () {
     Route::delete('/persona/{id}', [PersonaController::class, 'eliminar']);
 
     // RUTAS EMITIR RESOLUCION
-<<<<<<< HEAD
+
     Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
@@ -81,21 +81,19 @@ Route::prefix('api')->group(function () {
     // Reporte de trámites
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
-
-    });
-=======
     Route::post('/resolucion', [Emitir_ResolucionController::class, 'emitir']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionController::class, 'eliminar']);
+
+
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
+    Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
+
+
 });
 
 // Rutas web
-Auth::routes([
-    'register' => false,
-    'reset' => false,
-    'verify' => false,
-]);
-
+Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
-Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
+
