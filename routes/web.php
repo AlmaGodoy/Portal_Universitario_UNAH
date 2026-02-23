@@ -65,7 +65,12 @@ Route::prefix('api')->group(function () {
     Route::post('/resolucion', [Emitir_ResolucionController::class, 'emitir']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionController::class, 'eliminar']);
-});
+
+    //Ruta para gestionar la bitácora
+    Route::get('bitacora/ver/{fecha_inicial, fecha_final}', [AuditoriaController::class, 'ver']);
+    Route::delete('bitacora/eliminar/{id_auditoria}', [AuditoriaController::class, 'eliminar']);
+    Route::post('bitacora/actualizar/{id_auditoria,id_usuario,id_objeto,descripcion}', [AuditoriaController::class, 'actualiza']);
+    });
 
 // Rutas web
 Auth::routes([
