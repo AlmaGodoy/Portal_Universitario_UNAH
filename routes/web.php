@@ -12,6 +12,10 @@ use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\Emitir_ResolucionController;
 use App\Http\Controllers\ValidarDocumentoController;
+use App\Http\Controllers\TramiteController;
+use App\Http\Controllers\TramiteControllerAct;
+use App\Http\Controllers\ReporteTramiteController;
+
 
 // Rutas de API agrupadas
 Route::prefix('api')->group(function () {
@@ -62,15 +66,28 @@ Route::prefix('api')->group(function () {
     Route::delete('/persona/{id}', [PersonaController::class, 'eliminar']);
 
     // RUTAS EMITIR RESOLUCION
+<<<<<<< HEAD
+    Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
+    Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
+    Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
+
+    //RUTAS TRAMITES ACADÉMICOS
+    // Crear trámite
+    Route::post('/tramites/crear', [TramiteController::class, 'crear']);
+
+    // Actualizar trámite
+    Route::put('tramites', [TramiteControllerAct::class, 'actualizar']);
+
+    // Reporte de trámites
+    Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
+
+
+    });
+=======
     Route::post('/resolucion', [Emitir_ResolucionController::class, 'emitir']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionController::class, 'eliminar']);
-
-    //Ruta para gestionar la bitácora
-    Route::get('bitacora/ver/{fecha_inicial, fecha_final}', [AuditoriaController::class, 'ver']);
-    Route::delete('bitacora/eliminar/{id_auditoria}', [AuditoriaController::class, 'eliminar']);
-    Route::post('bitacora/actualizar/{id_auditoria,id_usuario,id_objeto,descripcion}', [AuditoriaController::class, 'actualiza']);
-    });
+});
 
 // Rutas web
 Auth::routes([
