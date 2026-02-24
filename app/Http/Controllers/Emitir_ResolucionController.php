@@ -8,88 +8,234 @@ use Illuminate\Support\Facades\DB;
 class Emitir_ResolucionController extends Controller
 {
     /**
-     * Emitir Resoluciones
+     * Emitir Resolución
+     * Procedimiento: INS_EMITIR_RESOLUCION
      */
     public function emitir(Request $request)
     {
-        $request->validate([
-            'id_resolucion' => 'required',
-            'id_tramite' => 'required',
-            'id_coordinador' => 'required',
-            'estado_validacion' => 'required',
-            'observaciones' => 'required',
-            'fecha_resolucion' => 'required',
-            'fecha_anulacion' => 'required',
-            'documento_resolucion' => 'required',
-            'activo' => 'required'
+        $validated = $request->validate([
+            'id_resolucion'         => 'required|integer',
+            'id_tramite'            => 'required|integer',
+            'id_coordinador'        => 'required|integer',
+            'estado_validacion'     => 'required|string|max:50',
+            'observaciones'         => 'required|string|max:500',
+            'fecha_resolucion'      => 'required|date',
+            'fecha_anulacion'       => 'nullable|date',
+            'documento_resolucion'  => 'required|string|max:255',
+            'estado'                => 'required|string|max:20'
         ]);
 
         try {
-            // PROCEDIMIENTO ALMACENADO INS_EMITIR_RESOLUCION
-            $resultado = DB::select('CALL INS_EMITIR_RESOLUCION(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-                $request->id_resolucion,
-                $request->id_tramite,
-                $request->id_coordinador,
-                $request->estado_validacion,
-                $request->observaciones,
-                $request->fecha_resolucion,
-                $request->fecha_anulacion,
-                $request->documento_resolucion,
-                $request->activo
-            ]);
 
-            return response()->json([
-                'resultado' => $resultado[0]->resultado,
-                'mensaje' => $resultado[0]->mensaje
-            ], 201);
+            $resultado = DB::select(
+                'CALL INS_EMITIR_RESOLUCION(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    $validated['id_resolucion'],
+                    $validated['id_tramite'],
+                    $validated['id_coordinador'],
+                    $validated['estado_validacion'],
+                    $validated['observaciones'],
+                    $validated['fecha_resolucion'],
+                    $validated['fecha_anulacion'],
+                    $validated['documento_resolucion'],
+                    $validated['estado']
+                ]
+            );
 
-        } catch (\Exception $e) {
+            if (!empty($resultado)) {
+                return response()->json([
+                    'resultado' => $resultado[0]->resultado ?? 'OK',
+                    'mensaje'   => $resultado[0]->mensaje ?? 'Resolución emitida correctamente'
+                ], 201);
+            }
+
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje' => $e->getMessage()
+                'mensaje' => 'El procedimiento no devolvió respuesta'
+            ], 500);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'Error al emitir resolución',
+                'detalle' => $e->getMessage()
             ], 500);
         }
     }
 
+
     /**
-     * Eliminar Resolucion (soft delete)
+     * Actualizar Resolución
+     * Procedimiento: UPD_EMITIR_RESOLUCION
+     */
+    public function actualizar(Request $request, $id)
+    {
+        if (!is_numeric($id)) {
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'ID inválido'
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'id_tramite'            => 'required|integer',
+            'id_coordinador'        => 'required|integer',
+            'estado_validacion'     => 'required|string|max:50',
+            'observaciones'         => 'required|string|max:500',
+            'fecha_resolucion'      => 'required|date',
+            'fecha_anulacion'       => 'nullable|date',
+            'documento_resolucion'  => 'required|string|max:255',
+            'estado'                => 'required|string|max:20'
+        ]);
+
+        try {
+
+            $resultado = DB::select(
+                'CALL UPD_EMITIR_RESOLUCION(?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    $id,
+                    $validated['id_tramite'],
+                    $validated['id_coordinador'],
+                    $validated['estado_validacion'],
+                    $validated['observaciones'],
+                    $validated['fecha_resolucion'],
+                    $validated['fecha_anulacion'],
+                    $validated['documento_resolucion'],
+                    $validated['estado']
+                ]
+            );
+
+            if (!empty($resultado)) {
+                return response()->json([
+                    'resultado' => $resultado[0]->resultado ?? 'OK',
+                    'mensaje'   => $resultado[0]->mensaje ?? 'Resolución actualizada correctamente'
+                ], 200);
+            }
+
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'No se pudo actualizar la resolución'
+            ], 500);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'Error al actualizar resolución',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Eliminar Resolución (Soft Delete)
      * Procedimiento: SOFT_DEL_RESOLUCION
      */
     public function eliminar($id)
     {
-        try {
-            $resultado = DB::select('CALL SOFT_DEL_RESOLUCION(?)', [$id]);
-
-            return response()->json([
-                'resultado' => $resultado[0]->resultado,
-                'mensaje' => $resultado[0]->mensaje
-            ], 200);
-
-        } catch (\Exception $e) {
+        if (!is_numeric($id)) {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje' => $e->getMessage()
+                'mensaje' => 'ID inválido'
+            ], 400);
+        }
+
+        try {
+
+            $resultado = DB::select(
+                'CALL SOFT_DEL_RESOLUCION(?)',
+                [$id]
+            );
+
+            if (!empty($resultado)) {
+                return response()->json([
+                    'resultado' => $resultado[0]->resultado ?? 'OK',
+                    'mensaje'   => $resultado[0]->mensaje ?? 'Resolución eliminada correctamente'
+                ], 200);
+            }
+
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'No se pudo eliminar la resolución'
+            ], 500);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'Error al eliminar resolución',
+                'detalle' => $e->getMessage()
             ], 500);
         }
     }
 
+
     /**
-     * Seleccionar resolucion
+     * Obtener una Resolución por ID
      * Procedimiento: SEL_EMITIR_RESOLUCION
      */
-    public function obtenerResolucion($id)
+    public function obtener($id)
     {
+        if (!is_numeric($id)) {
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'ID inválido'
+            ], 400);
+        }
+
         try {
-            $resultado = DB::select('CALL SEL_EMITIR_RESOLUCION(?)', [$id]);
+
+            $resultado = DB::select(
+                'CALL SEL_EMITIR_RESOLUCION(?)',
+                [$id]
+            );
+
+            if (empty($resultado)) {
+                return response()->json([
+                    'resultado' => 'ERROR',
+                    'mensaje' => 'Resolución no encontrada'
+                ], 404);
+            }
 
             return response()->json([
+                'resultado' => 'OK',
                 'data' => $resultado
             ], 200);
 
         } catch (\Exception $e) {
+
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje' => $e->getMessage()
+                'mensaje' => 'Error al obtener resolución',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Listar todas las resoluciones
+     * Procedimiento: SEL_RESOLUCIONES
+     */
+    public function listar()
+    {
+        try {
+
+            $resultado = DB::select('CALL SEL_RESOLUCIONES()');
+
+            return response()->json([
+                'resultado' => 'OK',
+                'data' => $resultado
+            ], 200);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'Error al listar resoluciones',
+                'detalle' => $e->getMessage()
             ], 500);
         }
     }

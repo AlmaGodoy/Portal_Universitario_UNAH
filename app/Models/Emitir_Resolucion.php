@@ -17,7 +17,7 @@ class Emitir_Resolucion extends Model
         'fecha_resolucion',
         'fecha_anulacion',
         'documento_resolucion',
-        'activo'
+        'estado'
 
     ];
 
