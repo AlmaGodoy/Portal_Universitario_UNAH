@@ -15,6 +15,8 @@ use App\Http\Controllers\ValidarDocumentoController;
 use App\Http\Controllers\TramiteController;
 use App\Http\Controllers\TramiteControllerAct;
 use App\Http\Controllers\ReporteTramiteController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\HomeController;
 
 
 // Rutas de API agrupadas
@@ -74,13 +76,8 @@ Route::prefix('api')->group(function () {
     Route::get('/resolucion/listar', [Emitir_ResolucionController::class, 'listar']);
 
     //RUTAS TRAMITES ACADÉMICOS
-    // Crear trámite
     Route::post('/tramites/crear', [TramiteController::class, 'crear']);
-
-    // Actualizar trámite
     Route::put('tramites', [TramiteControllerAct::class, 'actualizar']);
-
-    // Reporte de trámites
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
 
@@ -88,10 +85,69 @@ Route::prefix('api')->group(function () {
     Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
     Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
 
-
 });
 
 // Rutas web
 Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+
+// ============================
+// WEB - PORTAL (2 CARDS)
+// ============================
+Route::get('/', fn() => redirect()->route('portal'))->name('root');
+
+Route::get('/portal', fn() => view('auth.choose_portal'))
+    ->middleware('guest')
+    ->name('portal');
+
+// Login por tipo
+Route::get('/login/{tipo}', [LoginController::class, 'showLoginFormTipo'])
+    ->whereIn('tipo', ['estudiante', 'empleado'])
+    ->middleware('guest')
+    ->name('login.tipo');
+
+Route::post('/login/{tipo}', [LoginController::class, 'loginTipo'])
+    ->whereIn('tipo', ['estudiante', 'empleado'])
+    ->middleware('guest')
+    ->name('login.tipo.post');
+
+// Si entran a /login normal -> portal
+Route::get('/login', fn() => redirect()->route('portal'))
+    ->middleware('guest')
+    ->name('login');
+
+// Register por tipo
+Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
+    ->whereIn('tipo', ['estudiante', 'empleado'])
+    ->middleware('guest')
+    ->name('register.tipo');
+
+Route::post('/register', [UsuarioController::class, 'crearWeb'])
+    ->middleware('guest')
+    ->name('register.store');
+
+// Si entran a /register normal -> portal
+Route::get('/register', fn() => redirect()->route('portal'))
+    ->middleware('guest')
+    ->name('register');
+
+// Logout
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
+
+// Home
+Route::get('/home', [HomeController::class, 'index'])
+    ->middleware('auth')
+    ->name('home');
+
+// Paneles
+Route::middleware(['auth', 'roleid:2'])
+    ->get('/panel-estudiante', fn() => view('panel.estudiante'));
+
+Route::middleware(['auth', 'roleid:4'])
+    ->get('/panel-coordinador', fn() => view('panel.coordinador'));
+
+Route::middleware(['auth', 'roleid:5'])
+    ->get('/panel-secretario', fn() => view('panel.secretario'));

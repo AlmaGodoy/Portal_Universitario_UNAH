@@ -19,7 +19,7 @@
         <form method="POST" action="{{ route('register.store') }}">
             @csrf
 
-            {{-- DATOS BÁSICOS --}}
+            {{-- ================= DATOS BÁSICOS ================= --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Nombre</label>
@@ -28,7 +28,17 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Documento</label>
-                    <input name="documento" class="form-control" value="{{ old('documento') }}" required>
+                    <input name="documento"
+                           id="documento"
+                           class="form-control @error('documento') is-invalid @enderror"
+                           value="{{ old('documento') }}"
+                           maxlength="13"
+                           inputmode="numeric"
+                           autocomplete="off"
+                           required>
+                    @error('documento')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
@@ -39,37 +49,41 @@
                 </div>
 
                 <div class="col-md-6 mb-3">
-                     <label class="form-label">Contraseña</label>
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" name="contrasena" class="form-control" required>
 
-                     <input type="password"
-                     name="contrasena"
-                     class="form-control"
-                    required>
-
-        {{-- error de validación --}}
                     @error('contrasena')
-                     <div class="text-danger mt-1">
-                     {{ $message }}
-                     </div>
-              @enderror
+                        <div class="text-danger mt-1">{{ $message }}</div>
+                    @enderror
 
-        {{-- ayuda visual --}}
                     <small class="text-light">
-                  Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.
-                 </small>
+                        Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.
+                    </small>
+                </div>
             </div>
 
-            </div>
+            {{-- ================= TIPO + ROL ================= --}}
+            @php
+                $tipoFijo = session('register_tipo'); // estudiante|empleado|null
+            @endphp
 
-            {{-- TIPO + ROL --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Tipo de usuario</label>
-                    <select name="tipo_usuario" id="tipo_usuario" class="form-select" required>
-                        <option value="">Seleccione...</option>
-                        <option value="estudiante" @selected(old('tipo_usuario')==='estudiante')>Estudiante</option>
-                        <option value="empleado" @selected(old('tipo_usuario')==='empleado')>Empleado</option>
-                    </select>
+
+                    {{-- Si viene desde /register/{tipo}, lo fijamos aquí --}}
+                    @if($tipoFijo)
+                        <input class="form-control"
+                               value="{{ $tipoFijo === 'estudiante' ? 'Estudiante' : 'Empleado' }}"
+                               disabled>
+                        <input type="hidden" name="tipo_usuario" id="tipo_usuario" value="{{ $tipoFijo }}">
+                    @else
+                        <select name="tipo_usuario" id="tipo_usuario" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            <option value="estudiante" @selected(old('tipo_usuario')==='estudiante')>Estudiante</option>
+                            <option value="empleado" @selected(old('tipo_usuario')==='empleado')>Empleado</option>
+                        </select>
+                    @endif
                 </div>
 
                 {{-- ROL AUTOMÁTICO SOLO PARA ESTUDIANTE --}}
@@ -85,18 +99,21 @@
                     <select name="id_rol" id="id_rol_manual" class="form-select">
                         <option value="">Seleccione...</option>
                         @foreach($roles as $rol)
-                            @if(strtolower($rol->nombre_rol) !== 'estudiante')
+                            @if(in_array((int)$rol->id_rol, [4,5])) {{-- 4=coordinador, 5=secretario --}}
                                 <option value="{{ $rol->id_rol }}" @selected(old('id_rol')==$rol->id_rol)>
                                     {{ $rol->nombre_rol }}
                                 </option>
                             @endif
                         @endforeach
                     </select>
+                    @error('id_rol')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
-            {{-- DEPARTAMENTO --}}
-            <div class="row" id="box_departamento">
+            {{-- ================= DEPARTAMENTO (SOLO EMPLEADO) ================= --}}
+            <div class="row" id="box_departamento" style="display:none;">
                 <div class="col-md-12 mb-3">
                     <label class="form-label">Departamento</label>
                     <select name="id_departamento" id="id_departamento" class="form-select">
@@ -107,51 +124,66 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('id_departamento')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
-            {{-- BLOQUE ESTUDIANTE --}}
-            <div id="bloque_estudiante" class="border rounded p-3 mb-3" style="display:none; border-color: rgba(255,255,255,.2)!important;">
-                <h6 class="mb-3">Datos de estudiante</h6>
+            {{-- ================= ESTUDIANTE ================= --}}
+            <div id="bloque_estudiante" class="border rounded p-3 mb-3" style="display:none;">
+                <h6>Datos de estudiante</h6>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Número de cuenta</label>
-                        <input name="numero_cuenta" class="form-control" value="{{ old('numero_cuenta') }}">
+                        <input name="numero_cuenta"
+                               id="numero_cuenta"
+                               class="form-control @error('numero_cuenta') is-invalid @enderror"
+                               value="{{ old('numero_cuenta') }}"
+                               maxlength="11"
+                               inputmode="numeric">
+                        @error('numero_cuenta')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Carrera</label>
                         <select name="id_carrera" id="id_carrera" class="form-select">
-                            <option value="">Seleccione departamento primero...</option>
+                            <option value="">Seleccione...</option>
                         </select>
+                        @error('id_carrera')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
 
-            {{-- BLOQUE EMPLEADO --}}
-            <div id="bloque_empleado" class="border rounded p-3 mb-3" style="display:none; border-color: rgba(255,255,255,.2)!important;">
-                <h6 class="mb-3">Datos de empleado</h6>
+            {{-- ================= EMPLEADO ================= --}}
+            <div id="bloque_empleado" class="border rounded p-3 mb-3" style="display:none;">
+                <h6>Datos de empleado</h6>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Código empleado</label>
-                        <input name="cod_empleado" class="form-control" value="{{ old('cod_empleado') }}">
+                        <input name="cod_empleado" id="cod_empleado" class="form-control" value="{{ old('cod_empleado') }}">
+                        @error('cod_empleado')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Tipo empleado</label>
-                        <input name="tipo_empleado" class="form-control" value="{{ old('tipo_empleado') }}">
+                        <input name="tipo_empleado" id="tipo_empleado" class="form-control" value="{{ old('tipo_empleado') }}" readonly>
+                        @error('tipo_empleado')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
 
-            <div class="mt-3">
-                <button class="btn btn-primary w-100">Registrar</button>
-                <div class="text-center mt-3">
-                    <a href="/login">Ya tengo cuenta</a>
-                </div>
-            </div>
+            <button class="btn btn-primary w-100">Registrar</button>
         </form>
 
     </div>
@@ -160,42 +192,51 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const tipoSel = document.getElementById('tipo_usuario');
+    function soloNumerosMax(input, max) {
+        if (!input) return;
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g,'').slice(0,max);
+        });
+        input.addEventListener('paste', function (e) {
+            e.preventDefault();
+            const t = (e.clipboardData.getData('text') || '')
+                .replace(/\D/g,'')
+                .slice(0,max);
+            this.value = t;
+        });
+    }
+
+    soloNumerosMax(document.getElementById('documento'), 13);
+    soloNumerosMax(document.getElementById('numero_cuenta'), 11);
+
+    // ELEMENTOS
+    const tipoSel = document.getElementById('tipo_usuario'); // puede ser hidden o select
+    const boxDep = document.getElementById('box_departamento');
+    const depSel = document.getElementById('id_departamento');
 
     const bloqueEst = document.getElementById('bloque_estudiante');
     const bloqueEmp = document.getElementById('bloque_empleado');
 
-    const depSel = document.getElementById('id_departamento');
-    const carSel = document.getElementById('id_carrera');
-
     const rolAutoBox = document.getElementById('rol_auto_box');
+    const rolAutoInput = document.getElementById('id_rol_auto');
+
     const rolManualBox = document.getElementById('rol_manual_box');
     const rolManualSel = document.getElementById('id_rol_manual');
 
+    const codEmp = document.getElementById('cod_empleado');
+    const tipoEmp = document.getElementById('tipo_empleado');
+
+    // carreras
+    const carSel = document.getElementById('id_carrera');
     const carreras = @json($carreras);
     const oldCarrera = "{{ old('id_carrera') ?? '' }}";
 
-    function cargarCarreras() {
+    function cargarCarrerasTodas() {
         if (!carSel) return;
-
-        const depId = parseInt(depSel.value || '0', 10);
-        carSel.innerHTML = '';
-
-        if (!depId) {
-            carSel.innerHTML = '<option value="">Seleccione departamento primero...</option>';
-            return;
-        }
-
-        const filtradas = carreras.filter(c => parseInt(c.id_departamento, 10) === depId);
-
-        if (filtradas.length === 0) {
-            carSel.innerHTML = '<option value="">No hay carreras para este departamento</option>';
-            return;
-        }
 
         carSel.innerHTML = '<option value="">Seleccione...</option>';
 
-        filtradas.forEach(c => {
+        carreras.forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.id_carrera;
             opt.textContent = c.nombre_carrera;
@@ -208,41 +249,74 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderTipo() {
-        const tipo = tipoSel.value;
+    function getTipoActual() {
+        return (tipoSel?.value || '').toLowerCase().trim();
+    }
+
+    function aplicarUI() {
+        const tipo = getTipoActual();
 
         // ocultar todo
-        bloqueEst.style.display = 'none';
-        bloqueEmp.style.display = 'none';
-        rolAutoBox.style.display = 'none';
-        rolManualBox.style.display = 'none';
+        if (bloqueEst) bloqueEst.style.display = 'none';
+        if (bloqueEmp) bloqueEmp.style.display = 'none';
+        if (rolAutoBox) rolAutoBox.style.display = 'none';
+        if (rolManualBox) rolManualBox.style.display = 'none';
+        if (boxDep) boxDep.style.display = 'none';
 
+        // required base
+        if (depSel) depSel.required = false;
+        if (codEmp) codEmp.required = false;
+        if (tipoEmp) tipoEmp.required = false;
+
+        // roles: solo uno activo
+        if (rolAutoInput) rolAutoInput.disabled = true;
+        if (rolManualSel) rolManualSel.disabled = true;
+
+        // ESTUDIANTE (SIN DEPARTAMENTO)
         if (tipo === 'estudiante') {
-            bloqueEst.style.display = 'block';
-            rolAutoBox.style.display = 'block';
-            cargarCarreras();
-        } else if (tipo === 'empleado') {
-            bloqueEmp.style.display = 'block';
-            rolManualBox.style.display = 'block';
+            if (rolAutoBox) rolAutoBox.style.display = 'block';
+            if (bloqueEst) bloqueEst.style.display = 'block';
 
-            // por defecto id_rol=1 (cambia si tu rol empleado es otro)
-            if (rolManualSel && !rolManualSel.value) {
-                rolManualSel.value = "1";
+            if (rolAutoInput) rolAutoInput.disabled = false;
+
+            // cargar todas las carreras
+            cargarCarrerasTodas();
+            return;
+        }
+
+        // EMPLEADO (CON DEPARTAMENTO)
+        if (tipo === 'empleado') {
+            if (rolManualBox) rolManualBox.style.display = 'block';
+            if (rolManualSel) rolManualSel.disabled = false;
+
+            const rolId = parseInt(rolManualSel?.value || '0', 10);
+            const rolTexto = rolManualSel?.selectedOptions?.[0]?.textContent?.toLowerCase()?.trim() || '';
+
+            if (!rolId) return;
+
+            // solo 4 y 5
+            if (![4,5].includes(rolId)) {
+                if (rolManualSel) rolManualSel.value = '';
+                return;
             }
+
+            if (boxDep) boxDep.style.display = 'block';
+            if (bloqueEmp) bloqueEmp.style.display = 'block';
+
+            if (depSel) depSel.required = true;
+            if (codEmp) codEmp.required = true;
+            if (tipoEmp) tipoEmp.required = true;
+
+            if (tipoEmp) tipoEmp.value = rolTexto;
         }
     }
 
-    tipoSel.addEventListener('change', function () {
-        renderTipo();
-        if (tipoSel.value === 'estudiante') cargarCarreras();
-    });
-
-    depSel.addEventListener('change', () => {
-        if (tipoSel.value === 'estudiante') cargarCarreras();
-    });
+    tipoSel?.addEventListener?.('change', aplicarUI);
+    rolManualSel?.addEventListener('change', aplicarUI);
 
     // init
-    renderTipo();
+    aplicarUI();
+    if (getTipoActual() === 'estudiante') cargarCarrerasTodas();
 });
 </script>
 @endsection

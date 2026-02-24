@@ -3,13 +3,63 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User; // ✅ AGREGAR
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('guest')->except('logout');
+    }
+
+    public function showLoginFormTipo(string $tipo)
+    {
+        session(['login_tipo' => $tipo]);
+        return view('auth.login', ['tipo' => $tipo]);
+    }
+
+    public function loginTipo(Request $request, string $tipo)
+    {
+        session(['login_tipo' => $tipo]);
+        return $this->login($request);
+    }
+
+    private function throttleKey(Request $request): string
+    {
+        return Str::lower((string)$request->input('email')) . '|' . $request->ip();
+    }
+
+    private function logIntento(Request $request, string $resultado, ?string $detalle = null): void
+    {
+        try {
+            DB::table('tbl_login_intentos')->insert([
+                'email' => $request->input('email'),
+                'ip' => $request->ip(),
+                'user_agent' => substr((string)$request->userAgent(), 0, 255),
+                'resultado' => $resultado,
+                'detalle' => $detalle,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            // no rompemos el login si falla el log
+        }
+    }
+
+    private function formatWait(int $seconds): string
+    {
+        $m = intdiv($seconds, 60);
+        $s = $seconds % 60;
+
+        if ($m <= 0) return "{$s} segundos";
+        if ($s === 0) return "{$m} minuto(s)";
+        return "{$m} minuto(s) y {$s} segundo(s)";
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -17,75 +67,100 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        try {
+        $key = $this->throttleKey($request);
 
+        // 🔒 Bloqueo al llegar al límite (5 intentos)
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            $this->logIntento($request, 'BLOQUEADO_THROTTLE', "Esperar {$seconds}s");
+
+            return back()->withErrors([
+                'email' => "Demasiados intentos fallidos. Espera " . $this->formatWait($seconds) . " antes de intentar nuevamente."
+            ])->withInput();
+        }
+
+        try {
             $res = DB::select('CALL SEL_LOGIN(?, ?)', [
                 $request->email,
                 $request->password
             ]);
 
             if (empty($res) || !isset($res[0]->resultado)) {
+                RateLimiter::hit($key, 300); // ✅ 5 minutos
+                $this->logIntento($request, 'CREDENCIALES_INVALIDAS', 'Respuesta inválida SP');
+
                 return back()->withErrors([
                     'email' => 'Credenciales inválidas'
-                ]);
+                ])->withInput();
             }
 
             $r = $res[0];
 
             if ($r->resultado !== 'OK') {
+                RateLimiter::hit($key, 300); // ✅ 5 minutos
+                $this->logIntento($request, 'SP_RECHAZO', (string)$r->resultado);
+
+                // ✅ No revelar motivo exacto al usuario
                 return back()->withErrors([
-                    'email' => $r->resultado
-                ]);
+                    'email' => 'Credenciales inválidas'
+                ])->withInput();
             }
 
-            // ✅ LOGIN REAL CON AUTH (NO session manual)
-            $user = User::find($r->id_usuario);
+            // ✅ Login correcto: limpiamos intentos
+            RateLimiter::clear($key);
 
+            $user = User::find($r->id_usuario);
             if (!$user) {
-                return back()->withErrors([
-                    'email' => 'Usuario no encontrado en tbl_usuario'
-                ]);
+                $this->logIntento($request, 'USUARIO_NO_EXISTE', 'No existe en tbl_usuario');
+                return back()->withErrors(['email' => 'Usuario no encontrado'])->withInput();
+            }
+
+            $tipoElegido = session('login_tipo'); // estudiante|empleado
+            $idRol = (int)($user->id_rol ?? 0);
+
+            if ($tipoElegido === 'estudiante' && $idRol !== 2) {
+                $this->logIntento($request, 'PORTAL_INCORRECTO', 'login estudiante sin rol 2');
+                return back()->withErrors(['email' => 'Este portal es solo para estudiantes.'])->withInput();
+            }
+
+            if ($tipoElegido === 'empleado' && !in_array($idRol, [4, 5], true)) {
+                $this->logIntento($request, 'PORTAL_INCORRECTO', 'login empleado sin rol 4/5');
+                return back()->withErrors(['email' => 'Este portal es solo para coordinador o secretario.'])->withInput();
             }
 
             Auth::login($user);
             $request->session()->regenerate();
 
-            // ✅ Si quieres seguir usando estos datos, GUÁRDALOS DESPUÉS del Auth::login
             session([
-                'persona_id' => $r->id_persona,
-                'rol' => $r->rol,
-                'tipo_usuario' => $r->tipo_usuario
+                'persona_id' => $r->id_persona ?? null,
+                'rol_texto' => $r->rol ?? null,
+                'tipo_usuario' => $r->tipo_usuario ?? null,
             ]);
 
-            return redirect('/home');
+            $this->logIntento($request, 'OK', 'Login exitoso');
+
+            return match ($idRol) {
+                2 => redirect()->intended('/panel-estudiante'),
+                4 => redirect()->intended('/panel-coordinador'),
+                5 => redirect()->intended('/panel-secretario'),
+                default => redirect()->intended('/home'),
+            };
 
         } catch (\Exception $e) {
+            RateLimiter::hit($key, 300); // ✅ 5 minutos
+            $this->logIntento($request, 'EXCEPTION', $e->getMessage());
+
             return back()->withErrors([
-                'email' => $e->getMessage()
-            ]);
+                'email' => 'Ocurrió un error al iniciar sesión. Intenta de nuevo.'
+            ])->withInput();
         }
     }
-//Controlador de Autenticacion
-public function __construct()
-{
-$this->middleware('guest')->except('logout');
-}
 
-public function showLoginForm()
-{
-return view('auth.login');
-}
-
-// función de Cerrar Sesión
-public function logout(Request $request)
-{
-    Auth::logout();
-
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return redirect('/login');
-}
-
-
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('portal');
+    }
 }
