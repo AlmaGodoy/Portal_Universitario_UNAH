@@ -68,31 +68,22 @@ Route::prefix('api')->group(function () {
     Route::delete('/persona/{id}', [PersonaController::class, 'eliminar']);
 
     // RUTAS EMITIR RESOLUCION
-
     Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
 
     //RUTAS TRAMITES ACADÉMICOS
-    // Crear trámite
     Route::post('/tramites/crear', [TramiteController::class, 'crear']);
-
-    // Actualizar trámite
     Route::put('tramites', [TramiteControllerAct::class, 'actualizar']);
-
-    // Reporte de trámites
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
     Route::post('/resolucion', [Emitir_ResolucionController::class, 'emitir']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionController::class, 'eliminar']);
 
-
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
     Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
-
-
 });
 
 // ============================

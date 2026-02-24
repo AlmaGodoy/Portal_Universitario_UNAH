@@ -31,7 +31,7 @@ class LoginController extends Controller
 
     private function throttleKey(Request $request): string
     {
-        return Str::lower((string)$request->input('email')).'|'.$request->ip();
+        return Str::lower((string)$request->input('email')) . '|' . $request->ip();
     }
 
     private function logIntento(Request $request, string $resultado, ?string $detalle = null): void
@@ -69,13 +69,13 @@ class LoginController extends Controller
 
         $key = $this->throttleKey($request);
 
-        // 🔒 Bloqueo al llegar al límite
+        // 🔒 Bloqueo al llegar al límite (5 intentos)
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
             $this->logIntento($request, 'BLOQUEADO_THROTTLE', "Esperar {$seconds}s");
 
             return back()->withErrors([
-                'email' => "Demasiados intentos fallidos. Espera ".$this->formatWait($seconds)." antes de intentar nuevamente."
+                'email' => "Demasiados intentos fallidos. Espera " . $this->formatWait($seconds) . " antes de intentar nuevamente."
             ])->withInput();
         }
 
@@ -85,7 +85,6 @@ class LoginController extends Controller
                 $request->password
             ]);
 
-            // ❌ Respuesta rara del SP = fallo (cuenta como intento)
             if (empty($res) || !isset($res[0]->resultado)) {
                 RateLimiter::hit($key, 300); // ✅ 5 minutos
                 $this->logIntento($request, 'CREDENCIALES_INVALIDAS', 'Respuesta inválida SP');
@@ -97,12 +96,11 @@ class LoginController extends Controller
 
             $r = $res[0];
 
-            // ❌ SP rechaza (password mala, usuario, etc.) = fallo
             if ($r->resultado !== 'OK') {
                 RateLimiter::hit($key, 300); // ✅ 5 minutos
                 $this->logIntento($request, 'SP_RECHAZO', (string)$r->resultado);
 
-                // Recomendado: no revelar el motivo exacto
+                // ✅ No revelar motivo exacto al usuario
                 return back()->withErrors([
                     'email' => 'Credenciales inválidas'
                 ])->withInput();

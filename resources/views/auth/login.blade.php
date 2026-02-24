@@ -30,6 +30,7 @@
             </div>
         @endif
 
+        {{-- ✅ IMPORTANTE: si no hay tipo, mandamos a /portal --}}
         @if(!$tipo)
             <div class="alert alert-warning">
                 Selecciona primero un portal.
