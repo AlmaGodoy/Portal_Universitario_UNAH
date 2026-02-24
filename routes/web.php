@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
+//use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DocumentoExcepcionalController;
 use App\Http\Controllers\CambioCarreraController;
 use App\Http\Controllers\HistorialAcademicoController;
@@ -15,6 +15,8 @@ use App\Http\Controllers\ValidarDocumentoController;
 use App\Http\Controllers\TramiteController;
 use App\Http\Controllers\TramiteControllerAct;
 use App\Http\Controllers\ReporteTramiteController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\HomeController;
 
 
 // Rutas de API agrupadas
@@ -66,7 +68,7 @@ Route::prefix('api')->group(function () {
     Route::delete('/persona/{id}', [PersonaController::class, 'eliminar']);
 
     // RUTAS EMITIR RESOLUCION
-<<<<<<< HEAD
+
     Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
@@ -81,21 +83,74 @@ Route::prefix('api')->group(function () {
     // Reporte de trámites
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
-
-    });
-=======
     Route::post('/resolucion', [Emitir_ResolucionController::class, 'emitir']);
     Route::get('/resolucion/{id}', [Emitir_ResolucionController::class, 'obtenerResolucion']);
     Route::delete('/resolucion/{id}', [Emitir_ResolucionController::class, 'eliminar']);
+
+
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
+    Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
+
+
 });
 
-// Rutas web
-Auth::routes([
-    'register' => false,
-    'reset' => false,
-    'verify' => false,
-]);
+// ============================
+// WEB - PORTAL (2 CARDS)
+// ============================
+Route::get('/', fn() => redirect()->route('portal'))->name('root');
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
-Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
+Route::get('/portal', fn() => view('auth.choose_portal'))
+    ->middleware('guest')
+    ->name('portal');
+
+// Login por tipo
+Route::get('/login/{tipo}', [LoginController::class, 'showLoginFormTipo'])
+    ->whereIn('tipo', ['estudiante', 'empleado'])
+    ->middleware('guest')
+    ->name('login.tipo');
+
+Route::post('/login/{tipo}', [LoginController::class, 'loginTipo'])
+    ->whereIn('tipo', ['estudiante', 'empleado'])
+    ->middleware('guest')
+    ->name('login.tipo.post');
+
+// Si entran a /login normal -> portal
+Route::get('/login', fn() => redirect()->route('portal'))
+    ->middleware('guest')
+    ->name('login');
+
+// Register por tipo
+Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
+    ->whereIn('tipo', ['estudiante', 'empleado'])
+    ->middleware('guest')
+    ->name('register.tipo');
+
+Route::post('/register', [UsuarioController::class, 'crearWeb'])
+    ->middleware('guest')
+    ->name('register.store');
+
+// Si entran a /register normal -> portal
+Route::get('/register', fn() => redirect()->route('portal'))
+    ->middleware('guest')
+    ->name('register');
+
+// Logout
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
+
+// Home
+Route::get('/home', [HomeController::class, 'index'])
+    ->middleware('auth')
+    ->name('home');
+
+// Paneles
+Route::middleware(['auth', 'roleid:2'])
+    ->get('/panel-estudiante', fn() => view('panel.estudiante'));
+
+Route::middleware(['auth', 'roleid:4'])
+    ->get('/panel-coordinador', fn() => view('panel.coordinador'));
+
+Route::middleware(['auth', 'roleid:5'])
+    ->get('/panel-secretario', fn() => view('panel.secretario'));
