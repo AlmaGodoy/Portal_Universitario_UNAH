@@ -17,7 +17,7 @@ use App\Http\Controllers\TramiteControllerAct;
 use App\Http\Controllers\ReporteTramiteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
-
+use App\Http\Controllers\Auth\TwoFactorController;
 
 // Rutas de API agrupadas
 Route::prefix('api')->group(function () {
@@ -145,3 +145,16 @@ Route::middleware(['auth', 'roleid:4'])
 
 Route::middleware(['auth', 'roleid:5'])
     ->get('/panel-secretario', fn() => view('panel.secretario'));
+
+Route::get('/register/confirm/{token}', [UsuarioController::class, 'confirmarRegistro'])
+    ->middleware('guest')
+    ->name('register.confirm');
+
+Route::get('/email/verify/{token}', [App\Http\Controllers\VerifyEmailController::class, 'verify'])
+    ->middleware('guest')
+    ->name('email.verify');
+
+
+
+Route::get('/2fa', [TwoFactorController::class, 'form'])->name('twofa.form')->middleware('guest');
+Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify')->middleware('guest');

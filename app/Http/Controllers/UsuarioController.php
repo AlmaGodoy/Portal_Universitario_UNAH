@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VerifyEmailMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class UsuarioController extends Controller
@@ -16,13 +20,11 @@ class UsuarioController extends Controller
             ->orderBy('nombre_rol')
             ->get();
 
-        // 👇 Solo lo seguimos cargando porque EMPLEADO sí lo usa
         $departamentos = DB::table('tbl_departamento')
             ->select('id_departamento', 'nombre_departamento')
             ->orderBy('nombre_departamento')
             ->get();
 
-        // 👇 CARRERAS completas (ya no dependemos de departamento para estudiante)
         $carreras = DB::table('tbl_carrera')
             ->select('id_carrera', 'id_departamento', 'nombre_carrera')
             ->orderBy('nombre_carrera')
@@ -62,8 +64,6 @@ class UsuarioController extends Controller
 
             'numero_cuenta' => ['nullable','digits:11'],
             'id_carrera' => 'nullable|integer',
-
-            // 👇 para empleado sigue existiendo, para estudiante la mandamos null
             'id_departamento' => 'nullable|integer',
 
             'cod_empleado' => 'nullable|string|max:50',
@@ -77,14 +77,13 @@ class UsuarioController extends Controller
         $tipo = strtolower(trim($request->tipo_usuario));
 
         // =========================
-        // ✅ ESTUDIANTE (sin depto)
+        // ✅ ESTUDIANTE
         // =========================
         if ($tipo === 'estudiante') {
 
             // rol fijo estudiante
             $request->merge(['id_rol' => 2]);
 
-            // ✅ ahora solo pedimos carrera (y numero_cuenta)
             $request->validate([
                 'numero_cuenta' => ['required','digits:11'],
                 'id_carrera' => 'required|integer',
@@ -92,7 +91,7 @@ class UsuarioController extends Controller
                 'numero_cuenta.digits' => 'El número de cuenta debe tener exactamente 11 números.',
             ]);
 
-            // ✅ estudiante NO usa datos de empleado ni departamento
+            // estudiante NO usa datos empleado
             $request->merge([
                 'id_departamento' => null,
                 'cod_empleado' => null,
@@ -104,8 +103,6 @@ class UsuarioController extends Controller
             // =========================
             // ✅ EMPLEADO
             // =========================
-
-            // empleado: SOLO coord/secretario
             $request->validate([
                 'id_rol' => 'required|integer|in:4,5',
                 'id_departamento' => 'required|integer',
@@ -113,7 +110,7 @@ class UsuarioController extends Controller
                 'tipo_empleado' => 'required|string|max:50',
             ]);
 
-            // empleado NO usa datos de estudiante
+            // empleado NO usa datos estudiante
             $request->merge([
                 'numero_cuenta' => null,
                 'id_carrera' => null,
@@ -121,19 +118,22 @@ class UsuarioController extends Controller
         }
 
         // =========================
-        // ✅ LLAMADA SP
+        // ✅ SP: crear usuario INACTIVO + password HASH
         // =========================
         try {
+            // ✅ bcrypt hash (Laravel)
+            $passwordHash = Hash::make($request->contrasena);
+
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $request->nombre,
                 $request->documento,
                 $request->correo,
-                $request->contrasena,
+                $passwordHash,              // ✅ HASH (NO texto plano)
                 $request->tipo_usuario,
                 $request->id_rol,
                 $request->numero_cuenta,
                 $request->id_carrera,
-                $request->id_departamento, // <- null si estudiante
+                $request->id_departamento,
                 $request->cod_empleado,
                 $request->tipo_empleado
             ]);
@@ -145,9 +145,40 @@ class UsuarioController extends Controller
                 return back()->withErrors(['registro' => $mensaje])->withInput();
             }
 
+            // ✅ Buscar id_usuario recién creado (por correo)
+            $u = DB::table('tbl_usuario as u')
+                ->join('tbl_persona as p', 'p.id_persona', '=', 'u.id_persona')
+                ->where('p.correo_institucional', $request->correo)
+                ->select('u.id_usuario')
+                ->first();
+
+            if (!$u) {
+                return redirect()->route('portal')
+                    ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
+            }
+
+            // ✅ Crear token de activación (1 hora)
+            $token = Str::random(64);
+
+            DB::table('email_verifications')->updateOrInsert(
+                ['id_usuario' => $u->id_usuario],
+                [
+                    'token_hash' => hash('sha256', $token),
+                    'expires_at' => now()->addMinutes(60),
+                    'used_at' => null,
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+
+            $link = route('email.verify', ['token' => $token]);
+
+            Mail::to($request->correo)->send(new VerifyEmailMail($link));
+
             session()->forget('register_tipo');
 
-            return redirect()->route('portal')->with('status', 'Usuario creado correctamente.');
+            return redirect()->route('portal')
+                ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
 
         } catch (\Exception $e) {
             return back()->withErrors(['registro' => $e->getMessage()])->withInput();
