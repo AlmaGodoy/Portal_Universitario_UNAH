@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-//use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DocumentoExcepcionalController;
 use App\Http\Controllers\CambioCarreraController;
 use App\Http\Controllers\HistorialAcademicoController;
@@ -63,28 +63,34 @@ Route::prefix('api')->group(function () {
     Route::delete('documentos/eliminar/{id_documento}', [DocumentoController::class, 'eliminar']);
 
     // RUTAS GESTIONAR PERSONA
-    Route::post('/persona', [PersonaController::class, 'gestionar']);
-    Route::get('/persona/{id}', [PersonaController::class, 'obtenerPersona']);
-    Route::delete('/persona/{id}', [PersonaController::class, 'eliminar']);
+    Route::post('/persona/agregar', [PersonaController::class, 'agregar']);
+    Route::get('/persona/obtener/{id}', [PersonaController::class, 'obtener']);
+    Route::put('/persona/actualizar/{id}', [PersonaController::class, 'actualizar']);
+    Route::delete('/persona/eliminar/{id}', [PersonaController::class, 'eliminar']);
 
     // RUTAS EMITIR RESOLUCION
-    Route::post('/resolucion', [Emitir_ResolucionesController::class, 'emitirResolucion']);
-    Route::get('/resolucion/{id}', [Emitir_ResolucionesController::class, 'obtenerResolucion']);
-    Route::delete('/resolucion/{id}', [Emitir_ResolucionesController::class, 'eliminarResolucion']);
+    Route::post('/resolucion/emitir', [Emitir_ResolucionController::class, 'emitir']);
+    Route::get('/resolucion/obtener/{id}', [Emitir_ResolucionController::class, 'obtener']);
+    Route::put('/resolucion/actualizar/{id}', [Emitir_ResolucionController::class, 'actualizar']);
+    Route::delete('/resolucion/eliminar/{id}', [Emitir_ResolucionController::class, 'eliminar']);
+    Route::get('/resolucion/listar', [Emitir_ResolucionController::class, 'listar']);
 
     //RUTAS TRAMITES ACADÉMICOS
     Route::post('/tramites/crear', [TramiteController::class, 'crear']);
     Route::put('tramites', [TramiteControllerAct::class, 'actualizar']);
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
-    Route::post('/resolucion', [Emitir_ResolucionController::class, 'emitir']);
-    Route::get('/resolucion/{id}', [Emitir_ResolucionController::class, 'obtenerResolucion']);
-    Route::delete('/resolucion/{id}', [Emitir_ResolucionController::class, 'eliminar']);
 
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
     Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
+
 });
+
+// Rutas web
+Auth::routes();
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
 
 // ============================
 // WEB - PORTAL (2 CARDS)
