@@ -41,57 +41,71 @@ class UsuarioController extends Controller
 
     public function crearWeb(Request $request)
     {
-        // Si viene desde /register/{tipo}, forza tipo_usuario desde sesión
+        // Si viene desde /register/{tipo}, fuerza tipo_usuario desde sesión
         $tipoFijo = session('register_tipo');
         if ($tipoFijo) {
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
-        // ✅ Validación base
+        // Validación base
         $request->validate([
-            'nombre' => 'required|string|max:100',
-            'documento' => ['required','digits:13'],
-            'correo' => 'required|email|max:100',
+            // ✅ Solo letras y espacios (incluye tildes y ñ)
+            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
 
+            'documento' => ['required','digits:13'],
+            'correo' => ['required','email','max:100'],
+
+            // ✅ confirmed exige campo contrasena_confirmation
             'contrasena' => [
                 'required',
                 'max:255',
+                'confirmed',
                 Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
             ],
 
             'tipo_usuario' => 'required|in:estudiante,empleado',
-            'id_rol' => 'required|integer',
+            'id_rol' => 'nullable|integer',
 
             'numero_cuenta' => ['nullable','digits:11'],
             'id_carrera' => 'nullable|integer',
-            'id_departamento' => 'nullable|integer',
 
+            'id_departamento' => 'nullable|integer',
             'cod_empleado' => 'nullable|string|max:50',
             'tipo_empleado' => 'nullable|string|max:50',
         ], [
-            'documento.digits' => 'El documento debe tener exactamente 13 números.',
+            'nombre.regex' => 'El nombre solo debe contener letras y espacios.',
+            'documento.digits' => 'El DNI debe tener exactamente 13 números.',
             'numero_cuenta.digits' => 'El número de cuenta debe tener exactamente 11 números.',
-            'contrasena.password' => 'La contraseña debe tener mayúscula, minúscula, número y símbolo.',
+            'contrasena.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
-        $tipo = strtolower(trim($request->tipo_usuario));
+        $tipo = strtolower(trim((string)$request->tipo_usuario));
+
+        // ✅ Validación fuerte del dominio
+        $correo = strtolower(trim((string)$request->correo));
+        if ($tipo === 'estudiante' && !str_ends_with($correo, '@unah.hn')) {
+            return back()->withErrors(['correo' => 'Estudiante: el correo debe terminar en @unah.hn'])->withInput();
+        }
+        if ($tipo === 'empleado' && !str_ends_with($correo, '@unah.edu.hn')) {
+            return back()->withErrors(['correo' => 'Empleado: el correo debe terminar en @unah.edu.hn'])->withInput();
+        }
 
         // =========================
-        // ✅ ESTUDIANTE
+        // ESTUDIANTE
         // =========================
         if ($tipo === 'estudiante') {
-
-            // rol fijo estudiante
+            // rol fijo
             $request->merge(['id_rol' => 2]);
 
             $request->validate([
                 'numero_cuenta' => ['required','digits:11'],
                 'id_carrera' => 'required|integer',
             ], [
-                'numero_cuenta.digits' => 'El número de cuenta debe tener exactamente 11 números.',
+                'numero_cuenta.required' => 'Número de cuenta requerido.',
+                'id_carrera.required' => 'Carrera requerida.',
             ]);
 
-            // estudiante NO usa datos empleado
+            // no usa empleado/departamento
             $request->merge([
                 'id_departamento' => null,
                 'cod_empleado' => null,
@@ -99,9 +113,8 @@ class UsuarioController extends Controller
             ]);
 
         } else {
-
             // =========================
-            // ✅ EMPLEADO
+            // EMPLEADO
             // =========================
             $request->validate([
                 'id_rol' => 'required|integer|in:4,5',
@@ -110,7 +123,6 @@ class UsuarioController extends Controller
                 'tipo_empleado' => 'required|string|max:50',
             ]);
 
-            // empleado NO usa datos estudiante
             $request->merge([
                 'numero_cuenta' => null,
                 'id_carrera' => null,
@@ -118,17 +130,16 @@ class UsuarioController extends Controller
         }
 
         // =========================
-        // ✅ SP: crear usuario INACTIVO + password HASH
+        // SP + Email verification
         // =========================
         try {
-            // ✅ bcrypt hash (Laravel)
             $passwordHash = Hash::make($request->contrasena);
 
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $request->nombre,
                 $request->documento,
                 $request->correo,
-                $passwordHash,              // ✅ HASH (NO texto plano)
+                $passwordHash,
                 $request->tipo_usuario,
                 $request->id_rol,
                 $request->numero_cuenta,
@@ -145,7 +156,7 @@ class UsuarioController extends Controller
                 return back()->withErrors(['registro' => $mensaje])->withInput();
             }
 
-            // ✅ Buscar id_usuario recién creado (por correo)
+            // Buscar id_usuario recién creado
             $u = DB::table('tbl_usuario as u')
                 ->join('tbl_persona as p', 'p.id_persona', '=', 'u.id_persona')
                 ->where('p.correo_institucional', $request->correo)
@@ -157,7 +168,6 @@ class UsuarioController extends Controller
                     ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
-            // ✅ Crear token de activación (1 hora)
             $token = Str::random(64);
 
             DB::table('email_verifications')->updateOrInsert(
