@@ -164,3 +164,7 @@ Route::get('/email/verify/{token}', [App\Http\Controllers\VerifyEmailController:
 
 Route::get('/2fa', [TwoFactorController::class, 'form'])->name('twofa.form')->middleware('guest');
 Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify')->middleware('guest');
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
