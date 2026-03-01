@@ -32,7 +32,7 @@
                     @error('nombre')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
-                    <small class="text-light">Solo letras y espacios.</small>
+                    <small class="text-light">Ingrese su nombre completo.</small>
                 </div>
 
                 <div class="col-md-6 mb-3">
