@@ -87,6 +87,8 @@ Route::prefix('api')->group(function () {
 
 });
 
+
+
 // Rutas web
 Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -167,4 +169,13 @@ Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify'
 
 Route::get('/dashboard', function () {
     return view('dashboard');
+ 
+    
+});
+
+// ============================
+// FRONTEND - CAMBIO DE CARRERA
+// ============================
+Route::get('/cambio-carrera', function () {
+    return view('cambio_carrera'); // resources/views/cambio_carrera.blade.php
 });
