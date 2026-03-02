@@ -13,6 +13,7 @@ class DocumentoExcepcionalController extends Controller
     public function subir(Request $request)
     {
         try {
+            $id_persona_autenticada = auth()->user()->id_persona; //Para traer el ID automático de la persona logueada .
             $resultado = DB::select('CALL INS_CANCE_EXCEP(?, ?, ?)', [
                 $request->id_persona,
                 $request->prioridad,
