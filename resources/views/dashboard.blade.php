@@ -231,9 +231,10 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" style="font-size:.8rem;">
-            <i class="nav-icon fas fa-ban"></i><p style="font-size:.8rem;line-height:1.2;white-space:normal;">Cancelación Excepcional de Clases</p>
-          </a>
+          <a href="{{ route('cancelacion.index') }}" class="nav-link" style="font-size:.8rem;">
+      <i class="nav-icon fas fa-ban"></i>
+    <p style="font-size:.8rem;line-height:1.2;white-space:normal;">Cancelación Excepcional de Clases</p>
+     </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link">
