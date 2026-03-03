@@ -16,7 +16,6 @@ class PersonaController extends Controller
         $validated = $request->validate([
             'id_persona' => 'required|integer',
             'nombre_persona' => 'required|string|max:150',
-            'numero_documento' => 'required|integer',
             'correo_institucional' => 'required|email|max:150',
             'tipo_usuario' => 'required|string|max:50',
             'estado' => 'required|string|max:20'
@@ -25,11 +24,10 @@ class PersonaController extends Controller
         try {
 
             $resultado = DB::select(
-                'CALL INS_PERSONA(?, ?, ?, ?, ?, ?)',
+                'CALL INS_PERSONA(?, ?, ?, ?, ?)',
                 [
                     $validated['id_persona'],
                     $validated['nombre_persona'],
-                    $validated['numero_documento'],
                     $validated['correo_institucional'],
                     $validated['tipo_usuario'],
                     $validated['estado']
@@ -78,7 +76,6 @@ class PersonaController extends Controller
 
         $validated = $request->validate([
             'nombre_persona' => 'required|string|max:150',
-            'numero_documento' => 'required|integer',
             'correo_institucional' => 'required|email|max:150',
             'tipo_usuario' => 'required|string|max:50',
             'estado' => 'required|string|max:20'
@@ -87,11 +84,10 @@ class PersonaController extends Controller
         try {
 
             $resultado = DB::select(
-                'CALL UPD_PERSONA(?, ?, ?, ?, ?, ?)',
+                'CALL UPD_PERSONA(?, ?, ?, ?)',
                 [
                     $id,
                     $validated['nombre_persona'],
-                    $validated['numero_documento'],
                     $validated['correo_institucional'],
                     $validated['tipo_usuario'],
                     $validated['estado']
