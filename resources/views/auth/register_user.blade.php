@@ -23,7 +23,7 @@
         <form method="POST" action="{{ route('register.store') }}" autocomplete="off">
             @csrf
 
-            {{-- ================= FILA 1: Nombre (izq) + Contraseña (der) ================= --}}
+            {{-- ================= FILA 1: Nombre (izq) + Correo (der) ================= --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Nombre</label>
@@ -37,6 +37,20 @@
                 </div>
 
                 <div class="col-md-6 mb-3">
+                    <label class="form-label">Correo</label>
+                    <input type="email" name="correo" id="correo"
+                           class="form-control @error('correo') is-invalid @enderror"
+                           value="{{ old('correo') }}" required>
+                    @error('correo')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <small class="text-light" id="correo_hint"></small>
+                </div>
+            </div>
+
+            {{-- ================= FILA 2: Contraseña (izq) + Confirmar contraseña (der) ================= --}}
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">Contraseña</label>
                     <div class="input-group">
                         <input type="password"
@@ -49,7 +63,7 @@
                                 style="min-width:44px;"
                                 type="button"
                                 id="btn_toggle_pass"
-                                aria-label="Mostrar contraseña">👁️</button>
+                                aria-label="Mostrar contraseña">🔓</button>
                     </div>
 
                     @error('contrasena')
@@ -59,20 +73,6 @@
                     <small class="text-light">
                         Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.
                     </small>
-                </div>
-            </div>
-
-            {{-- ================= FILA 2: Correo (izq) + Confirmar (der) ================= --}}
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Correo</label>
-                    <input type="email" name="correo" id="correo"
-                           class="form-control @error('correo') is-invalid @enderror"
-                           value="{{ old('correo') }}" required>
-                    @error('correo')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                    <small class="text-light" id="correo_hint"></small>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -89,7 +89,7 @@
                                 style="min-width:44px;"
                                 type="button"
                                 id="btn_toggle_pass2"
-                                aria-label="Mostrar confirmación">👁️</button>
+                                aria-label="Mostrar confirmación">🔓</button>
                     </div>
 
                     <div id="pass_mismatch" class="text-danger mt-1" style="display:none;">
@@ -194,8 +194,6 @@
 
             {{-- ================= ESTUDIANTE ================= --}}
             <div id="bloque_estudiante" class="border rounded p-3 mb-3" style="display:none;">
-                <h6>Datos de estudiante</h6>
-
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Número de cuenta</label>
@@ -224,8 +222,6 @@
 
             {{-- ================= EMPLEADO ================= --}}
             <div id="bloque_empleado" class="border rounded p-3 mb-3" style="display:none;">
-                <h6>Datos de empleado</h6>
-
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Código empleado</label>
@@ -393,7 +389,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (tipo === 'estudiante') {
             if (bloqueEst) bloqueEst.style.display = 'block';
             cargarCarrerasTodas();
-            // (rol auto existe pero no es necesario mostrarlo)
             return;
         }
 
