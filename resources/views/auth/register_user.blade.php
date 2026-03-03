@@ -23,36 +23,19 @@
         <form method="POST" action="{{ route('register.store') }}" autocomplete="off">
             @csrf
 
-            {{-- ================= DATOS BÁSICOS ================= --}}
+            {{-- ================= FILA 1: Nombre (izq) + Correo (der) ================= --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Nombre</label>
-                    <input name="nombre" id="nombre" class="form-control @error('nombre') is-invalid @enderror"
+                    <input name="nombre" id="nombre"
+                           class="form-control @error('nombre') is-invalid @enderror"
                            value="{{ old('nombre') }}" required>
                     @error('nombre')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
-                    <small class="text-light">Solo letras y espacios.</small>
+                    <small class="text-light">Ingrese su nombre completo.</small>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">DNI</label>
-                    <input name="documento"
-                           id="documento"
-                           class="form-control @error('documento') is-invalid @enderror"
-                           value="{{ old('documento') }}"
-                           maxlength="13"
-                           inputmode="numeric"
-                           autocomplete="off"
-                           required>
-                    @error('documento')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
-            {{-- Correo + Contraseña --}}
-            <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Correo</label>
                     <input type="email" name="correo" id="correo"
@@ -63,7 +46,10 @@
                     @enderror
                     <small class="text-light" id="correo_hint"></small>
                 </div>
+            </div>
 
+            {{-- ================= FILA 2: Contraseña (izq) + Confirmar contraseña (der) ================= --}}
+            <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Contraseña</label>
                     <div class="input-group">
@@ -77,7 +63,7 @@
                                 style="min-width:44px;"
                                 type="button"
                                 id="btn_toggle_pass"
-                                aria-label="Mostrar contraseña">👁️</button>
+                                aria-label="Mostrar contraseña">🔓</button>
                     </div>
 
                     @error('contrasena')
@@ -88,11 +74,8 @@
                         Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.
                     </small>
                 </div>
-            </div>
 
-            {{-- Confirmar contraseña: abajo de contraseña (derecha) --}}
-            <div class="row">
-                <div class="col-md-6 offset-md-6 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">Confirmar contraseña</label>
 
                     <div class="input-group">
@@ -106,7 +89,7 @@
                                 style="min-width:44px;"
                                 type="button"
                                 id="btn_toggle_pass2"
-                                aria-label="Mostrar confirmación">👁️</button>
+                                aria-label="Mostrar confirmación">🔓</button>
                     </div>
 
                     <div id="pass_mismatch" class="text-danger mt-1" style="display:none;">
@@ -120,7 +103,6 @@
             </div>
 
             {{-- ================= TIPO + ROL ================= --}}
-            {{-- ✅ Caso 1: NO hay tipo fijo -> mostrar selector tipo + UI completa --}}
             @if(!$tipoFijo)
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -132,7 +114,7 @@
                         </select>
                     </div>
 
-                    {{-- Estudiante: rol automático --}}
+                    {{-- Estudiante: rol automático (hidden en backend, aquí no se muestra) --}}
                     <div class="col-md-6 mb-3" id="rol_auto_box" style="display:none;">
                         <label class="form-label">Rol</label>
                         <input type="text" class="form-control" value="estudiante" disabled>
@@ -157,12 +139,11 @@
                         @enderror
                     </div>
                 </div>
-
             @else
-                {{-- ✅ Caso 2: hay tipo fijo -> mandamos hidden tipo_usuario --}}
+                {{-- tipo fijo --}}
                 <input type="hidden" name="tipo_usuario" id="tipo_usuario" value="{{ $tipoFijo }}">
 
-                {{-- ✅ Si es EMPLEADO fijo: mostramos Tipo (solo lectura) + Rol (selector) --}}
+                {{-- empleado fijo: mostrar tipo (read-only) y rol --}}
                 @if($tipoFijo === 'empleado')
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -187,9 +168,8 @@
                             @enderror
                         </div>
                     </div>
-
                 @else
-                    {{-- ✅ Si es ESTUDIANTE fijo: NO mostrar tipo/rol, solo mandar rol 2 hidden --}}
+                    {{-- estudiante fijo: rol hidden --}}
                     <input type="hidden" name="id_rol" value="2">
                 @endif
             @endif
@@ -214,8 +194,6 @@
 
             {{-- ================= ESTUDIANTE ================= --}}
             <div id="bloque_estudiante" class="border rounded p-3 mb-3" style="display:none;">
-                <h6>Datos de estudiante</h6>
-
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Número de cuenta</label>
@@ -244,8 +222,6 @@
 
             {{-- ================= EMPLEADO ================= --}}
             <div id="bloque_empleado" class="border rounded p-3 mb-3" style="display:none;">
-                <h6>Datos de empleado</h6>
-
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Código empleado</label>
@@ -305,10 +281,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    soloNumerosMax(document.getElementById('documento'), 13);
+    // Solo números en cuenta
     soloNumerosMax(document.getElementById('numero_cuenta'), 11);
 
-    // Mostrar / ocultar contraseñas
+    // Mostrar / ocultar contraseñas (ojo)
     function togglePassword(inputId, btnId) {
         const inp = document.getElementById(inputId);
         const btn = document.getElementById(btnId);
@@ -323,20 +299,19 @@ document.addEventListener('DOMContentLoaded', function () {
     togglePassword('contrasena', 'btn_toggle_pass');
     togglePassword('contrasena_confirmation', 'btn_toggle_pass2');
 
-    // Validación en vivo: no mostrar “no coinciden” si está vacío
+    // Validación en vivo: no mostrar si está vacío
     const pass1 = document.getElementById('contrasena');
     const pass2 = document.getElementById('contrasena_confirmation');
     const mismatch = document.getElementById('pass_mismatch');
 
     function validarMatch() {
         if (!pass1 || !pass2 || !mismatch) return;
-        const v1 = (pass1.value || '').trim();
-        const v2 = (pass2.value || '').trim();
-        mismatch.style.display = (v1 && v2 && v1 !== v2) ? 'block' : 'none';
+        const v1 = (pass1.value || '');
+        const v2 = (pass2.value || '');
+        mismatch.style.display = (v1.length > 0 && v2.length > 0 && v1 !== v2) ? 'block' : 'none';
     }
     pass1?.addEventListener('input', validarMatch);
     pass2?.addEventListener('input', validarMatch);
-    setTimeout(() => { if (mismatch) mismatch.style.display = 'none'; validarMatch(); }, 50);
 
     // UI por tipo
     const tipoSel = document.getElementById('tipo_usuario'); // hidden o select
@@ -347,8 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const bloqueEmp = document.getElementById('bloque_empleado');
 
     const rolAutoBox = document.getElementById('rol_auto_box');
-    const rolAutoInput = document.getElementById('id_rol_auto');
-
+    const rolManualBox = document.getElementById('rol_manual_box');
     const rolManualSel = document.getElementById('id_rol_manual');
 
     const codEmp = document.getElementById('cod_empleado');
@@ -397,13 +371,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function aplicarUI() {
         const tipo = getTipoActual();
 
-        // ocultar bloques
+        // ocultar
         if (bloqueEst) bloqueEst.style.display = 'none';
         if (bloqueEmp) bloqueEmp.style.display = 'none';
-        if (rolAutoBox) rolAutoBox.style.display = 'none';
         if (boxDep) boxDep.style.display = 'none';
+        if (rolAutoBox) rolAutoBox.style.display = 'none';
+        if (rolManualBox) rolManualBox.style.display = 'none';
 
-        // required reset
+        // reset required
         if (depSel) depSel.required = false;
         if (codEmp) codEmp.required = false;
         if (tipoEmp) tipoEmp.required = false;
@@ -412,7 +387,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // estudiante
         if (tipo === 'estudiante') {
-            if (rolAutoBox) rolAutoBox.style.display = 'none'; // no lo mostramos
             if (bloqueEst) bloqueEst.style.display = 'block';
             cargarCarrerasTodas();
             return;
@@ -420,6 +394,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // empleado
         if (tipo === 'empleado') {
+            if (rolManualBox) rolManualBox.style.display = 'block';
+
             if (boxDep) boxDep.style.display = 'block';
             if (bloqueEmp) bloqueEmp.style.display = 'block';
 
