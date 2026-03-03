@@ -12,20 +12,22 @@ class CreatePendingRegistrationsTable extends Migration
             $table->id();
 
             $table->string('nombre');
-            $table->string('documento', 13);
             $table->string('correo')->unique();
             $table->string('contrasena_hash');
 
             $table->string('tipo_usuario');
             $table->integer('id_rol');
 
+            // Datos opcionales estudiante
             $table->string('numero_cuenta')->nullable();
             $table->integer('id_carrera')->nullable();
-            $table->integer('id_departamento')->nullable();
 
+            // Datos opcionales empleado
+            $table->integer('id_departamento')->nullable();
             $table->string('cod_empleado')->nullable();
             $table->string('tipo_empleado')->nullable();
 
+            // Verificación
             $table->string('token')->unique();
             $table->timestamp('expires_at');
 
