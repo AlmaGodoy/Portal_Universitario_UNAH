@@ -38,6 +38,8 @@ Route::prefix('api')->group(function () {
     Route::get('cambio-carrera/ver/{codigo}', [CambioCarreraController::class, 'ver']);
     Route::put('cambio-carrera/estado/{id_tramite}', [CambioCarreraController::class, 'actualizarEstado']);
     Route::delete('cambio-carrera/eliminar/{id_tramite}', [CambioCarreraController::class, 'eliminar']);
+    Route::get('cambio-carrera/calendario-vigente', [CambioCarreraController::class, 'calendarioVigente']);
+    Route::get('cambio-carrera/carreras', [CambioCarreraController::class, 'carreras']);
 
     // HISTORIAL ACADÉMICO
     Route::post('historial/crear', [HistorialAcademicoController::class, 'crear']);
