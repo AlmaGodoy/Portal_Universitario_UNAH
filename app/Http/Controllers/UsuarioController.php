@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Bitacora;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,14 +48,17 @@ class UsuarioController extends Controller
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
+        // Convertir correo a minúsculas automáticamente
+$correo = strtolower(trim((string)$request->correo));
+
+$request->merge([
+    'correo' => $correo
+]);
         // ✅ Validación base (YA NO HAY documento)
         $request->validate([
-            // Solo letras y espacios (incluye tildes y ñ)
             'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
-
             'correo' => ['required','email','max:100'],
 
-            // confirmed exige contrasena_confirmation
             'contrasena' => [
                 'required',
                 'max:255',
@@ -131,7 +135,7 @@ class UsuarioController extends Controller
         }
 
         // =========================
-        // ✅ SP + Email verification
+        // ✅ SP + Email verification + Bitácora
         // =========================
         try {
             $passwordHash = Hash::make($request->contrasena);
@@ -169,6 +173,13 @@ class UsuarioController extends Controller
                     ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
+            // ✅ BITÁCORA: registro_usuario
+            Bitacora::registrar(
+                (int)$u->id_usuario,
+                'registro_usuario',
+                'Nuevo usuario registrado: '.$request->correo
+            );
+
             // token 1 hora
             $token = Str::random(64);
 
@@ -184,7 +195,27 @@ class UsuarioController extends Controller
             );
 
             $link = route('email.verify', ['token' => $token]);
-            Mail::to($request->correo)->send(new VerifyEmailMail($link));
+
+            // ✅ Envío de correo con bitácora OK/FAIL
+            try {
+                Mail::to($request->correo)->send(new VerifyEmailMail($link));
+
+                Bitacora::registrar(
+                    (int)$u->id_usuario,
+                    'email_verificacion_enviada',
+                    'Se envió correo de verificación a '.$request->correo
+                );
+            } catch (\Throwable $e) {
+
+                Bitacora::registrar(
+                    (int)$u->id_usuario,
+                    'email_verificacion_fallida',
+                    'Fallo envío a '.$request->correo.' | '.$e->getMessage()
+                );
+
+                return redirect()->route('portal')
+                    ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
+            }
 
             session()->forget('register_tipo');
 
