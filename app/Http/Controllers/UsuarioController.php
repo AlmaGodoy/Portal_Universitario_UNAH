@@ -48,6 +48,7 @@ class UsuarioController extends Controller
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
+Modulo-Login-y-Registro
         // Convertir correo a minúsculas automáticamente
 $correo = strtolower(trim((string)$request->correo));
 
@@ -59,6 +60,16 @@ $request->merge([
             'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
             'correo' => ['required','email','max:100'],
 
+
+        // ✅ Validación base (YA NO HAY documento)
+        $request->validate([
+            // Solo letras y espacios (incluye tildes y ñ)
+            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+
+            'correo' => ['required','email','max:100'],
+
+            // confirmed exige contrasena_confirmation
+main
             'contrasena' => [
                 'required',
                 'max:255',
@@ -135,7 +146,11 @@ $request->merge([
         }
 
         // =========================
+ Modulo-Login-y-Registro
         // ✅ SP + Email verification + Bitácora
+=======
+        // ✅ SP + Email verification
+main
         // =========================
         try {
             $passwordHash = Hash::make($request->contrasena);
@@ -173,6 +188,7 @@ $request->merge([
                     ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
+ Modulo-Login-y-Registro
             // ✅ BITÁCORA: registro_usuario
             Bitacora::registrar(
                 (int)$u->id_usuario,
@@ -180,6 +196,8 @@ $request->merge([
                 'Nuevo usuario registrado: '.$request->correo
             );
 
+
+ main
             // token 1 hora
             $token = Str::random(64);
 
@@ -195,6 +213,7 @@ $request->merge([
             );
 
             $link = route('email.verify', ['token' => $token]);
+ Modulo-Login-y-Registro
 
             // ✅ Envío de correo con bitácora OK/FAIL
             try {
@@ -216,6 +235,9 @@ $request->merge([
                 return redirect()->route('portal')
                     ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
             }
+
+            Mail::to($request->correo)->send(new VerifyEmailMail($link));
+main
 
             session()->forget('register_tipo');
 
