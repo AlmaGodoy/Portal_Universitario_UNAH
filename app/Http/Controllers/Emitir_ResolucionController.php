@@ -223,7 +223,10 @@ class Emitir_ResolucionController extends Controller
     {
         try {
 
-            $resultado = DB::select('CALL SEL_RESOLUCIONES()');
+            $resultado = DB::select(
+                'CALL SEL_EMITIR_RESOLUCION(?)',
+                [$id]
+            );
 
             return response()->json([
                 'resultado' => 'OK',

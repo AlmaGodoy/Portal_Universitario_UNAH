@@ -47,15 +47,14 @@ class UsuarioController extends Controller
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
-        // Validación base
+        // ✅ Validación base (YA NO HAY documento)
         $request->validate([
-            // ✅ Solo letras y espacios (incluye tildes y ñ)
+            // Solo letras y espacios (incluye tildes y ñ)
             'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
 
-            'documento' => ['required','digits:13'],
             'correo' => ['required','email','max:100'],
 
-            // ✅ confirmed exige campo contrasena_confirmation
+            // confirmed exige contrasena_confirmation
             'contrasena' => [
                 'required',
                 'max:255',
@@ -74,14 +73,13 @@ class UsuarioController extends Controller
             'tipo_empleado' => 'nullable|string|max:50',
         ], [
             'nombre.regex' => 'El nombre solo debe contener letras y espacios.',
-            'documento.digits' => 'El DNI debe tener exactamente 13 números.',
             'numero_cuenta.digits' => 'El número de cuenta debe tener exactamente 11 números.',
             'contrasena.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
         $tipo = strtolower(trim((string)$request->tipo_usuario));
 
-        // ✅ Validación fuerte del dominio
+        // ✅ Validación fuerte del dominio de correo
         $correo = strtolower(trim((string)$request->correo));
         if ($tipo === 'estudiante' && !str_ends_with($correo, '@unah.hn')) {
             return back()->withErrors(['correo' => 'Estudiante: el correo debe terminar en @unah.hn'])->withInput();
@@ -91,10 +89,11 @@ class UsuarioController extends Controller
         }
 
         // =========================
-        // ESTUDIANTE
+        // ✅ ESTUDIANTE
         // =========================
         if ($tipo === 'estudiante') {
-            // rol fijo
+
+            // rol fijo estudiante
             $request->merge(['id_rol' => 2]);
 
             $request->validate([
@@ -105,7 +104,7 @@ class UsuarioController extends Controller
                 'id_carrera.required' => 'Carrera requerida.',
             ]);
 
-            // no usa empleado/departamento
+            // estudiante NO usa empleado/departamento
             $request->merge([
                 'id_departamento' => null,
                 'cod_empleado' => null,
@@ -113,8 +112,9 @@ class UsuarioController extends Controller
             ]);
 
         } else {
+
             // =========================
-            // EMPLEADO
+            // ✅ EMPLEADO
             // =========================
             $request->validate([
                 'id_rol' => 'required|integer|in:4,5',
@@ -123,6 +123,7 @@ class UsuarioController extends Controller
                 'tipo_empleado' => 'required|string|max:50',
             ]);
 
+            // empleado NO usa estudiante
             $request->merge([
                 'numero_cuenta' => null,
                 'id_carrera' => null,
@@ -130,14 +131,14 @@ class UsuarioController extends Controller
         }
 
         // =========================
-        // SP + Email verification
+        // ✅ SP + Email verification
         // =========================
         try {
             $passwordHash = Hash::make($request->contrasena);
 
-            $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            // ✅ YA NO SE ENVÍA documento => 10 parámetros
+            $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $request->nombre,
-                $request->documento,
                 $request->correo,
                 $passwordHash,
                 $request->tipo_usuario,
@@ -168,6 +169,7 @@ class UsuarioController extends Controller
                     ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
+            // token 1 hora
             $token = Str::random(64);
 
             DB::table('email_verifications')->updateOrInsert(
@@ -182,7 +184,6 @@ class UsuarioController extends Controller
             );
 
             $link = route('email.verify', ['token' => $token]);
-
             Mail::to($request->correo)->send(new VerifyEmailMail($link));
 
             session()->forget('register_tipo');

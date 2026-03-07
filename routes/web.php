@@ -19,8 +19,21 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\TwoFactorController;
 
-// Rutas de API agrupadas
+//Prueba
+
+Route::get('/cancelacion-excepcional', function () {
+    return view('cancelacion');
+})->name('cancelacion.index');
+
+//Route::get('/cancelacion-excepcional', function () {
+    //return view('cancelacion');
+// })->name('cancelacion.index')->middleware('auth');
+
+// ==========================================================
+// Rutas de API
+// ==========================================================
 Route::prefix('api')->group(function () {
+    // TUS RUTAS DE CANCELACIÓN (APIS)
     Route::post('cancelaciones/crear', [DocumentoExcepcionalController::class, 'subir']);
     Route::get('cancelaciones/todas', [DocumentoExcepcionalController::class, 'obtenerTodos']);
     Route::get('cancelaciones/detalle/{id}', [DocumentoExcepcionalController::class, 'obtenerCancelacion']);
@@ -47,54 +60,52 @@ Route::prefix('api')->group(function () {
     Route::put('historial/actualizar/{id_persona}', [HistorialAcademicoController::class, 'actualizar']);
     Route::delete('historial/eliminar/{id_historial}', [HistorialAcademicoController::class, 'eliminar']);
 
-    // Rutas Usuario
+    // USUARIO
     Route::post('/usuarios', [UsuarioController::class, 'crear'])->name('usuarios.store');
     Route::post('/usuarios/{id_persona}/activar', [UsuarioController::class, 'activar'])->name('usuarios.activar');
     Route::post('/usuarios/{id_persona}/desactivar', [UsuarioController::class, 'desactivar'])->name('usuarios.desactivar');
     Route::post('/usuarios/{id_usuario}/rol', [UsuarioController::class, 'asignarRol'])->name('usuarios.rol');
 
-    // Rutas pago
+    // PAGOS
     Route::post('pagos/crear', [PagoController::class, 'crear']);
     Route::get('pagos/ver/{id_tramite}', [PagoController::class, 'verPorTramite']);
     Route::put('pagos/estado/{id_pago}', [PagoController::class, 'actualizarEstado']);
 
-    // Rutas para Subir Documento
+    // SUBIR DOCUMENTO
     Route::post('documentos/crear', [DocumentoController::class, 'crear']);
     Route::get('documentos/ver/{id_tramite}', [DocumentoController::class, 'ver']);
     Route::put('documentos/actualizar/{id_documento}', [DocumentoController::class, 'actualizar']);
     Route::delete('documentos/eliminar/{id_documento}', [DocumentoController::class, 'eliminar']);
 
-    // RUTAS GESTIONAR PERSONA
+    // GESTIONAR PERSONA
     Route::post('/persona/agregar', [PersonaController::class, 'agregar']);
     Route::get('/persona/obtener/{id}', [PersonaController::class, 'obtener']);
     Route::put('/persona/actualizar/{id}', [PersonaController::class, 'actualizar']);
     Route::delete('/persona/eliminar/{id}', [PersonaController::class, 'eliminar']);
 
-    // RUTAS EMITIR RESOLUCION
+    // EMITIR RESOLUCION
     Route::post('/resolucion/emitir', [Emitir_ResolucionController::class, 'emitir']);
     Route::get('/resolucion/obtener/{id}', [Emitir_ResolucionController::class, 'obtener']);
     Route::put('/resolucion/actualizar/{id}', [Emitir_ResolucionController::class, 'actualizar']);
     Route::delete('/resolucion/eliminar/{id}', [Emitir_ResolucionController::class, 'eliminar']);
     Route::get('/resolucion/listar', [Emitir_ResolucionController::class, 'listar']);
 
-    //RUTAS TRAMITES ACADÉMICOS
+    // TRAMITES ACADÉMICOS
     Route::post('/tramites/crear', [TramiteController::class, 'crear']);
     Route::put('tramites', [TramiteControllerAct::class, 'actualizar']);
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
-
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
     Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
-
 });
 
 
 
 // Rutas web
 Auth::routes();
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // ============================
 // WEB - PORTAL (2 CARDS)
@@ -141,11 +152,6 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
-// Home
-Route::get('/home', [HomeController::class, 'index'])
-    ->middleware('auth')
-    ->name('home');
-
 // Paneles
 Route::middleware(['auth', 'roleid:2'])
     ->get('/panel-estudiante', fn() => view('panel.estudiante'));
@@ -164,15 +170,17 @@ Route::get('/email/verify/{token}', [App\Http\Controllers\VerifyEmailController:
     ->middleware('guest')
     ->name('email.verify');
 
-
-
 Route::get('/2fa', [TwoFactorController::class, 'form'])->name('twofa.form')->middleware('guest');
 Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify')->middleware('guest');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
+ Modulo-Cambio-de-carrera
  
     
+
+
+main
 });
 
 // ============================

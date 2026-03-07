@@ -11,7 +11,6 @@ class Persona extends Model
 
     protected $fillable = [
         'nombre_persona',
-        'numero_documento',
         'correo_institucional',
         'tipo_usuario',
         'estado'

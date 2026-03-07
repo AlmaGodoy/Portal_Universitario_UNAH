@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Documento extends Model
 {
+    use HasFactory;
 
     protected $table = 'tbl_documento';
-
-    // Definimos la llave primaria
     protected $primaryKey = 'id_documento';
+    public $timestamps = false;
 
+    const AUT_NO_VERIFICADO = 'no_verificado';
+    const AUT_VERIFICADO = 'verificado';
+    const AUT_FRAUDULENTO = 'fraudulento';
 
     protected $fillable = [
         'id_tramite',
@@ -20,14 +24,28 @@ class Documento extends Model
         'hash_contenido',
         'ruta_archivo',
         'fecha_carga',
-        'autenticidad_documento', // Usado por ValidarDocumentoController
-        'numero_folio',           // Usado por el procedimiento VAL_TRAMITE_ANTIFRAUDE
-        'estado'                  // Controla si el documento está activo (1) o eliminado (0)
+        'autenticidad_documento',
+        'numero_folio',
+        'estado'
     ];
 
-    public $timestamps = false;
+    protected static function booted()
+    {
+        static::creating(function ($documento) {
+            if (empty($documento->fecha_carga)) {
+                $documento->fecha_carga = now();
+            }
 
-    // Relación con el Trámite (Un documento pertenece a un trámite)
+            if (empty($documento->autenticidad_documento)) {
+                $documento->autenticidad_documento = self::AUT_NO_VERIFICADO;
+            }
+
+            if (!isset($documento->estado)) {
+                $documento->estado = 1;
+            }
+        });
+    }
+
     public function tramite()
     {
         return $this->belongsTo(Tramite::class, 'id_tramite', 'id_tramite');
