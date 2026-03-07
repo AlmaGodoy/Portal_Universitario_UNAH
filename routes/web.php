@@ -20,9 +20,14 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\TwoFactorController;
 
 //Prueba
+
 Route::get('/cancelacion-excepcional', function () {
     return view('cancelacion');
-})->name('cancelacion.index')->middleware('auth');
+})->name('cancelacion.index');
+
+//Route::get('/cancelacion-excepcional', function () {
+    //return view('cancelacion');
+// })->name('cancelacion.index')->middleware('auth');
 
 // ==========================================================
 // Rutas de API
@@ -168,8 +173,8 @@ Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify'
 
 Route::get('/dashboard', function () {
     return view('dashboard');
- 
-    
+
+
 });
 
 // ============================
