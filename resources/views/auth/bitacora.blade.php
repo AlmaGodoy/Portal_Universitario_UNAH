@@ -6,7 +6,7 @@
     <h3>Bitácora del Sistema</h3>
 
     <!-- FORMULARIO DE CONSULTA -->
-    <form method="GET" action="{{ route('auditoria') }}" class="mb-3">
+    <form method="GET" action="{{ route('bitacora') }}" class="mb-3">
 
         <div>
             <label>Fecha de Inicio: </label>
@@ -25,11 +25,10 @@
     <table border="1" width="100%">
         <thead>
             <tr>
-                <th>Usuario</th>
-                <th>Acción</th>
-                <th>Descripción</th>
+                <th>Usuario Responsable</th>
+                <th>Operación Realizada</th>
+                <th>Detalle</th>
                 <th>Fecha</th>
-                <th>Modulo Afectado</th>
             </tr>
         </thead>
         <tbody>
@@ -39,7 +38,6 @@
                     <td>{{ $item->operacion_realizada }}</td>
                     <td>{{ $item->detalle }}</td>
                     <td>{{ $item->fecha_y_hora }}</td>
-                    <td>{{ $item->modulo_afectado }}</td>
                 </tr>
             @empty
                 <tr>
