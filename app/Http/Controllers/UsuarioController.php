@@ -48,41 +48,27 @@ class UsuarioController extends Controller
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
-Modulo-Login-y-Registro
         // Convertir correo a minúsculas automáticamente
-$correo = strtolower(trim((string)$request->correo));
+        $correo = strtolower(trim((string) $request->correo));
 
-$request->merge([
-    'correo' => $correo
-]);
-        // ✅ Validación base (YA NO HAY documento)
+        $request->merge([
+            'correo' => $correo
+        ]);
+
+        // Validación base
         $request->validate([
-            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
-            'correo' => ['required','email','max:100'],
-
-
-        // ✅ Validación base (YA NO HAY documento)
-        $request->validate([
-            // Solo letras y espacios (incluye tildes y ñ)
-            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
-
-            'correo' => ['required','email','max:100'],
-
-            // confirmed exige contrasena_confirmation
-main
+            'nombre' => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'correo' => ['required', 'email', 'max:100'],
             'contrasena' => [
                 'required',
                 'max:255',
                 'confirmed',
                 Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
             ],
-
             'tipo_usuario' => 'required|in:estudiante,empleado',
             'id_rol' => 'nullable|integer',
-
-            'numero_cuenta' => ['nullable','digits:11'],
+            'numero_cuenta' => ['nullable', 'digits:11'],
             'id_carrera' => 'nullable|integer',
-
             'id_departamento' => 'nullable|integer',
             'cod_empleado' => 'nullable|string|max:50',
             'tipo_empleado' => 'nullable|string|max:50',
@@ -92,27 +78,28 @@ main
             'contrasena.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
-        $tipo = strtolower(trim((string)$request->tipo_usuario));
+        $tipo = strtolower(trim((string) $request->tipo_usuario));
 
-        // ✅ Validación fuerte del dominio de correo
-        $correo = strtolower(trim((string)$request->correo));
+        // Validación del dominio de correo
         if ($tipo === 'estudiante' && !str_ends_with($correo, '@unah.hn')) {
-            return back()->withErrors(['correo' => 'Estudiante: el correo debe terminar en @unah.hn'])->withInput();
+            return back()->withErrors([
+                'correo' => 'Estudiante: el correo debe terminar en @unah.hn'
+            ])->withInput();
         }
+
         if ($tipo === 'empleado' && !str_ends_with($correo, '@unah.edu.hn')) {
-            return back()->withErrors(['correo' => 'Empleado: el correo debe terminar en @unah.edu.hn'])->withInput();
+            return back()->withErrors([
+                'correo' => 'Empleado: el correo debe terminar en @unah.edu.hn'
+            ])->withInput();
         }
 
-        // =========================
-        // ✅ ESTUDIANTE
-        // =========================
+        // ESTUDIANTE
         if ($tipo === 'estudiante') {
-
             // rol fijo estudiante
             $request->merge(['id_rol' => 2]);
 
             $request->validate([
-                'numero_cuenta' => ['required','digits:11'],
+                'numero_cuenta' => ['required', 'digits:11'],
                 'id_carrera' => 'required|integer',
             ], [
                 'numero_cuenta.required' => 'Número de cuenta requerido.',
@@ -125,12 +112,8 @@ main
                 'cod_empleado' => null,
                 'tipo_empleado' => null,
             ]);
-
         } else {
-
-            // =========================
-            // ✅ EMPLEADO
-            // =========================
+            // EMPLEADO
             $request->validate([
                 'id_rol' => 'required|integer|in:4,5',
                 'id_departamento' => 'required|integer',
@@ -145,17 +128,10 @@ main
             ]);
         }
 
-        // =========================
- Modulo-Login-y-Registro
-        // ✅ SP + Email verification + Bitácora
-=======
-        // ✅ SP + Email verification
-main
-        // =========================
         try {
             $passwordHash = Hash::make($request->contrasena);
 
-            // ✅ YA NO SE ENVÍA documento => 10 parámetros
+            // YA NO SE ENVÍA documento => 10 parámetros
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $request->nombre,
                 $request->correo,
@@ -188,16 +164,13 @@ main
                     ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
- Modulo-Login-y-Registro
-            // ✅ BITÁCORA: registro_usuario
+            // BITÁCORA: registro_usuario
             Bitacora::registrar(
-                (int)$u->id_usuario,
+                (int) $u->id_usuario,
                 'registro_usuario',
-                'Nuevo usuario registrado: '.$request->correo
+                'Nuevo usuario registrado: ' . $request->correo
             );
 
-
- main
             // token 1 hora
             $token = Str::random(64);
 
@@ -213,37 +186,31 @@ main
             );
 
             $link = route('email.verify', ['token' => $token]);
- Modulo-Login-y-Registro
 
-            // ✅ Envío de correo con bitácora OK/FAIL
+            // Envío de correo con bitácora OK/FAIL
             try {
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
 
                 Bitacora::registrar(
-                    (int)$u->id_usuario,
+                    (int) $u->id_usuario,
                     'email_verificacion_enviada',
-                    'Se envió correo de verificación a '.$request->correo
+                    'Se envió correo de verificación a ' . $request->correo
                 );
             } catch (\Throwable $e) {
-
                 Bitacora::registrar(
-                    (int)$u->id_usuario,
+                    (int) $u->id_usuario,
                     'email_verificacion_fallida',
-                    'Fallo envío a '.$request->correo.' | '.$e->getMessage()
+                    'Fallo envío a ' . $request->correo . ' | ' . $e->getMessage()
                 );
 
                 return redirect()->route('portal')
                     ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
             }
 
-            Mail::to($request->correo)->send(new VerifyEmailMail($link));
-main
-
             session()->forget('register_tipo');
 
             return redirect()->route('portal')
                 ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
-
         } catch (\Exception $e) {
             return back()->withErrors(['registro' => $e->getMessage()])->withInput();
         }
