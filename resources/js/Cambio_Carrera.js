@@ -1,129 +1,143 @@
-(function () {
-  const alertas = document.getElementById("alertas");
-  const respuesta = document.getElementById("respuesta");
-  const resultadoConsulta = document.getElementById("resultadoConsulta");
+document.addEventListener('DOMContentLoaded', () => {
+    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+    const selectCarreras = document.getElementById('id_carrera_destino');
+    const inputCalendario = document.getElementById('id_calendario');
+    const inputPersona = document.getElementById('id_persona');
 
-  function showAlert(type, msg) {
-    alertas.innerHTML = `
-      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${msg}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    `;
-  }
+    const formCambio = document.getElementById('formCambioCarrera');
+    const formHistorial = document.getElementById('formHistorial');
 
-  function printJSON(el, data) {
-    if (!el) return;
-    el.textContent = JSON.stringify(data, null, 2);
-  }
+    const seccionHistorial = document.getElementById('seccionHistorial');
+    const inputTramite = document.getElementById('id_tramite');
 
-  async function requestJSON(url, method, bodyObj = null) {
-    const headers = {
-      "Accept": "application/json",
-    };
+    const msg = document.getElementById('msg');
 
-    // Si tus rutas API están en web.php con middleware web, puede pedir CSRF.
-    if (csrf) headers["X-CSRF-TOKEN"] = csrf;
+    function setMsg(text, ok = false) {
+        msg.textContent = text;
+        msg.className = ok ? 'msg ok' : 'msg error';
+    }
 
-    if (bodyObj) headers["Content-Type"] = "application/json";
+    async function cargarCalendarioVigente() {
+        const res = await fetch('/api/cambio-carrera/calendario-vigente');
+        const data = await res.json();
 
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: bodyObj ? JSON.stringify(bodyObj) : null
+        if (!data || data.resultado === 'ERROR') {
+            setMsg('No hay calendario vigente para cambio de carrera.', false);
+            inputCalendario.value = '';
+            return;
+        }
+
+        inputCalendario.value = data.id_calendario_academico;
+    }
+
+    async function cargarCarreras() {
+        const res = await fetch('/api/cambio-carrera/carreras');
+        const data = await res.json();
+
+        selectCarreras.innerHTML = '<option value="">Seleccione...</option>';
+
+        if (!Array.isArray(data)) {
+            setMsg('No se pudo cargar catálogo de carreras.', false);
+            return;
+        }
+
+        data.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id_carrera;
+            opt.textContent = c.nombre_carrera;
+            selectCarreras.appendChild(opt);
+        });
+    }
+
+    formCambio.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!inputCalendario.value) {
+            setMsg('No hay calendario vigente. No se puede crear el trámite.', false);
+            return;
+        }
+
+        const payload = {
+            id_persona: parseInt(inputPersona.value, 10),             // temporal
+            id_calendario: parseInt(inputCalendario.value, 10),
+            id_carrera_destino: parseInt(selectCarreras.value, 10),
+            direccion: document.getElementById('direccion').value
+        };
+
+        try {
+            const res = await fetch('/api/cambio-carrera/crear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.resultado === 'ERROR') {
+                setMsg(data.mensaje || 'No se pudo crear el trámite.', false);
+                return;
+            }
+
+            // tu SP devuelve id_tramite
+            const idTramite = data.id_tramite || (Array.isArray(data) ? data[0]?.id_tramite : null);
+
+            if (!idTramite) {
+                setMsg('Trámite creado pero no se recibió id_tramite.', false);
+                return;
+            }
+
+            inputTramite.value = idTramite;
+            seccionHistorial.style.display = 'block';
+
+            setMsg(`Trámite creado (#${idTramite}). Ahora sube tu Historial Académico (PDF).`, true);
+
+        } catch (err) {
+            setMsg('Error de conexión al crear trámite.', false);
+        }
     });
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const msg = data?.mensaje || data?.message || "Error en la solicitud";
-      throw new Error(msg);
-    }
-    return data;
-  }
+    formHistorial.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-  // CREAR
-  document.getElementById("formCrear")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    alertas.innerHTML = "";
-    printJSON(respuesta, "");
+        const fileInput = document.getElementById('archivo');
+        if (!fileInput.files.length) {
+            setMsg('Selecciona un PDF.', false);
+            return;
+        }
 
-    const fd = new FormData(e.target);
-    const payload = {
-      id_persona: Number(fd.get("id_persona")),
-      id_calendario: Number(fd.get("id_calendario")),
-      id_carrera_destino: Number(fd.get("id_carrera_destino")),
-      direccion: String(fd.get("direccion") || "").trim(),
-    };
+        const formData = new FormData();
+        formData.append('id_tramite', inputTramite.value);
+        formData.append('tipo_documento', 'historial_academico'); // <--- CLAVE: aquí va el tipo real
+        formData.append('archivo', fileInput.files[0]);
 
-    try {
-      const data = await requestJSON("/api/cambio-carrera/crear", "POST", payload);
-      showAlert("success", "Solicitud creada correctamente.");
-      printJSON(respuesta, data);
-      e.target.reset();
-    } catch (err) {
-      showAlert("danger", err.message);
-    }
-  });
+        try {
+            const res = await fetch('/api/documentos/crear', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf
+                },
+                body: formData
+            });
 
-  // CONSULTAR
-  document.getElementById("formConsultar")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    alertas.innerHTML = "";
-    printJSON(resultadoConsulta, "");
+            const data = await res.json();
 
-    const fd = new FormData(e.target);
-    const codigo = Number(fd.get("codigo"));
+            if (!res.ok || data.resultado === 'ERROR') {
+                setMsg(data.mensaje || 'No se pudo subir el PDF.', false);
+                return;
+            }
 
-    try {
-      const data = await requestJSON(`/api/cambio-carrera/ver/${codigo}`, "GET");
-      showAlert("info", "Consulta realizada.");
-      printJSON(resultadoConsulta, data);
-    } catch (err) {
-      showAlert("danger", err.message);
-    }
-  });
+            setMsg('PDF subido correctamente. Solicitud completada.', true);
 
-  // ACTUALIZAR ESTADO
-  document.getElementById("formEstado")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    alertas.innerHTML = "";
-    printJSON(respuesta, "");
+        } catch (err) {
+            setMsg('Error de conexión al subir PDF.', false);
+        }
+    });
 
-    const fd = new FormData(e.target);
-    const id_tramite = Number(fd.get("id_tramite"));
-    const estado = String(fd.get("estado") || "").trim();
-
-    try {
-      const data = await requestJSON(`/api/cambio-carrera/estado/${id_tramite}`, "PUT", { estado });
-      showAlert("success", "Estado actualizado.");
-      printJSON(respuesta, data);
-      e.target.reset();
-    } catch (err) {
-      showAlert("danger", err.message);
-    }
-  });
-
-  // CANCELAR
-  document.getElementById("formCancelar")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    alertas.innerHTML = "";
-    printJSON(respuesta, "");
-
-    const fd = new FormData(e.target);
-    const id_tramite = Number(fd.get("id_tramite"));
-
-    if (!confirm(`¿Seguro que deseas cancelar el trámite ${id_tramite}?`)) return;
-
-    try {
-      const data = await requestJSON(`/api/cambio-carrera/eliminar/${id_tramite}`, "DELETE");
-      showAlert("warning", "Trámite cancelado/inactivado.");
-      printJSON(respuesta, data);
-      e.target.reset();
-    } catch (err) {
-      showAlert("danger", err.message);
-    }
-  });
-
-})();
+    // carga inicial
+    cargarCalendarioVigente();
+    cargarCarreras();
+});
