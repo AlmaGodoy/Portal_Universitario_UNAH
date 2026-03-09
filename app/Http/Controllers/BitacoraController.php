@@ -22,10 +22,10 @@ class BitacoraController extends Controller
 
 
         // 2. INGRESAR
-    public function ingresar($id_bitacora,$id_objeto,$accion,$fecha_accion,$descripcion)
+    public function ingresar($id_usuario,$id_objeto,$p_accion,$fecha_accion,$p_descripcion)
     {
         try {
-            $resultado = DB::select('CALL INS_BITACORA(?,?,?,?,?)', [$id_bitacora,$id_objeto,$accion,$fecha_accion,$descripcion]);
+            $resultado = DB::select('CALL INS_BITACORA(?,?,?,?,?)', [$id_usuario,$id_objeto,$p_accion,$fecha_accion,$p_descripcion]);
             return response()->json($resultado[0], 200);
         } catch (\Exception $e) {
             return response()->json(['resultado' => 'ERROR', 'mensaje' => $e->getMessage()], 500);

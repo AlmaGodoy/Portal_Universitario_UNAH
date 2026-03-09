@@ -31,6 +31,12 @@ Route::get('/cancelacion-excepcional', function () {
 Route::prefix('api')->group(function () {
     // BITACORA
     Route::get('bitacora/ver/{fecha_inicial}/{fecha_final}', [BitacoraController::class, 'ver']);
+    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha_accion}/{descripcion}', [BitacoraController::class, 'ingresar']);
+
+    //AUDITORIA
+    Route::get('auditoria/ver/{fecha_inicial}/{fecha_final}', [AuditoriaController::class, 'ver']);
+    Route::get('auditoria/ingresar/{id_usuario}/{id_objeto}/{accion}/{descripcion}/{fecha}', [AuditoriaController::class, 'ingresar']);
+
 
     // TUS RUTAS DE CANCELACIÓN (APIS)
     Route::post('cancelaciones/crear', [DocumentoExcepcionalController::class, 'subir']);
