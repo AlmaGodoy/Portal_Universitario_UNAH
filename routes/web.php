@@ -20,7 +20,10 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\RolController;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 // Rutas de API agrupadas
@@ -169,6 +172,7 @@ Route::post('/2fa', [TwoFactorController::class, 'verify'])
     ->name('twofa.verify');
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Route::get('/dashboard', function () {
     return view('dashboard');
 });
@@ -187,6 +191,12 @@ Route::get('/cambio-carrera', function () {
 
 // Ruta módulo de seguridad
 =======
+//Ruta modulo de seguridad
+>>>>>>> Stashed changes
+=======
+Route::get('/2fa', [TwoFactorController::class, 'form'])->name('twofa.form')->middleware('guest');
+Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify')->middleware('guest');
+
 //Ruta modulo de seguridad
 >>>>>>> Stashed changes
 Route::get('/seguridad', [RolController::class, 'index'])->name('seguridad.index');
