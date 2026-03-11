@@ -167,6 +167,18 @@ Route::post('/2fa', [TwoFactorController::class, 'verify'])
 
 Route::get('/dashboard', function () {
     return view('dashboard');
+Modulo-Login-y-Registro
+=======
+ Modulo-Cambio-de-carrera
+ 
+    
+
+Modulo-Cambio-de-carrera
+
+
+main
+main
+ main
 });
 
 // Ruta de cancelación excepcional

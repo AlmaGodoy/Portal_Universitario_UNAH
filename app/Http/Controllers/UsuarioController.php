@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Bitacora;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -60,15 +61,40 @@ class UsuarioController extends Controller
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
+ Modulo-Login-y-Registro
         $correo = strtolower(trim((string) $request->correo));
+=======
+Modulo-Login-y-Registro
+        // Convertir correo a minúsculas automáticamente
+$correo = strtolower(trim((string)$request->correo));
+
+$request->merge([
+    'correo' => $correo
+]);
+        // ✅ Validación base (YA NO HAY documento)
+        $request->validate([
+            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'correo' => ['required','email','max:100'],
+
+
+        // ✅ Validación base (YA NO HAY documento)
+        $request->validate([
+            // Solo letras y espacios (incluye tildes y ñ)
+            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+ main
 
         $request->merge([
             'correo' => $correo
         ]);
 
+ Modulo-Login-y-Registro
         $request->validate([
             'nombre' => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
             'correo' => ['required', 'email', 'max:100'],
+=======
+            // confirmed exige contrasena_confirmation
+main
+ main
             'contrasena' => [
                 'required',
                 'max:255',
@@ -132,6 +158,16 @@ class UsuarioController extends Controller
             ]);
         }
 
+ Modulo-Login-y-Registro
+=======
+        // =========================
+ Modulo-Login-y-Registro
+        // ✅ SP + Email verification + Bitácora
+=======
+        // ✅ SP + Email verification
+main
+        // =========================
+ main
         try {
             $passwordHash = Hash::make($request->contrasena);
 
@@ -166,12 +202,26 @@ class UsuarioController extends Controller
                     ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
+Modulo-Login-y-Registro
             $this->registrarBitacora(
                 (int)$u->id_usuario,
                 'registro_usuario',
                 'Nuevo usuario registrado: ' . $request->correo
             );
 
+=======
+ Modulo-Login-y-Registro
+            // ✅ BITÁCORA: registro_usuario
+            Bitacora::registrar(
+                (int)$u->id_usuario,
+                'registro_usuario',
+                'Nuevo usuario registrado: '.$request->correo
+            );
+
+
+ main
+            // token 1 hora
+ main
             $token = Str::random(64);
 
             DB::table('tbl_login_autentications')
@@ -190,6 +240,7 @@ class UsuarioController extends Controller
             ]);
 
             $link = route('email.verify', ['token' => $token]);
+ Modulo-Login-y-Registro
 
             try {
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
@@ -204,11 +255,35 @@ class UsuarioController extends Controller
                     (int)$u->id_usuario,
                     'email_verificacion_fallida',
                     'Fallo envío a ' . $request->correo . ' | ' . $e->getMessage()
+
+ Modulo-Login-y-Registro
+
+            // ✅ Envío de correo con bitácora OK/FAIL
+            try {
+                Mail::to($request->correo)->send(new VerifyEmailMail($link));
+
+                Bitacora::registrar(
+                    (int)$u->id_usuario,
+                    'email_verificacion_enviada',
+                    'Se envió correo de verificación a '.$request->correo
+                );
+            } catch (\Throwable $e) {
+
+                Bitacora::registrar(
+                    (int)$u->id_usuario,
+                    'email_verificacion_fallida',
+                    'Fallo envío a '.$request->correo.' | '.$e->getMessage()
+ main
                 );
 
                 return redirect()->route('portal')
                     ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
             }
+Modulo-Login-y-Registro
+
+            Mail::to($request->correo)->send(new VerifyEmailMail($link));
+main
+ main
 
             session()->forget('register_tipo');
 
