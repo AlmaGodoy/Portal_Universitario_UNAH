@@ -33,9 +33,12 @@ class LoginController extends Controller
         return $this->login($request);
     }
 
+Modulo-Login-y-Registro
+=======
     /**
      * Normaliza el email (minúsculas y sin espacios)
      */
+ main
     private function normalizeEmail(Request $request): void
     {
         $email = strtolower(trim((string)$request->input('email')));
@@ -44,8 +47,12 @@ class LoginController extends Controller
 
     private function throttleKey(Request $request): string
     {
+Modulo-Login-y-Registro
+        return (string)$request->input('email') . '|' . $request->ip();
+=======
         // ya viene normalizado por normalizeEmail()
         return (string)$request->input('email').'|'.$request->ip();
+ main
     }
 
     /**
@@ -55,7 +62,11 @@ class LoginController extends Controller
     {
         try {
             DB::table('tbl_login_intentos')->insert([
+Modulo-Login-y-Registro
+                'email' => (string)$request->input('email'),
+=======
                 'email' => (string)$request->input('email'), // ya normalizado
+ main
                 'ip' => $request->ip(),
                 'user_agent' => substr((string)$request->userAgent(), 0, 255),
                 'resultado' => $resultado,
@@ -63,6 +74,22 @@ class LoginController extends Controller
                 'created_at' => now(),
             ]);
         } catch (\Throwable $e) {
+ Modulo-Login-y-Registro
+        }
+    }
+
+    private function registrarBitacora(?int $idUsuario, string $accion, string $descripcion, ?int $idObjeto = null): void
+    {
+        try {
+            DB::table('tbl_bitacora')->insert([
+                'id_usuario' => $idUsuario,
+                'id_objeto' => $idObjeto,
+                'accion' => $accion,
+                'fecha_accion' => now(),
+                'descripcion' => $descripcion,
+            ]);
+        } catch (\Throwable $e) {
+=======
             // no rompemos el login si falla el log técnico
         }
     }
@@ -80,6 +107,7 @@ class LoginController extends Controller
             );
         } catch (\Throwable $e) {
             // no rompemos el login si falla bitácora
+ main
         }
     }
 
@@ -95,7 +123,10 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+ Modulo-Login-y-Registro
+=======
         // ✅ 1) normalizar email ANTES de validar / throttle / SP
+ main
         $this->normalizeEmail($request);
 
         $request->validate([
@@ -105,33 +136,50 @@ class LoginController extends Controller
 
         $key = $this->throttleKey($request);
 
+ Modulo-Login-y-Registro
+=======
         // 🔒 Bloqueo por RateLimiter
+ main
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
 
             $this->logIntento($request, 'BLOQUEADO_THROTTLE', "Esperar {$seconds}s");
+Modulo-Login-y-Registro
+            $this->registrarBitacora(
+                null,
+                'login_fallido',
+                'Bloqueado por demasiados intentos. IP: ' . $request->ip() . ' | Email: ' . $request->email
+=======
             $this->bitacora(
                 null,
                 'login_fallido',
                 'Bloqueado por demasiados intentos. IP: '.$request->ip().' | Email: '.$request->email
+ main
             );
 
             return back()->withErrors([
-                'email' => "Demasiados intentos fallidos. Espera ".$this->formatWait($seconds)." antes de intentar nuevamente."
+                'email' => "Demasiados intentos fallidos. Espera " . $this->formatWait($seconds) . " antes de intentar nuevamente."
             ])->withInput();
         }
 
         try {
-            // ✅ SP SOLO BUSCA y DEVUELVE pass_hash (bcrypt)
             $res = DB::select('CALL SEL_LOGIN(?, ?)', [
                 $request->email,
+ Modulo-Login-y-Registro
+                ''
+=======
                 '' // tu SP no debe comparar la contraseña
+ main
             ]);
 
             if (empty($res) || !isset($res[0]->resultado)) {
                 RateLimiter::hit($key, 300);
                 $this->logIntento($request, 'CREDENCIALES_INVALIDAS', 'Respuesta inválida SP');
+ Modulo-Login-y-Registro
+                $this->registrarBitacora(null, 'login_fallido', 'Respuesta inválida del SP. Email: ' . $request->email);
+=======
                 $this->bitacora(null, 'login_fallido', 'Respuesta inválida del SP. Email: '.$request->email);
+ main
 
                 return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
             }
@@ -145,61 +193,79 @@ class LoginController extends Controller
 
                 $spMsg = (string)$r->resultado;
                 if (str_contains(strtolower($spMsg), 'no') && str_contains(strtolower($spMsg), 'ex')) {
+Modulo-Login-y-Registro
+                    $this->registrarBitacora(null, 'intento_login_correo_inexistente', 'Correo no existe: ' . $request->email . ' | IP: ' . $request->ip());
+                } else {
+                    $this->registrarBitacora(null, 'login_fallido', 'SP rechazó: ' . $spMsg . ' | Email: ' . $request->email);
+=======
                     $this->bitacora(null, 'intento_login_correo_inexistente', 'Correo no existe: '.$request->email.' | IP: '.$request->ip());
                 } else {
                     $this->bitacora(null, 'login_fallido', 'SP rechazó: '.$spMsg.' | Email: '.$request->email);
+ main
                 }
 
                 return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
             }
 
-            // ✅ Validar password con bcrypt
             if (!isset($r->pass_hash) || !Hash::check($request->password, (string)$r->pass_hash)) {
                 RateLimiter::hit($key, 300);
                 $this->logIntento($request, 'CONTRASENA_INCORRECTA', 'Hash::check falló');
 
+Modulo-Login-y-Registro
+                $this->registrarBitacora(
+                    isset($r->id_usuario) ? (int)$r->id_usuario : null,
+                    'login_fallido',
+                    'Contraseña incorrecta. Email: ' . $request->email . ' | IP: ' . $request->ip()
+=======
                 $this->bitacora(
                     isset($r->id_usuario) ? (int)$r->id_usuario : null,
                     'login_fallido',
                     'Contraseña incorrecta. Email: '.$request->email.' | IP: '.$request->ip()
+ main
                 );
 
                 return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
             }
 
-            // ✅ Limpiar intentos porque contraseña fue correcta
             RateLimiter::clear($key);
 
-            // ✅ cargar user
             $user = User::find($r->id_usuario);
             if (!$user) {
                 $this->logIntento($request, 'USUARIO_NO_EXISTE', 'No existe en tbl_usuario');
+ Modulo-Login-y-Registro
+                $this->registrarBitacora(null, 'intento_login_correo_inexistente', 'No existe usuario para: ' . $request->email . ' | IP: ' . $request->ip());
+=======
                 $this->bitacora(null, 'intento_login_correo_inexistente', 'No existe usuario para: '.$request->email.' | IP: '.$request->ip());
+ main
 
                 return back()->withErrors(['email' => 'Usuario no encontrado'])->withInput();
             }
 
-            // ✅ Validación portal (estudiante / empleado)
-            $tipoElegido = session('login_tipo'); // estudiante|empleado
+            $tipoElegido = session('login_tipo');
             $idRol = (int)($user->id_rol ?? 0);
 
             if ($tipoElegido === 'estudiante' && $idRol !== 2) {
                 $this->logIntento($request, 'PORTAL_INCORRECTO', 'login estudiante sin rol 2');
+ Modulo-Login-y-Registro
+                $this->registrarBitacora((int)$user->id_usuario, 'login_fallido', 'Portal incorrecto (estudiante). Rol: ' . $idRol);
+=======
                 $this->bitacora((int)$user->id_usuario, 'login_fallido', 'Portal incorrecto (estudiante). Rol: '.$idRol);
+ main
 
                 return back()->withErrors(['email' => 'Este portal es solo para estudiantes.'])->withInput();
             }
 
             if ($tipoElegido === 'empleado' && !in_array($idRol, [4, 5], true)) {
                 $this->logIntento($request, 'PORTAL_INCORRECTO', 'login empleado sin rol 4/5');
+ Modulo-Login-y-Registro
+                $this->registrarBitacora((int)$user->id_usuario, 'login_fallido', 'Portal incorrecto (empleado). Rol: ' . $idRol);
+=======
                 $this->bitacora((int)$user->id_usuario, 'login_fallido', 'Portal incorrecto (empleado). Rol: '.$idRol);
+ main
 
                 return back()->withErrors(['email' => 'Este portal es solo para coordinador o secretario.'])->withInput();
             }
 
-            // ============================
-            // ✅ 2FA: primera vez o cada 30 días
-            // ============================
             $last2fa = null;
 
             try {
@@ -219,9 +285,15 @@ class LoginController extends Controller
             if ($needs2fa) {
                 $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-                DB::table('two_factor_codes')->insert([
+                DB::table('tbl_login_autentications')
+                    ->where('id_usuario', $user->id_usuario)
+                    ->where('tipo', 'two_factor')
+                    ->delete();
+
+                DB::table('tbl_login_autentications')->insert([
                     'id_usuario' => $user->id_usuario,
-                    'code_hash' => hash('sha256', $code),
+                    'tipo' => 'two_factor',
+                    'valor_hash' => hash('sha256', $code),
                     'expires_at' => now()->addMinutes(10),
                     'used_at' => null,
                     'created_at' => now(),
@@ -232,11 +304,18 @@ class LoginController extends Controller
                     Mail::to($request->email)->send(new TwoFactorCodeMail($code));
 
                     $this->logIntento($request, '2FA_ENVIADO', 'Se envió código 2FA');
+ Modulo-Login-y-Registro
+                    $this->registrarBitacora((int)$user->id_usuario, '2fa_enviado', 'Código 2FA enviado a: ' . $request->email);
+                } catch (\Throwable $e) {
+                    $this->logIntento($request, '2FA_FALLO_ENVIO', $e->getMessage());
+                    $this->registrarBitacora((int)$user->id_usuario, '2fa_fallido', 'Fallo envío 2FA: ' . $e->getMessage());
+=======
                     $this->bitacora((int)$user->id_usuario, '2fa_enviado', 'Código 2FA enviado a: '.$request->email);
 
                 } catch (\Throwable $e) {
                     $this->logIntento($request, '2FA_FALLO_ENVIO', $e->getMessage());
                     $this->bitacora((int)$user->id_usuario, '2fa_fallido', 'Fallo envío 2FA: '.$e->getMessage());
+ main
 
                     return back()->withErrors(['email' => 'No se pudo enviar el código 2FA. Intenta más tarde.'])->withInput();
                 }
@@ -250,9 +329,6 @@ class LoginController extends Controller
                     ->with('status', 'Te enviamos un código de 6 dígitos a tu correo.');
             }
 
-            // ============================
-            // ✅ si NO necesita 2FA: entra normal
-            // ============================
             Auth::login($user);
             $request->session()->regenerate();
 
@@ -263,7 +339,11 @@ class LoginController extends Controller
             ]);
 
             $this->logIntento($request, 'OK', 'Login exitoso (sin 2FA)');
+ Modulo-Login-y-Registro
+            $this->registrarBitacora((int)$user->id_usuario, 'login_exitoso', 'Inicio de sesión exitoso.');
+=======
             $this->bitacora((int)$user->id_usuario, 'login_exitoso', 'Inicio de sesión exitoso.');
+  main
 
             return match ($idRol) {
                 2 => redirect()->intended('/panel-estudiante'),
@@ -271,12 +351,15 @@ class LoginController extends Controller
                 5 => redirect()->intended('/panel-secretario'),
                 default => redirect()->intended('/home'),
             };
-
         } catch (\Exception $e) {
             RateLimiter::hit($key, 300);
 
             $this->logIntento($request, 'EXCEPTION', $e->getMessage());
+ Modulo-Login-y-Registro
+            $this->registrarBitacora(null, 'login_fallido', 'EXCEPTION login: ' . $e->getMessage() . ' | Email: ' . $request->email);
+=======
             $this->bitacora(null, 'login_fallido', 'EXCEPTION login: '.$e->getMessage().' | Email: '.$request->email);
+main
 
             return back()->withErrors([
                 'email' => 'Ocurrió un error al iniciar sesión. Intenta de nuevo.'
@@ -289,10 +372,16 @@ class LoginController extends Controller
         try {
             $idUsuario = Auth::id();
             if ($idUsuario) {
+Modulo-Login-y-Registro
+                $this->registrarBitacora((int)$idUsuario, 'logout', 'Cierre de sesión.');
+            }
+        } catch (\Throwable $e) {
+=======
                 $this->bitacora((int)$idUsuario, 'logout', 'Cierre de sesión.');
             }
         } catch (\Throwable $e) {
             // no romper logout
+ main
         }
 
         Auth::logout();

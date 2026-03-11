@@ -247,7 +247,9 @@
 
             <button class="btn btn-primary w-100">Registrar</button>
         </form>
-
+ <a href="{{ route('portal') }}" class="btn btn-outline-secondary w-100 mt-2">
+        Volver al portal
+    </a>
     </div>
 </div>
 
