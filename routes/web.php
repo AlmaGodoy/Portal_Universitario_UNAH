@@ -175,7 +175,15 @@ Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify'
 
 Route::get('/dashboard', function () {
     return view('dashboard');
+ Modulo-Cambio-de-carrera
+ 
+    
 
+Modulo-Cambio-de-carrera
+
+
+main
+main
 });
 
 // ============================
