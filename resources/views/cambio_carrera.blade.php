@@ -1,4 +1,6 @@
+Modulo-Cambio-de-carrera
  Modulo-Cambio-de-carrera
+ main
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,7 +9,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cambio de Carrera</title>
 
+Modulo-Cambio-de-carrera
+    {{-- ✅ CARGA CORRECTA CON VITE --}}
+    @vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera.js'])
+
     <link rel="stylesheet" href="{{ asset('css/cambio_carrera.css') }}">
+ main
 </head>
 <body>
 
@@ -21,7 +28,9 @@
     <form id="formCambioCarrera">
         <!-- (TEMPORAL) mientras no hay login -->
         <input type="hidden" id="id_persona" value="12">
+Modulo-Cambio-de-carrera
 
+main
         <input type="hidden" id="id_calendario" value="">
 
         <label for="id_carrera_destino">Carrera destino</label>
@@ -29,8 +38,13 @@
             <option value="">Cargando carreras...</option>
         </select>
 
+ Modulo-Cambio-de-carrera
+        <label for="direccion">Justificación por la cual solicita el cambio de carrera</label>
+        <input type="text" id="direccion" placeholder="justificación" required>
+
         <label for="direccion">Dirección / Departamento</label>
         <input type="text" id="direccion" placeholder="Ej: Departamento de informática" required>
+ main
 
         <button type="submit" id="btnCrearTramite">Crear trámite</button>
     </form>
@@ -61,6 +75,13 @@
     <div class="registroBox">
         <p><b>Nota:</b> Este sistema es de seguimiento. Para completar el proceso oficial, también debes realizarlo en Registro UNAH.</p>
         <a class="btnLink" href="https://registro.unah.edu.hn/" target="_blank">Ir a Registro UNAH</a>
+Modulo-Cambio-de-carrera
+    </div>
+</div>
+
+</body>
+</html>
+
     </div>
 </div>
 
@@ -201,3 +222,4 @@
 <script src="{{ asset('js/cambio_carrera.js') }}"></script>
 @endsection
 main
+ main
