@@ -9,6 +9,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\Emitir_ResolucionController;
 use App\Http\Controllers\ValidarDocumentoController;
@@ -19,12 +20,21 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\RolController;
-use App\Http\Controllers\BackupController;
 
 // Rutas de API agrupadas
 Route::prefix('api')->group(function () {
+    // BITACORA
 
-    // CANCELACIÓN
+    Route::get('bitacora/index', [BitacoraController::class, 'index'])->name('bitacora.index');
+    Route::get('bitacora/ver/{fecha_inicial}/{fecha_final}', [BitacoraController::class, 'ver'])->name('bitacora.ver');
+    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha_accion}/{descripcion}', [BitacoraController::class, 'ingresar'])->name('bitacora.ingresar');
+
+    //AUDITORIA
+    Route::get('auditoria/ver/{fecha_inicial}/{fecha_final}', [AuditoriaController::class, 'ver']);
+    Route::get('auditoria/ingresar/{id_usuario}/{id_objeto}/{accion}/{descripcion}/{fecha}', [AuditoriaController::class, 'ingresar']);
+
+
+    // TUS RUTAS DE CANCELACIÓN (APIS)
     Route::post('cancelaciones/crear', [DocumentoExcepcionalController::class, 'subir']);
     Route::get('cancelaciones/todas', [DocumentoExcepcionalController::class, 'obtenerTodos']);
     Route::get('cancelaciones/detalle/{id}', [DocumentoExcepcionalController::class, 'obtenerCancelacion']);
@@ -89,22 +99,7 @@ Route::prefix('api')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
     Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
-
-     // BACKUP
-    Route::get('/respaldo-sistema', [BackupController::class, 'mostrarPanel'])->name('backup.panel');
-    Route::post('/backup/probar', [BackupController::class, 'probarConexion'])->name('backup.probar');
-    Route::post('/backup/generar', [BackupController::class, 'crearBackup'])->name('backup.generar');
-
-     // SEGURIDAD
-    Route::get('/seguridad', [RolController::class, 'index'])->name('seguridad.index');
-    Route::post('/seguridad/rol', [RolController::class, 'storeRol'])->name('seguridad.rol.store');
-    Route::put('/seguridad/rol/{id}', [RolController::class, 'updateRol'])->name('seguridad.rol.update');
-    Route::post('/seguridad/asignar-permisos-objeto', [RolController::class, 'asignarPermisosObjeto'])->name('seguridad.asignar.objeto');
-    Route::delete('/seguridad/asignacion/{id}', [RolController::class, 'deleteAsignacion'])->name('seguridad.asignacion.delete');
-
-
 });
-
 
 // Rutas web
 Auth::routes();
@@ -185,12 +180,8 @@ Route::post('/2fa', [TwoFactorController::class, 'verify'])
 Route::get('/dashboard', function () {
     return view('dashboard');
 
-});
 
-// Ruta de cancelación excepcional
-Route::get('/cancelacion-excepcional', function () {
-    return view('cancelacion');
-})->middleware('auth')->name('cancelacion.index');
+});
 
 // ============================
 // FRONTEND - CAMBIO DE CARRERA
@@ -198,3 +189,10 @@ Route::get('/cancelacion-excepcional', function () {
 Route::get('/cambio-carrera', function () {
     return view('cambio_carrera');
 });
+
+// Ruta módulo de seguridad
+Route::get('/seguridad', [RolController::class, 'index'])->name('seguridad.index');
+Route::post('/seguridad/rol', [RolController::class, 'storeRol'])->name('seguridad.rol.store');
+Route::put('/seguridad/rol/{id}', [RolController::class, 'updateRol'])->name('seguridad.rol.update');
+Route::post('/seguridad/asignar-permisos-objeto', [RolController::class, 'asignarPermisosObjeto'])->name('seguridad.asignar.objeto');
+Route::delete('/seguridad/asignacion/{id}', [RolController::class, 'deleteAsignacion'])->name('seguridad.asignacion.delete');
