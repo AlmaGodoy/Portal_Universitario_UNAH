@@ -1,0 +1,197 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class RolSeguridadController extends Controller
+{
+    public function index()
+    {
+        $modulos = [
+            [
+                'titulo' => 'Gestión de Roles',
+                'descripcion' => 'Crear, editar, activar o desactivar roles y asignar permisos.',
+                'ruta' => route('seguridad.roles'),
+                'icono' => 'bi-shield-lock'
+            ],
+            [
+                'titulo' => 'Gestión de Usuarios',
+                'descripcion' => 'Administrar usuarios del sistema y revisar su estado.',
+                'ruta' => route('seguridad.usuarios'),
+                'icono' => 'bi-people'
+            ],
+            [
+                'titulo' => 'Gestión de Objetos',
+                'descripcion' => 'Administrar módulos y submódulos de seguridad.',
+                'ruta' => route('seguridad.objetos'),
+                'icono' => 'bi-diagram-3'
+            ],
+            [
+                'titulo' => 'Gestión de Accesos',
+                'descripcion' => 'Administrar accesos y permisos por módulo.',
+                'ruta' => route('seguridad.accesos'),
+                'icono' => 'bi-key'
+            ],
+        ];
+
+        return view('rol_seguridad_index', compact('modulos'));
+    }
+
+    public function usuarios()
+    {
+        $usuarios = DB::select('CALL SEL_USUARIOS_SEGURIDAD()');
+
+        return view('rol_seguridad_usuarios', compact('usuarios'));
+    }
+
+    public function updateEstadoUsuario(Request $request, $id)
+    {
+        $request->validate([
+            'estado_cuenta' => 'required|in:0,1',
+        ]);
+
+        $res = DB::select('CALL UPD_ESTADO_USUARIO_SEGURIDAD(?, ?, ?)', [
+            $id,
+            (int) $request->estado_cuenta,
+            Auth::id()
+        ]);
+
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo actualizar el estado del usuario.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['usuario' => $mensaje])->withInput();
+        }
+
+        return redirect()->route('seguridad.usuarios')
+            ->with('status', $mensaje);
+    }
+
+    public function objetos()
+    {
+        $objetos = DB::select('CALL SEL_MODULOS_SEGURIDAD()');
+
+        return view('rol_seguridad_objetos', compact('objetos'));
+    }
+
+    public function storeObjeto(Request $request)
+    {
+        $request->validate([
+            'nombre_objeto' => 'required|string|max:100',
+            'tipo_objeto' => 'required|string|max:50',
+        ]);
+
+        $res = DB::select('CALL INS_MODULOS_SEGURIDAD(?, ?, ?)', [
+            $request->nombre_objeto,
+            $request->tipo_objeto,
+            Auth::id()
+        ]);
+
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo crear el módulo/objeto.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['objeto' => $mensaje])->withInput();
+        }
+
+        return redirect()->route('seguridad.objetos')
+            ->with('status', $mensaje);
+    }
+
+    public function updateObjeto(Request $request, $id)
+    {
+        $request->validate([
+            'nombre_objeto' => 'required|string|max:100',
+            'tipo_objeto' => 'required|string|max:50',
+        ]);
+
+        $res = DB::select('CALL UPD_MODULOS_SEGURIDAD(?, ?, ?, ?)', [
+            $id,
+            $request->nombre_objeto,
+            $request->tipo_objeto,
+            Auth::id()
+        ]);
+
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo actualizar el módulo/objeto.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['objeto' => $mensaje])->withInput();
+        }
+
+        return redirect()->route('seguridad.objetos')
+            ->with('status', $mensaje);
+    }
+
+    public function accesos()
+    {
+        $accesos = DB::select('CALL SEL_ACCESOS_SEGURIDAD()');
+
+        $roles = DB::table('tbl_rol')
+            ->where('estado_activo', 1)
+            ->orderBy('nombre_rol')
+            ->get();
+
+        $permisos = DB::table('tbl_permiso')
+            ->orderBy('nombre_permiso')
+            ->get();
+
+        $objetos = DB::table('tbl_objeto')
+            ->orderBy('nombre_objeto')
+            ->get();
+
+        return view('rol_seguridad_accesos', compact('accesos', 'roles', 'permisos', 'objetos'));
+    }
+
+    public function storeAcceso(Request $request)
+    {
+        $request->validate([
+            'id_rol' => 'required|integer',
+            'id_permiso' => 'required|integer',
+            'id_objeto' => 'required|integer',
+        ]);
+
+        $res = DB::select('CALL INS_ACCESOS_SEGURIDAD(?, ?, ?, ?)', [
+            $request->id_rol,
+            $request->id_permiso,
+            $request->id_objeto,
+            Auth::id()
+        ]);
+
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo asignar el acceso.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['acceso' => $mensaje])->withInput();
+        }
+
+        return redirect()->route('seguridad.accesos')
+            ->with('status', $mensaje);
+    }
+
+    public function deleteAcceso($id)
+    {
+        $res = DB::select('CALL DEL_ACCESOS_SEGURIDAD(?, ?)', [
+            $id,
+            Auth::id()
+        ]);
+
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo eliminar el acceso.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['acceso' => $mensaje]);
+        }
+
+        return redirect()->route('seguridad.accesos')
+            ->with('status', $mensaje);
+    }
+}
