@@ -87,4 +87,38 @@ class CambioCarreraController extends Controller
             ], 500);
         }
     }
+
+    public function calendarioVigente()
+{
+    try {
+
+        $data = DB::select('CALL SEL_CALENDARIO_VIGENTE_CAMBIO_CARRERA()');
+
+        return response()->json($data[0] ?? null, 200);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => $e->getMessage()
+        ], 500);
+    }
+    
 }
+public function carreras()
+{
+    try {
+        $data = DB::select('CALL SEL_CARRERAS_ACTIVAS()');
+        return response()->json($data, 200);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
+}
+

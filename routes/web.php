@@ -19,15 +19,9 @@ use App\Http\Controllers\ReporteTramiteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\RolController;
 
-//Prueba
-Route::get('/cancelacion-excepcional', function () {
-    return view('cancelacion');
-})->name('cancelacion.index')->middleware('auth');
-
-// ==========================================================
-// Rutas de API
-// ==========================================================
+// Rutas de API agrupadas
 Route::prefix('api')->group(function () {
     // BITACORA
 
@@ -58,6 +52,8 @@ Route::prefix('api')->group(function () {
     Route::get('cambio-carrera/ver/{codigo}', [CambioCarreraController::class, 'ver']);
     Route::put('cambio-carrera/estado/{id_tramite}', [CambioCarreraController::class, 'actualizarEstado']);
     Route::delete('cambio-carrera/eliminar/{id_tramite}', [CambioCarreraController::class, 'eliminar']);
+    Route::get('cambio-carrera/calendario-vigente', [CambioCarreraController::class, 'calendarioVigente']);
+    Route::get('cambio-carrera/carreras', [CambioCarreraController::class, 'carreras']);
 
     // HISTORIAL ACADÉMICO
     Route::post('historial/crear', [HistorialAcademicoController::class, 'crear']);
@@ -88,29 +84,27 @@ Route::prefix('api')->group(function () {
     Route::put('/persona/actualizar/{id}', [PersonaController::class, 'actualizar']);
     Route::delete('/persona/eliminar/{id}', [PersonaController::class, 'eliminar']);
 
-    // EMITIR RESOLUCION
+    // EMITIR RESOLUCIÓN
     Route::post('/resolucion/emitir', [Emitir_ResolucionController::class, 'emitir']);
     Route::get('/resolucion/obtener/{id}', [Emitir_ResolucionController::class, 'obtener']);
     Route::put('/resolucion/actualizar/{id}', [Emitir_ResolucionController::class, 'actualizar']);
     Route::delete('/resolucion/eliminar/{id}', [Emitir_ResolucionController::class, 'eliminar']);
     Route::get('/resolucion/listar', [Emitir_ResolucionController::class, 'listar']);
 
-    // TRAMITES ACADÉMICOS
+    // TRÁMITES ACADÉMICOS
     Route::post('/tramites/crear', [TramiteController::class, 'crear']);
     Route::put('tramites', [TramiteControllerAct::class, 'actualizar']);
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
     Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
 });
 
-
-
 // Rutas web
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 // ============================
 // WEB - PORTAL (2 CARDS)
@@ -175,8 +169,13 @@ Route::get('/email/verify/{token}', [App\Http\Controllers\VerifyEmailController:
     ->middleware('guest')
     ->name('email.verify');
 
-Route::get('/2fa', [TwoFactorController::class, 'form'])->name('twofa.form')->middleware('guest');
-Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('twofa.verify')->middleware('guest');
+Route::get('/2fa', [TwoFactorController::class, 'form'])
+    ->middleware('guest')
+    ->name('twofa.form');
+
+Route::post('/2fa', [TwoFactorController::class, 'verify'])
+    ->middleware('guest')
+    ->name('twofa.verify');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -188,5 +187,12 @@ Route::get('/dashboard', function () {
 // FRONTEND - CAMBIO DE CARRERA
 // ============================
 Route::get('/cambio-carrera', function () {
-    return view('cambio_carrera'); // resources/views/cambio_carrera.blade.php
+    return view('cambio_carrera');
 });
+
+// Ruta módulo de seguridad
+Route::get('/seguridad', [RolController::class, 'index'])->name('seguridad.index');
+Route::post('/seguridad/rol', [RolController::class, 'storeRol'])->name('seguridad.rol.store');
+Route::put('/seguridad/rol/{id}', [RolController::class, 'updateRol'])->name('seguridad.rol.update');
+Route::post('/seguridad/asignar-permisos-objeto', [RolController::class, 'asignarPermisosObjeto'])->name('seguridad.asignar.objeto');
+Route::delete('/seguridad/asignacion/{id}', [RolController::class, 'deleteAsignacion'])->name('seguridad.asignacion.delete');
