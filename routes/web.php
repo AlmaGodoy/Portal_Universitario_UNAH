@@ -30,8 +30,10 @@ Route::get('/cancelacion-excepcional', function () {
 // ==========================================================
 Route::prefix('api')->group(function () {
     // BITACORA
-    Route::get('bitacora/ver/{fecha_inicial}/{fecha_final}', [BitacoraController::class, 'ver']);
-    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha_accion}/{descripcion}', [BitacoraController::class, 'ingresar']);
+
+    Route::get('bitacora/index', [BitacoraController::class, 'index'])->name('bitacora.index');
+    Route::get('bitacora/ver/{fecha_inicial}/{fecha_final}', [BitacoraController::class, 'ver'])->name('bitacora.ver');
+    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha_accion}/{descripcion}', [BitacoraController::class, 'ingresar'])->name('bitacora.ingresar');
 
     //AUDITORIA
     Route::get('auditoria/ver/{fecha_inicial}/{fecha_final}', [AuditoriaController::class, 'ver']);

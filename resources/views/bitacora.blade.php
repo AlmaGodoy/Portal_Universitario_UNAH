@@ -5,12 +5,18 @@
 
     <h3>Bitácora del Sistema</h3>
 
+    @if(session('error'))
+        <div style="color:red; margin-bottom: 10px;">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- FORMULARIO DE CONSULTA -->
-    <form method="GET" action="{{ route('bitacora') }}" class="mb-3">
+    <form method="GET" action="{{ route('bitacora.index') }}" class="mb-3">
 
         <div>
             <label>Fecha de Inicio: </label>
-            <input type="text" name="fecha_inicial" value="{{ request('fecha_inicial') }}">
+            <input type="date" name="fecha_inicial" value="{{ request('fecha_inicial') }}">
         </div>
 
         <div>
@@ -34,22 +40,22 @@
         <tbody>
             @forelse($bitacoras as $item)
                 <tr>
-                    <td>{{ $item->usuario_responsable }}</td>
-                    <td>{{ $item->operacion_realizada }}</td>
-                    <td>{{ $item->detalle }}</td>
-                    <td>{{ $item->fecha_y_hora }}</td>
+                    <td>{{ $item->usuario_responsable ?? '' }}</td>
+                    <td>{{ $item->operacion_realizada ?? '' }}</td>
+                    <td>{{ $item->detalle ?? '' }}</td>
+                    <td>{{ $item->fecha_y_hora ?? '' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5">No hay resultados</td>
+                    <td colspan="4">No hay resultados</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
-    <!-- PAGINACIÓN -->
-    <!-- « Anterior   1   2   3   Siguiente » -->
-    {{ $bitacoras->links() }}
+    <div style="margin-top: 15px;">
+        {{ $bitacoras->links() }}
+    </div>
 
 </div>
 @endsection
