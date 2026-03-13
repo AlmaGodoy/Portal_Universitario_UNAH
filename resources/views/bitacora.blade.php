@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
+@vite(['resources/css/bitacora.css', 'resources/js/bitacora.js'])
+
 <div class="container">
 
     <h3>Bitácora del Sistema</h3>
@@ -12,7 +14,7 @@
     @endif
 
     <!-- FORMULARIO DE CONSULTA -->
-    <form method="GET" action="{{ route('bitacora.index') }}" class="mb-3">
+    <form id="formBitacora" method="GET" action="{{ route('bitacora.index') }}" class="mb-3">
 
         <div>
             <label>Fecha de Inicio: </label>
