@@ -10,6 +10,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\Emitir_ResolucionController;
 use App\Http\Controllers\ValidarDocumentoController;
@@ -17,6 +18,8 @@ use App\Http\Controllers\TramiteController;
 use App\Http\Controllers\TramiteControllerAct;
 use App\Http\Controllers\ReporteTramiteController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\RolController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,8 +28,18 @@ use App\Http\Controllers\HomeController;
 */
 
 Route::prefix('api')->group(function () {
+    // BITACORA
 
-    // CANCELACIÓN EXCEPCIONAL
+    Route::get('bitacora/index', [BitacoraController::class, 'index'])->name('bitacora.index');
+    Route::get('bitacora/ver/{fecha_inicial}/{fecha_final}', [BitacoraController::class, 'ver'])->name('bitacora.ver');
+    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha_accion}/{descripcion}', [BitacoraController::class, 'ingresar'])->name('bitacora.ingresar');
+
+    //AUDITORIA
+    Route::get('auditoria/ver/{fecha_inicial}/{fecha_final}', [AuditoriaController::class, 'ver']);
+    Route::get('auditoria/ingresar/{id_usuario}/{id_objeto}/{accion}/{descripcion}/{fecha}', [AuditoriaController::class, 'ingresar']);
+
+
+    // TUS RUTAS DE CANCELACIÓN (APIS)
     Route::post('cancelaciones/crear', [DocumentoExcepcionalController::class, 'subir']);
     Route::get('cancelaciones/todas', [DocumentoExcepcionalController::class, 'obtenerTodos']);
     Route::get('cancelaciones/detalle/{id}', [DocumentoExcepcionalController::class, 'obtenerCancelacion']);
@@ -88,14 +101,12 @@ Route::prefix('api')->group(function () {
     Route::put('tramites', [TramiteControllerAct::class, 'actualizar']);
     Route::get('/reporte', [ReporteTramiteController::class, 'reporte']);
 
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/register', [UsuarioController::class, 'formRegistro'])->name('register');
+    Route::post('/register', [UsuarioController::class, 'crearWeb'])->name('register.store');
 });
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS WEB
-|--------------------------------------------------------------------------
-*/
-
+// Rutas web
 Auth::routes();
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -150,21 +161,17 @@ Route::middleware(['auth','roleid:5'])
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-});
 
-Route::get('/cancelacion-excepcional', function () {
-    return view('cancelacion');
-})->middleware('auth')->name('cancelacion.index');
+
+});
 
 Route::get('/cambio-carrera', function () {
     return view('cambio_carrera');
 });
 
-/*
-|--------------------------------------------------------------------------
-| CARGAR RUTAS MODULARES
-|--------------------------------------------------------------------------
-*/
-
-require __DIR__.'/seguridad.php';
-require __DIR__.'/login.php';
+// Ruta módulo de seguridad
+Route::get('/seguridad', [RolController::class, 'index'])->name('seguridad.index');
+Route::post('/seguridad/rol', [RolController::class, 'storeRol'])->name('seguridad.rol.store');
+Route::put('/seguridad/rol/{id}', [RolController::class, 'updateRol'])->name('seguridad.rol.update');
+Route::post('/seguridad/asignar-permisos-objeto', [RolController::class, 'asignarPermisosObjeto'])->name('seguridad.asignar.objeto');
+Route::delete('/seguridad/asignacion/{id}', [RolController::class, 'deleteAsignacion'])->name('seguridad.asignacion.delete');
