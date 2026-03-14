@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('portal_login')
 
 @section('content')
 <div class="auth-container">
@@ -30,7 +30,6 @@
             </div>
         @endif
 
-        {{-- ✅ IMPORTANTE: si no hay tipo, mandamos a /portal --}}
         @if(!$tipo)
             <div class="alert alert-warning">
                 Selecciona primero un portal.
@@ -61,10 +60,10 @@
                 <button class="btn btn-primary w-100">Iniciar Sesión</button>
 
                 <div class="text-center mt-3">
-    <a href="{{ route('custom.password.request') }}">
-    ¿Olvidaste tu contraseña?
-</a>
-</div>
+                    <a href="{{ route('custom.password.request') }}">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
 
                 <div class="text-center mt-3">
                     <a href="{{ route('register.tipo', ['tipo' => $tipo]) }}">

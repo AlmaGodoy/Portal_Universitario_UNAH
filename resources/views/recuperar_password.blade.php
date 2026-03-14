@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('portal_login')
 
 @section('content')
 <div class="auth-container">
