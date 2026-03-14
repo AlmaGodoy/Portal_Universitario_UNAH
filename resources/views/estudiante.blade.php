@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('portal_login')
 
 @section('content')
 <div class="container py-4">

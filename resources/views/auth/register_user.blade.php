@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('portal_login')
 
 @section('content')
 <div class="auth-container">
@@ -17,13 +17,17 @@
         @endif
 
         @php
-            $tipoFijo = session('register_tipo'); // estudiante|empleado|null
+            $tipoFijo = session('register_tipo');
         @endphp
 
-        <form method="POST" action="{{ route('register.store') }}" autocomplete="off">
+        <form method="POST"
+              action="{{ route('register.store') }}"
+              autocomplete="off"
+              id="registerForm"
+              data-carreras='@json($carreras)'
+              data-old-carrera="{{ old('id_carrera') ?? '' }}">
             @csrf
 
-            {{-- ================= FILA 1: Nombre (izq) + Correo (der) ================= --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Nombre</label>
@@ -48,7 +52,6 @@
                 </div>
             </div>
 
-            {{-- ================= FILA 2: Contraseña (izq) + Confirmar contraseña (der) ================= --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Contraseña</label>
@@ -59,8 +62,7 @@
                                class="form-control @error('contrasena') is-invalid @enderror"
                                required
                                autocomplete="new-password">
-                        <button class="btn btn-outline-secondary btn-sm"
-                                style="min-width:44px;"
+                        <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
                                 type="button"
                                 id="btn_toggle_pass"
                                 aria-label="Mostrar contraseña">🔓</button>
@@ -77,7 +79,6 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Confirmar contraseña</label>
-
                     <div class="input-group">
                         <input type="password"
                                name="contrasena_confirmation"
@@ -85,14 +86,13 @@
                                class="form-control @error('contrasena_confirmation') is-invalid @enderror"
                                required
                                autocomplete="new-password">
-                        <button class="btn btn-outline-secondary btn-sm"
-                                style="min-width:44px;"
+                        <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
                                 type="button"
                                 id="btn_toggle_pass2"
                                 aria-label="Mostrar confirmación">🔓</button>
                     </div>
 
-                    <div id="pass_mismatch" class="text-danger mt-1" style="display:none;">
+                    <div id="pass_mismatch" class="text-danger mt-1 hidden-field">
                         Las contraseñas no coinciden.
                     </div>
 
@@ -102,7 +102,6 @@
                 </div>
             </div>
 
-            {{-- ================= TIPO + ROL ================= --}}
             @if(!$tipoFijo)
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -114,15 +113,13 @@
                         </select>
                     </div>
 
-                    {{-- Estudiante: rol automático (hidden en backend, aquí no se muestra) --}}
-                    <div class="col-md-6 mb-3" id="rol_auto_box" style="display:none;">
+                    <div class="col-md-6 mb-3 hidden-field" id="rol_auto_box">
                         <label class="form-label">Rol</label>
                         <input type="text" class="form-control" value="estudiante" disabled>
                         <input type="hidden" name="id_rol" id="id_rol_auto" value="2">
                     </div>
 
-                    {{-- Empleado: rol manual --}}
-                    <div class="col-md-6 mb-3" id="rol_manual_box" style="display:none;">
+                    <div class="col-md-6 mb-3 hidden-field" id="rol_manual_box">
                         <label class="form-label">Rol</label>
                         <select name="id_rol" id="id_rol_manual" class="form-select">
                             <option value="">Seleccione...</option>
@@ -140,10 +137,8 @@
                     </div>
                 </div>
             @else
-                {{-- tipo fijo --}}
                 <input type="hidden" name="tipo_usuario" id="tipo_usuario" value="{{ $tipoFijo }}">
 
-                {{-- empleado fijo: mostrar tipo (read-only) y rol --}}
                 @if($tipoFijo === 'empleado')
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -169,13 +164,11 @@
                         </div>
                     </div>
                 @else
-                    {{-- estudiante fijo: rol hidden --}}
                     <input type="hidden" name="id_rol" value="2">
                 @endif
             @endif
 
-            {{-- ================= DEPARTAMENTO (SOLO EMPLEADO) ================= --}}
-            <div class="row" id="box_departamento" style="display:none;">
+            <div class="row hidden-field" id="box_departamento">
                 <div class="col-md-12 mb-3">
                     <label class="form-label">Departamento</label>
                     <select name="id_departamento" id="id_departamento" class="form-select">
@@ -192,8 +185,7 @@
                 </div>
             </div>
 
-            {{-- ================= ESTUDIANTE ================= --}}
-            <div id="bloque_estudiante" class="border rounded p-3 mb-3" style="display:none;">
+            <div id="bloque_estudiante" class="border rounded p-3 mb-3 hidden-field">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Número de cuenta</label>
@@ -220,8 +212,7 @@
                 </div>
             </div>
 
-            {{-- ================= EMPLEADO ================= --}}
-            <div id="bloque_empleado" class="border rounded p-3 mb-3" style="display:none;">
+            <div id="bloque_empleado" class="border rounded p-3 mb-3 hidden-field">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Código empleado</label>
@@ -247,179 +238,10 @@
 
             <button class="btn btn-primary w-100">Registrar</button>
         </form>
- <a href="{{ route('portal') }}" class="btn btn-outline-secondary w-100 mt-2">
-        Volver al portal
-    </a>
+
+        <a href="{{ route('portal') }}" class="btn btn-outline-secondary w-100 mt-2">
+            Volver al portal
+        </a>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    function soloNumerosMax(input, max) {
-        if (!input) return;
-        input.addEventListener('input', function () {
-            this.value = this.value.replace(/\D/g,'').slice(0,max);
-        });
-        input.addEventListener('paste', function (e) {
-            e.preventDefault();
-            const t = (e.clipboardData.getData('text') || '')
-                .replace(/\D/g,'')
-                .slice(0,max);
-            this.value = t;
-        });
-    }
-
-    // Nombre solo letras/espacios
-    const nombreInput = document.getElementById('nombre');
-    if (nombreInput) {
-        const re = /[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g;
-        nombreInput.addEventListener('input', function () {
-            this.value = this.value.replace(re, '');
-        });
-        nombreInput.addEventListener('paste', function (e) {
-            e.preventDefault();
-            this.value = (e.clipboardData.getData('text') || '').replace(re, '');
-        });
-    }
-
-    // Solo números en cuenta
-    soloNumerosMax(document.getElementById('numero_cuenta'), 11);
-
-    // Mostrar / ocultar contraseñas (ojo)
-    function togglePassword(inputId, btnId) {
-        const inp = document.getElementById(inputId);
-        const btn = document.getElementById(btnId);
-        if (!inp || !btn) return;
-
-        btn.addEventListener('click', () => {
-            const isPass = inp.type === 'password';
-            inp.type = isPass ? 'text' : 'password';
-            btn.textContent = isPass ? '🔒' : '🔓';
-        });
-    }
-    togglePassword('contrasena', 'btn_toggle_pass');
-    togglePassword('contrasena_confirmation', 'btn_toggle_pass2');
-
-    // Validación en vivo: no mostrar si está vacío
-    const pass1 = document.getElementById('contrasena');
-    const pass2 = document.getElementById('contrasena_confirmation');
-    const mismatch = document.getElementById('pass_mismatch');
-
-    function validarMatch() {
-        if (!pass1 || !pass2 || !mismatch) return;
-        const v1 = (pass1.value || '');
-        const v2 = (pass2.value || '');
-        mismatch.style.display = (v1.length > 0 && v2.length > 0 && v1 !== v2) ? 'block' : 'none';
-    }
-    pass1?.addEventListener('input', validarMatch);
-    pass2?.addEventListener('input', validarMatch);
-
-    // UI por tipo
-    const tipoSel = document.getElementById('tipo_usuario'); // hidden o select
-    const boxDep = document.getElementById('box_departamento');
-    const depSel = document.getElementById('id_departamento');
-
-    const bloqueEst = document.getElementById('bloque_estudiante');
-    const bloqueEmp = document.getElementById('bloque_empleado');
-
-    const rolAutoBox = document.getElementById('rol_auto_box');
-    const rolManualBox = document.getElementById('rol_manual_box');
-    const rolManualSel = document.getElementById('id_rol_manual');
-
-    const codEmp = document.getElementById('cod_empleado');
-    const tipoEmp = document.getElementById('tipo_empleado');
-
-    const correoHint = document.getElementById('correo_hint');
-    const correoInput = document.getElementById('correo');
-
-    // carreras
-    const carSel = document.getElementById('id_carrera');
-    const carreras = @json($carreras);
-    const oldCarrera = "{{ old('id_carrera') ?? '' }}";
-
-    function cargarCarrerasTodas() {
-        if (!carSel) return;
-        carSel.innerHTML = '<option value="">Seleccione...</option>';
-        carreras.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id_carrera;
-            opt.textContent = c.nombre_carrera;
-            if (oldCarrera && String(oldCarrera) === String(c.id_carrera)) opt.selected = true;
-            carSel.appendChild(opt);
-        });
-    }
-
-    function getTipoActual() {
-        return (tipoSel?.value || '').toLowerCase().trim();
-    }
-
-    function setCorreoRegla(tipo) {
-        if (!correoHint) return;
-        if (tipo === 'estudiante') correoHint.textContent = 'Estudiante: solo correos @unah.hn';
-        else if (tipo === 'empleado') correoHint.textContent = 'Empleado: solo correos @unah.edu.hn';
-        else correoHint.textContent = '';
-    }
-
-    function validarCorreoDominio(tipo) {
-        if (!correoInput) return true;
-        const v = (correoInput.value || '').trim().toLowerCase();
-        if (!v) return true;
-        if (tipo === 'estudiante') return v.endsWith('@unah.hn');
-        if (tipo === 'empleado') return v.endsWith('@unah.edu.hn');
-        return true;
-    }
-
-    function aplicarUI() {
-        const tipo = getTipoActual();
-
-        // ocultar
-        if (bloqueEst) bloqueEst.style.display = 'none';
-        if (bloqueEmp) bloqueEmp.style.display = 'none';
-        if (boxDep) boxDep.style.display = 'none';
-        if (rolAutoBox) rolAutoBox.style.display = 'none';
-        if (rolManualBox) rolManualBox.style.display = 'none';
-
-        // reset required
-        if (depSel) depSel.required = false;
-        if (codEmp) codEmp.required = false;
-        if (tipoEmp) tipoEmp.required = false;
-
-        setCorreoRegla(tipo);
-
-        // estudiante
-        if (tipo === 'estudiante') {
-            if (bloqueEst) bloqueEst.style.display = 'block';
-            cargarCarrerasTodas();
-            return;
-        }
-
-        // empleado
-        if (tipo === 'empleado') {
-            if (rolManualBox) rolManualBox.style.display = 'block';
-
-            if (boxDep) boxDep.style.display = 'block';
-            if (bloqueEmp) bloqueEmp.style.display = 'block';
-
-            if (depSel) depSel.required = true;
-            if (codEmp) codEmp.required = true;
-            if (tipoEmp) tipoEmp.required = true;
-
-            const rolTexto = rolManualSel?.selectedOptions?.[0]?.textContent?.toLowerCase()?.trim() || '';
-            if (tipoEmp) tipoEmp.value = rolTexto;
-        }
-    }
-
-    rolManualSel?.addEventListener('change', aplicarUI);
-    tipoSel?.addEventListener?.('change', aplicarUI);
-
-    correoInput?.addEventListener('input', () => {
-        const tipo = getTipoActual();
-        correoInput.setCustomValidity(validarCorreoDominio(tipo) ? '' : 'Dominio inválido para este tipo.');
-    });
-
-    // init
-    aplicarUI();
-});
-</script>
 @endsection

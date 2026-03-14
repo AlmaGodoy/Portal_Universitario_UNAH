@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('portal_login')
 
 @section('content')
 <div class="auth-container">
@@ -23,7 +23,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('custom.password.update') }}">
+        <form method="POST" action="{{ route('custom.password.update') }}" id="resetPasswordForm">
             @csrf
 
             <input type="hidden" name="token" value="{{ $token }}">
@@ -37,8 +37,7 @@
                            class="form-control"
                            required
                            autocomplete="new-password">
-                    <button class="btn btn-outline-secondary btn-sm"
-                            style="min-width:44px;"
+                    <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
                             type="button"
                             id="btn_toggle_pass"
                             aria-label="Mostrar contraseña">👁️</button>
@@ -54,14 +53,13 @@
                            class="form-control"
                            required
                            autocomplete="new-password">
-                    <button class="btn btn-outline-secondary btn-sm"
-                            style="min-width:44px;"
+                    <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
                             type="button"
                             id="btn_toggle_pass2"
                             aria-label="Mostrar confirmación">👁️</button>
                 </div>
 
-                <div id="pass_mismatch" class="text-danger mt-1" style="display:none;">
+                <div id="pass_mismatch" class="text-danger mt-1 hidden-field">
                     Las contraseñas no coinciden.
                 </div>
             </div>
@@ -81,43 +79,4 @@
 
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    function togglePassword(inputId, btnId) {
-        const inp = document.getElementById(inputId);
-        const btn = document.getElementById(btnId);
-
-        if (!inp || !btn) return;
-
-        btn.addEventListener('click', () => {
-            const isPass = inp.type === 'password';
-            inp.type = isPass ? 'text' : 'password';
-            btn.textContent = isPass ? '🔒' : '👁️';
-        });
-    }
-
-    togglePassword('password', 'btn_toggle_pass');
-    togglePassword('password_confirmation', 'btn_toggle_pass2');
-
-    const pass1 = document.getElementById('password');
-    const pass2 = document.getElementById('password_confirmation');
-    const mismatch = document.getElementById('pass_mismatch');
-
-    function validarMatch() {
-        if (!pass1 || !pass2 || !mismatch) return;
-
-        const v1 = pass1.value || '';
-        const v2 = pass2.value || '';
-
-        mismatch.style.display = (v1.length > 0 && v2.length > 0 && v1 !== v2)
-            ? 'block'
-            : 'none';
-    }
-
-    pass1?.addEventListener('input', validarMatch);
-    pass2?.addEventListener('input', validarMatch);
-});
-</script>
 @endsection
