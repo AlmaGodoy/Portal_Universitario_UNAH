@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\Bitacora;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +12,21 @@ use Illuminate\Validation\Rules\Password;
 
 class UsuarioController extends Controller
 {
-    /**
-     * Muestra el formulario de registro con la carga de datos necesarios.
-     */
+    private function registrarBitacora(?int $idUsuario, string $accion, string $descripcion, ?int $idObjeto = null): void
+    {
+        try {
+            DB::table('tbl_bitacora')->insert([
+                'id_usuario' => $idUsuario,
+                'id_objeto' => $idObjeto,
+                'accion' => $accion,
+                'fecha_accion' => now(),
+                'descripcion' => $descripcion,
+            ]);
+        } catch (\Throwable $e) {
+            //
+        }
+    }
+
     public function formRegistro()
     {
         $roles = DB::table('tbl_rol')
@@ -37,21 +48,14 @@ class UsuarioController extends Controller
         return view('auth.register_user', compact('roles', 'departamentos', 'carreras'));
     }
 
-    /**
-     * Define el tipo de registro en sesión y redirige al formulario.
-     */
     public function formRegistroTipo(string $tipo)
     {
         session(['register_tipo' => $tipo]);
         return $this->formRegistro();
     }
 
-    /**
-     * Procesa la creación del usuario.
-     */
     public function crearWeb(Request $request)
     {
-        // 1. Preparación de datos
         $tipoFijo = session('register_tipo');
         if ($tipoFijo) {
             $request->merge(['tipo_usuario' => $tipoFijo]);
@@ -60,62 +64,74 @@ class UsuarioController extends Controller
         $correo = strtolower(trim((string) $request->correo));
         $request->merge(['correo' => $correo]);
 
-        // 2. Validación General
         $request->validate([
-            'nombre'        => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
-            'correo'        => ['required', 'email', 'max:100'],
-            'contrasena'    => [
+            'nombre' => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'correo' => ['required', 'email', 'max:100'],
+            'contrasena' => [
                 'required',
                 'max:255',
                 'confirmed',
                 Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
             ],
-            'tipo_usuario'    => 'required|in:estudiante,empleado',
-            'id_rol'          => 'nullable|integer',
-            'numero_cuenta'   => ['nullable', 'digits:11'],
-            'id_carrera'      => 'nullable|integer',
+            'tipo_usuario' => 'required|in:estudiante,empleado',
+            'id_rol' => 'nullable|integer',
+            'numero_cuenta' => ['nullable', 'digits:11'],
+            'id_carrera' => 'nullable|integer',
             'id_departamento' => 'nullable|integer',
-            'cod_empleado'    => 'nullable|string|max:50',
-            'tipo_empleado'   => 'nullable|string|max:50',
+            'cod_empleado' => 'nullable|string|max:50',
+            'tipo_empleado' => 'nullable|string|max:50',
         ], [
-            'nombre.regex'           => 'El nombre solo debe contener letras y espacios.',
-            'numero_cuenta.digits'   => 'El número de cuenta debe tener exactamente 11 números.',
-            'contrasena.confirmed'   => 'Las contraseñas no coinciden.',
+            'nombre.regex' => 'El nombre solo debe contener letras y espacios.',
+            'numero_cuenta.digits' => 'El número de cuenta debe tener exactamente 11 números.',
+            'contrasena.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
-        $tipo = $request->tipo_usuario;
+        $tipo = strtolower(trim((string) $request->tipo_usuario));
 
-        // 3. Validaciones de Dominio UNAH
         if ($tipo === 'estudiante' && !str_ends_with($correo, '@unah.hn')) {
-            return back()->withErrors(['correo' => 'Estudiante: el correo debe terminar en @unah.hn'])->withInput();
+            return back()->withErrors([
+                'correo' => 'Estudiante: el correo debe terminar en @unah.hn'
+            ])->withInput();
         }
 
         if ($tipo === 'empleado' && !str_ends_with($correo, '@unah.edu.hn')) {
-            return back()->withErrors(['correo' => 'Empleado: el correo debe terminar en @unah.edu.hn'])->withInput();
+            return back()->withErrors([
+                'correo' => 'Empleado: el correo debe terminar en @unah.edu.hn'
+            ])->withInput();
         }
 
-        // 4. Lógica por Tipo de Usuario
         if ($tipo === 'estudiante') {
-            $request->merge(['id_rol' => 2]); // Rol fijo para estudiante
             $request->validate([
                 'numero_cuenta' => ['required', 'digits:11'],
-                'id_carrera'    => 'required|integer',
+                'id_carrera' => 'required|integer',
+            ], [
+                'numero_cuenta.required' => 'Número de cuenta requerido.',
+                'id_carrera.required' => 'Carrera requerida.',
             ]);
-            $request->merge(['id_departamento' => null, 'cod_empleado' => null, 'tipo_empleado' => null]);
+
+            $request->merge([
+                'id_rol' => 2,
+                'id_departamento' => null,
+                'cod_empleado' => null,
+                'tipo_empleado' => null,
+            ]);
         } else {
             $request->validate([
-                'id_rol'          => 'required|integer|in:4,5',
+                'id_rol' => 'required|integer|in:4,5',
                 'id_departamento' => 'required|integer',
-                'cod_empleado'    => 'required|string|max:50',
-                'tipo_empleado'   => 'required|string|max:50',
+                'cod_empleado' => 'required|string|max:50',
+                'tipo_empleado' => 'required|string|in:coordinador,secretario|max:50',
+            ], [
+                'tipo_empleado.in' => 'El tipo de empleado debe ser coordinador o secretario.'
             ]);
-            $request->merge(['numero_cuenta' => null, 'id_carrera' => null]);
+
+            $request->merge([
+                'numero_cuenta' => null,
+                'id_carrera' => null,
+            ]);
         }
 
-        // 5. Ejecución en Base de Datos
         try {
-            DB::beginTransaction();
-
             $passwordHash = Hash::make($request->contrasena);
 
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
@@ -128,63 +144,120 @@ class UsuarioController extends Controller
                 $request->id_carrera,
                 $request->id_departamento,
                 $request->cod_empleado,
-                $request->tipo_empleado
+                $request->tipo_empleado,
             ]);
 
-            $resultado = $res[0]->resultado ?? 'ERROR';
-            $mensaje   = $res[0]->mensaje ?? 'Error desconocido en el procedimiento.';
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'Respuesta inválida del procedimiento';
 
             if ($resultado !== 'OK') {
-                DB::rollBack();
                 return back()->withErrors(['registro' => $mensaje])->withInput();
             }
 
-            // Obtener el ID del usuario recién creado
-            $u = DB::table('tbl_usuario as u')
-                ->join('tbl_persona as p', 'p.id_persona', '=', 'u.id_persona')
-                ->where('p.correo_institucional', $request->correo)
-                ->select('u.id_usuario')
-                ->first();
+            $idUsuario = $row->id_usuario ?? null;
 
-            if (!$u) {
-                DB::rollBack();
-                return back()->withErrors(['registro' => 'Error al recuperar el usuario creado.'])->withInput();
+            if (!$idUsuario) {
+                return redirect()->route('portal')
+                    ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
-            // Registro en Bitácora
-            Bitacora::registrar((int)$u->id_usuario, 'registro_usuario', 'Nuevo usuario registrado: ' . $request->correo);
-
-            // 6. Generación de Token de Verificación
             $token = Str::random(64);
-            DB::table('tbl_login_autentications')->updateOrInsert(
-                ['id_usuario' => $u->id_usuario, 'tipo' => 'email_verification'],
-                [
-                    'valor_hash' => hash('sha256', $token),
-                    'expires_at' => now()->addMinutes(60),
-                    'used_at'    => null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
 
-            DB::commit();
+            DB::table('tbl_login_autentications')
+                ->where('id_usuario', $idUsuario)
+                ->where('tipo', 'email_verification')
+                ->delete();
 
-            // 7. Envío de Correo
+            DB::table('tbl_login_autentications')->insert([
+                'id_usuario' => $idUsuario,
+                'tipo' => 'email_verification',
+                'valor_hash' => hash('sha256', $token),
+                'expires_at' => now()->addMinutes(60),
+                'used_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
             $link = route('email.verify', ['token' => $token]);
+
             try {
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
-                Bitacora::registrar((int)$u->id_usuario, 'email_verificacion_enviada', 'Se envió correo de verificación a ' . $request->correo);
+
+                $this->registrarBitacora(
+                    (int) $idUsuario,
+                    'email_verificacion_enviada',
+                    'Se envió correo de verificación a ' . $request->correo
+                );
             } catch (\Throwable $e) {
-                Bitacora::registrar((int)$u->id_usuario, 'email_verificacion_fallida', 'Fallo envío a ' . $request->correo . ' | ' . $e->getMessage());
-                return redirect()->route('portal')->with('status', 'Usuario creado, pero hubo un error al enviar el correo de activación.');
+                $this->registrarBitacora(
+                    (int) $idUsuario,
+                    'email_verificacion_fallida',
+                    'Fallo envío a ' . $request->correo . ' | ' . $e->getMessage()
+                );
+
+                return redirect()->route('portal')
+                    ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
             }
 
             session()->forget('register_tipo');
-            return redirect()->route('portal')->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para iniciar sesión.');
 
+            return redirect()->route('portal')
+                ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
         } catch (\Exception $e) {
+            return back()->withErrors(['registro' => $e->getMessage()])->withInput();
+        }
+    }
+
+    public function verificarCorreo(string $token)
+    {
+        try {
+            $hash = hash('sha256', $token);
+
+            $registro = DB::table('tbl_login_autentications')
+                ->where('tipo', 'email_verification')
+                ->where('valor_hash', $hash)
+                ->whereNull('used_at')
+                ->where('expires_at', '>=', now())
+                ->first();
+
+            if (!$registro) {
+                return redirect()->route('portal')
+                    ->with('status', 'El enlace de verificación es inválido, expiró o ya fue usado.');
+            }
+
+            DB::beginTransaction();
+
+            DB::table('tbl_usuario')
+                ->where('id_usuario', $registro->id_usuario)
+                ->update([
+                    'estado_cuenta' => 1,
+                ]);
+
+            DB::table('tbl_login_autentications')
+                ->where('id_usuario', $registro->id_usuario)
+                ->where('tipo', 'email_verification')
+                ->where('valor_hash', $hash)
+                ->update([
+                    'used_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            DB::commit();
+
+            $this->registrarBitacora(
+                (int) $registro->id_usuario,
+                'email_verificado',
+                'Cuenta activada mediante verificación por correo.'
+            );
+
+            return redirect()->route('portal')
+                ->with('status', 'Cuenta verificada correctamente. Ya puedes iniciar sesión.');
+        } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withErrors(['registro' => 'Ocurrió un error inesperado: ' . $e->getMessage()])->withInput();
+
+            return redirect()->route('portal')
+                ->with('status', 'No se pudo verificar la cuenta. Intenta nuevamente.');
         }
     }
 }
