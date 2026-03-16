@@ -23,6 +23,7 @@ class UsuarioController extends Controller
                 'descripcion' => $descripcion,
             ]);
         } catch (\Throwable $e) {
+            //
         }
     }
 
@@ -60,7 +61,7 @@ class UsuarioController extends Controller
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
-        $correo = strtolower(trim((string)$request->correo));
+        $correo = strtolower(trim((string) $request->correo));
         $request->merge(['correo' => $correo]);
 
         $request->validate([
@@ -73,6 +74,7 @@ class UsuarioController extends Controller
                 Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
             ],
             'tipo_usuario' => 'required|in:estudiante,empleado',
+            'id_rol' => 'nullable|integer',
             'numero_cuenta' => ['nullable', 'digits:11'],
             'id_carrera' => 'nullable|integer',
             'id_departamento' => 'nullable|integer',
@@ -84,7 +86,7 @@ class UsuarioController extends Controller
             'contrasena.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
-        $tipo = strtolower(trim((string)$request->tipo_usuario));
+        $tipo = strtolower(trim((string) $request->tipo_usuario));
 
         if ($tipo === 'estudiante' && !str_ends_with($correo, '@unah.hn')) {
             return back()->withErrors([
@@ -108,12 +110,14 @@ class UsuarioController extends Controller
             ]);
 
             $request->merge([
+                'id_rol' => 2,
                 'id_departamento' => null,
                 'cod_empleado' => null,
                 'tipo_empleado' => null,
             ]);
         } else {
             $request->validate([
+                'id_rol' => 'required|integer|in:4,5',
                 'id_departamento' => 'required|integer',
                 'cod_empleado' => 'required|string|max:50',
                 'tipo_empleado' => 'required|string|in:coordinador,secretario|max:50',
@@ -130,22 +134,22 @@ class UsuarioController extends Controller
         try {
             $passwordHash = Hash::make($request->contrasena);
 
-            // Nuevo SP: ya no recibe id_rol
-            $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $request->nombre,
                 $request->correo,
                 $passwordHash,
                 $request->tipo_usuario,
+                $request->id_rol,
                 $request->numero_cuenta,
                 $request->id_carrera,
                 $request->id_departamento,
                 $request->cod_empleado,
-                $request->tipo_empleado
+                $request->tipo_empleado,
             ]);
 
             $row = $res[0] ?? null;
             $resultado = $row->resultado ?? 'ERROR';
-            $mensaje   = $row->mensaje ?? 'Respuesta inválida del procedimiento';
+            $mensaje = $row->mensaje ?? 'Respuesta inválida del procedimiento';
 
             if ($resultado !== 'OK') {
                 return back()->withErrors(['registro' => $mensaje])->withInput();
@@ -181,13 +185,13 @@ class UsuarioController extends Controller
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
 
                 $this->registrarBitacora(
-                    (int)$idUsuario,
+                    (int) $idUsuario,
                     'email_verificacion_enviada',
                     'Se envió correo de verificación a ' . $request->correo
                 );
             } catch (\Throwable $e) {
                 $this->registrarBitacora(
-                    (int)$idUsuario,
+                    (int) $idUsuario,
                     'email_verificacion_fallida',
                     'Fallo envío a ' . $request->correo . ' | ' . $e->getMessage()
                 );
@@ -202,6 +206,58 @@ class UsuarioController extends Controller
                 ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
         } catch (\Exception $e) {
             return back()->withErrors(['registro' => $e->getMessage()])->withInput();
+        }
+    }
+
+    public function verificarCorreo(string $token)
+    {
+        try {
+            $hash = hash('sha256', $token);
+
+            $registro = DB::table('tbl_login_autentications')
+                ->where('tipo', 'email_verification')
+                ->where('valor_hash', $hash)
+                ->whereNull('used_at')
+                ->where('expires_at', '>=', now())
+                ->first();
+
+            if (!$registro) {
+                return redirect()->route('portal')
+                    ->with('status', 'El enlace de verificación es inválido, expiró o ya fue usado.');
+            }
+
+            DB::beginTransaction();
+
+            DB::table('tbl_usuario')
+                ->where('id_usuario', $registro->id_usuario)
+                ->update([
+                    'estado_cuenta' => 1,
+                ]);
+
+            DB::table('tbl_login_autentications')
+                ->where('id_usuario', $registro->id_usuario)
+                ->where('tipo', 'email_verification')
+                ->where('valor_hash', $hash)
+                ->update([
+                    'used_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            DB::commit();
+
+            $this->registrarBitacora(
+                (int) $registro->id_usuario,
+                'email_verificado',
+                'Cuenta activada mediante verificación por correo.'
+            );
+
+            return redirect()->route('portal')
+                ->with('status', 'Cuenta verificada correctamente. Ya puedes iniciar sesión.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return redirect()->route('portal')
+                ->with('status', 'No se pudo verificar la cuenta. Intenta nuevamente.');
         }
     }
 }
