@@ -80,6 +80,48 @@ Route::get('/cambio-carrera', fn() => view('cambio_carrera'));
 |--------------------------------------------------------------------------
 */
 
+
+Route::middleware(['auth', 'roleid:5'])
+    ->get('/panel-secretario', fn() => view('panel.secretario'));
+
+Route::get('/register/confirm/{token}', [UsuarioController::class, 'confirmarRegistro'])
+    ->middleware('guest')
+    ->name('register.confirm');
+
+Route::get('/email/verify/{token}', [App\Http\Controllers\VerifyEmailController::class, 'verify'])
+    ->middleware('guest')
+    ->name('email.verify');
+
+Route::get('/2fa', [TwoFactorController::class, 'form'])
+    ->middleware('guest')
+    ->name('twofa.form');
+
+Route::post('/2fa', [TwoFactorController::class, 'verify'])
+    ->middleware('guest')
+    ->name('twofa.verify');
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+
+});
+
+// Ruta de cancelación excepcional
+Route::get('/cancelacion-excepcional', function () {
+    return view('cancelacion');
+})->middleware('auth')->name('cancelacion.index');
+
+// ============================
+// FRONTEND - CAMBIO DE CARRERA
+// ============================
+Route::get('/cambio-carrera', function () {
+    return view('cambio_carrera');
+});
+
 require __DIR__.'/Modulos/login.php';
 require __DIR__.'/Modulos/seguridad.php';
 require __DIR__.'/Modulos/usuarios.php'; // 👈 NUEVO
+require __DIR__.'/Modulos/cambiocarrera.php';
+require __DIR__.'/Modulos/documentos.php';
+
+
+

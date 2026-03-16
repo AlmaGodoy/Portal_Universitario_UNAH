@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cambio de Carrera</title>
 
-    {{-- ✅ CARGA CORRECTA CON VITE --}}
+ 
     @vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera.js'])
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <form id="formCambioCarrera">
         <!-- (TEMPORAL) mientras no hay login -->
-        <input type="hidden" id="id_persona" value="12">
+        <input type="hidden" id="id_persona" value="20">
         <input type="hidden" id="id_calendario" value="">
 
         <label for="id_carrera_destino">Carrera destino</label>
