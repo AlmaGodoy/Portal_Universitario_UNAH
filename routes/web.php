@@ -1,127 +1,21 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 
-use App\Http\Controllers\DocumentoExcepcionalController;
-use App\Http\Controllers\CambioCarreraController;
-use App\Http\Controllers\HistorialAcademicoController;
-use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\PagoController;
-use App\Http\Controllers\DocumentoController;
-use App\Http\Controllers\AuditoriaController;
-use App\Http\Controllers\BitacoraController;
-use App\Http\Controllers\PersonaController;
-use App\Http\Controllers\Emitir_ResolucionController;
-use App\Http\Controllers\ValidarDocumentoController;
-use App\Http\Controllers\TramiteController;
-use App\Http\Controllers\TramiteControllerAct;
-use App\Http\Controllers\ReporteTramiteController;
-use App\Http\Controllers\HomeController;
-
-/*
-|--------------------------------------------------------------------------
-| API
-|--------------------------------------------------------------------------
-*/
-
-Route::prefix('api')->group(function () {
-
-    // BITACORA
-    Route::get('bitacora/index', [BitacoraController::class, 'index']);
-    Route::get('bitacora/ver/{fi}/{ff}', [BitacoraController::class, 'ver']);
-    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha}/{desc}', [BitacoraController::class, 'ingresar']);
-
-    // AUDITORIA
-    Route::get('auditoria/ver/{fi}/{ff}', [AuditoriaController::class, 'ver']);
-    Route::get('auditoria/ingresar/{id_usuario}/{id_objeto}/{accion}/{descripcion}/{fecha}', [AuditoriaController::class, 'ingresar']);
-
-    // CANCELACIONES
-    Route::post('cancelaciones/crear', [DocumentoExcepcionalController::class, 'subir']);
-    Route::get('cancelaciones/todas', [DocumentoExcepcionalController::class, 'obtenerTodos']);
-
-    // ... (puedes dejar el resto igual como lo tienes)
+//Ruta principal (Login)
+Route::get('/', function () {
+    return view('portal_login');
 });
 
-/*
-|--------------------------------------------------------------------------
-| WEB BASE
-|--------------------------------------------------------------------------
-*/
+//Autocarga de módulos
 
-//Auth::routes();
+$path = __DIR__ . '/Modulos';
 
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+if (is_dir($path)) {
+    foreach (glob($path . "/*.php") as $file) {
+        require $file;
+    }
+}
 
-Route::get('/', fn() => redirect()->route('portal'))->name('root');
-
-Route::get('/portal', fn() => view('auth.choose_portal'))
-    ->middleware('guest')
-    ->name('portal');
-
-
-/*
-|--------------------------------------------------------------------------
-| VISTAS
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/dashboard', fn() => view('dashboard'));
-
-Route::get('/cancelacion-excepcional', fn() => view('cancelacion'))
-    ->middleware('auth')
-    ->name('cancelacion.index');
-
-Route::get('/cambio-carrera', fn() => view('cambio_carrera'));
-
-/*
-|--------------------------------------------------------------------------
-| MODULOS
-|--------------------------------------------------------------------------
-*/
-
-
-Route::middleware(['auth', 'roleid:5'])
-    ->get('/panel-secretario', fn() => view('panel.secretario'));
-
-Route::get('/register/confirm/{token}', [UsuarioController::class, 'confirmarRegistro'])
-    ->middleware('guest')
-    ->name('register.confirm');
-
-Route::get('/email/verify/{token}', [App\Http\Controllers\VerifyEmailController::class, 'verify'])
-    ->middleware('guest')
-    ->name('email.verify');
-
-Route::get('/2fa', [TwoFactorController::class, 'form'])
-    ->middleware('guest')
-    ->name('twofa.form');
-
-Route::post('/2fa', [TwoFactorController::class, 'verify'])
-    ->middleware('guest')
-    ->name('twofa.verify');
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-
-});
-
-// Ruta de cancelación excepcional
-Route::get('/cancelacion-excepcional', function () {
-    return view('cancelacion');
-})->middleware('auth')->name('cancelacion.index');
-
-// ============================
-// FRONTEND - CAMBIO DE CARRERA
-// ============================
-Route::get('/cambio-carrera', function () {
-    return view('cambio_carrera');
-});
-
-require __DIR__.'/Modulos/login.php';
-require __DIR__.'/Modulos/seguridad.php';
-require __DIR__.'/Modulos/usuarios.php'; // 👈 NUEVO
-require __DIR__.'/Modulos/cambiocarrera.php';
-require __DIR__.'/Modulos/documentos.php';
-
-
-
+//NADIE DEBE TOCAR ESTE ARCHIVO WEB.PHP, SI CREEN QUE ES NECESARIO DEBEN CONSULTAR A SU
+//PRO MANAGER PRIMERO
