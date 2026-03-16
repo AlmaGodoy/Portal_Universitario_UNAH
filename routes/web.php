@@ -120,4 +120,8 @@ Route::get('/cambio-carrera', function () {
 require __DIR__.'/Modulos/login.php';
 require __DIR__.'/Modulos/seguridad.php';
 require __DIR__.'/Modulos/usuarios.php'; // 👈 NUEVO
+require __DIR__.'/Modulos/cambiocarrera.php';
+require __DIR__.'/Modulos/documentos.php';
+
+
 
