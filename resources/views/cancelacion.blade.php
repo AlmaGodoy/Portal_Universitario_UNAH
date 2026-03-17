@@ -1,127 +1,188 @@
-@extends('layouts.app')
+@extends('portal_login')
 
 @section('content')
-<div class="container" style="padding-top: 100px; padding-bottom: 50px;">
-    <div class="row justify-content-center">
-        <div class="col-md-9">
-            <div class="card shadow border-0" id="cardPaso1">
-                <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Paso 1: Solicitud de Cancelación Digital</h4>
-                </div>
-                <div class="card-body p-4">
-                    <div class="alert alert-info">
-                        <small><i class="fas fa-info-circle me-1"></i> Según los <strong>Artículos 222-224</strong>, esta solicitud será evaluada por su Coordinación de Carrera en un máximo de 3 días hábiles.</small>
-                    </div>
+@vite(['resources/css/cancelacion.css', 'resources/js/cancelacion.js'])
 
-                    <form id="formCancelacion">
-                        @csrf
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Nombre Completo</label>
-                                <input type="text" class="form-control bg-light" name="nombre_estudiante" value="Alma Patricia Godoy Cruz" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Correo Institucional</label>
-                                <input type="email" class="form-control bg-light" name="email" value="alma.godoy@unah.hn" readonly>
-                            </div>
-                        </div>
+<div class="puma-page">
 
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Prioridad de la Solicitud</label>
-                                <select name="prioridad" id="prioridad" class="form-select" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="Alta">Alta (Casos de emergencia)</option>
-                                    <option value="Media">Media</option>
-                                    <option value="Baja">Baja</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Tipo de Cancelación</label>
-                                <select name="tipo_cancelacion" class="form-select" required>
-                                    <option value="Parcial">Parcial (Solo algunas asignaturas)</option>
-                                    <option value="Total">Total (Todo el período)</option>
-                                </select>
-                            </div>
-                        </div>
+    {{-- ─── Topbar ──────────────────────────────── --}}
+    <nav class="puma-topbar">
+    <a href="/" class="puma-logo-wrap">
+        {{-- AJUSTE: Reemplazamos <img> por este div con el emoji y estilo --}}
+        <div class="nav-bee-circle">
+            🐝
+        </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Explicación de los Hechos (Art. 224)</label>
-                            <textarea name="observacion_inicial" id="observacion_inicial" class="form-control" rows="4"
-                                placeholder="Describa brevemente la razón de su cancelación..." required></textarea>
-                            <div class="form-text">Esta descripción sustituye el cuadro de 'Hechos' del formato físico.</div>
-                        </div>
+        <div class="puma-logo-text">
+            <span class="brand">Puma<span>Gestión</span></span>
+            <span class="sub">FCEAC · UNAH</span>
+        </div>
+    </a>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" id="btnSiguiente">
-                                Continuar a Carga de Documentos <i class="fas fa-arrow-right ms-2"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <nav class="puma-breadcrumb">
+            <a href="/">Inicio</a>
+            <span class="sep">›</span>
+            <a href="#">Gestión Académica</a>
+            <span class="sep">›</span>
+            <span class="current">Cancelación Digital</span>
+        </nav>
+    </nav>
+
+    {{-- ─── Main content ────────────────────────── --}}
+    <div class="puma-container">
+
+        {{-- Paso indicador --}}
+        <div class="puma-steps">
+            <div class="puma-step puma-step--active">
+                <div class="puma-step__circle">1</div>
+                <div class="puma-step__label">Información</div>
             </div>
+            <div class="puma-step-connector"></div>
 
-            <div class="card shadow border-0 mt-4 d-none" id="cardPaso2">
-                <div class="card-header bg-success text-white py-3">
-                    <h4 class="mb-0"><i class="fas fa-file-upload me-2"></i>Paso 2: Requisitos y Evidencias</h4>
-                </div>
-                <div class="card-body p-4">
-                    <div class="mb-4">
-                        <span class="badge bg-secondary px-3 py-2">ID Trámite: <span id="displayIdTramite"></span></span>
-                    </div>
+            <div class="puma-step puma-step--inactive">
+                <div class="puma-step__circle">2</div>
+                <div class="puma-step__label">Requisitos</div>
+            </div>
+            <div class="puma-step-connector"></div>
 
-                    <form id="formDocumento" enctype="multipart/form-data">
-                        @csrf
-                        <input type="hidden" name="id_tramite" id="id_tramite_hidden">
+            <div class="puma-step puma-step--inactive">
+                <div class="puma-step__circle">3</div>
+                <div class="puma-step__label">Asignaturas</div>
+            </div>
+            <div class="puma-step-connector"></div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold text-primary">1. Identificación (DNI)</label>
-                                <input type="file" name="archivo_dni" class="form-control" accept="image/*,.pdf" required>
-                                <div class="form-text">Copia legible por ambos lados.</div>
-                            </div>
-
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold text-primary">2. Forma 003</label>
-                                <input type="file" name="archivo_forma" class="form-control" accept=".pdf" required>
-                                <div class="form-text">Descargada de la página de Registro.</div>
-                            </div>
-
-                            <hr>
-
-                            <div class="col-12 mb-4">
-                                <label class="form-label fw-bold text-danger">3. Documentación de Respaldo (Evidencia)</label>
-                                <input type="file" name="archivo_pdf" id="archivo_pdf" class="form-control" accept=".pdf" required>
-                                <div class="form-text">
-                                    Suba el respaldo correspondiente a su causa:
-                                    <ul class="mt-1">
-                                        []<li><strong>Salud:</strong> Certificación médica oficial[cite: 74].</li>
-                                        []<li><strong>Trabajo:</strong> Constancia de la Jefatura de Personal[cite: 78].</li>
-                                        []<li><strong>Calamidad:</strong> Acta de defunción o certificación del RNP[cite: 77].</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-warning mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="declaracion" required>
-                                <label class="form-check-label" for="declaracion">
-                                    <strong>Declaración Jurada:</strong> Declaro que la información y documentos adjuntos son verídicos. Entiendo que esto equivale a mi firma física en el proceso institucional.
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">Finalizar Trámite Digital</button>
-                            <button type="button" class="btn btn-link text-muted" onclick="window.location.reload()">Cancelar y Empezar de Nuevo</button>
-                        </div>
-                    </form>
-                </div>
+            <div class="puma-step puma-step--inactive">
+                <div class="puma-step__circle">4</div>
+                <div class="puma-step__label">Confirmación</div>
             </div>
         </div>
-    </div>
-</div>
 
-@vite(['resources/js/cancelacion.js'])
+        {{-- Card principal --}}
+        <div class="puma-card" id="cardPaso1">
+
+            {{-- Header --}}
+            <div class="puma-card__header">
+                <div class="puma-card__header-icon">📋</div>
+                <div>
+                    <h4 class="puma-card__header-title">Solicitud de Cancelación Digital</h4>
+                    <p class="puma-card__header-sub">Gestión Académica FCEAC</p>
+                </div>
+                <span class="puma-card__header-badge">Art. 222–224</span>
+            </div>
+
+            {{-- Body --}}
+            <div class="puma-card__body">
+
+                {{-- Alerta informativa --}}
+                <div class="puma-alert">
+                    <span class="puma-alert__icon">⚠️</span>
+                    <p class="puma-alert__text">
+                        <strong>Artículos 222-224:</strong>
+                        Su solicitud será evaluada por la Coordinación en un máximo de
+                        <strong>3 días hábiles</strong> a partir de su envío.
+                    </p>
+                </div>
+
+                <form id="formCancelacion" action="/cancelacion-excepcional" method="POST">
+                    @csrf
+
+                    {{-- ── Datos del solicitante ──────────── --}}
+                    <div class="puma-section"><span>Datos del Solicitante</span></div>
+
+                    <div class="puma-grid">
+                        <div>
+                            <label class="puma-label">Nombre Completo</label>
+                            <div class="puma-input-wrap">
+                                <span class="puma-input-icon">👤</span>
+                                <input type="text"
+                                       class="puma-input"
+                                       value="{{ auth()->user()->name ?? 'Alma Patricia Godoy Cruz' }}"
+                                       readonly>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="puma-label">Correo Institucional</label>
+                            <div class="puma-input-wrap">
+                                <span class="puma-input-icon">✉️</span>
+                                <input type="email"
+                                       class="puma-input"
+                                       value="{{ auth()->user()->email ?? 'alma.godoy@unah.hn' }}"
+                                       readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Detalles de la solicitud ───────── --}}
+                    <div class="puma-section" style="margin-top:24px"><span>Detalles de la Solicitud</span></div>
+
+                    <div class="puma-grid">
+                        <div>
+                            <label class="puma-label">
+                                Prioridad <span class="req">*</span>
+                            </label>
+                            <div class="puma-input-wrap">
+                                <span class="puma-input-icon">🚦</span>
+                                <select name="prioridad" id="prioridad" class="puma-select" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Alta"  {{ old('prioridad') === 'Alta'  ? 'selected' : '' }}>🔴 Alta (Emergencia)</option>
+                                    <option value="Media" {{ old('prioridad') === 'Media' ? 'selected' : '' }}>🟡 Media</option>
+                                    <option value="Baja"  {{ old('prioridad') === 'Baja'  ? 'selected' : '' }}>🟢 Baja</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="puma-label">
+                                Tipo de Cancelación <span class="req">*</span>
+                            </label>
+                            <div class="puma-input-wrap">
+                                <span class="puma-input-icon">📂</span>
+                                <select name="tipo_cancelacion" id="tipo_cancelacion" class="puma-select" required>
+                                    <option value=" Parcial" {{ old('tipo_cancelacion', 'Parcial') === 'Parcial' ? 'selected' : '' }}>Parcial (Asignaturas)</option>
+                                    <option value="Total"   {{ old('tipo_cancelacion') === 'Total' ? 'selected' : '' }}>Total (Período)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Justificación ───────────────────── --}}
+                    <div class="puma-section" style="margin-top:24px"><span>Justificación</span></div>
+
+                    <div>
+                        <label class="puma-label">
+                            Explicación de los Hechos
+                            <span class="req">*</span>
+                            <span class="art">(Art. 224)</span>
+                        </label>
+                        <div class="puma-input-wrap">
+                            <span class="puma-input-icon puma-input-icon--top">📝</span>
+                            <textarea name="observacion_inicial"
+                                      id="observacion"
+                                      class="puma-textarea"
+                                      rows="5"
+                                      maxlength="500"
+                                      placeholder="Describa el motivo de la solicitud con el mayor detalle posible..."
+                                      required>{{ old('observacion_inicial') }}</textarea>
+                        </div>
+                        <div class="puma-char-count" id="charCount">0 / 500</div>
+                    </div>
+
+                    {{-- ── Submit ──────────────────────────── --}}
+                    <button type="submit" id="btnSubmit" class="puma-btn">
+                        <div class="puma-spinner"></div>
+                        <span class="puma-btn__text">Continuar a Requisitos</span>
+                        <span class="puma-btn__arrow">›</span>
+                    </button>
+
+                </form>
+
+                <p class="puma-footer-note">🔒 Sus datos están protegidos · Solicitud cifrada con SSL</p>
+
+            </div>{{-- /.puma-card__body --}}
+        </div>{{-- /.puma-card --}}
+
+    </div>{{-- /.puma-container --}}
+</div>{{-- /.puma-page --}}
+
 @endsection

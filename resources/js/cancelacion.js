@@ -1,136 +1,144 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const formCancelacion = document.getElementById('formCancelacion');
-    const formDocumento = document.getElementById('formDocumento');
-    const cardPaso1 = document.getElementById('cardPaso1');
-    const cardPaso2 = document.getElementById('cardPaso2');
-    const btnSiguiente = document.getElementById('btnSiguiente');
+/**
+ * PumaGestión — Cancelación Digital
+ * FCEAC · UNAH
+ * cancelacion.js
+ */
 
+document.addEventListener('DOMContentLoaded', () => {
 
-    if (!formCancelacion) return;
+    // ── Character counter ───────────────────────────
+    const textarea  = document.getElementById('observacion')
+    const charCount = document.getElementById('charCount')
+    const MAX_CHARS = 500
 
-    // Función segura para obtener el CSRF Token
-    const getCsrfToken = () => {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') : '';
-    };
-
-    // --- PASO 1: CREAR TRÁMITE ---
-    formCancelacion.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-
-        btnSiguiente.disabled = true;
-        const originalText = btnSiguiente.innerText;
-        btnSiguiente.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
-
-        const datos = {
-            prioridad: document.getElementById('prioridad').value,
-            observacion_inicial: document.getElementById('observacion_inicial').value
-        };
-
-        fetch('/api/cancelaciones/crear', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken()
-            },
-            body: JSON.stringify(datos)
-        })
-        .then(response => {
-            if (!response.ok) throw response;
-            return response.json();
-        })
-        .then(data => {
-            if (data.resultado === 'OK') {
-
-                const idTramite = data.id_tramite_creado;
-                const inputHidden = document.getElementById('id_tramite_hidden');
-                const displayId = document.getElementById('displayIdTramite');
-
-                if (inputHidden) inputHidden.value = idTramite;
-                if (displayId) displayId.innerText = idTramite;
-
-
-                if (cardPaso1) cardPaso1.classList.add('d-none');
-                if (cardPaso2) cardPaso2.classList.remove('d-none');
-
-                alert('¡Éxito! Trámite iniciado correctamente.');
-            } else {
-                throw new Error(data.mensaje || 'Error desconocido en el servidor');
-            }
-        })
-        .catch(async (error) => {
-            console.error('Error en Paso 1:', error);
-            let msg = 'No se pudo conectar con el servidor';
-
-            // Intentar extraer el mensaje de error de la respuesta JSON
-            if (error.json) {
-                try {
-                    const errData = await error.json();
-                    msg = errData.mensaje || msg;
-                } catch (e) { /* No es JSON */ }
-            } else if (error.message) {
-                msg = error.message;
-            }
-
-            alert('Error: ' + msg);
-            btnSiguiente.disabled = false;
-            btnSiguiente.innerText = originalText;
-        });
-    });
-
-    // --- PASO 2: GUARDAR DOCUMENTO PDF ---
-    if (formDocumento) {
-        formDocumento.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const btnFinalizar = this.querySelector('button[type="submit"]');
-            if (btnFinalizar) {
-                btnFinalizar.disabled = true;
-                btnFinalizar.innerText = 'Subiendo Archivo...';
-            }
-
-            const formData = new FormData(this);
-
-            fetch('/api/cancelaciones/guardar-documento', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken()
-                    // Nota: NO se define Content-Type para enviar archivos con FormData
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw response;
-                return response.json();
-            })
-            .then(data => {
-                if (data.resultado === 'OK') {
-                    alert('¡Trámite finalizado correctamente!');
-                    window.location.href = '/home'; // Redirección al panel
-                } else {
-                    throw new Error(data.mensaje || 'Error al guardar documento');
-                }
-            })
-            .catch(async (error) => {
-                console.error('Error en Paso 2:', error);
-                let msg = 'Error al subir el archivo';
-
-                if (error.json) {
-                    try {
-                        const errData = await error.json();
-                        msg = errData.mensaje || msg;
-                    } catch (e) {  }
-                }
-
-                alert(msg);
-                if (btnFinalizar) {
-                    btnFinalizar.disabled = false;
-                    btnFinalizar.innerText = 'Finalizar Trámite';
-                }
-            });
-        });
+    if (textarea && charCount) {
+        const updateCount = () => {
+            const len = textarea.value.length
+            charCount.textContent = `${len} / ${MAX_CHARS}`
+            charCount.classList.remove('warn', 'over')
+            if (len >= MAX_CHARS)         charCount.classList.add('over')
+            else if (len >= MAX_CHARS * 0.8) charCount.classList.add('warn')
+        }
+        textarea.addEventListener('input', updateCount)
+        updateCount()
     }
-});
+
+    // ── Form validation & submit ────────────────────
+    const form   = document.getElementById('formCancelacion')
+    const btn    = document.getElementById('btnSubmit')
+
+    if (!form || !btn) return
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+
+        if (!validateForm()) return
+
+        // Loading state
+        btn.disabled = true
+        btn.classList.add('loading')
+
+        try {
+            const response = await fetch(form.action || window.location.pathname, {
+                method:  'POST',
+                headers: { 'X-CSRF-TOKEN': getCsrfToken() },
+                body:    new FormData(form),
+            })
+
+            if (response.ok) {
+                const data = await response.json().catch(() => ({}))
+                if (data.redirect) {
+                    window.location.href = data.redirect
+                } else {
+                    window.location.reload()
+                }
+            } else {
+                showError('Ocurrió un error. Por favor intente de nuevo.')
+                btn.disabled = false
+                btn.classList.remove('loading')
+            }
+        } catch {
+            showError('Error de conexión. Verifique su internet.')
+            btn.disabled = false
+            btn.classList.remove('loading')
+        }
+    })
+
+    // ── Live field validation ────────────────────────
+    const requiredFields = form.querySelectorAll('[required]')
+    requiredFields.forEach(field => {
+        field.addEventListener('change', () => validateField(field))
+        field.addEventListener('blur',   () => validateField(field))
+    })
+
+    // ── Helpers ──────────────────────────────────────
+
+    function validateForm () {
+        let valid = true
+        requiredFields.forEach(field => {
+            if (!validateField(field)) valid = false
+        })
+        return valid
+    }
+
+    function validateField (field) {
+        const isEmpty = field.value.trim() === '' || field.value === ''
+        const wrap    = field.closest('.puma-input-wrap') || field.parentElement
+
+        if (isEmpty) {
+            field.style.borderColor = 'rgba(226, 75, 74, 0.65)'
+            field.style.boxShadow   = '0 0 0 3px rgba(226, 75, 74, 0.10)'
+            return false
+        } else {
+            field.style.borderColor = 'rgba(245, 166, 35, 0.40)'
+            field.style.boxShadow   = '0 0 0 3px rgba(245, 166, 35, 0.08)'
+            return true
+        }
+    }
+
+    function getCsrfToken () {
+        const meta = document.querySelector('meta[name="csrf-token"]')
+        return meta ? meta.getAttribute('content') : ''
+    }
+
+    function showError (msg) {
+        // Remove existing toast if any
+        document.getElementById('puma-toast')?.remove()
+
+        const toast = document.createElement('div')
+        toast.id = 'puma-toast'
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #a32d2d;
+            color: #fff;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        `
+        toast.textContent = msg
+        document.body.appendChild(toast)
+
+        // Animate in
+        requestAnimationFrame(() => {
+            toast.style.opacity   = '1'
+            toast.style.transform = 'translateX(-50%) translateY(0)'
+        })
+
+        // Auto-dismiss after 4 s
+        setTimeout(() => {
+            toast.style.opacity   = '0'
+            toast.style.transform = 'translateX(-50%) translateY(20px)'
+            setTimeout(() => toast.remove(), 350)
+        }, 4000)
+    }
+
+})
