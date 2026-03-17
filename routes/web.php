@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 //Ruta principal (Login)
 Route::get('/', function () {
-    return view('portal_login');
-});
+    return view('auth.login');
+})->name('portal');
 
 //Autocarga de módulos
 
