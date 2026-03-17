@@ -1,11 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
 
 //Ruta principal (Login)
 Route::get('/', function () {
-    return view('portal_login');
-});
+    return view('auth.login');
+})->name('portal');
 
 //Autocarga de módulos
 
