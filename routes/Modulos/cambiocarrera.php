@@ -19,3 +19,11 @@ Route::prefix('api/cambio-carrera')->group(function () {
     Route::get('calendario-vigente', [CambioCarreraController::class, 'calendarioVigente']);
     Route::get('carreras', [CambioCarreraController::class, 'carreras']);
 });
+
+
+// ============================
+// FRONTEND - CAMBIO DE CARRERA
+// ============================
+Route::get('/cambio-carrera', function () {
+    return view('cambio_carrera');
+});
