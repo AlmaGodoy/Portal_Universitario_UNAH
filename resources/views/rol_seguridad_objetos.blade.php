@@ -1,8 +1,17 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Objetos</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-@section('content')
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    @vite(['resources/css/rolseguridad.css', 'resources/js/rolseguridad.js'])
+</head>
+<body>
 
-<div class="container py-4">
+<div class="container py-4 security-page">
 
     @if(session('status'))
         <div class="alert alert-success shadow-sm">
@@ -18,8 +27,8 @@
 
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="fw-bold">Gestión de Objetos</h2>
-            <p class="text-muted mb-0">Administración de módulos y submódulos de seguridad.</p>
+            <h2 class="security-title">Gestión de Objetos</h2>
+            <p class="security-subtitle">Administración de módulos y submódulos de seguridad.</p>
         </div>
 
         <div>
@@ -33,7 +42,7 @@
         </div>
     </div>
 
-    <div class="card shadow border-0">
+    <div class="card shadow border-0 security-card">
         <div class="card-header security-header">
             <span class="fw-bold text-white">Lista de Objetos / Módulos</span>
         </div>
@@ -79,11 +88,10 @@
 
 </div>
 
-{{-- MODAL NUEVO OBJETO --}}
 <div class="modal fade" id="modalNuevoObjeto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content shadow">
-            <form action="{{ route('seguridad.objeto.store') }}" method="POST">
+            <form action="{{ route('seguridad.objeto.store') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar este objeto?">
                 @csrf
 
                 <div class="modal-header security-header">
@@ -116,12 +124,11 @@
     </div>
 </div>
 
-{{-- MODALES EDITAR --}}
 @foreach($objetos as $objeto)
 <div class="modal fade" id="modalEditarObjeto{{ $objeto->id_objeto }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content shadow">
-            <form action="{{ route('seguridad.objeto.update', $objeto->id_objeto) }}" method="POST">
+            <form action="{{ route('seguridad.objeto.update', $objeto->id_objeto) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar los cambios de este objeto?">
                 @csrf
                 @method('PUT')
 
@@ -159,27 +166,6 @@
 </div>
 @endforeach
 
-<style>
-    .security-header {
-        background: #3b82c4;
-        color: white;
-        border-bottom: none;
-    }
-
-    .input-highlight {
-        background-color: #eef5be;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .card {
-        border-radius: 10px;
-    }
-
-    .table th,
-    .table td {
-        vertical-align: middle;
-    }
-</style>
-
-@endsection
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

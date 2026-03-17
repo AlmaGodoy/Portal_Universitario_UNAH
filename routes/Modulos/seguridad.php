@@ -6,26 +6,37 @@ use App\Http\Controllers\RolSeguridadController;
 
 /*
 |--------------------------------------------------------------------------
-| API de Seguridad
+| Rutas WEB de Seguridad
 |--------------------------------------------------------------------------
+| Estas rutas cargan vistas Blade
+*/
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/seguridad', [RolSeguridadController::class, 'index'])
+        ->name('seguridad.index');
+
+    Route::get('/seguridad/roles', [RolController::class, 'panelRoles'])
+        ->name('seguridad.roles');
+
+    Route::get('/seguridad/usuarios', [RolSeguridadController::class, 'usuarios'])
+        ->name('seguridad.usuarios');
+
+    Route::get('/seguridad/objetos', [RolSeguridadController::class, 'objetos'])
+        ->name('seguridad.objetos');
+
+    Route::get('/seguridad/accesos', [RolSeguridadController::class, 'accesos'])
+        ->name('seguridad.accesos');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API de Seguridad
+|--------------------------------------------------------------------------
+| Estas rutas procesan formularios y acciones
 */
 
 Route::prefix('api/seguridad')->middleware('auth')->group(function () {
-
-    Route::get('/', [RolSeguridadController::class, 'index'])
-        ->name('seguridad.index');
-
-    Route::get('/roles', [RolController::class, 'panelRoles'])
-        ->name('seguridad.roles');
-
-    Route::get('/usuarios', [RolSeguridadController::class, 'usuarios'])
-        ->name('seguridad.usuarios');
-
-    Route::get('/objetos', [RolSeguridadController::class, 'objetos'])
-        ->name('seguridad.objetos');
-
-    Route::get('/accesos', [RolSeguridadController::class, 'accesos'])
-        ->name('seguridad.accesos');
 
     Route::post('/rol', [RolController::class, 'storeRol'])
         ->name('seguridad.rol.store');
@@ -53,5 +64,4 @@ Route::prefix('api/seguridad')->middleware('auth')->group(function () {
 
     Route::delete('/acceso/{id}', [RolSeguridadController::class, 'deleteAcceso'])
         ->name('seguridad.acceso.delete');
-
 });

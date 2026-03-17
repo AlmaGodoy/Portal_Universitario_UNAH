@@ -12,20 +12,7 @@ use Illuminate\Validation\Rules\Password;
 
 class UsuarioController extends Controller
 {
-    private function registrarBitacora(?int $idUsuario, string $accion, string $descripcion, ?int $idObjeto = null): void
-    {
-        try {
-            DB::table('tbl_bitacora')->insert([
-                'id_usuario' => $idUsuario,
-                'id_objeto' => $idObjeto,
-                'accion' => $accion,
-                'fecha_accion' => now(),
-                'descripcion' => $descripcion,
-            ]);
-        } catch (\Throwable $e) {
-            //
-        }
-    }
+    private const ID_OBJETO_LOGIN = 12;
 
     public function formRegistro()
     {
@@ -110,14 +97,13 @@ class UsuarioController extends Controller
             ]);
 
             $request->merge([
-                'id_rol' => 2,
+                'id_rol' => null, // el SP busca el rol estudiante dinámicamente
                 'id_departamento' => null,
                 'cod_empleado' => null,
                 'tipo_empleado' => null,
             ]);
         } else {
             $request->validate([
-                'id_rol' => 'required|integer|in:4,5',
                 'id_departamento' => 'required|integer',
                 'cod_empleado' => 'required|string|max:50',
                 'tipo_empleado' => 'required|string|in:coordinador,secretario|max:50',
@@ -163,39 +149,37 @@ class UsuarioController extends Controller
             }
 
             $token = Str::random(64);
+            $tokenHash = hash('sha256', $token);
 
-            DB::table('tbl_login_autentications')
-                ->where('id_usuario', $idUsuario)
-                ->where('tipo', 'email_verification')
-                ->delete();
-
-            DB::table('tbl_login_autentications')->insert([
-                'id_usuario' => $idUsuario,
-                'tipo' => 'email_verification',
-                'valor_hash' => hash('sha256', $token),
-                'expires_at' => now()->addMinutes(60),
-                'used_at' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
+            DB::select('CALL DEL_LOGIN_AUTHENTICATION_TIPO(?, ?)', [
+                $idUsuario,
+                'email_verification',
             ]);
+
+            $resAuth = DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
+                $idUsuario,
+                'email_verification',
+                $tokenHash,
+                now()->addMinutes(60)->format('Y-m-d H:i:s'),
+                self::ID_OBJETO_LOGIN,
+                'email_verificacion_generada',
+                'Se generó token de verificación para el correo ' . $request->correo,
+            ]);
+
+            $rowAuth = $resAuth[0] ?? null;
+            $resultadoAuth = $rowAuth->resultado ?? 'ERROR';
+            $mensajeAuth = $rowAuth->mensaje ?? 'No se pudo registrar el token de verificación.';
+
+            if ($resultadoAuth !== 'OK') {
+                return redirect()->route('portal')
+                    ->with('status', 'Usuario creado, pero no se pudo preparar la verificación por correo.');
+            }
 
             $link = route('email.verify', ['token' => $token]);
 
             try {
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
-
-                $this->registrarBitacora(
-                    (int) $idUsuario,
-                    'email_verificacion_enviada',
-                    'Se envió correo de verificación a ' . $request->correo
-                );
             } catch (\Throwable $e) {
-                $this->registrarBitacora(
-                    (int) $idUsuario,
-                    'email_verificacion_fallida',
-                    'Fallo envío a ' . $request->correo . ' | ' . $e->getMessage()
-                );
-
                 return redirect()->route('portal')
                     ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
             }
@@ -204,8 +188,11 @@ class UsuarioController extends Controller
 
             return redirect()->route('portal')
                 ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
-        } catch (\Exception $e) {
-            return back()->withErrors(['registro' => $e->getMessage()])->withInput();
+
+        } catch (\Throwable $e) {
+            return back()->withErrors([
+                'registro' => $e->getMessage()
+            ])->withInput();
         }
     }
 
@@ -214,48 +201,15 @@ class UsuarioController extends Controller
         try {
             $hash = hash('sha256', $token);
 
-            $registro = DB::table('tbl_login_autentications')
-                ->where('tipo', 'email_verification')
-                ->where('valor_hash', $hash)
-                ->whereNull('used_at')
-                ->where('expires_at', '>=', now())
-                ->first();
+            $res = DB::select('CALL UPD_VERIFICACION_CORREO_USUARIO(?)', [$hash]);
 
-            if (!$registro) {
-                return redirect()->route('portal')
-                    ->with('status', 'El enlace de verificación es inválido, expiró o ya fue usado.');
-            }
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'No se pudo verificar la cuenta.';
 
-            DB::beginTransaction();
+            return redirect()->route('portal')->with('status', $mensaje);
 
-            DB::table('tbl_usuario')
-                ->where('id_usuario', $registro->id_usuario)
-                ->update([
-                    'estado_cuenta' => 1,
-                ]);
-
-            DB::table('tbl_login_autentications')
-                ->where('id_usuario', $registro->id_usuario)
-                ->where('tipo', 'email_verification')
-                ->where('valor_hash', $hash)
-                ->update([
-                    'used_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-            DB::commit();
-
-            $this->registrarBitacora(
-                (int) $registro->id_usuario,
-                'email_verificado',
-                'Cuenta activada mediante verificación por correo.'
-            );
-
-            return redirect()->route('portal')
-                ->with('status', 'Cuenta verificada correctamente. Ya puedes iniciar sesión.');
         } catch (\Throwable $e) {
-            DB::rollBack();
-
             return redirect()->route('portal')
                 ->with('status', 'No se pudo verificar la cuenta. Intenta nuevamente.');
         }
