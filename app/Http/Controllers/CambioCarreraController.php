@@ -17,14 +17,30 @@ class CambioCarreraController extends Controller
         ]);
 
         try {
-            $data = DB::select('CALL INS_CAMBIO_CARRERA(?, ?, ?, ?)', [
-                $request->id_persona,
-                $request->id_calendario,
-                $request->id_carrera_destino,
-                $request->direccion
-            ]);
+            // Usamos una transacción para asegurar que los cambios se guarden
+            return DB::transaction(function () use ($request) {
+                
+                // Usamos statement para ejecutar el procedimiento
+                DB::statement('CALL INS_CAMBIO_CARRERA(?, ?, ?, ?, ?)', [
+                    $request->id_persona,
+                    $request->id_calendario,
+                    $request->id_carrera_destino,
+                    $request->direccion,
+                    12 // ID de usuario para bitácora
+                ]);
 
-            return response()->json($data[0] ?? $data, 201);
+                // Obtenemos el último trámite para devolverlo en la respuesta
+                $ultimoTramite = DB::table('tbl_tramite')
+                                    ->where('id_persona', $request->id_persona)
+                                    ->latest('id_tramite')
+                                    ->first();
+
+                return response()->json([
+                    'resultado' => 'OK',
+                    'mensaje'   => 'Trámite y bitácora registrados exitosamente',
+                    'id_tramite' => $ultimoTramite->id_tramite ?? null
+                ], 201);
+            });
 
         } catch (\Throwable $e) {
             return response()->json([
