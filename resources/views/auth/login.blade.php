@@ -35,7 +35,7 @@
                 Selecciona primero un portal.
             </div>
             <div class="d-grid gap-2">
-                <a class="btn btn-primary" href="{{ route('portal') }}">Ir al Portal</a>
+                <a class="btn btn-primary" href="{{ url('/portal') }}">Ir al Portal</a>
             </div>
         @else
 
@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="text-center mt-2">
-                    <a href="{{ route('portal') }}">← Volver al portal</a>
+                    <a href="{{ url('/portal') }}">← Volver al portal</a>
                 </div>
             </form>
 

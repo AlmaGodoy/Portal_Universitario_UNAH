@@ -13,12 +13,16 @@ use App\Http\Controllers\Auth\PasswordResetController;
 */
 
 Route::middleware('guest')->group(function () {
+    Route::get('/portal', function () {
+        return view('auth.choose_portal');
+    })->name('choose.portal');
+
     Route::get('/login/{tipo}', [LoginController::class, 'showLoginFormTipo'])
         ->whereIn('tipo', ['estudiante', 'empleado'])
         ->name('login.tipo');
 
     Route::get('/login', function () {
-        return redirect()->route('portal');
+        return redirect()->route('choose.portal');
     })->name('login');
 
     Route::get('/2fa', [TwoFactorController::class, 'form'])
