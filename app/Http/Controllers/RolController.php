@@ -104,20 +104,6 @@ class RolController extends Controller
             ->with('status', $mensaje);
     }
 
-    private function registrarBitacora(?int $idUsuario, string $accion, string $descripcion, ?int $idObjeto = null): void
-    {
-        try {
-            DB::table('tbl_bitacora')->insert([
-                'id_usuario'   => $idUsuario,
-                'id_objeto'    => $idObjeto,
-                'accion'       => $accion,
-                'fecha_accion' => now(),
-                'descripcion'  => $descripcion,
-            ]);
-        } catch (\Throwable $e) {
-        }
-    }
-
     public function asignarPermisosObjeto(Request $request)
     {
         $request->validate([
@@ -131,33 +117,30 @@ class RolController extends Controller
             'permisos.required'  => 'Debes seleccionar al menos un acceso.',
         ]);
 
-        $rol = DB::table('tbl_rol')->where('id_rol', $request->id_rol)->first();
-        $objeto = DB::table('tbl_objeto')->where('id_objeto', $request->id_objeto)->first();
+        $errores = [];
 
         foreach ($request->permisos as $idPermiso) {
-            $existe = DB::table('tbl_rol_permiso')
-                ->where('id_rol', $request->id_rol)
-                ->where('id_permiso', $idPermiso)
-                ->where('id_objeto', $request->id_objeto)
-                ->exists();
+            $res = DB::select('CALL INS_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?, ?, ?)', [
+                (int) $request->id_rol,
+                (int) $idPermiso,
+                (int) $request->id_objeto,
+                auth()->id()
+            ]);
 
-            if (!$existe) {
-                DB::table('tbl_rol_permiso')->insert([
-                    'id_rol'           => $request->id_rol,
-                    'id_permiso'       => $idPermiso,
-                    'id_objeto'        => $request->id_objeto,
-                    'fecha_asignacion' => now(),
-                ]);
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'No se pudo asignar el permiso.';
+
+            if (!in_array($resultado, ['OK', 'EXISTE'], true)) {
+                $errores[] = $mensaje;
             }
         }
 
-        $this->registrarBitacora(
-            auth()->id(),
-            'asignar_permiso_rol',
-            'Se asignaron permisos al rol ' . strtoupper($rol->nombre_rol ?? '') .
-            ' sobre el objeto ' . strtoupper($objeto->nombre_objeto ?? ''),
-            $request->id_objeto
-        );
+        if (!empty($errores)) {
+            return back()->withErrors([
+                'permiso' => implode(' | ', $errores)
+            ])->withInput();
+        }
 
         return redirect()->route('seguridad.roles')
             ->with('status', 'Permisos asignados correctamente.');
@@ -165,36 +148,22 @@ class RolController extends Controller
 
     public function deleteAsignacion($id)
     {
-        $asignacion = DB::table('tbl_rol_permiso as rp')
-            ->join('tbl_rol as r', 'r.id_rol', '=', 'rp.id_rol')
-            ->join('tbl_permiso as p', 'p.id_permiso', '=', 'rp.id_permiso')
-            ->join('tbl_objeto as o', 'o.id_objeto', '=', 'rp.id_objeto')
-            ->select(
-                'rp.id_rol_permiso',
-                'rp.id_objeto',
-                'r.nombre_rol',
-                'p.nombre_permiso',
-                'o.nombre_objeto'
-            )
-            ->where('rp.id_rol_permiso', $id)
-            ->first();
+        $res = DB::select('CALL DEL_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?)', [
+            (int) $id,
+            auth()->id()
+        ]);
 
-        DB::table('tbl_rol_permiso')
-            ->where('id_rol_permiso', $id)
-            ->delete();
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo eliminar la asignación.';
 
-        if ($asignacion) {
-            $this->registrarBitacora(
-                auth()->id(),
-                'eliminar_permiso_rol',
-                'Se eliminó el permiso ' . strtoupper($asignacion->nombre_permiso) .
-                ' del rol ' . strtoupper($asignacion->nombre_rol) .
-                ' sobre el objeto ' . strtoupper($asignacion->nombre_objeto),
-                $asignacion->id_objeto
-            );
+        if ($resultado !== 'OK') {
+            return back()->withErrors([
+                'permiso' => $mensaje
+            ]);
         }
 
         return redirect()->route('seguridad.roles')
-            ->with('status', 'Asignación eliminada correctamente.');
+            ->with('status', $mensaje);
     }
 }
