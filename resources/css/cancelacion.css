@@ -1,581 +1,338 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Exo+2:wght@400;600;700;800&display=swap');
-
 /* =============================================
-   PUMAGESTIÓN — Cancelación Digital
-   FCEAC · UNAH
+   PUMAGESTIÓN — CANCELACIÓN EXCEPCIONAL CSS
+   resources/css/cancelacion.css
    ============================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap');
+
 :root {
-    --unah-navy:       #0a1628;
-    --unah-blue-dark:  #0d2347;
-    --unah-blue-mid:   #1a3a6b;
-    --unah-blue-light: #0f2550;
-    --unah-gold:       #f5a623;
-    --unah-gold-dark:  #e8900a;
-    --unah-gold-glow:  rgba(245, 166, 35, 0.25);
-    --unah-white-80:   rgba(255, 255, 255, 0.80);
-    --unah-white-50:   rgba(255, 255, 255, 0.50);
-    --unah-white-30:   rgba(255, 255, 255, 0.30);
-    --unah-white-10:   rgba(255, 255, 255, 0.10);
-    --unah-white-06:   rgba(255, 255, 255, 0.06);
-    --unah-white-08:   rgba(255, 255, 255, 0.08);
-    --font-display:    'Exo 2', sans-serif;
-    --font-body:       'Nunito', sans-serif;
-    --radius-sm:       8px;
-    --radius-md:       10px;
-    --radius-lg:       14px;
-    --radius-xl:       18px;
-    --transition:      0.2s ease;
+    --unah-navy:      #0a1628;
+    --unah-blue-card: #0f1f3d;
+    --unah-blue-dark: #071020;
+    --unah-gold:      #f5a623;
+    --unah-gold-dim:  rgba(245, 166, 35, 0.3);
+    --unah-green:     #28a745;
+    --unah-red:       #e55353;
+    --white:          #ffffff;
+    --text-muted:     rgba(255, 255, 255, 0.5);
 }
 
-/* ── Layout wrapper ───────────────────────────── */
+/* ── BASE ── */
 .puma-page {
-    font-family: var(--font-body);
-    background-color: var(--unah-navy);
-    background-image:
-        radial-gradient(ellipse 60% 40% at 80% 5%,  rgba(245,166,35,.07) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 60% at 5%  95%,  rgba(13,71,161,.28)  0%, transparent 60%);
+    background-color: var(--unah-navy) !important;
+    color: var(--white);
     min-height: 100vh;
-    padding-bottom: 48px;
+    font-family: 'Nunito', sans-serif;
 }
 
-/* ── Top navigation bar ───────────────────────── */
+/* ── TOPBAR ── */
 .puma-topbar {
-    background: linear-gradient(135deg, #0d2347 0%, #1a3a6b 50%, #0d2347 100%);
-    border-bottom: 3px solid var(--unah-gold);
-    padding: 12px 28px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    position: relative;
+    background: rgba(0, 0, 0, 0.35);
+    border-bottom: 1px solid var(--unah-gold-dim);
+    padding: 12px 24px;
+    display: flex; align-items: center;
 }
-
-.puma-topbar::after {
-    content: '';
-    position: absolute;
-    bottom: -7px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: rgba(245, 166, 35, 0.20);
-    pointer-events: none;
-}
-
-/* ── Logo ─────────────────────────────────────── */
 .puma-logo-wrap {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    display: flex; align-items: center; gap: 12px;
     text-decoration: none;
 }
-
 .nav-bee-circle {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #e8b800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem; /* Tamaño del emoji */
-    box-shadow: 0 0 0 3px rgba(232,184,0,.35);
-    margin-right: 12px;
-    flex-shrink: 0;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--unah-gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
 }
-
-.puma-logo-text {
-    font-family: var(--font-display);
-    color: #ffffff;
-    line-height: 1;
-}
-
+.puma-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
 .puma-logo-text .brand {
-    font-size: 18px;
-    font-weight: 800;
-    display: block;
-    letter-spacing: -0.3px;
+    font-size: 1.1rem; font-weight: 900; color: var(--white);
 }
-
-.puma-logo-text .brand span {
-    color: var(--unah-gold);
-}
-
+.puma-logo-text .brand span { color: var(--unah-gold); }
 .puma-logo-text .sub {
-    font-size: 10px;
-    font-weight: 400;
-    opacity: 0.60;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    display: block;
-    margin-top: 2px;
+    font-size: 0.7rem; color: var(--text-muted); letter-spacing: 1.5px;
 }
 
-/* ── Breadcrumb ───────────────────────────────── */
-.puma-breadcrumb {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--unah-white-50);
-    font-weight: 600;
-}
-
-.puma-breadcrumb a {
-    color: var(--unah-white-50);
-    text-decoration: none;
-    transition: color var(--transition);
-}
-
-.puma-breadcrumb a:hover {
-    color: var(--unah-gold);
-}
-
-.puma-breadcrumb .sep {
-    color: var(--unah-white-30);
-    font-size: 14px;
-}
-
-.puma-breadcrumb .current {
-    color: var(--unah-gold);
-}
-
-/* ── Main content container ───────────────────── */
+/* ── CONTAINER ── */
 .puma-container {
-    max-width: 800px;
+    max-width: 860px;
     margin: 0 auto;
-    padding: 32px 20px 0;
+    padding: 30px 20px 60px;
 }
 
-/* ── Step progress indicator ──────────────────── */
+/* ── ALERTAS ── */
+.puma-alert {
+    display: flex; align-items: flex-start; gap: 12px;
+    border-radius: 10px; padding: 14px 18px;
+    margin-bottom: 20px; font-size: 0.9rem;
+}
+.puma-alert p { margin: 0; }
+.puma-alert--error {
+    background: rgba(229, 83, 83, 0.15);
+    border: 1px solid rgba(229, 83, 83, 0.4);
+    color: #ffaaaa;
+}
+.puma-alert--success {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.4);
+    color: #a8ffbf;
+}
+
+/* ── STEPPER ── */
 .puma-steps {
     display: flex;
+    justify-content: center;
     align-items: center;
-    margin-bottom: 28px;
+    gap: 15px;
+    margin: 30px 0;
 }
-
 .puma-step {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: flex; flex-direction: column; align-items: center;
+    color: rgba(255, 255, 255, 0.3);
 }
-
+.puma-step--active { color: var(--unah-gold) !important; }
+.puma-step--done   { color: var(--unah-green) !important; }
 .puma-step__circle {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: var(--font-display);
-    flex-shrink: 0;
-    transition: box-shadow var(--transition);
+    width: 36px; height: 36px;
+    border: 2px solid currentColor; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.04);
 }
-
-.puma-step--active .puma-step__circle {
-    background: linear-gradient(135deg, var(--unah-gold), var(--unah-gold-dark));
-    color: var(--unah-blue-dark);
-    box-shadow: 0 0 0 4px var(--unah-gold-glow);
-}
-
-.puma-step--done .puma-step__circle {
-    background: rgba(245, 166, 35, 0.15);
-    color: var(--unah-gold);
-    border: 1.5px solid rgba(245, 166, 35, 0.4);
-}
-
-.puma-step--inactive .puma-step__circle {
-    background: var(--unah-white-06);
-    color: var(--unah-white-30);
-    border: 1px solid var(--unah-white-10);
-}
-
-.puma-step__label {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.puma-step--active .puma-step__label  { color: var(--unah-gold); }
-.puma-step--done .puma-step__label    { color: rgba(245,166,35,.60); }
-.puma-step--inactive .puma-step__label { color: var(--unah-white-30); }
-
+.puma-step__label { font-size: 0.72rem; margin-top: 6px; font-weight: 600; }
 .puma-step-connector {
-    flex: 1;
-    height: 2px;
-    background: var(--unah-white-08);
-    margin: 0 6px;
-    position: relative;
-    top: -1px;
+    width: 60px; height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
 }
+.puma-step-connector--done { background: var(--unah-green); }
 
-/* ── Card ─────────────────────────────────────── */
+/* ── CARD ── */
 .puma-card {
-    background: linear-gradient(180deg, #0f1f3d 0%, #0d1a30 100%);
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--unah-white-08);
-    overflow: hidden;
-    box-shadow:
-        0 24px 64px rgba(0, 0, 0, 0.55),
-        0 0 0 1px rgba(245, 166, 35, 0.07);
+    background: var(--unah-blue-card) !important;
+    border: 1px solid var(--unah-gold-dim) !important;
+    border-radius: 15px; padding: 35px;
+    max-width: 800px; margin: 0 auto;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
 }
-
-/* ── Card header ──────────────────────────────── */
+.puma-card--success {
+    border-color: rgba(40, 167, 69, 0.4) !important;
+    text-align: center;
+}
 .puma-card__header {
-    background: linear-gradient(135deg, #1a3a6b 0%, #0f2550 65%, #162d58 100%);
-    border-bottom: 2px solid rgba(245, 166, 35, 0.35);
-    padding: 22px 28px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    position: relative;
-    overflow: hidden;
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
 }
-
-.puma-card__header::before {
-    content: '';
-    position: absolute;
-    right: -24px;
-    top: -24px;
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    background: rgba(245, 166, 35, 0.05);
-    pointer-events: none;
-}
-
-.puma-card__header-icon {
-    width: 52px;
-    height: 52px;
-    background: rgba(245, 166, 35, 0.12);
-    border: 1.5px solid rgba(245, 166, 35, 0.38);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-}
-
+.puma-card__header-icon { font-size: 2rem; }
 .puma-card__header-title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0 0 4px;
-    letter-spacing: -0.2px;
+    color: var(--white); font-weight: 900; font-size: 1.15rem; margin: 0;
 }
-
 .puma-card__header-sub {
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--unah-white-50);
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    margin: 0;
+    color: var(--text-muted); font-size: 0.82rem; margin: 3px 0 0;
 }
 
-.puma-card__header-badge {
-    margin-left: auto;
-    background: rgba(245, 166, 35, 0.12);
-    border: 1px solid rgba(245, 166, 35, 0.25);
-    color: #f5c842;
-    font-size: 10.5px;
-    font-weight: 700;
-    padding: 4px 12px;
-    border-radius: 20px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    white-space: nowrap;
+/* ── NOTICE BOX ── */
+.puma-notice-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--unah-gold-dim);
+    border-radius: 10px; padding: 20px 24px;
+    margin-bottom: 24px;
+}
+.puma-notice-box p { color: rgba(255,255,255,.8); margin-bottom: 16px; line-height: 1.6; }
+.puma-notice-box--compact { padding: 14px 18px; }
+.puma-notice-box--compact p { margin-bottom: 8px; font-size: 0.88rem; }
+
+.puma-doc-list {
+    list-style: none; padding: 0; margin: 8px 0 12px;
+}
+.puma-doc-list li {
+    color: rgba(255,255,255,.75); font-size: 0.85rem;
+    padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.05);
 }
 
-/* ── Card body ────────────────────────────────── */
-.puma-card__body {
-    padding: 28px 30px 30px;
+/* ── INFO GRID ── */
+.puma-info-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    margin-top: 16px;
 }
-
-/* ── Alert info ───────────────────────────────── */
-.puma-alert {
-    background: rgba(13, 71, 161, 0.18);
-    border-left: 4px solid var(--unah-gold);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    padding: 14px 16px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 28px;
+@media (max-width: 600px) {
+    .puma-info-grid { grid-template-columns: 1fr; }
 }
-
-.puma-alert__icon {
-    font-size: 16px;
-    flex-shrink: 0;
-    margin-top: 1px;
-    line-height: 1;
+.info-item {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 8px; padding: 14px;
 }
-
-.puma-alert__text {
-    color: var(--unah-white-80);
-    font-size: 13.5px;
-    line-height: 1.55;
-    margin: 0;
+.info-icon { font-size: 1.4rem; display: block; margin-bottom: 6px; }
+.info-item h6 {
+    color: var(--unah-gold); font-weight: 700; font-size: 0.82rem;
+    margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.5px;
 }
+.info-item p { color: var(--text-muted); font-size: 0.78rem; margin: 0; line-height: 1.5; }
 
-.puma-alert__text strong {
-    color: var(--unah-gold);
-    font-weight: 700;
-}
-
-/* ── Section divider ──────────────────────────── */
+/* ── SECCIÓN ── */
 .puma-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 26px 0 18px;
+    border-bottom: 2px solid var(--unah-gold);
+    margin: 25px 0 15px; padding-bottom: 8px;
 }
-
 .puma-section span {
-    color: var(--unah-white-30);
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    white-space: nowrap;
+    color: var(--unah-gold); font-weight: 900 !important;
+    text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;
 }
 
-.puma-section::before,
-.puma-section::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--unah-white-08);
-}
-
-/* ── Form grid ────────────────────────────────── */
+/* ── GRID DE CAMPOS ── */
 .puma-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
 }
+@media (max-width: 600px) { .puma-grid { grid-template-columns: 1fr; } }
 
-/* ── Form label ───────────────────────────────── */
+.puma-field { display: flex; flex-direction: column; }
+
+/* ── LABELS ── */
 .puma-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.40);
-    margin-bottom: 8px;
+    color: rgba(255,255,255,.75); font-size: 0.82rem;
+    font-weight: 700; margin-bottom: 4px; text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+.req { color: var(--unah-gold); }
 
-.puma-label .req {
-    color: var(--unah-gold);
-    margin-left: 2px;
-}
-
-.puma-label .art {
-    font-size: 10px;
-    letter-spacing: 0;
-    text-transform: none;
-    color: rgba(255, 255, 255, 0.22);
-    margin-left: 4px;
-    font-weight: 400;
-}
-
-/* ── Input wrapper with icon ──────────────────── */
-.puma-input-wrap {
-    position: relative;
-}
-
-.puma-input-wrap .puma-input-icon {
-    position: absolute;
-    left: 13px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.20);
-    pointer-events: none;
-    line-height: 1;
-}
-
-.puma-input-wrap .puma-input-icon--top {
-    top: 15px;
-    transform: none;
-}
-
-/* ── Form controls ────────────────────────────── */
-.puma-input,
-.puma-select,
-.puma-textarea {
-    width: 100%;
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1.5px solid var(--unah-white-08);
-    border-radius: var(--radius-md);
-    color: var(--unah-white-80);
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 600;
-    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+/* ── INPUTS ── */
+.puma-input, .puma-select, .puma-textarea {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--white) !important;
+    border-radius: 8px; padding: 12px; width: 100%; margin-top: 6px;
+    font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+    transition: border-color 0.2s;
     outline: none;
-    appearance: none;
-    -webkit-appearance: none;
 }
-
-.puma-input,
-.puma-select {
-    height: 46px;
-    padding: 0 14px 0 40px;
+.puma-input:focus, .puma-select:focus, .puma-textarea:focus {
+    border-color: var(--unah-gold) !important;
+    box-shadow: 0 0 0 3px rgba(245,166,35,.15);
 }
-
-.puma-select {
-    padding-right: 38px;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='rgba(255,255,255,0.30)' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-}
-
-.puma-textarea {
-    padding: 13px 14px 13px 40px;
-    resize: vertical;
-    min-height: 110px;
-    line-height: 1.65;
-}
-
-.puma-input[readonly] {
-    color: rgba(255, 255, 255, 0.35);
-    cursor: default;
-}
-
-.puma-input:not([readonly]):focus,
-.puma-select:focus,
-.puma-textarea:focus {
-    border-color: rgba(245, 166, 35, 0.55);
-    background: rgba(255, 255, 255, 0.07);
-    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.10);
-}
-
 .puma-select option {
-    background: #0f2550;
-    color: #ffffff;
+    background-color: #0f1f3d !important;
+    color: var(--white) !important;
+}
+.puma-input.readonly {
+    background: rgba(0,0,0,.3) !important;
+    border-style: dashed !important; opacity: 0.6; cursor: not-allowed;
+}
+.puma-textarea { resize: vertical; min-height: 110px; }
+
+/* ── ERROR DE CAMPO ── */
+.puma-field-error {
+    color: #ff9090; font-size: 0.78rem; margin-top: 4px;
 }
 
-/* ── Character counter ────────────────────────── */
-.puma-char-count {
-    text-align: right;
-    font-size: 11px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.20);
-    letter-spacing: 0.3px;
-    margin-top: 5px;
-    transition: color var(--transition);
+/* ── HELPER ── */
+.puma-helper {
+    color: var(--text-muted); font-size: 0.78rem;
+    margin-top: 5px; font-style: italic;
 }
 
-.puma-char-count.warn { color: var(--unah-gold); }
-.puma-char-count.over { color: #e24b4a; }
+/* ── UPLOAD AREA ── */
+.puma-upload-area {
+    border: 2px dashed rgba(245,166,35,.4);
+    border-radius: 12px; padding: 40px 20px;
+    text-align: center; cursor: pointer;
+    transition: all 0.25s;
+    background: rgba(245,166,35,.03);
+    margin-top: 16px;
+}
+.puma-upload-area:hover,
+.puma-upload-area--drag {
+    border-color: var(--unah-gold);
+    background: rgba(245,166,35,.08);
+}
+.puma-upload-area--selected {
+    border-color: var(--unah-green);
+    background: rgba(40,167,69,.06);
+}
+.puma-upload-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.puma-upload-text { color: var(--white); font-weight: 700; margin: 0; }
+.puma-file-name {
+    color: var(--unah-green); font-weight: 700;
+    font-size: 0.9rem; margin-top: 8px;
+}
 
-/* ── Submit button ────────────────────────────── */
+/* ── BOTONES ── */
 .puma-btn {
-    width: 100%;
-    height: 52px;
-    background: linear-gradient(135deg, var(--unah-gold) 0%, var(--unah-gold-dark) 100%);
-    border: none;
-    border-radius: var(--radius-lg);
-    color: var(--unah-blue-dark);
-    font-family: var(--font-display);
-    font-size: 14.5px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 28px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-    box-shadow:
-        0 8px 24px rgba(245, 166, 35, 0.30),
-        0 2px 6px  rgba(245, 166, 35, 0.18);
+    background: var(--unah-gold);
+    color: var(--unah-navy);
+    font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;
+    border: none; border-radius: 10px; padding: 14px 28px;
+    cursor: pointer; transition: 0.25s; font-size: 0.85rem;
+    text-decoration: none; display: inline-block;
 }
-
 .puma-btn:hover {
     transform: translateY(-2px);
-    box-shadow:
-        0 14px 34px rgba(245, 166, 35, 0.42),
-        0 4px 10px  rgba(245, 166, 35, 0.22);
-    filter: brightness(1.05);
+    box-shadow: 0 8px 20px rgba(245,166,35,.35);
+    color: var(--unah-navy);
 }
 
-.puma-btn:active {
-    transform: translateY(0);
-    filter: brightness(0.97);
+.puma-btn-full {
+    background: var(--unah-gold) !important;
+    color: var(--unah-navy) !important;
+    font-weight: 900 !important; text-transform: uppercase;
+    border: none; border-radius: 10px; padding: 16px;
+    cursor: pointer; width: 100%; margin-top: 25px;
+    transition: 0.25s; font-size: 0.88rem; letter-spacing: 0.5px;
+}
+.puma-btn-full--auto { width: auto; padding: 16px 32px; margin-top: 0; }
+.puma-btn-full:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(245,166,35,.3);
 }
 
-.puma-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
+.puma-btn-outline {
+    background: transparent;
+    color: rgba(255,255,255,.7);
+    border: 1.5px solid rgba(255,255,255,.2);
+    border-radius: 10px; padding: 14px 24px;
+    cursor: pointer; transition: 0.25s; font-size: 0.85rem;
+    text-decoration: none; display: inline-block;
+    font-weight: 700;
+}
+.puma-btn-outline:hover {
+    border-color: var(--unah-gold);
+    color: var(--unah-gold);
 }
 
-.puma-btn__arrow {
-    width: 22px;
-    height: 22px;
-    background: rgba(13, 35, 71, 0.18);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-style: normal;
+.puma-btn-group {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    gap: 12px; margin-top: 28px;
 }
 
-/* ── Footer note ──────────────────────────────── */
-.puma-footer-note {
-    text-align: center;
-    margin-top: 14px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.18);
-    letter-spacing: 0.3px;
+.puma-actions-center { text-align: center; margin-top: 24px; }
+
+/* ── ÉXITO ── */
+.puma-success-icon { font-size: 4rem; margin-bottom: 12px; }
+.puma-success-title {
+    color: var(--unah-gold); font-weight: 900;
+    font-size: 1.6rem; margin-bottom: 10px;
+}
+.puma-success-msg {
+    color: rgba(255,255,255,.8); font-size: 1rem;
+    margin-bottom: 24px;
+}
+.puma-success-info {
+    background: rgba(0,0,0,.25); border-radius: 10px;
+    padding: 18px 22px; text-align: left;
+    border: 1px solid rgba(255,255,255,.07);
+}
+.puma-success-info p {
+    color: rgba(255,255,255,.7); font-size: 0.88rem;
+    margin: 6px 0; line-height: 1.6;
 }
 
-/* ── Spinner (loading state) ──────────────────── */
-@keyframes spin {
-    to { transform: rotate(360deg); }
+/* ── ANIMACIÓN ENTRADA ── */
+.animate-in {
+    animation: fadeSlideUp 0.4s ease both;
 }
-
-.puma-spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(13, 35, 71, 0.25);
-    border-top-color: var(--unah-blue-dark);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: none;
-}
-
-.puma-btn.loading .puma-spinner { display: block; }
-.puma-btn.loading .puma-btn__text { opacity: 0.6; }
-
-/* ── Page-load fade-in animation ──────────────── */
-@keyframes fadeUp {
+@keyframes fadeSlideUp {
     from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0);    }
-}
-
-.puma-steps  { animation: fadeUp 0.45s ease both; animation-delay: 0.05s; }
-.puma-card   { animation: fadeUp 0.50s ease both; animation-delay: 0.15s; }
-
-/* ── Responsive ───────────────────────────────── */
-@media (max-width: 580px) {
-    .puma-grid            { grid-template-columns: 1fr; }
-    .puma-card__body      { padding: 20px; }
-    .puma-step__label     { display: none; }
-    .puma-topbar          { padding: 10px 16px; }
-    .puma-breadcrumb      { display: none; }
-    .puma-container       { padding: 20px 12px 0; }
+    to   { opacity: 1; transform: translateY(0); }
 }

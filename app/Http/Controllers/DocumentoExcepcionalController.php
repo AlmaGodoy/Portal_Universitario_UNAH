@@ -11,57 +11,89 @@ use Illuminate\Support\Facades\Validator;
 class DocumentoExcepcionalController extends Controller
 {
     /**
+     * Muestra el formulario principal (Paso 1 + Pantalla intro)
+     */
+    public function index()
+    {
+        return view('cancelacion');
+    }
+
+    /**
      * Paso 1: Crear la solicitud de cancelación
+     * Recibe motivo_id + justificacion, llama al SP y redirige al Paso 2
      */
     public function subir(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'prioridad'           => 'required|string|max:20',
-            'observacion_inicial' => 'required|string',
+            'motivo_id'     => 'required|integer',
+            'justificacion' => 'required|string|min:10',
         ]);
 
+        // Si falla validación: regresa al formulario Y mantiene el step-form visible
         if ($validator->fails()) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => 'Datos incompletos',
-                'errores'   => $validator->errors()
-            ], 400);
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('show_form', true); // ← CLAVE: le dice a la vista que muestre paso 2
         }
 
         try {
-            // Valores de prueba
-            $id_persona_prueba = 8;
-            $id_usuario_prueba = 4;
+            // Ajusta estos valores a tu sistema de autenticación
+            $id_persona = auth()->user()->id_persona ?? 8;
+            $id_usuario = auth()->id() ?? 4;
 
-            // Ejecutar el procedimiento almacenado
-            // El orden debe ser: p_id_persona, p_prioridad, p_observacion_inicial, p_id_usuario
             $resultado = DB::select('CALL INS_CANCE_EXCEP(?, ?, ?, ?)', [
-                $id_persona_prueba,
-                $request->prioridad,
-                $request->observacion_inicial,
-                $id_usuario_prueba
+                $id_persona,
+                $request->motivo_id,      // → p_prioridad   (ID del motivo)
+                $request->justificacion,  // → p_observacion_inicial
+                $id_usuario
             ]);
 
-            // Verificamos si el procedimiento devolvió algo
             if (isset($resultado[0])) {
                 $res = $resultado[0];
 
-                // Si el procedimiento devolvió 'OK', respondemos con el ID creado
                 if ($res->resultado === 'OK') {
-                    return response()->json($res, 201);
+                    // Éxito: redirige al Paso 2 pasando el id_tramite por sesión
+                    // SP retorna el campo como 'id_tramite_creado'
+                    return redirect()->route('cancelacion.paso2')
+                        ->with('id_tramite', $res->id_tramite_creado ?? null)
+                        ->with('success', 'Solicitud registrada. Ahora adjunte su documentación.');
                 }
 
-                return response()->json($res, 400);
+                // SP respondió con error de negocio
+                return back()
+                    ->withErrors(['error' => $res->mensaje])
+                    ->withInput()
+                    ->with('show_form', true);
             }
 
-            return response()->json(['resultado' => 'ERROR', 'mensaje' => 'No se recibió respuesta del servidor'], 500);
+            return back()
+                ->withErrors(['error' => 'No se recibió respuesta del servidor.'])
+                ->withInput()
+                ->with('show_form', true);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => 'Error al ejecutar procedimiento: ' . $e->getMessage()
-            ], 500);
+            return back()
+                ->withErrors(['error' => 'Error en el sistema: ' . $e->getMessage()])
+                ->withInput()
+                ->with('show_form', true);
         }
+    }
+
+    /**
+     * Muestra el formulario del Paso 2 (subir documentos)
+     */
+    public function paso2()
+    {
+        // Si no viene id_tramite en sesión, no puede estar aquí
+        if (!session('id_tramite')) {
+            return redirect()->route('cancelacion.index')
+                ->withErrors(['error' => 'Debe completar el Paso 1 primero.']);
+        }
+
+        return view('cancelacion_paso2', [
+            'id_tramite' => session('id_tramite')
+        ]);
     }
 
     /**
@@ -71,51 +103,57 @@ class DocumentoExcepcionalController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'id_tramite'  => 'required|integer',
-            'archivo_pdf' => 'required|file|mimes:pdf|max:10240', // Max 10MB
+            'archivo_pdf' => 'required|file|mimes:pdf|max:10240',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['resultado' => 'ERROR', 'mensaje' => 'Datos o archivo inválidos'], 400);
+            return back()->withErrors(['error' => 'El archivo debe ser un PDF menor a 10MB.'])->withInput();
         }
 
         try {
             DB::beginTransaction();
 
-            $archivo = $request->file('archivo_pdf');
-            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-
-            $ruta = $archivo->storeAs('public/cancelaciones', $nombreArchivo);
+            $archivo       = $request->file('archivo_pdf');
+            $nombreArchivo = 'PUMA_' . time() . '_' . $archivo->getClientOriginalName();
+            $ruta          = $archivo->storeAs('public/cancelaciones', $nombreArchivo);
 
             $nuevoDoc = new Documento();
-            $nuevoDoc->id_tramite      = $request->id_tramite;
-            $nuevoDoc->tipo_documento  = 'CONSTANCIA_EXCEPCIONAL';
+            $nuevoDoc->id_tramite       = $request->id_tramite;
+            $nuevoDoc->tipo_documento   = 'SOLICITUD_CANCELACION';
             $nuevoDoc->nombre_documento = $nombreArchivo;
-            $nuevoDoc->hash_contenido  = hash_file('sha256', $archivo->getRealPath());
-            $nuevoDoc->ruta_archivo    = $ruta;
-            $nuevoDoc->numero_folio    = $request->numero_folio ?? 1;
-            $nuevoDoc->estado          = 1;
+            $nuevoDoc->hash_contenido   = hash_file('sha256', $archivo->getRealPath());
+            $nuevoDoc->ruta_archivo     = $ruta;
+            $nuevoDoc->numero_folio     = 1;
+            $nuevoDoc->estado           = 1;
             $nuevoDoc->save();
 
-            // Llamada al segundo procedimiento de validación
             DB::statement('CALL VAL_TRAMITE_ANTIFRAUDE(?)', [$request->id_tramite]);
 
             DB::commit();
 
-            return response()->json([
-                'resultado'  => 'OK',
-                'mensaje'    => 'Documento guardado y validado con éxito.',
-                'id_tramite' => $request->id_tramite
-            ], 201);
+            return redirect()->route('cancelacion.exito')
+                ->with('mensaje', 'Solicitud enviada correctamente a la facultad.');
 
         } catch (QueryException $e) {
             DB::rollBack();
-            if ($e->errorInfo[1] == 1062) {
-                return response()->json(['resultado' => 'REPETIDO', 'mensaje' => 'Este documento ya existe (Hash duplicado).'], 409);
-            }
-            return response()->json(['resultado' => 'ERROR_DB', 'mensaje' => $e->getMessage()], 400);
+            $mensaje = ($e->errorInfo[1] == 1062)
+                ? 'Este documento ya fue subido anteriormente.'
+                : $e->getMessage();
+            return back()->withErrors(['error' => $mensaje])->withInput();
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['resultado' => 'ERROR', 'mensaje' => $e->getMessage()], 500);
+            return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
         }
+    }
+
+    /**
+     * Vista de éxito final
+     */
+    public function exito()
+    {
+        return view('cancelacion_exito', [
+            'mensaje' => session('mensaje', 'Solicitud procesada correctamente.')
+        ]);
     }
 }
