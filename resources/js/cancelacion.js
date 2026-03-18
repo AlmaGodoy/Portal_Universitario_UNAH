@@ -1,144 +1,168 @@
 /**
- * PumaGestión — Cancelación Digital
+ * PumaGestión — Lógica de Cancelación Digital
  * FCEAC · UNAH
- * cancelacion.js
+ * Desarrollado por: Alma Patricia Godoy
  */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── Character counter ───────────────────────────
-    const textarea  = document.getElementById('observacion')
-    const charCount = document.getElementById('charCount')
-    const MAX_CHARS = 500
+    // ── 1. Contador de Caracteres Dinámico ───────────────────────────
+    const textarea  = document.getElementById('observacion');
+    const charCount = document.getElementById('charCount');
+    const MAX_CHARS = 500;
 
     if (textarea && charCount) {
         const updateCount = () => {
-            const len = textarea.value.length
-            charCount.textContent = `${len} / ${MAX_CHARS}`
-            charCount.classList.remove('warn', 'over')
-            if (len >= MAX_CHARS)         charCount.classList.add('over')
-            else if (len >= MAX_CHARS * 0.8) charCount.classList.add('warn')
-        }
-        textarea.addEventListener('input', updateCount)
-        updateCount()
-    }
+            const len = textarea.value.length;
+            charCount.textContent = `${len} / ${MAX_CHARS}`;
 
-    // ── Form validation & submit ────────────────────
-    const form   = document.getElementById('formCancelacion')
-    const btn    = document.getElementById('btnSubmit')
-
-    if (!form || !btn) return
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault()
-
-        if (!validateForm()) return
-
-        // Loading state
-        btn.disabled = true
-        btn.classList.add('loading')
-
-        try {
-            const response = await fetch(form.action || window.location.pathname, {
-                method:  'POST',
-                headers: { 'X-CSRF-TOKEN': getCsrfToken() },
-                body:    new FormData(form),
-            })
-
-            if (response.ok) {
-                const data = await response.json().catch(() => ({}))
-                if (data.redirect) {
-                    window.location.href = data.redirect
-                } else {
-                    window.location.reload()
-                }
+            // Gestión de estados visuales del contador
+            charCount.classList.remove('warn', 'over');
+            if (len >= MAX_CHARS) {
+                charCount.classList.add('over');
+                charCount.style.color = '#e24b4a'; // Rojo error
+            } else if (len >= MAX_CHARS * 0.8) {
+                charCount.classList.add('warn');
+                charCount.style.color = '#f5a623'; // Dorado advertencia
             } else {
-                showError('Ocurrió un error. Por favor intente de nuevo.')
-                btn.disabled = false
-                btn.classList.remove('loading')
+                charCount.style.color = 'rgba(255, 255, 255, 0.3)';
             }
-        } catch {
-            showError('Error de conexión. Verifique su internet.')
-            btn.disabled = false
-            btn.classList.remove('loading')
-        }
-    })
+        };
+        textarea.addEventListener('input', updateCount);
+        updateCount();
+    }
 
-    // ── Live field validation ────────────────────────
-    const requiredFields = form.querySelectorAll('[required]')
+    // ── 2. Validación y Envío del Formulario (AJAX) ──────────────────
+    const form = document.getElementById('formCancelacion');
+    const btn  = document.getElementById('btnSubmit');
+
+    if (form && btn) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Validación previa antes de intentar el envío
+            if (!validateForm()) {
+                showToast('Por favor, complete los campos obligatorios.', 'error');
+                return;
+            }
+
+            // Estado de carga (UX)
+            setLoading(true);
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Solicitud enviada con éxito.', 'success');
+                    // Redirección controlada por el backend
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/dashboard';
+                    }, 1500);
+                } else {
+                    // Manejo de errores de validación de Laravel (422)
+                    const errorMsg = data.message || 'Error en la validación de datos.';
+                    showToast(errorMsg, 'error');
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Error PumaGestión:', error);
+                showToast('Error de conexión con el servidor.', 'error');
+                setLoading(false);
+            }
+        });
+    }
+
+    // ── 3. Validación de Campos en Tiempo Real ──────────────────────
+    const requiredFields = document.querySelectorAll('.puma-input[required], .puma-select[required], .puma-textarea[required]');
+
     requiredFields.forEach(field => {
-        field.addEventListener('change', () => validateField(field))
-        field.addEventListener('blur',   () => validateField(field))
-    })
+        ['blur', 'change'].forEach(evt => {
+            field.addEventListener(evt, () => validateField(field));
+        });
+    });
 
-    // ── Helpers ──────────────────────────────────────
+    // ── 4. Funciones Auxiliares (Helpers) ────────────────────────────
 
-    function validateForm () {
-        let valid = true
+    function validateForm() {
+        let isValid = true;
         requiredFields.forEach(field => {
-            if (!validateField(field)) valid = false
-        })
-        return valid
+            if (!validateField(field)) isValid = false;
+        });
+        return isValid;
     }
 
-    function validateField (field) {
-        const isEmpty = field.value.trim() === '' || field.value === ''
-        const wrap    = field.closest('.puma-input-wrap') || field.parentElement
+    function validateField(field) {
+        const val = field.value.trim();
+        const isValid = val !== '';
 
-        if (isEmpty) {
-            field.style.borderColor = 'rgba(226, 75, 74, 0.65)'
-            field.style.boxShadow   = '0 0 0 3px rgba(226, 75, 74, 0.10)'
-            return false
+        if (!isValid) {
+            field.style.borderColor = '#e24b4a'; // Rojo UNAH Error
+            field.style.boxShadow = '0 0 0 3px rgba(226, 75, 74, 0.15)';
         } else {
-            field.style.borderColor = 'rgba(245, 166, 35, 0.40)'
-            field.style.boxShadow   = '0 0 0 3px rgba(245, 166, 35, 0.08)'
-            return true
+            field.style.borderColor = 'rgba(245, 166, 35, 0.5)'; // Dorado UNAH
+            field.style.boxShadow = 'none';
+        }
+        return isValid;
+    }
+
+    function setLoading(isLoading) {
+        if (isLoading) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="puma-spinner"></span> Procesando...';
+            btn.style.opacity = '0.7';
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = 'Enviar Solicitud <i class="puma-btn__arrow">→</i>';
+            btn.style.opacity = '1';
         }
     }
 
-    function getCsrfToken () {
-        const meta = document.querySelector('meta[name="csrf-token"]')
-        return meta ? meta.getAttribute('content') : ''
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     }
 
-    function showError (msg) {
-        // Remove existing toast if any
-        document.getElementById('puma-toast')?.remove()
+    // ── 5. Sistema de Notificaciones (Toast) ─────────────────────────
+    function showToast(message, type = 'error') {
+        const existing = document.getElementById('puma-toast');
+        if (existing) existing.remove();
 
-        const toast = document.createElement('div')
-        toast.id = 'puma-toast'
+        const toast = document.createElement('div');
+        toast.id = 'puma-toast';
+        const bgColor = type === 'success' ? '#2d6a4f' : '#a32d2d';
+
         toast.style.cssText = `
-            position: fixed;
-            bottom: 28px;
-            left: 50%;
+            position: fixed; bottom: 30px; left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: #a32d2d;
-            color: #fff;
-            font-family: 'Nunito', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            padding: 12px 24px;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        `
-        toast.textContent = msg
-        document.body.appendChild(toast)
+            background: ${bgColor}; color: white;
+            padding: 12px 25px; border-radius: 12px;
+            font-family: 'Nunito', sans-serif; font-size: 14px;
+            font-weight: 700; z-index: 10000; opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        `;
 
-        // Animate in
-        requestAnimationFrame(() => {
-            toast.style.opacity   = '1'
-            toast.style.transform = 'translateX(-50%) translateY(0)'
-        })
+        toast.textContent = message;
+        document.body.appendChild(toast);
 
-        // Auto-dismiss after 4 s
         setTimeout(() => {
-            toast.style.opacity   = '0'
-            toast.style.transform = 'translateX(-50%) translateY(20px)'
-            setTimeout(() => toast.remove(), 350)
-        }, 4000)
-    }
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+        }, 100);
 
-})
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(20px)';
+            setTimeout(() => toast.remove(), 400);
+        }, 3500);
+    }
+});
