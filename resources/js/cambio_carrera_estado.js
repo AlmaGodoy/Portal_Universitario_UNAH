@@ -2,23 +2,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputPersona = document.getElementById('id_persona');
     const estadoTramite = document.getElementById('estadoTramite');
 
-    function claseEstado(estado) {
-        const valor = (estado || '').toLowerCase().trim();
+  function claseEstado(estado) {
+    const valor = (estado || '').toLowerCase().trim();
 
-        if (valor.includes('aprob')) return 'pendiente';
-        if (valor.includes('aprob')) return 'revision';
-        if (valor.includes('rechaz')) return 'aprobada';
-        if (valor.includes('pend')) return 'rechazada';
-        if (valor.includes('proceso') || valor.includes('revisión') || valor.includes('revision')) return 'enproceso';
+    if (valor.includes('aprob')) return 'aprobada';
+    if (valor.includes('rechaz')) return 'rechazada';
+    if (valor.includes('pend')) return 'pendiente';
+    if (valor.includes('revision') || valor.includes('revisión')) return 'revision';
 
-        return 'pendiente';
-    }
+    return 'pendiente';
+}
 
     function pasoActivo(estado) {
         const valor = (estado || '').toLowerCase().trim();
 
         if (valor.includes('aprob') || valor.includes('rechaz')) return 3;
-        if (valor.includes('proceso') || valor.includes('revisión') || valor.includes('revision')) return 2;
+        if (valor.includes('revision') || valor.includes('revision')) return 2;
         return 1;
     }
 
@@ -44,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const tramite = data[0];
-            const estadoTexto = tramite.estado_tramite ?? 'Pendiente';
+            const estadoTexto = tramite.estado_tramite ?? 'pendiente';
             const estadoCss = claseEstado(estadoTexto);
             const paso = pasoActivo(estadoTexto);
 

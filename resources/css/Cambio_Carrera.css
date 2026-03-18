@@ -519,17 +519,17 @@ hr {
     color: #856404;
 }
 
-.estado-badge.aprobado {
+.estado-badge.revision {
     background: #e8f5e9;
     color: #2e7d32;
 }
 
-.estado-badge.rechazado {
+.estado-badge.aprobada {
     background: #ffebee;
     color: #c62828;
 }
 
-.estado-badge.enproceso {
+.estado-badge.rechazada {
     background: #e3f2fd;
     color: #1565c0;
 }
