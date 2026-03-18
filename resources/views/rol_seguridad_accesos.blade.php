@@ -1,8 +1,17 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Accesos</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-@section('content')
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    @vite(['resources/css/rolseguridad.css', 'resources/js/rolseguridad.js'])
+</head>
+<body>
 
-<div class="container py-4">
+<div class="container py-4 security-page">
 
     @if(session('status'))
         <div class="alert alert-success shadow-sm">
@@ -21,8 +30,8 @@
         <div class="col-lg-5">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h2 class="fw-bold mb-0">Gestión de Accesos</h2>
-                    <p class="text-muted mb-0">Asignación de permisos por rol y objeto.</p>
+                    <h2 class="security-title">Gestión de Accesos</h2>
+                    <p class="security-subtitle">Asignación de permisos por rol y objeto.</p>
                 </div>
 
                 <a href="{{ route('seguridad.index') }}" class="btn btn-outline-secondary">
@@ -30,13 +39,13 @@
                 </a>
             </div>
 
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
                     <span class="fw-bold text-white">Asignar Nuevo Acceso</span>
                 </div>
 
                 <div class="card-body bg-white">
-                    <form action="{{ route('seguridad.acceso.store') }}" method="POST">
+                    <form action="{{ route('seguridad.acceso.store') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas asignar este acceso?">
                         @csrf
 
                         <div class="mb-3">
@@ -84,7 +93,7 @@
         </div>
 
         <div class="col-lg-7">
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
                     <span class="fw-bold text-white">Accesos Registrados</span>
                 </div>
@@ -115,7 +124,8 @@
                                         <td>
                                             <form action="{{ route('seguridad.acceso.delete', $acceso->id_rol_permiso) }}"
                                                   method="POST"
-                                                  onsubmit="return confirm('¿Eliminar este acceso?')">
+                                                  class="js-confirm-delete"
+                                                  data-confirm="¿Eliminar este acceso?">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm">
@@ -141,21 +151,6 @@
     </div>
 </div>
 
-<style>
-    .security-header {
-        background: #3b82c4;
-        color: white;
-        border-bottom: none;
-    }
-
-    .card {
-        border-radius: 10px;
-    }
-
-    .table th,
-    .table td {
-        vertical-align: middle;
-    }
-</style>
-
-@endsection
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

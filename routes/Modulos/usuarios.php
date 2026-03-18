@@ -5,34 +5,41 @@ use App\Http\Controllers\UsuarioController;
 
 /*
 |--------------------------------------------------------------------------
-| API de Usuarios
+| Rutas WEB de Usuarios
 |--------------------------------------------------------------------------
+| Estas rutas cargan vistas Blade o enlaces públicos.
 */
 
-// Registro web por tipo
-Route::prefix('api/usuarios')->middleware('guest')->group(function () {
-
-    Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
+Route::middleware('guest')->group(function () {
+  Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
         ->whereIn('tipo', ['estudiante', 'empleado'])
         ->name('register.tipo');
-
-    Route::post('/register', [UsuarioController::class, 'crearWeb'])
-        ->name('register.store');
 
     Route::get('/verificar-correo/{token}', [UsuarioController::class, 'verificarCorreo'])
         ->name('email.verify');
 });
 
-// Gestión de usuarios autenticados
-Route::prefix('api/usuarios')->middleware('auth')->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Rutas API de Usuarios
+|--------------------------------------------------------------------------
+| Estas rutas procesan formularios y acciones autenticadas.
+*/
 
-    Route::post('/{id_persona}/activar', [UsuarioController::class, 'activar'])
-        ->name('usuarios.activar');
+Route::prefix('api/usuarios')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::post('/register', [UsuarioController::class, 'crearWeb'])
+            ->name('register.store');
+    });
 
-    Route::post('/{id_persona}/desactivar', [UsuarioController::class, 'desactivar'])
-        ->name('usuarios.desactivar');
+    Route::middleware('auth')->group(function () {
+        Route::post('/{id_persona}/activar', [UsuarioController::class, 'activar'])
+            ->name('usuarios.activar');
 
-    Route::post('/{id_usuario}/rol', [UsuarioController::class, 'asignarRol'])
-        ->name('usuarios.rol');
+        Route::post('/{id_persona}/desactivar', [UsuarioController::class, 'desactivar'])
+            ->name('usuarios.desactivar');
 
+        Route::post('/{id_usuario}/rol', [UsuarioController::class, 'asignarRol'])
+            ->name('usuarios.rol');
+    });
 });
