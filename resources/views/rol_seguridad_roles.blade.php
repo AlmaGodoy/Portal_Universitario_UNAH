@@ -1,7 +1,17 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Roles</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-@section('content')
-<div class="container py-4">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    @vite(['resources/css/rolseguridad.css', 'resources/js/rolseguridad.js'])
+</head>
+<body>
+
+<div class="container py-4 security-page">
 
     @if(session('status'))
         <div class="alert alert-success shadow-sm">
@@ -17,12 +27,11 @@
 
     <div class="row g-4">
 
-        {{-- PANEL DE ROLES --}}
         <div class="col-lg-7">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h2 class="fw-bold mb-0">Gestión de Roles</h2>
-                    <p class="text-muted mb-0">Crear, editar, activar o desactivar roles.</p>
+                    <h2 class="security-title">Gestión de Roles</h2>
+                    <p class="security-subtitle">Crear, editar, activar o desactivar roles.</p>
                 </div>
 
                 <div>
@@ -36,7 +45,7 @@
                 </div>
             </div>
 
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 security-card">
                 <div class="card-header security-header d-flex justify-content-between align-items-center">
                     <span class="fw-bold text-white">Lista de Roles</span>
                 </div>
@@ -86,15 +95,14 @@
             </div>
         </div>
 
-        {{-- ASIGNACIÓN DE PERMISOS --}}
         <div class="col-lg-5">
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
                     <span class="fw-bold text-white">Asignación de Permisos</span>
                 </div>
 
                 <div class="card-body bg-white">
-                    <form action="{{ route('seguridad.asignar.objeto') }}" method="POST">
+                    <form action="{{ route('seguridad.asignar.objeto') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas asignar estos permisos?">
                         @csrf
 
                         <div class="mb-3">
@@ -156,9 +164,8 @@
             </div>
         </div>
 
-        {{-- TABLA DE ASIGNACIONES --}}
         <div class="col-12">
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
                     <span class="fw-bold text-white">Asignaciones de Roles y Permisos</span>
                 </div>
@@ -187,7 +194,8 @@
                                         <td>
                                             <form action="{{ route('seguridad.asignacion.delete', $rp->id_rol_permiso) }}"
                                                   method="POST"
-                                                  onsubmit="return confirm('¿Eliminar esta asignación?')">
+                                                  class="js-confirm-delete"
+                                                  data-confirm="¿Eliminar esta asignación?">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm">
@@ -211,11 +219,10 @@
     </div>
 </div>
 
-{{-- MODAL NUEVO ROL --}}
 <div class="modal fade" id="modalNuevoRol" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content shadow">
-            <form action="{{ route('seguridad.rol.store') }}" method="POST">
+            <form action="{{ route('seguridad.rol.store') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar este rol?">
                 @csrf
 
                 <div class="modal-header security-header">
@@ -251,12 +258,11 @@
     </div>
 </div>
 
-{{-- MODALES EDITAR ROL --}}
 @foreach($roles as $rol)
 <div class="modal fade" id="modalEditarRol{{ $rol->id_rol }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content shadow">
-            <form action="{{ route('seguridad.rol.update', $rol->id_rol) }}" method="POST">
+            <form action="{{ route('seguridad.rol.update', $rol->id_rol) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar los cambios de este rol?">
                 @csrf
                 @method('PUT')
 
@@ -298,26 +304,6 @@
 </div>
 @endforeach
 
-<style>
-    .security-header {
-        background: #3b82c4;
-        color: white;
-        border-bottom: none;
-    }
-
-    .input-highlight {
-        background-color: #eef5be;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .card {
-        border-radius: 10px;
-    }
-
-    .table th,
-    .table td {
-        vertical-align: middle;
-    }
-</style>
-@endsection
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

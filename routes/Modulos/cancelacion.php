@@ -17,3 +17,7 @@ Route::prefix('api/cancelaciones')->group(function () {
     Route::post('guardar-documento', [DocumentoExcepcionalController::class, 'guardarDocumento']);
     Route::put('actualizar/{id}', [DocumentoExcepcionalController::class, 'actualizar']);
 });
+
+Route::get('/cancelacion-excepcional', function () {
+    return view('cancelacion');
+})->name('cancelacion.index');

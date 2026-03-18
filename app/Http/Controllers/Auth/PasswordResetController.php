@@ -24,7 +24,7 @@ class PasswordResetController extends Controller
             'correo' => 'required|email|max:100',
         ]);
 
-        $correo = strtolower(trim((string)$request->correo));
+        $correo = strtolower(trim((string) $request->correo));
 
         $res = DB::select('CALL SOL_REST_CONTRASENA_LOGIN(?)', [$correo]);
 
@@ -33,7 +33,9 @@ class PasswordResetController extends Controller
 
         if ($resultado !== 'OK') {
             $mensaje = $row->mensaje ?? 'No se pudo procesar la solicitud.';
-            return back()->withErrors(['correo' => $mensaje])->withInput();
+            return back()->withErrors([
+                'correo' => $mensaje
+            ])->withInput();
         }
 
         $idUsuario = $row->id_usuario ?? null;
@@ -47,21 +49,30 @@ class PasswordResetController extends Controller
         $tokenPlano = Str::random(64);
         $tokenHash = hash('sha256', $tokenPlano);
 
-        DB::table('tbl_login_autentications')
-            ->where('id_usuario', $idUsuario)
-            ->where('tipo', 'password_reset')
-            ->whereNull('used_at')
-            ->delete();
-
-        DB::table('tbl_login_autentications')->insert([
-            'id_usuario' => $idUsuario,
-            'tipo' => 'password_reset',
-            'valor_hash' => $tokenHash,
-            'expires_at' => now()->addMinutes(60),
-            'used_at' => null,
-            'created_at' => now(),
-            'updated_at' => now(),
+        DB::select('CALL DEL_LOGIN_AUTHENTICATION_TIPO(?, ?)', [
+            $idUsuario,
+            'password_reset',
         ]);
+
+        $resAuth = DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
+            $idUsuario,
+            'password_reset',
+            $tokenHash,
+            now()->addMinutes(60)->format('Y-m-d H:i:s'),
+            null,
+            null,
+            null,
+        ]);
+
+        $rowAuth = $resAuth[0] ?? null;
+        $resultadoAuth = $rowAuth->resultado ?? 'ERROR';
+        $mensajeAuth = $rowAuth->mensaje ?? 'No se pudo registrar el token de recuperación.';
+
+        if ($resultadoAuth !== 'OK') {
+            return back()->withErrors([
+                'correo' => $mensajeAuth
+            ])->withInput();
+        }
 
         $link = route('custom.password.reset.form', ['token' => $tokenPlano]);
 
