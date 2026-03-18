@@ -11,7 +11,7 @@ use App\Http\Controllers\UsuarioController;
 */
 
 Route::middleware('guest')->group(function () {
-    Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
+  Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
         ->whereIn('tipo', ['estudiante', 'empleado'])
         ->name('register.tipo');
 

@@ -140,4 +140,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // carga inicial
     cargarCalendarioVigente();
     cargarCarreras();
+    cargarMisTramites();
+
+    async function cargarMisTramites() {
+    try {
+        const idPersona = parseInt(inputPersona.value, 10);
+
+        const res = await fetch(`/api/cambio-carrera/ver/${idPersona}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        const data = await res.json();
+
+        const tbody = document.getElementById('tbodyTramites');
+
+        // si viene vacío
+        if (!Array.isArray(data) || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5">No tienes trámites registrados.</td></tr>`;
+            return;
+        }
+
+        // llenar tabla
+        tbody.innerHTML = '';
+        data.forEach(t => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${t.id_tramite}</td>
+                    <td>${t.fecha_solicitud ?? ''}</td>
+                    <td>${t.carrera_destino ?? ''}</td>
+                    <td>${t.estado_tramite ?? ''}</td>
+                    <td>${t.direccion ?? ''}</td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error(err);
+        const tbody = document.getElementById('tbodyTramites');
+        tbody.innerHTML = `<tr><td colspan="5">Error cargando trámites.</td></tr>`;
+    }
+}
 });

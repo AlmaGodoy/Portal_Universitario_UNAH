@@ -104,6 +104,7 @@ class UsuarioController extends Controller
             ]);
         } else {
             $request->validate([
+                'id_rol' => 'required|integer|in:4,5',
                 'id_departamento' => 'required|integer',
                 'cod_empleado' => 'required|string|max:50',
                 'tipo_empleado' => 'required|string|in:coordinador,secretario|max:50',

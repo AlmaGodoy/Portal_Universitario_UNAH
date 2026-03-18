@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cambio de Carrera</title>
 
-    {{-- ✅ CARGA CORRECTA CON VITE --}}
+ 
     @vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera.js'])
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <form id="formCambioCarrera">
         <!-- (TEMPORAL) mientras no hay login -->
-        <input type="hidden" id="id_persona" value="12">
+        <input type="hidden" id="id_persona" value="20">
         <input type="hidden" id="id_calendario" value="">
 
         <label for="id_carrera_destino">Carrera destino</label>
@@ -61,6 +61,27 @@
         <p><b>Nota:</b> Este sistema es de seguimiento. Para completar el proceso oficial, también debes realizarlo en Registro UNAH.</p>
         <a class="btnLink" href="https://registro.unah.edu.hn/" target="_blank">Ir a Registro UNAH</a>
     </div>
+
+    <hr>
+
+<h3>Mis trámites de Cambio de Carrera</h3>
+
+<table class="tabla" id="tablaTramites" style="width:100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th>ID Trámite</th>
+            <th>Fecha</th>
+            <th>Carrera Destino</th>
+            <th>Estado</th>
+            <th>Dirección</th>
+        </tr>
+    </thead>
+    <tbody id="tbodyTramites">
+        <tr>
+            <td colspan="5">Cargando trámites...</td>
+        </tr>
+    </tbody>
+</table>
 </div>
 
 </body>
