@@ -1,0 +1,103 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+}
+
+.security-page {
+    padding: 30px 0;
+}
+
+.security-header {
+    background: #3b82c4;
+    color: white;
+    border-bottom: none;
+}
+
+.security-card,
+.card {
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+}
+
+.security-card {
+    transition: all .2s ease;
+}
+
+.security-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+}
+
+label,
+.form-label {
+    font-weight: bold;
+}
+
+input,
+select,
+textarea,
+button {
+    border-radius: 6px !important;
+}
+
+.input-highlight {
+    background-color: #eef5be;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+}
+
+.msg {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.msg.ok {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.msg.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.info {
+    color: #444;
+    font-size: 14px;
+}
+
+.registroBox {
+    margin-top: 10px;
+}
+
+.btnLink {
+    display: inline-block;
+    margin-top: 8px;
+    background: #2e7d32;
+    color: white;
+    padding: 10px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.btnLink:hover {
+    opacity: .9;
+    color: white;
+}
+
+.security-title {
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+.security-subtitle {
+    color: #6c757d;
+    margin-bottom: 0;
+}

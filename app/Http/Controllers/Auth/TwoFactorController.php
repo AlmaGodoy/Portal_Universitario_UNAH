@@ -10,19 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class TwoFactorController extends Controller
 {
-    private function registrarBitacora(?int $idUsuario, string $accion, string $descripcion, ?int $idObjeto = null): void
-    {
-        try {
-            DB::table('tbl_bitacora')->insert([
-                'id_usuario' => $idUsuario,
-                'id_objeto' => $idObjeto,
-                'accion' => $accion,
-                'fecha_accion' => now(),
-                'descripcion' => $descripcion,
-            ]);
-        } catch (\Throwable $e) {
-        }
-    }
+    private const ID_OBJETO_LOGIN = 12;
 
     public function form()
     {
@@ -39,66 +27,82 @@ class TwoFactorController extends Controller
             'code' => 'required|digits:6',
         ]);
 
-        $userId = session('twofa_user_id');
+        $userId = (int) session('twofa_user_id');
 
         if (!$userId) {
             return redirect()->route('portal');
         }
 
-        $record = DB::table('tbl_login_autentications')
-            ->where('id_usuario', $userId)
-            ->where('tipo', 'two_factor')
-            ->whereNull('used_at')
-            ->where('expires_at', '>', now())
-            ->latest('id_auth')
-            ->first();
+        try {
+            $res = DB::select('CALL SEL_TWOFA_ACTIVO(?)', [$userId]);
 
-        if (!$record) {
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'Código inválido o expirado.';
+
+            if ($resultado !== 'OK') {
+                return back()->withErrors([
+                    'code' => $mensaje
+                ]);
+            }
+
+            $idAuth = $row->id_auth ?? null;
+            $valorHash = $row->valor_hash ?? null;
+
+            if (!$idAuth || !$valorHash) {
+                return back()->withErrors([
+                    'code' => 'Código inválido o expirado.'
+                ]);
+            }
+
+            if ($valorHash !== hash('sha256', $request->code)) {
+                return back()->withErrors([
+                    'code' => 'Código incorrecto.'
+                ]);
+            }
+
+            $resUpd = DB::select('CALL UPD_TWOFA_VERIFICADO(?, ?, ?)', [
+                $idAuth,
+                $userId,
+                self::ID_OBJETO_LOGIN,
+            ]);
+
+            $rowUpd = $resUpd[0] ?? null;
+            $resultadoUpd = $rowUpd->resultado ?? 'ERROR';
+            $mensajeUpd = $rowUpd->mensaje ?? 'No se pudo verificar el código 2FA.';
+
+            if ($resultadoUpd !== 'OK') {
+                return back()->withErrors([
+                    'code' => $mensajeUpd
+                ]);
+            }
+
+            $user = User::find($userId);
+
+            if (!$user) {
+                return redirect()->route('portal')
+                    ->with('status', 'No se pudo completar el inicio de sesión.');
+            }
+
+            Auth::login($user);
+            session()->regenerate();
+
+            session()->forget('twofa_user_id');
+            session()->forget('twofa_login_tipo');
+
+            $idRol = (int) $user->id_rol;
+
+            return match ($idRol) {
+                2 => redirect()->route('panel.estudiante'),
+                4 => redirect('/panel-coordinador'),
+                5 => redirect('/panel-secretario'),
+                default => redirect('/home'),
+            };
+
+        } catch (\Throwable $e) {
             return back()->withErrors([
-                'code' => 'Código inválido o expirado.'
+                'code' => 'Ocurrió un error al verificar el código. Intenta nuevamente.'
             ]);
         }
-
-        if ($record->valor_hash !== hash('sha256', $request->code)) {
-            return back()->withErrors([
-                'code' => 'Código incorrecto.'
-            ]);
-        }
-
-        DB::table('tbl_login_autentications')
-            ->where('id_auth', $record->id_auth)
-            ->update([
-                'used_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-        DB::table('tbl_usuario')
-            ->where('id_usuario', $userId)
-            ->update([
-                'twofa_verified_at' => now()
-            ]);
-
-        $this->registrarBitacora(
-            (int)$userId,
-            '2fa_verificado',
-            'Código 2FA verificado correctamente.'
-        );
-
-        $user = User::find($userId);
-
-        Auth::login($user);
-        session()->regenerate();
-
-        session()->forget('twofa_user_id');
-        session()->forget('twofa_login_tipo');
-
-        $idRol = $user->id_rol;
-
-        return match ($idRol) {
-            2 => redirect('/panel-estudiante'),
-            4 => redirect('/panel-coordinador'),
-            5 => redirect('/panel-secretario'),
-            default => redirect('/home'),
-        };
     }
 }
