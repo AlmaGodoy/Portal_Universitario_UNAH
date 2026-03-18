@@ -28,6 +28,12 @@
     </header>
 
     <div class="page-wrap">
+        <nav class="subnav">
+        <a href="/cambio-carrera" class="active">Nuevo trámite</a>
+        <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
+        <a href="/cambio-carrera/estado">Estado / Dictamen</a>
+    </nav>
+
         <div class="card">
             <h2>Solicitud de Cambio de Carrera</h2>
 
@@ -78,27 +84,6 @@
                 <a class="btnLink" href="https://registro.unah.edu.hn/" target="_blank">Ir a Registro UNAH</a>
             </div>
 
-            <hr>
-
-            <h3>Mis trámites de Cambio de Carrera</h3>
-
-            <table class="tabla" id="tablaTramites" style="width:100%; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th>ID Trámite</th>
-                        <th>Fecha</th>
-                        <th>Carrera Destino</th>
-                        <th>Estado</th>
-                        <th>Dirección</th>
-                    </tr>
-                </thead>
-                <tbody id="tbodyTramites">
-                    <tr>
-                        <td colspan="5">Cargando trámites...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </div>
 
 </body>
