@@ -67,8 +67,9 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-exchange-alt"></i><p>Cambio de Carrera</p>
+          <a href="{{ route('cambio-carrera.index') }}" class="nav-link">
+            <i class="nav-icon fas fa-exchange-alt"></i>
+            <p>Cambio de Carrera</p>
           </a>
         </li>
         <li class="nav-item">
