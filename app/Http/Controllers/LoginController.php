@@ -351,12 +351,12 @@ class LoginController extends Controller
             );
 
             if ($tipoUsuarioDb === 'estudiante') {
-                return redirect()->route('panel.estudiante');
+                return redirect()->route('dashboard');
             }
 
             return match ($rolNombre) {
-                'coordinador' => redirect('/panel-coordinador'),
-                'secretario' => redirect('/panel-secretario'),
+                'coordinador' => redirect('dashboard'),
+                'secretario' => redirect('dashboard'),
                 default => redirect('/home'),
             };
         } catch (\Throwable $e) {
