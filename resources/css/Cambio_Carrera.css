@@ -207,6 +207,11 @@ table td {
     border-bottom: 1px solid #ddd;
 }
 
+table td {
+    white-space: normal;
+    word-break: break-word;
+}
+
 table th {
     color: #1d3557;
     font-weight: 700;
@@ -380,7 +385,7 @@ hr {
         font-size: 0.85rem;
         display: block;
         overflow-x: auto;
-        white-space: nowrap;
+        white-space: normal;
     }
 }
 
@@ -575,4 +580,45 @@ hr {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+}
+
+.preview-archivo {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #d9e6fb;
+    border-radius: 8px;
+    background: #f8fbff;
+}
+
+.preview-archivo p {
+    margin: 4px 0;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.preview-actions button {
+    width: auto;
+    padding: 8px 12px;
+}
+
+.btn-ver-doc {
+    display: inline-block;
+    background: #1f6fc2;
+    color: white;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.sin-documento {
+    color: #777;
+    font-size: 0.85rem;
+    font-style: italic;
 }
