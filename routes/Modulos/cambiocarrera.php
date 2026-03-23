@@ -26,7 +26,8 @@ Route::prefix('api/cambio-carrera')->group(function () {
 // ============================
 Route::get('/cambio-carrera', function () {
     return view('cambio_carrera');
-});
+    })->name('cambio-carrera.index');
+
 
 Route::get('/cambio-carrera/mis-tramites', function () {
     return view('cambio_carrera_tramites');
