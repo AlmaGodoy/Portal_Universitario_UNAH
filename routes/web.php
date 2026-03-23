@@ -9,7 +9,6 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\AuditoriaController;
-use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\Emitir_ResolucionController;
 use App\Http\Controllers\ValidarDocumentoController;
@@ -23,17 +22,6 @@ use App\Http\Controllers\RolController;
 
 // Rutas de API agrupadas
 Route::prefix('api')->group(function () {
-    // BITACORA
-
-    Route::get('bitacora/index', [BitacoraController::class, 'index'])->name('bitacora.index');
-    Route::get('bitacora/ver/{fecha_inicial}/{fecha_final}', [BitacoraController::class, 'ver'])->name('bitacora.ver');
-    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha_accion}/{descripcion}', [BitacoraController::class, 'ingresar'])->name('bitacora.ingresar');
-
-    //AUDITORIA
-    Route::get('auditoria/ver/{fecha_inicial}/{fecha_final}', [AuditoriaController::class, 'ver']);
-    Route::get('auditoria/ingresar/{id_usuario}/{id_objeto}/{accion}/{descripcion}/{fecha}', [AuditoriaController::class, 'ingresar']);
-
-
     // TUS RUTAS DE CANCELACIÓN (APIS)
     Route::post('cancelaciones/crear', [DocumentoExcepcionalController::class, 'subir']);
     Route::get('cancelaciones/todas', [DocumentoExcepcionalController::class, 'obtenerTodos']);
@@ -179,9 +167,12 @@ Route::post('/2fa', [TwoFactorController::class, 'verify'])
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-
-
 });
+
+// Ruta de cancelación excepcional
+Route::get('/cancelacion-excepcional', function () {
+    return view('cancelacion');
+})->middleware('auth')->name('cancelacion.index');
 
 // ============================
 // FRONTEND - CAMBIO DE CARRERA

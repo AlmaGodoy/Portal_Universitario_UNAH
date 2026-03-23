@@ -1,103 +1,90 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambio de Carrera</title>
 
-@section('content')
-@vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera.js'])
+    @vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera.js'])
+</head>
+<body>
 
-<div class="container py-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Gestión de Cambio de Carrera</h4>
+    <header class="topbar">
+        <div class="brand">
+            <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
+
+            <div class="brand-text">
+                <h1 class="brand-title">
+                    <span class="puma">Puma</span><span class="gestion">Gestión</span>
+                </h1>
+                <span class="brand-subtitle">FCEAC - UNAH</span>
+            </div>
         </div>
-        <div class="card-body">
-            <p class="text-muted">Portal para la creación y seguimiento de trámites académicos.</p>
 
+        <div class="topbar-center">Laravel</div>
 
-            <ul class="nav nav-pills mb-4" id="ccTabs" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" id="tab-crear" data-bs-toggle="tab" data-bs-target="#pane-crear" type="button">Crear Solicitud</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="tab-consultar" data-bs-toggle="tab" data-bs-target="#pane-consultar" type="button">Consultar</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="tab-estado" data-bs-toggle="tab" data-bs-target="#pane-estado" type="button">Estado</button>
-                </li>
-            </ul>
+        <div class="topbar-right">Login</div>
+    </header>
 
-            <div class="tab-content">
+    <div class="page-wrap">
+        <nav class="subnav">
+        <a href="/cambio-carrera" class="active">Nuevo trámite</a>
+        <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
+        <a href="/cambio-carrera/estado">Estado / Dictamen</a>
+    </nav>
 
-                <div class="tab-pane fade show active" id="pane-crear" role="tabpanel">
-                    <form id="formCrear" class="row g-3">
-                        @csrf
+        <div class="card">
+            <h2>Solicitud de Cambio de Carrera</h2>
 
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">ID Persona</label>
-                            <input type="number" class="form-control bg-light" name="id_persona" id="id_persona" value="12" readonly>
-                            <small class="text-muted">ID temporal de sesión</small>
-                        </div>
+            <p class="info">
+                Completa el formulario. Al crear el trámite, se habilitará la sección para subir tu <b>Historial Académico (PDF)</b>.
+            </p>
 
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Calendario Académico</label>
-                            <select class="form-select" name="id_calendario" id="id_calendario" required>
-                                <option value="">Seleccione el periodo...</option>
-                                <option value="1">Primer Período 2026</option>
-                            </select>
-                        </div>
+            <form id="formCambioCarrera">
+                <input type="hidden" id="id_persona" value="20">
+                <input type="hidden" id="id_calendario" value="">
 
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Carrera Destino</label>
-                            <select class="form-select" name="id_carrera_destino" id="id_carrera_destino" required>
-                                <option value="">Cargando carreras...</option>
-                            </select>
-                        </div>
+                <label for="id_carrera_destino">Carrera destino</label>
+                <select id="id_carrera_destino" required>
+                    <option value="">Cargando carreras...</option>
+                </select>
 
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Justificación del Cambio</label>
-                            <textarea class="form-control" name="justificacion" id="justificacion" rows="2" placeholder="Explique brevemente los motivos..." required></textarea>
-                        </div>
+                <label for="direccion">Justificación por la cual solicita el cambio de carrera</label>
+                <input type="text" id="direccion" placeholder="justificación" required>
 
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Departamento / Facultad</label>
-                            <input type="text" class="form-control" name="direccion" id="direccion" placeholder="Ej: Facultad de Ciencias Económicas" required>
-                        </div>
+                <button type="submit" id="btnCrearTramite">Crear trámite</button>
+            </form>
 
-                        <div class="col-12">
-                            <button class="btn btn-primary px-4" type="submit" id="btnCrearTramite">
-                                <i class="bi bi-plus-circle"></i> Crear Trámite
-                            </button>
-                        </div>
-                    </form>
+            <hr>
 
-                    {{-- SECCIÓN PDF --}}
-                    <div id="seccionHistorial" class="mt-4 p-3 border rounded border-warning bg-light" style="display:none;">
-                        <h5 class="text-warning"><i class="bi bi-file-earmark-pdf"></i> Paso Final: Adjuntar Historial</h5>
-                        <form id="formHistorial">
-                            <input type="hidden" name="id_tramite" id="id_tramite_input">
-                            <div class="input-group">
-                                <input type="file" class="form-control" id="archivo_pdf" accept=".pdf" required>
-                                <button class="btn btn-success" type="submit">Subir Archivo</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            <div id="seccionHistorial" style="display:none;">
+                <h3>Subir Historial Académico (PDF)</h3>
 
-                {{-- PANE: CONSULTAR --}}
-                <div class="tab-pane fade" id="pane-consultar" role="tabpanel">
-                    <div class="input-group mb-3" style="max-width: 400px;">
-                        <input type="number" class="form-control" id="codigo_busqueda" placeholder="Ingrese ID de Trámite">
-                        <button class="btn btn-success" id="btnConsultar">Buscar</button>
-                    </div>
-                    <div id="resultadoConsulta" class="mt-3"></div>
-                </div>
+                <p class="info">
+                    Sube el PDF de tu historial académico. Este documento respalda las validaciones del trámite.
+                </p>
 
-                {{-- PANE: ESTADO --}}
-                <div class="tab-pane fade" id="pane-estado" role="tabpanel">
-                    <div class="alert alert-secondary">Módulo de actualización para coordinadores.</div>
-                </div>
+                <form id="formHistorial" enctype="multipart/form-data">
+                    <input type="hidden" id="id_tramite" value="">
+
+                    <label for="archivo">Selecciona tu PDF</label>
+                    <input type="file" id="archivo" accept="application/pdf" required>
+
+                    <button type="submit" id="btnSubirPDF">Subir PDF</button>
+                </form>
             </div>
 
-            <div id="alertas" class="mt-3"></div>
-        </div>
+            <div id="msg" class="msg"></div>
+
+            <hr>
+
+            <div class="registroBox">
+                <p><b>Nota:</b> Este sistema es de seguimiento. Para completar el proceso oficial, también debes realizarlo en Registro UNAH.</p>
+                <a class="btnLink" href="https://registro.unah.edu.hn/" target="_blank">Ir a Registro UNAH</a>
+            </div>
+
     </div>
-</div>
-@endsection
+
+</body>
+</html>

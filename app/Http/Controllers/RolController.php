@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class RolController extends Controller
 {
-    public function index()
+    public function panelRoles()
     {
         $roles = DB::table('tbl_rol')
             ->orderBy('id_rol')
@@ -41,7 +41,7 @@ class RolController extends Controller
             ->orderBy('p.nombre_permiso')
             ->get();
 
-        return view('seguridad.index', compact(
+        return view('rol_seguridad_roles', compact(
             'roles',
             'permisos',
             'objetos',
@@ -52,82 +52,118 @@ class RolController extends Controller
     public function storeRol(Request $request)
     {
         $request->validate([
-            'nombre_rol' => 'required|string|max:100|unique:tbl_rol,nombre_rol',
-            'descripcion' => 'required|string|max:255',
+            'nombre_rol'    => 'required|string|max:100',
+            'descripcion'   => 'required|string|max:255',
             'estado_activo' => 'required|in:0,1',
         ]);
 
-        DB::table('tbl_rol')->insert([
-            'nombre_rol' => strtoupper(trim($request->nombre_rol)),
-            'descripcion' => trim($request->descripcion),
-            'estado_activo' => (int) $request->estado_activo,
+        $res = DB::select('CALL INS_ROL_SEGURIDAD(?, ?, ?, ?)', [
+            $request->nombre_rol,
+            $request->descripcion,
+            (int) $request->estado_activo,
+            auth()->id()
         ]);
 
-        return redirect()->route('seguridad.index')
-            ->with('status', 'Rol creado correctamente.');
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo crear el rol.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['rol' => $mensaje])->withInput();
+        }
+
+        return redirect()->route('seguridad.roles')
+            ->with('status', $mensaje);
     }
 
     public function updateRol(Request $request, $id)
     {
         $request->validate([
-            'nombre_rol' => 'required|string|max:100|unique:tbl_rol,nombre_rol,' . $id . ',id_rol',
-            'descripcion' => 'required|string|max:255',
+            'nombre_rol'    => 'required|string|max:100',
+            'descripcion'   => 'required|string|max:255',
             'estado_activo' => 'required|in:0,1',
         ]);
 
-        DB::table('tbl_rol')
-            ->where('id_rol', $id)
-            ->update([
-                'nombre_rol' => strtoupper(trim($request->nombre_rol)),
-                'descripcion' => trim($request->descripcion),
-                'estado_activo' => (int) $request->estado_activo,
-            ]);
+        $res = DB::select('CALL UPD_ROL_SEGURIDAD(?, ?, ?, ?, ?)', [
+            $id,
+            $request->nombre_rol,
+            $request->descripcion,
+            (int) $request->estado_activo,
+            auth()->id()
+        ]);
 
-        return redirect()->route('seguridad.index')
-            ->with('status', 'Rol actualizado correctamente.');
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo actualizar el rol.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['rol' => $mensaje])->withInput();
+        }
+
+        return redirect()->route('seguridad.roles')
+            ->with('status', $mensaje);
     }
 
     public function asignarPermisosObjeto(Request $request)
     {
         $request->validate([
-            'id_rol' => 'required|integer',
-            'id_objeto' => 'required|integer',
-            'permisos' => 'required|array|min:1',
+            'id_rol'     => 'required|integer',
+            'id_objeto'  => 'required|integer',
+            'permisos'   => 'required|array|min:1',
             'permisos.*' => 'integer',
         ], [
-            'id_rol.required' => 'Debes seleccionar un rol.',
+            'id_rol.required'    => 'Debes seleccionar un rol.',
             'id_objeto.required' => 'Debes seleccionar una pantalla.',
-            'permisos.required' => 'Debes seleccionar al menos un acceso.',
+            'permisos.required'  => 'Debes seleccionar al menos un acceso.',
         ]);
 
-        foreach ($request->permisos as $idPermiso) {
-            $existe = DB::table('tbl_rol_permiso')
-                ->where('id_rol', $request->id_rol)
-                ->where('id_permiso', $idPermiso)
-                ->where('id_objeto', $request->id_objeto)
-                ->exists();
+        $errores = [];
 
-            if (!$existe) {
-                DB::table('tbl_rol_permiso')->insert([
-                    'id_rol' => $request->id_rol,
-                    'id_permiso' => $idPermiso,
-                    'id_objeto' => $request->id_objeto,
-                    'fecha_asignacion' => now(),
-                ]);
+        foreach ($request->permisos as $idPermiso) {
+            $res = DB::select('CALL INS_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?, ?, ?)', [
+                (int) $request->id_rol,
+                (int) $idPermiso,
+                (int) $request->id_objeto,
+                auth()->id()
+            ]);
+
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'No se pudo asignar el permiso.';
+
+            if (!in_array($resultado, ['OK', 'EXISTE'], true)) {
+                $errores[] = $mensaje;
             }
         }
 
-        return redirect()->route('seguridad.index')
+        if (!empty($errores)) {
+            return back()->withErrors([
+                'permiso' => implode(' | ', $errores)
+            ])->withInput();
+        }
+
+        return redirect()->route('seguridad.roles')
             ->with('status', 'Permisos asignados correctamente.');
     }
 
     public function deleteAsignacion($id)
     {
-        DB::table('tbl_rol_permiso')
-            ->where('id_rol_permiso', $id)
-            ->delete();
+        $res = DB::select('CALL DEL_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?)', [
+            (int) $id,
+            auth()->id()
+        ]);
 
-        return redirect()->route('seguridad.index')
-            ->with('status', 'Asignación eliminada correctamente.');
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo eliminar la asignación.';
+
+        if ($resultado !== 'OK') {
+            return back()->withErrors([
+                'permiso' => $mensaje
+            ]);
+        }
+
+        return redirect()->route('seguridad.roles')
+            ->with('status', $mensaje);
     }
 }

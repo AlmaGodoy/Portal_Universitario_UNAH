@@ -1,7 +1,17 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Roles</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-@section('content')
-<div class="container py-4">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    @vite(['resources/css/rolseguridad.css', 'resources/js/rolseguridad.js'])
+</head>
+<body>
+
+<div class="container py-4 security-page">
 
     @if(session('status'))
         <div class="alert alert-success shadow-sm">
@@ -17,15 +27,27 @@
 
     <div class="row g-4">
 
-        {{-- PANEL DE ROLES --}}
         <div class="col-lg-7">
-            <div class="card shadow border-0">
-                <div class="card-header security-header d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-white">Gestión de Roles</span>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="security-title">Gestión de Roles</h2>
+                    <p class="security-subtitle">Crear, editar, activar o desactivar roles.</p>
+                </div>
 
-                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
+                <div>
+                    <a href="{{ route('seguridad.index') }}" class="btn btn-outline-secondary me-2">
+                        Volver a Seguridad
+                    </a>
+
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
                         + Nuevo Rol
                     </button>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 security-card">
+                <div class="card-header security-header d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-white">Lista de Roles</span>
                 </div>
 
                 <div class="card-body bg-white">
@@ -35,8 +57,9 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Rol</th>
+                                    <th>Descripción</th>
                                     <th>Estado</th>
-                                    <th style="width: 170px;">Acciones</th>
+                                    <th style="width: 140px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -44,11 +67,12 @@
                                     <tr>
                                         <td>{{ $rol->id_rol }}</td>
                                         <td>{{ strtoupper($rol->nombre_rol) }}</td>
+                                        <td>{{ $rol->descripcion }}</td>
                                         <td>
                                             @if($rol->estado_activo == 1)
-                                                <span class="badge bg-success">A</span>
+                                                <span class="badge bg-success">Activo</span>
                                             @else
-                                                <span class="badge bg-danger">I</span>
+                                                <span class="badge bg-danger">Inactivo</span>
                                             @endif
                                         </td>
                                         <td>
@@ -59,50 +83,9 @@
                                             </button>
                                         </td>
                                     </tr>
-
-                                    {{-- MODAL EDITAR ROL --}}
-                                    <div class="modal fade" id="modalEditarRol{{ $rol->id_rol }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content shadow">
-                                                <form action="{{ route('seguridad.rol.update', $rol->id_rol) }}" method="POST">
-                                                    @csrf
-                                                    @method('PUT')
-
-                                                    <div class="modal-header security-header">
-                                                        <h5 class="modal-title text-white">Editar Rol</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label class="form-label fw-bold">Rol:</label>
-                                                            <input type="text" name="nombre_rol" class="form-control input-highlight" value="{{ strtoupper($rol->nombre_rol) }}" required>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <label class="form-label fw-bold">Descripción:</label>
-                                                            <textarea name="descripcion" class="form-control" rows="3" required>{{ $rol->descripcion }}</textarea>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <label class="form-label fw-bold">Estado del Rol:</label>
-                                                            <select name="estado_activo" class="form-select" required>
-                                                                <option value="1" {{ $rol->estado_activo == 1 ? 'selected' : '' }}>ACTIVO</option>
-                                                                <option value="0" {{ $rol->estado_activo == 0 ? 'selected' : '' }}>INACTIVO</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="modal-footer">
-                                                        <button type="submit" class="btn btn-success">Guardar</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">No hay roles registrados.</td>
+                                        <td colspan="5" class="text-center text-muted">No hay roles registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -112,19 +95,18 @@
             </div>
         </div>
 
-        {{-- ASIGNACIÓN DE PERMISOS --}}
         <div class="col-lg-5">
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
-                    <span class="fw-bold text-white">Editar Tipo de Usuario</span>
+                    <span class="fw-bold text-white">Asignación de Permisos</span>
                 </div>
 
                 <div class="card-body bg-white">
-                    <form action="{{ route('seguridad.asignar.objeto') }}" method="POST">
+                    <form action="{{ route('seguridad.asignar.objeto') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas asignar estos permisos?">
                         @csrf
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Descripción:</label>
+                            <label class="form-label fw-bold">Rol:</label>
                             <select name="id_rol" class="form-select" required>
                                 <option value="">- SELECCIONE ROL -</option>
                                 @foreach($roles as $rol)
@@ -134,17 +116,19 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Pantalla</label>
+                            <label class="form-label fw-bold">Objeto / Pantalla:</label>
                             <select name="id_objeto" class="form-select" required>
-                                <option value="">- SELECCIONE UNA PANTALLA -</option>
+                                <option value="">- SELECCIONE UN OBJETO -</option>
                                 @foreach($objetos as $obj)
-                                    <option value="{{ $obj->id_objeto }}">{{ strtoupper($obj->nombre_objeto) }}</option>
+                                    <option value="{{ $obj->id_objeto }}">
+                                        {{ strtoupper($obj->nombre_objeto) }} ({{ strtoupper($obj->tipo_objeto) }})
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold d-block">Nuevo Acceso:</label>
+                            <label class="form-label fw-bold d-block">Permisos:</label>
 
                             @php
                                 $mapa = [];
@@ -174,17 +158,16 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Agregar</button>
+                        <button type="submit" class="btn btn-primary">Asignar Permisos</button>
                     </form>
                 </div>
             </div>
         </div>
 
-        {{-- TABLA DE ASIGNACIONES --}}
         <div class="col-12">
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
-                    <span class="fw-bold text-white">Roles de Usuarios Agregados</span>
+                    <span class="fw-bold text-white">Asignaciones de Roles y Permisos</span>
                 </div>
 
                 <div class="card-body bg-white">
@@ -194,7 +177,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Rol</th>
-                                    <th>Pantalla</th>
+                                    <th>Objeto</th>
                                     <th>Permiso</th>
                                     <th>Fecha</th>
                                     <th>Acción</th>
@@ -211,11 +194,12 @@
                                         <td>
                                             <form action="{{ route('seguridad.asignacion.delete', $rp->id_rol_permiso) }}"
                                                   method="POST"
-                                                  onsubmit="return confirm('¿Eliminar esta asignación?')">
+                                                  class="js-confirm-delete"
+                                                  data-confirm="¿Eliminar esta asignación?">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm">
-                                                    Acción
+                                                    Eliminar
                                                 </button>
                                             </form>
                                         </td>
@@ -235,15 +219,14 @@
     </div>
 </div>
 
-{{-- MODAL NUEVO ROL --}}
 <div class="modal fade" id="modalNuevoRol" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content shadow">
-            <form action="{{ route('seguridad.rol.store') }}" method="POST">
+            <form action="{{ route('seguridad.rol.store') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar este rol?">
                 @csrf
 
                 <div class="modal-header security-header">
-                    <h5 class="modal-title text-white">Nuevo</h5>
+                    <h5 class="modal-title text-white">Nuevo Rol</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -275,26 +258,52 @@
     </div>
 </div>
 
-<style>
-    .security-header {
-        background: #3b82c4;
-        color: white;
-        border-bottom: none;
-    }
+@foreach($roles as $rol)
+<div class="modal fade" id="modalEditarRol{{ $rol->id_rol }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content shadow">
+            <form action="{{ route('seguridad.rol.update', $rol->id_rol) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar los cambios de este rol?">
+                @csrf
+                @method('PUT')
 
-    .input-highlight {
-        background-color: #eef5be;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
+                <div class="modal-header security-header">
+                    <h5 class="modal-title text-white">Editar Rol</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
 
-    .card {
-        border-radius: 10px;
-    }
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rol:</label>
+                        <input type="text"
+                               name="nombre_rol"
+                               class="form-control input-highlight"
+                               value="{{ strtoupper($rol->nombre_rol) }}"
+                               required>
+                    </div>
 
-    .table th,
-    .table td {
-        vertical-align: middle;
-    }
-</style>
-@endsection
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción:</label>
+                        <textarea name="descripcion" class="form-control" rows="3" required>{{ $rol->descripcion }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Estado del Rol:</label>
+                        <select name="estado_activo" class="form-select" required>
+                            <option value="1" {{ $rol->estado_activo == 1 ? 'selected' : '' }}>ACTIVO</option>
+                            <option value="0" {{ $rol->estado_activo == 0 ? 'selected' : '' }}>INACTIVO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

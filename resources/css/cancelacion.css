@@ -1,0 +1,338 @@
+/* =============================================
+   PUMAGESTIÓN — CANCELACIÓN EXCEPCIONAL CSS
+   resources/css/cancelacion.css
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap');
+
+:root {
+    --unah-navy:      #0a1628;
+    --unah-blue-card: #0f1f3d;
+    --unah-blue-dark: #071020;
+    --unah-gold:      #f5a623;
+    --unah-gold-dim:  rgba(245, 166, 35, 0.3);
+    --unah-green:     #28a745;
+    --unah-red:       #e55353;
+    --white:          #ffffff;
+    --text-muted:     rgba(255, 255, 255, 0.5);
+}
+
+/* ── BASE ── */
+.puma-page {
+    background-color: var(--unah-navy) !important;
+    color: var(--white);
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+}
+
+/* ── TOPBAR ── */
+.puma-topbar {
+    background: rgba(0, 0, 0, 0.35);
+    border-bottom: 1px solid var(--unah-gold-dim);
+    padding: 12px 24px;
+    display: flex; align-items: center;
+}
+.puma-logo-wrap {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none;
+}
+.nav-bee-circle {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--unah-gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
+}
+.puma-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+.puma-logo-text .brand {
+    font-size: 1.1rem; font-weight: 900; color: var(--white);
+}
+.puma-logo-text .brand span { color: var(--unah-gold); }
+.puma-logo-text .sub {
+    font-size: 0.7rem; color: var(--text-muted); letter-spacing: 1.5px;
+}
+
+/* ── CONTAINER ── */
+.puma-container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+}
+
+/* ── ALERTAS ── */
+.puma-alert {
+    display: flex; align-items: flex-start; gap: 12px;
+    border-radius: 10px; padding: 14px 18px;
+    margin-bottom: 20px; font-size: 0.9rem;
+}
+.puma-alert p { margin: 0; }
+.puma-alert--error {
+    background: rgba(229, 83, 83, 0.15);
+    border: 1px solid rgba(229, 83, 83, 0.4);
+    color: #ffaaaa;
+}
+.puma-alert--success {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.4);
+    color: #a8ffbf;
+}
+
+/* ── STEPPER ── */
+.puma-steps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 30px 0;
+}
+.puma-step {
+    display: flex; flex-direction: column; align-items: center;
+    color: rgba(255, 255, 255, 0.3);
+}
+.puma-step--active { color: var(--unah-gold) !important; }
+.puma-step--done   { color: var(--unah-green) !important; }
+.puma-step__circle {
+    width: 36px; height: 36px;
+    border: 2px solid currentColor; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.04);
+}
+.puma-step__label { font-size: 0.72rem; margin-top: 6px; font-weight: 600; }
+.puma-step-connector {
+    width: 60px; height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+.puma-step-connector--done { background: var(--unah-green); }
+
+/* ── CARD ── */
+.puma-card {
+    background: var(--unah-blue-card) !important;
+    border: 1px solid var(--unah-gold-dim) !important;
+    border-radius: 15px; padding: 35px;
+    max-width: 800px; margin: 0 auto;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+}
+.puma-card--success {
+    border-color: rgba(40, 167, 69, 0.4) !important;
+    text-align: center;
+}
+.puma-card__header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.puma-card__header-icon { font-size: 2rem; }
+.puma-card__header-title {
+    color: var(--white); font-weight: 900; font-size: 1.15rem; margin: 0;
+}
+.puma-card__header-sub {
+    color: var(--text-muted); font-size: 0.82rem; margin: 3px 0 0;
+}
+
+/* ── NOTICE BOX ── */
+.puma-notice-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--unah-gold-dim);
+    border-radius: 10px; padding: 20px 24px;
+    margin-bottom: 24px;
+}
+.puma-notice-box p { color: rgba(255,255,255,.8); margin-bottom: 16px; line-height: 1.6; }
+.puma-notice-box--compact { padding: 14px 18px; }
+.puma-notice-box--compact p { margin-bottom: 8px; font-size: 0.88rem; }
+
+.puma-doc-list {
+    list-style: none; padding: 0; margin: 8px 0 12px;
+}
+.puma-doc-list li {
+    color: rgba(255,255,255,.75); font-size: 0.85rem;
+    padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+/* ── INFO GRID ── */
+.puma-info-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    margin-top: 16px;
+}
+@media (max-width: 600px) {
+    .puma-info-grid { grid-template-columns: 1fr; }
+}
+.info-item {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 8px; padding: 14px;
+}
+.info-icon { font-size: 1.4rem; display: block; margin-bottom: 6px; }
+.info-item h6 {
+    color: var(--unah-gold); font-weight: 700; font-size: 0.82rem;
+    margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.info-item p { color: var(--text-muted); font-size: 0.78rem; margin: 0; line-height: 1.5; }
+
+/* ── SECCIÓN ── */
+.puma-section {
+    border-bottom: 2px solid var(--unah-gold);
+    margin: 25px 0 15px; padding-bottom: 8px;
+}
+.puma-section span {
+    color: var(--unah-gold); font-weight: 900 !important;
+    text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;
+}
+
+/* ── GRID DE CAMPOS ── */
+.puma-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+@media (max-width: 600px) { .puma-grid { grid-template-columns: 1fr; } }
+
+.puma-field { display: flex; flex-direction: column; }
+
+/* ── LABELS ── */
+.puma-label {
+    color: rgba(255,255,255,.75); font-size: 0.82rem;
+    font-weight: 700; margin-bottom: 4px; text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.req { color: var(--unah-gold); }
+
+/* ── INPUTS ── */
+.puma-input, .puma-select, .puma-textarea {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--white) !important;
+    border-radius: 8px; padding: 12px; width: 100%; margin-top: 6px;
+    font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+    transition: border-color 0.2s;
+    outline: none;
+}
+.puma-input:focus, .puma-select:focus, .puma-textarea:focus {
+    border-color: var(--unah-gold) !important;
+    box-shadow: 0 0 0 3px rgba(245,166,35,.15);
+}
+.puma-select option {
+    background-color: #0f1f3d !important;
+    color: var(--white) !important;
+}
+.puma-input.readonly {
+    background: rgba(0,0,0,.3) !important;
+    border-style: dashed !important; opacity: 0.6; cursor: not-allowed;
+}
+.puma-textarea { resize: vertical; min-height: 110px; }
+
+/* ── ERROR DE CAMPO ── */
+.puma-field-error {
+    color: #ff9090; font-size: 0.78rem; margin-top: 4px;
+}
+
+/* ── HELPER ── */
+.puma-helper {
+    color: var(--text-muted); font-size: 0.78rem;
+    margin-top: 5px; font-style: italic;
+}
+
+/* ── UPLOAD AREA ── */
+.puma-upload-area {
+    border: 2px dashed rgba(245,166,35,.4);
+    border-radius: 12px; padding: 40px 20px;
+    text-align: center; cursor: pointer;
+    transition: all 0.25s;
+    background: rgba(245,166,35,.03);
+    margin-top: 16px;
+}
+.puma-upload-area:hover,
+.puma-upload-area--drag {
+    border-color: var(--unah-gold);
+    background: rgba(245,166,35,.08);
+}
+.puma-upload-area--selected {
+    border-color: var(--unah-green);
+    background: rgba(40,167,69,.06);
+}
+.puma-upload-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.puma-upload-text { color: var(--white); font-weight: 700; margin: 0; }
+.puma-file-name {
+    color: var(--unah-green); font-weight: 700;
+    font-size: 0.9rem; margin-top: 8px;
+}
+
+/* ── BOTONES ── */
+.puma-btn {
+    background: var(--unah-gold);
+    color: var(--unah-navy);
+    font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;
+    border: none; border-radius: 10px; padding: 14px 28px;
+    cursor: pointer; transition: 0.25s; font-size: 0.85rem;
+    text-decoration: none; display: inline-block;
+}
+.puma-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245,166,35,.35);
+    color: var(--unah-navy);
+}
+
+.puma-btn-full {
+    background: var(--unah-gold) !important;
+    color: var(--unah-navy) !important;
+    font-weight: 900 !important; text-transform: uppercase;
+    border: none; border-radius: 10px; padding: 16px;
+    cursor: pointer; width: 100%; margin-top: 25px;
+    transition: 0.25s; font-size: 0.88rem; letter-spacing: 0.5px;
+}
+.puma-btn-full--auto { width: auto; padding: 16px 32px; margin-top: 0; }
+.puma-btn-full:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(245,166,35,.3);
+}
+
+.puma-btn-outline {
+    background: transparent;
+    color: rgba(255,255,255,.7);
+    border: 1.5px solid rgba(255,255,255,.2);
+    border-radius: 10px; padding: 14px 24px;
+    cursor: pointer; transition: 0.25s; font-size: 0.85rem;
+    text-decoration: none; display: inline-block;
+    font-weight: 700;
+}
+.puma-btn-outline:hover {
+    border-color: var(--unah-gold);
+    color: var(--unah-gold);
+}
+
+.puma-btn-group {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    gap: 12px; margin-top: 28px;
+}
+
+.puma-actions-center { text-align: center; margin-top: 24px; }
+
+/* ── ÉXITO ── */
+.puma-success-icon { font-size: 4rem; margin-bottom: 12px; }
+.puma-success-title {
+    color: var(--unah-gold); font-weight: 900;
+    font-size: 1.6rem; margin-bottom: 10px;
+}
+.puma-success-msg {
+    color: rgba(255,255,255,.8); font-size: 1rem;
+    margin-bottom: 24px;
+}
+.puma-success-info {
+    background: rgba(0,0,0,.25); border-radius: 10px;
+    padding: 18px 22px; text-align: left;
+    border: 1px solid rgba(255,255,255,.07);
+}
+.puma-success-info p {
+    color: rgba(255,255,255,.7); font-size: 0.88rem;
+    margin: 6px 0; line-height: 1.6;
+}
+
+/* ── ANIMACIÓN ENTRADA ── */
+.animate-in {
+    animation: fadeSlideUp 0.4s ease both;
+}
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

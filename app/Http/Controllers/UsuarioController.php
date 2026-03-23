@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\Bitacora;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,19 +12,7 @@ use Illuminate\Validation\Rules\Password;
 
 class UsuarioController extends Controller
 {
-    private function registrarBitacora(?int $idUsuario, string $accion, string $descripcion, ?int $idObjeto = null): void
-    {
-        try {
-            DB::table('tbl_bitacora')->insert([
-                'id_usuario' => $idUsuario,
-                'id_objeto' => $idObjeto,
-                'accion' => $accion,
-                'fecha_accion' => now(),
-                'descripcion' => $descripcion,
-            ]);
-        } catch (\Throwable $e) {
-        }
-    }
+    private const ID_OBJETO_LOGIN = 12;
 
     public function formRegistro()
     {
@@ -61,40 +48,12 @@ class UsuarioController extends Controller
             $request->merge(['tipo_usuario' => $tipoFijo]);
         }
 
- Modulo-Login-y-Registro
         $correo = strtolower(trim((string) $request->correo));
-=======
-Modulo-Login-y-Registro
-        // Convertir correo a minúsculas automáticamente
-$correo = strtolower(trim((string)$request->correo));
+        $request->merge(['correo' => $correo]);
 
-$request->merge([
-    'correo' => $correo
-]);
-        // ✅ Validación base (YA NO HAY documento)
-        $request->validate([
-            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
-            'correo' => ['required','email','max:100'],
-
-
-        // ✅ Validación base (YA NO HAY documento)
-        $request->validate([
-            // Solo letras y espacios (incluye tildes y ñ)
-            'nombre' => ['required','string','max:100','regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
- main
-
-        $request->merge([
-            'correo' => $correo
-        ]);
-
- Modulo-Login-y-Registro
         $request->validate([
             'nombre' => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
             'correo' => ['required', 'email', 'max:100'],
-=======
-            // confirmed exige contrasena_confirmation
-main
- main
             'contrasena' => [
                 'required',
                 'max:255',
@@ -129,8 +88,6 @@ main
         }
 
         if ($tipo === 'estudiante') {
-            $request->merge(['id_rol' => 2]);
-
             $request->validate([
                 'numero_cuenta' => ['required', 'digits:11'],
                 'id_carrera' => 'required|integer',
@@ -140,6 +97,7 @@ main
             ]);
 
             $request->merge([
+                'id_rol' => null, // el SP busca el rol estudiante dinámicamente
                 'id_departamento' => null,
                 'cod_empleado' => null,
                 'tipo_empleado' => null,
@@ -149,7 +107,9 @@ main
                 'id_rol' => 'required|integer|in:4,5',
                 'id_departamento' => 'required|integer',
                 'cod_empleado' => 'required|string|max:50',
-                'tipo_empleado' => 'required|string|max:50',
+                'tipo_empleado' => 'required|string|in:coordinador,secretario|max:50',
+            ], [
+                'tipo_empleado.in' => 'El tipo de empleado debe ser coordinador o secretario.'
             ]);
 
             $request->merge([
@@ -158,16 +118,6 @@ main
             ]);
         }
 
- Modulo-Login-y-Registro
-=======
-        // =========================
- Modulo-Login-y-Registro
-        // ✅ SP + Email verification + Bitácora
-=======
-        // ✅ SP + Email verification
-main
-        // =========================
- main
         try {
             $passwordHash = Hash::make($request->contrasena);
 
@@ -181,116 +131,88 @@ main
                 $request->id_carrera,
                 $request->id_departamento,
                 $request->cod_empleado,
-                $request->tipo_empleado
+                $request->tipo_empleado,
             ]);
 
-            $resultado = $res[0]->resultado ?? 'ERROR';
-            $mensaje   = $res[0]->mensaje ?? 'Respuesta inválida del procedimiento';
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'Respuesta inválida del procedimiento';
 
             if ($resultado !== 'OK') {
                 return back()->withErrors(['registro' => $mensaje])->withInput();
             }
 
-            $u = DB::table('tbl_usuario as u')
-                ->join('tbl_persona as p', 'p.id_persona', '=', 'u.id_persona')
-                ->where('p.correo_institucional', $request->correo)
-                ->select('u.id_usuario')
-                ->first();
+            $idUsuario = $row->id_usuario ?? null;
 
-            if (!$u) {
+            if (!$idUsuario) {
                 return redirect()->route('portal')
                     ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
-Modulo-Login-y-Registro
-            $this->registrarBitacora(
-                (int)$u->id_usuario,
-                'registro_usuario',
-                'Nuevo usuario registrado: ' . $request->correo
-            );
-
-=======
- Modulo-Login-y-Registro
-            // ✅ BITÁCORA: registro_usuario
-            Bitacora::registrar(
-                (int)$u->id_usuario,
-                'registro_usuario',
-                'Nuevo usuario registrado: '.$request->correo
-            );
-
-
- main
-            // token 1 hora
- main
             $token = Str::random(64);
+            $tokenHash = hash('sha256', $token);
 
-            DB::table('tbl_login_autentications')
-                ->where('id_usuario', $u->id_usuario)
-                ->where('tipo', 'email_verification')
-                ->delete();
-
-            DB::table('tbl_login_autentications')->insert([
-                'id_usuario' => $u->id_usuario,
-                'tipo' => 'email_verification',
-                'valor_hash' => hash('sha256', $token),
-                'expires_at' => now()->addMinutes(60),
-                'used_at' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
+            DB::select('CALL DEL_LOGIN_AUTHENTICATION_TIPO(?, ?)', [
+                $idUsuario,
+                'email_verification',
             ]);
 
+            $resAuth = DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
+                $idUsuario,
+                'email_verification',
+                $tokenHash,
+                now()->addMinutes(60)->format('Y-m-d H:i:s'),
+                self::ID_OBJETO_LOGIN,
+                'email_verificacion_generada',
+                'Se generó token de verificación para el correo ' . $request->correo,
+            ]);
+
+            $rowAuth = $resAuth[0] ?? null;
+            $resultadoAuth = $rowAuth->resultado ?? 'ERROR';
+            $mensajeAuth = $rowAuth->mensaje ?? 'No se pudo registrar el token de verificación.';
+
+            if ($resultadoAuth !== 'OK') {
+                return redirect()->route('portal')
+                    ->with('status', 'Usuario creado, pero no se pudo preparar la verificación por correo.');
+            }
+
             $link = route('email.verify', ['token' => $token]);
- Modulo-Login-y-Registro
 
             try {
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
-
-                $this->registrarBitacora(
-                    (int)$u->id_usuario,
-                    'email_verificacion_enviada',
-                    'Se envió correo de verificación a ' . $request->correo
-                );
             } catch (\Throwable $e) {
-                $this->registrarBitacora(
-                    (int)$u->id_usuario,
-                    'email_verificacion_fallida',
-                    'Fallo envío a ' . $request->correo . ' | ' . $e->getMessage()
-
- Modulo-Login-y-Registro
-
-            // ✅ Envío de correo con bitácora OK/FAIL
-            try {
-                Mail::to($request->correo)->send(new VerifyEmailMail($link));
-
-                Bitacora::registrar(
-                    (int)$u->id_usuario,
-                    'email_verificacion_enviada',
-                    'Se envió correo de verificación a '.$request->correo
-                );
-            } catch (\Throwable $e) {
-
-                Bitacora::registrar(
-                    (int)$u->id_usuario,
-                    'email_verificacion_fallida',
-                    'Fallo envío a '.$request->correo.' | '.$e->getMessage()
- main
-                );
-
                 return redirect()->route('portal')
                     ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
             }
-Modulo-Login-y-Registro
-
-            Mail::to($request->correo)->send(new VerifyEmailMail($link));
-main
- main
 
             session()->forget('register_tipo');
 
             return redirect()->route('portal')
                 ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
-        } catch (\Exception $e) {
-            return back()->withErrors(['registro' => $e->getMessage()])->withInput();
+
+        } catch (\Throwable $e) {
+            return back()->withErrors([
+                'registro' => $e->getMessage()
+            ])->withInput();
+        }
+    }
+
+    public function verificarCorreo(string $token)
+    {
+        try {
+            $hash = hash('sha256', $token);
+
+            $res = DB::select('CALL UPD_VERIFICACION_CORREO_USUARIO(?)', [$hash]);
+
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'No se pudo verificar la cuenta.';
+
+            return redirect()->route('portal')->with('status', $mensaje);
+
+        } catch (\Throwable $e) {
+            return redirect()->route('portal')
+                ->with('status', 'No se pudo verificar la cuenta. Intenta nuevamente.');
         }
     }
 }
