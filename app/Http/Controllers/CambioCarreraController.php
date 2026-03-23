@@ -129,6 +129,30 @@ public function carreras()
 }
 
 
+public function listadoSecretaria()
+{
+    $tramites = DB::table('tbl_tramite as t')
+        ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+        ->leftJoin('tbl_pago as p', 't.id_tramite', '=', 'p.id_tramite')
+        ->select(
+            't.id_tramite',
+            't.id_persona',
+            't.fecha_solicitud',
+            't.resolucion_de_tramite_academico as estado_tramite',
+            'c.nombre_carrera as carrera_destino',
+            'p.estado_pago'
+        )
+        ->where('t.tipo_tramite_academico', 'cambio_carrera')
+        ->where('t.estado', 1)
+        ->orderByDesc('t.id_tramite')
+        ->get();
+
+    return response()->json($tramites);
+}
+
+
 
 }
+
+
 
