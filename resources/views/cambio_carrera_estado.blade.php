@@ -39,7 +39,7 @@
         </nav>
 
         <div class="card main-card">
-            <input type="hidden" id="id_persona" value="20">
+          <input type="hidden" id="id_persona" value="{{ session('persona_id') }}">
 
             <div class="card-head">
                 <div>

@@ -18,12 +18,13 @@ class DocumentoController extends Controller
         ]);
 
         try {
+            $archivo = $request->file('archivo');
 
             // Guardar archivo en storage/app/public/documentos
             $ruta = $request->file('archivo')->store('documentos', 'public');
 
             $nombreArchivo = $request->file('archivo')->getClientOriginalName();
-            $hash = hash_file('sha256', $request->file('archivo'));
+            $hash = hash_file('sha256', $archivo->getRealPath());
 
             $data = DB::select('CALL INS_SUBIR_DOCUMENTO(?, ?, ?, ?, ?)', [
             $request->id_tramite,

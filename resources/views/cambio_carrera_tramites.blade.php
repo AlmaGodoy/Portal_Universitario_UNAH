@@ -39,7 +39,7 @@
         </nav>
 
         <div class="card main-card">
-            <input type="hidden" id="id_persona" value="20">
+            <input type="hidden" id="id_persona" value="{{ session('persona_id') }}">
 
             <div class="card-head">
                 <div>
@@ -56,12 +56,13 @@
                         <th>Fecha</th>
                         <th>Carrera Destino</th>
                         <th>Estado</th>
-                        <th>Dirección</th>
+                        <th>Justificación</th>
+                         <th>Documento</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyTramites">
                     <tr>
-                        <td colspan="5">Cargando trámites...</td>
+                        <td colspan="6">Cargando trámites...</td>
                     </tr>
                 </tbody>
             </table>
