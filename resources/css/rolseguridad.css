@@ -1,6 +1,11 @@
 body {
     font-family: Arial, sans-serif;
-    background: #f4f6f9;
+    background-image: url('/public/images/fondo_seguridad.png');
+    background-size: 100% auto;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
 }
 
 .security-page {
@@ -15,9 +20,9 @@ body {
 
 .security-card,
 .card {
-    border-radius: 10px;
-    background: white;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
 .security-card {
@@ -26,7 +31,7 @@ body {
 
 .security-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
 label,
@@ -95,9 +100,28 @@ button {
 .security-title {
     font-weight: bold;
     margin-bottom: 0;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 .security-subtitle {
-    color: #6c757d;
+    color: #ffffff;
     margin-bottom: 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.fondo-seguridad {
+    background: rgba(255, 255, 255, 0.68);
+    border-radius: 22px;
+    padding: 28px;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.security-card .card-body {
+    min-height: 260px;
+}
+
+.security-card .text-muted.small {
+    min-height: 72px;
 }

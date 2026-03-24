@@ -27,8 +27,8 @@
 
     <div class="row g-4">
 
-        <div class="col-lg-5">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h2 class="security-title">Gestión de Accesos</h2>
                     <p class="security-subtitle">Asignación de permisos por rol y objeto.</p>
@@ -92,7 +92,7 @@
             </div>
         </div>
 
-        <div class="col-lg-7">
+        <div class="col-12">
             <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
                     <span class="fw-bold text-white">Accesos Registrados</span>
