@@ -18,38 +18,49 @@
   <nav class="main-header navbar navbar-expand navbar-dark">
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+          <i class="fas fa-bars"></i>
+        </a>
       </li>
     </ul>
+
     <a class="navbar-brand d-flex align-items-center" href="#">
       <div class="nav-logo-circle">
         <img src="{{ asset('images/Logo.png') }}" alt="PumaGestión Logo">
       </div>
       <span class="nav-brand-title">PumaGestión</span>
     </a>
+
     <ul class="navbar-nav ml-auto">
-      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-search fa-fw"></i></a></li>
+      <li class="nav-item">
+        <a class="nav-link" href="#"><i class="fas fa-search fa-fw"></i></a>
+      </li>
       <li class="nav-item" style="position:relative;">
         <a class="nav-link" href="#">
           <i class="far fa-bell fa-fw"></i>
           <span class="navbar-badge-custom" id="notif-count">3</span>
         </a>
       </li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="far fa-envelope fa-fw"></i></a></li>
+      <li class="nav-item">
+        <a class="nav-link" href="#"><i class="far fa-envelope fa-fw"></i></a>
+      </li>
     </ul>
   </nav>
 
   {{-- ===== SIDEBAR ===== --}}
-  <aside class="main-sidebar sidebar-dark-primary elevation-4 sidebar-puma">
-    <div class="sidebar-edificio-bg" style="background-image: url('{{ asset('images/Edificio.jpg') }}');"></div>
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+
+    <div class="sidebar-edificio-bg"
+         style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
+
     <div class="sidebar-overlay"></div>
 
     <a href="#" class="brand-link">
       <div class="sidebar-logo-wrap">
         <div class="logo-ring-outer"></div>
-        <div class="logo-stars">★ ★ ★ ★ ★ ★ ★ ★</div>
+        <div class="logo-stars"></div>
         <div class="logo-circle-inner">
-          <img src="{{ asset('images/Logo.png') }}" alt="PumaGestión">
+          <img src="{{ asset('images/Logo.png') }}" alt="PumaGestión Logo">
         </div>
       </div>
       <span class="brand-name">
@@ -59,6 +70,7 @@
     </a>
 
     <div class="sidebar">
+
       <div class="sidebar-user-top">
         <div class="su-icon" id="sidebar-initials">AG</div>
         <div>
@@ -73,41 +85,105 @@
       </div>
 
       <nav class="mt-1">
-        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+        <ul class="nav nav-pills nav-sidebar flex-column"
+            data-widget="treeview" role="menu" data-accordion="false">
+
           <li class="nav-item">
             <a href="#" class="nav-link active">
-              <i class="nav-icon fas fa-building"></i>
-              <p>Panel Institucional</p>
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>Dashboard</p>
             </a>
           </li>
+
+          {{-- MÓDULOS DE TRÁMITES --}}
           <li class="nav-item">
             <a href="{{ route('cambio-carrera.index') }}" class="nav-link">
               <i class="nav-icon fas fa-exchange-alt"></i>
               <p>Cambio de Carrera</p>
             </a>
           </li>
+
           <li class="nav-item">
             <a href="{{ route('cancelacion.index') }}" class="nav-link">
               <i class="nav-icon fas fa-ban"></i>
               <p>Cancelación Excepcional</p>
             </a>
           </li>
-          {{-- REINTEGRO DE LOS ITEMS QUE FALTABAN --}}
-          <li class="nav-item"><a href="#" class="nav-link"><i class="nav-icon fas fa-file-signature"></i><p>Equivalencias de Plan</p></a></li>
-          <li class="nav-item"><a href="#" class="nav-link"><i class="nav-icon fas fa-clipboard-list"></i><p>Gestión de Trámites</p></a></li>
-          <li class="nav-item"><a href="#" class="nav-link"><i class="nav-icon fas fa-search-dollar"></i><p>Auditoría</p></a></li>
-          <li class="nav-item"><a href="#" class="nav-link"><i class="nav-icon fas fa-chart-bar"></i><p>Reportes</p></a></li>
-          <li class="nav-item"><a href="#" class="nav-link"><i class="nav-icon fas fa-database"></i><p>Respaldo de Sistema</p></a></li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-file-signature"></i>
+              <p>Equivalencias de Plan</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-clipboard-list"></i>
+              <p>Gestión de Trámites</p>
+            </a>
+          </li>
+
+          {{-- CONTROL DE GESTIÓN --}}
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-chart-line"></i>
+              <p>
+                Control de Gestión
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview" style="display: none; background: rgba(255,255,255,0.05);">
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="fas fa-search-dollar nav-icon"></i>
+                  <p>Auditoría</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="fas fa-list-ul nav-icon"></i>
+                  <p>Bitácora</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-chart-bar"></i>
+              <p>Reportes</p>
+            </a>
+          </li>
+
+          {{-- BOTÓN DE SEGURIDAD ENLAZADO --}}
+          <li class="nav-item">
+            <a href="{{ route('seguridad.index') }}" class="nav-link" style="color: #ffc107;">
+              <i class="nav-icon fas fa-user-shield"></i>
+              <p>Seguridad</p>
+            </a>
+          </li>
+
+          {{-- BOTÓN DE RESPALDO ENLAZADO CORRECTAMENTE --}}
+          <li class="nav-item">
+            <a href="{{ route('backup.index') }}" class="nav-link">
+              <i class="nav-icon fas fa-database"></i>
+              <p>Respaldo de Sistema</p>
+            </a>
+          </li>
 
           <li class="nav-item">
             <form action="{{ route('logout') }}" method="POST" style="margin:0;">
               @csrf
-              <button type="submit" class="nav-link btn btn-link text-left w-100" style="border:none;background:none;color:#fff;">
+              <button type="submit"
+                      class="nav-link btn btn-link text-left w-100"
+                      style="border:none;background:none;color:rgba(255,255,255,.78);padding:9px 16px;">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
                 <p>Cerrar sesión</p>
               </button>
             </form>
           </li>
+
         </ul>
       </nav>
     </div>
@@ -115,28 +191,27 @@
 
   {{-- ===== CONTENT ===== --}}
   <div class="content-wrapper">
+
     <div style="padding:8px 18px 0;">
       <div class="breadcrumb-wrap">
         <i class="fas fa-home" style="color:var(--blue2);"></i>
         <a href="#">Inicio</a>
         <span><i class="fas fa-chevron-right" style="font-size:.65rem;color:#bbb;"></i></span>
-        <span>Panel Institucional</span>
+        <span>Dashboard</span>
       </div>
     </div>
 
     <section class="content" style="padding:0 18px 80px;">
+
       <div class="faculty-banner">
         <div class="fb-bg"></div>
-        <div class="fb-photo-right" style="background-image: url('{{ asset('images/Edificio.jpg') }}');"></div>
+        <div class="fb-photo-right"
+             style="background-image: url('{{ asset('images/FCEAC.jpeg') }}');"></div>
         <div class="fb-content">
-          <div class="fb-logo-wrap">
-            <div class="fb-logo-glow"></div>
-            <div class="fb-logo-circle">
-              <img src="{{ asset('images/Logo.png') }}" alt="PumaGestión Logo">
-            </div>
-          </div>
           <div>
-            <div class="fb-title-main">Facultad de Ciencias Económicas,<br>Administrativas y Contables</div>
+            <div class="fb-title-main">
+              Facultad de Ciencias Económicas,<br>Administrativas y Contables
+            </div>
             <div class="fb-subtitle">FCEAC · UNAH · PumaGestión</div>
           </div>
         </div>
@@ -152,13 +227,15 @@
         </div>
       </div>
 
-      {{-- REINTEGRO DE TODAS LAS INFO BOXES --}}
       <div class="info-boxes-row">
         <div class="info-box-custom ibc-gold">
           <i class="fas fa-user-graduate ibc-icon-bg"></i>
           <div class="ibc-top">
             <i class="fas fa-user-graduate ibc-icon-front"></i>
-            <div><div class="ibc-num">1,240</div><div class="ibc-label">Estudiantes Inscritos</div></div>
+            <div>
+              <div class="ibc-num">1,240</div>
+              <div class="ibc-label">Estudiantes Inscritos</div>
+            </div>
           </div>
           <div class="ibc-footer">Actualizado hoy</div>
         </div>
@@ -167,7 +244,10 @@
           <i class="fas fa-user-tie ibc-icon-bg"></i>
           <div class="ibc-top">
             <i class="fas fa-user-tie ibc-icon-front"></i>
-            <div><div class="ibc-num">12</div><div class="ibc-label">Secretarios Activos</div></div>
+            <div>
+              <div class="ibc-num">12</div>
+              <div class="ibc-label">Secretarios Activos</div>
+            </div>
           </div>
           <div class="ibc-footer">Personal autorizado</div>
         </div>
@@ -176,7 +256,10 @@
           <i class="fas fa-file-alt ibc-icon-bg"></i>
           <div class="ibc-top">
             <i class="fas fa-file-alt ibc-icon-front"></i>
-            <div><div class="ibc-num">85</div><div class="ibc-label">Trámites en Proceso</div></div>
+            <div>
+              <div class="ibc-num">85</div>
+              <div class="ibc-label">Trámites en Proceso</div>
+            </div>
           </div>
           <div class="ibc-footer">Semana actual</div>
         </div>
@@ -185,7 +268,10 @@
           <i class="fas fa-clock ibc-icon-bg"></i>
           <div class="ibc-top">
             <i class="fas fa-clock ibc-icon-front"></i>
-            <div><div class="ibc-num">14</div><div class="ibc-label">Solicitudes Pendientes</div></div>
+            <div>
+              <div class="ibc-num">14</div>
+              <div class="ibc-label">Solicitudes Pendientes</div>
+            </div>
           </div>
           <div class="ibc-footer">Requieren atención</div>
         </div>
@@ -194,17 +280,22 @@
           <i class="fas fa-calendar-check ibc-icon-bg"></i>
           <div class="ibc-top">
             <i class="fas fa-calendar-check ibc-icon-front"></i>
-            <div><div class="ibc-num">312</div><div class="ibc-label">Trámites Aprobados</div></div>
+            <div>
+              <div class="ibc-num">312</div>
+              <div class="ibc-label">Trámites Aprobados</div>
+            </div>
           </div>
           <div class="ibc-footer">Ciclo actual</div>
         </div>
       </div>
+
     </section>
   </div>
 
   <footer class="main-footer">
     <strong>© 2026 PumaGestión – UNAH</strong>
   </footer>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
