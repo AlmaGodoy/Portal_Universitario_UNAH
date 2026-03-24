@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<div class="container py-4 security-page">
+<div class="container py-4 security-page fondo-seguridad">
 
     <div class="mb-4">
         <h2 class="security-title">Módulo de Seguridad</h2>
@@ -24,10 +24,8 @@
         @foreach($modulos as $modulo)
 
         <div class="col-md-6 col-lg-3">
-
             <div class="card shadow border-0 h-100 security-card">
-
-                <div class="card-body text-center">
+                <div class="card-body text-center d-flex flex-column">
 
                     <div class="mb-3">
                         <i class="bi {{ $modulo['icono'] }} fs-1 text-primary"></i>
@@ -39,14 +37,12 @@
                         {{ $modulo['descripcion'] }}
                     </p>
 
-                    <a href="{{ $modulo['ruta'] }}" class="btn btn-primary w-100">
+                    <a href="{{ $modulo['ruta'] }}" class="btn btn-primary w-100 mt-auto">
                         Ingresar
                     </a>
 
                 </div>
-
             </div>
-
         </div>
 
         @endforeach

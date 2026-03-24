@@ -13,7 +13,7 @@ class RolSeguridadController extends Controller
         $modulos = [
             [
                 'titulo' => 'Gestión de Roles',
-                'descripcion' => 'Crear, editar, activar o desactivar roles y asignar permisos.',
+                'descripcion' => 'Crear, editar, activar o desactivar roles.',
                 'ruta' => route('seguridad.roles'),
                 'icono' => 'bi-shield-lock'
             ],
