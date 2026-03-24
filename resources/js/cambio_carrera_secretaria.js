@@ -3,8 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
         =====================================================
         1) ELEMENTOS DE LA VISTA
         =====================================================
-        tbodySecretaria: aquí se cargarán los trámites
-        msg: para mostrar mensajes de error o éxito
     */
     const tbodySecretaria = document.getElementById('tbodySecretaria');
     const msg = document.getElementById('msg');
@@ -24,11 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
         =====================================================
         3) CARGAR TRÁMITES DE CAMBIO DE CARRERA
         =====================================================
-        Aquí se consultan los trámites que Secretaría debe revisar.
-
-        IMPORTANTE:
-        Por ahora usaremos un endpoint nuevo que luego agregaremos
-        en rutas/controlador para devolver los trámites de cambio de carrera.
     */
     async function cargarTramitesSecretaria() {
         if (!tbodySecretaria) return;
@@ -56,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <td>${t.id_tramite ?? ''}</td>
                         <td>${t.fecha_solicitud ?? ''}</td>
-                        <td>${t.id_persona ?? ''}</td>
+                        <td>${t.nombre_persona ?? ''}</td>
                         <td>${t.carrera_destino ?? ''}</td>
                         <td>${t.estado_tramite ?? ''}</td>
                         <td>${t.estado_pago ?? 'Sin pago'}</td>

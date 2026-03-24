@@ -47,7 +47,7 @@
                     <tr>
                         <th>ID Trámite</th>
                         <th>Fecha</th>
-                        <th>ID Persona</th>
+                        <th>Nombre del Estudiante</th>
                         <th>Carrera Destino</th>
                         <th>Estado Trámite</th>
                         <th>Pago</th>
