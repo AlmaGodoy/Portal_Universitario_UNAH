@@ -27,15 +27,16 @@
 
     <div class="row g-4">
 
-        <div class="col-lg-7">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- BLOQUE PRINCIPAL: LISTA DE ROLES -->
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h2 class="security-title">Gestión de Roles</h2>
                     <p class="security-subtitle">Crear, editar, activar o desactivar roles.</p>
                 </div>
 
-                <div>
-                    <a href="{{ route('seguridad.index') }}" class="btn btn-outline-secondary me-2">
+                <div class="d-flex gap-2">
+                    <a href="{{ route('seguridad.index') }}" class="btn btn-outline-secondary">
                         Volver a Seguridad
                     </a>
 
@@ -95,79 +96,11 @@
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card shadow border-0 security-card">
-                <div class="card-header security-header">
-                    <span class="fw-bold text-white">Asignación de Permisos</span>
-                </div>
-
-                <div class="card-body bg-white">
-                    <form action="{{ route('seguridad.asignar.objeto') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas asignar estos permisos?">
-                        @csrf
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Rol:</label>
-                            <select name="id_rol" class="form-select" required>
-                                <option value="">- SELECCIONE ROL -</option>
-                                @foreach($roles as $rol)
-                                    <option value="{{ $rol->id_rol }}">{{ strtoupper($rol->nombre_rol) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Objeto / Pantalla:</label>
-                            <select name="id_objeto" class="form-select" required>
-                                <option value="">- SELECCIONE UN OBJETO -</option>
-                                @foreach($objetos as $obj)
-                                    <option value="{{ $obj->id_objeto }}">
-                                        {{ strtoupper($obj->nombre_objeto) }} ({{ strtoupper($obj->tipo_objeto) }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold d-block">Permisos:</label>
-
-                            @php
-                                $mapa = [];
-                                foreach($permisos as $permiso){
-                                    $mapa[strtolower($permiso->nombre_permiso)] = $permiso->id_permiso;
-                                }
-                            @endphp
-
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="permisos[]" value="{{ $mapa['visualizar'] ?? '' }}" id="perm_visualizar">
-                                <label class="form-check-label" for="perm_visualizar">Visualizar</label>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="permisos[]" value="{{ $mapa['guardar'] ?? '' }}" id="perm_guardar">
-                                <label class="form-check-label" for="perm_guardar">Guardar</label>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="permisos[]" value="{{ $mapa['actualizar'] ?? '' }}" id="perm_actualizar">
-                                <label class="form-check-label" for="perm_actualizar">Actualizar</label>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="permisos[]" value="{{ $mapa['eliminar'] ?? '' }}" id="perm_eliminar">
-                                <label class="form-check-label" for="perm_eliminar">Eliminar</label>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Asignar Permisos</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
+        <!-- BLOQUE INFERIOR: ASIGNACIONES -->
         <div class="col-12">
             <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
-                    <span class="fw-bold text-white">Asignaciones de Roles y Permisos</span>
+                    <span class="fw-bold text-white">Asignaciones de Roles</span>
                 </div>
 
                 <div class="card-body bg-white">
@@ -219,6 +152,7 @@
     </div>
 </div>
 
+<!-- MODAL NUEVO ROL -->
 <div class="modal fade" id="modalNuevoRol" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content shadow">
@@ -258,6 +192,7 @@
     </div>
 </div>
 
+<!-- MODALES EDITAR ROL -->
 @foreach($roles as $rol)
 <div class="modal fade" id="modalEditarRol{{ $rol->id_rol }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">

@@ -134,6 +134,11 @@ class LoginController extends Controller
         $user->setAttribute($identifierName, (int) $r->id_usuario);
         $user->setAttribute('id_usuario', (int) $r->id_usuario);
         $user->setAttribute('id_persona', (int) $r->id_persona);
+
+        if (isset($r->id_rol)) {
+            $user->setAttribute('id_rol', (int) $r->id_rol);
+        }
+
         $user->exists = true;
 
         return $user;
@@ -250,10 +255,7 @@ class LoginController extends Controller
 
             if (
                 $tipoElegido === 'empleado'
-                && (
-                    $tipoUsuarioDb !== 'empleado'
-                    || !in_array($rolNombre, ['coordinador', 'secretario'], true)
-                )
+                && !in_array($rolNombre, ['coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
             ) {
                 $this->registrarIntentoLogin(
                     $request->email,
@@ -267,7 +269,7 @@ class LoginController extends Controller
                 );
 
                 return back()->withErrors([
-                    'email' => 'Este portal es solo para coordinador o secretario.'
+                    'email' => 'Este portal es solo para coordinador, secretario, administrador o secretaria general.'
                 ])->withInput();
             }
 
@@ -326,6 +328,7 @@ class LoginController extends Controller
 
                 return redirect()->route('twofa.form')
                     ->with('status', 'Te enviamos un código de 6 dígitos a tu correo.');
+
             }
 
             $authUser = $this->buildAuthUserFromSp($r);
@@ -357,7 +360,9 @@ class LoginController extends Controller
             return match ($rolNombre) {
                 'coordinador' => redirect('dashboard'),
                 'secretario' => redirect('dashboard'),
-                default => redirect('/home'),
+                'administrador' => redirect('dashboard'),
+                'secretaria_general' => redirect('dashboard'),
+                default => redirect('dashboard'),
             };
         } catch (\Throwable $e) {
             report($e);
