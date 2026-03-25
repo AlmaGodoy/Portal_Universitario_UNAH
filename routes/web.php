@@ -36,3 +36,18 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // FIRMADO Y ASEGURADO POR: PRO MANAGER ALMA PATRICIA GODOY
+// MÓDULOS RESTRINGIDOS (Solo Roles 1 y 2: Admin y Pro Manager)
+Route::middleware(['auth', 'roleid:1,2'])->group(function () {
+
+    $path = __DIR__ . '/Modulos';
+
+    if (is_dir($path)) {
+        foreach (glob($path . "/*.php") as $file) {
+            require $file;
+        }
+    }
+});
+
+// NADIE DEBE TOCAR ESTE ARCHIVO WEB.PHP, SI CREEN QUE ES NECESARIO DEBEN CONSULTAR A SU
+// PRO MANAGER PRIMERO
+
