@@ -1,32 +1,21 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
-use App\Http\Controllers\BackupController;
 
+//Ruta principal (Login)
 Route::get('/', function () {
-    return view('auth.login');
+    return view('auth.choose_portal');
 })->name('portal');
 
-// 2. MÓDULOS PARA TODOS (Alumnos, Admins, etc.)
-// Aquí cargamos solo lo que los alumnos NECESITAN ver
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-});
+//Autocarga de módulos
 
-// MÓDULOS RESTRINGIDOS (Solo Roles 1 y 2: Admin y Pro Manager)
-Route::middleware(['auth', 'roleid:1,2'])->group(function () {
+$path = __DIR__ . '/Modulos';
 
-    $path = __DIR__ . '/Modulos';
-
-    if (is_dir($path)) {
-        foreach (glob($path . "/*.php") as $file) {
-            require $file;
-        }
+if (is_dir($path)) {
+    foreach (glob($path . "/*.php") as $file) {
+        require $file;
     }
-});
+}
 
-// NADIE DEBE TOCAR ESTE ARCHIVO WEB.PHP, SI CREEN QUE ES NECESARIO DEBEN CONSULTAR A SU
-// PRO MANAGER PRIMERO
+//NADIE DEBE TOCAR ESTE ARCHIVO WEB.PHP, SI CREEN QUE ES NECESARIO DEBEN CONSULTAR A SU
+//PRO MANAGER PRIMERO
