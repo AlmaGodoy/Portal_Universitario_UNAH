@@ -93,10 +93,10 @@ class TwoFactorController extends Controller
             $idRol = (int) $user->id_rol;
 
             return match ($idRol) {
-                2 => redirect()->route('panel.estudiante'),
-                4 => redirect('/panel-coordinador'),
-                5 => redirect('/panel-secretario'),
-                default => redirect('/home'),
+                2 => redirect()->route('dashboard'),
+                4 => redirect('dashboard'),
+                5 => redirect('dashboard'),
+                default => redirect('dashboard'),
             };
 
         } catch (\Throwable $e) {

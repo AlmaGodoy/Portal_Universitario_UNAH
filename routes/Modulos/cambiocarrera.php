@@ -18,6 +18,9 @@ Route::prefix('api/cambio-carrera')->group(function () {
     // catálogos
     Route::get('calendario-vigente', [CambioCarreraController::class, 'calendarioVigente']);
     Route::get('carreras', [CambioCarreraController::class, 'carreras']);
+    Route::get('secretaria/listado', [CambioCarreraController::class, 'listadoSecretaria']);
+    Route::get('secretaria/detalle/{id_tramite}', [CambioCarreraController::class, 'detalleSecretaria']);
+    Route::post('secretaria/guardar-revision', [CambioCarreraController::class, 'guardarRevisionSecretaria']);
 });
 
 
@@ -26,7 +29,8 @@ Route::prefix('api/cambio-carrera')->group(function () {
 // ============================
 Route::get('/cambio-carrera', function () {
     return view('cambio_carrera');
-});
+    })->name('cambio-carrera.index');
+
 
 Route::get('/cambio-carrera/mis-tramites', function () {
     return view('cambio_carrera_tramites');
@@ -35,3 +39,18 @@ Route::get('/cambio-carrera/mis-tramites', function () {
 Route::get('/cambio-carrera/estado', function () {
     return view('cambio_carrera_estado');
 });
+
+/*
+|--------------------------------------------------------------------------
+| FRONTEND - SECRETARÍA CAMBIO DE CARRERA
+|--------------------------------------------------------------------------
+*/
+Route::get('/cambio-carrera/secretaria', function () {
+    return view('cambio_carrera_secretaria');
+})->name('cambio-carrera.secretaria');
+
+Route::get('/cambio-carrera/secretaria/revisar/{id_tramite}', function ($id_tramite) {
+    return view('cambio_carrera_secretaria_revision', compact('id_tramite'));
+})->name('cambio-carrera.secretaria.revisar');
+
+
