@@ -1,36 +1,21 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
 
-// 1. PORTAL DE INICIO
+//Ruta principal (Login)
 Route::get('/', function () {
     return view('auth.choose_portal');
 })->name('portal');
 
-// 2. EL "CEREBRO" DE CARGA DE MÓDULOS
+//Autocarga de módulos
+
 $path = __DIR__ . '/Modulos';
 
 if (is_dir($path)) {
-    // Escaneamos todos los archivos .php dentro de /Modulos
     foreach (glob($path . "/*.php") as $file) {
-        $filename = basename($file);
-
-        if (str_contains($filename, 'auth') || str_contains($filename, 'login')) {
-            require $file;
-        }
-        else {
-            Route::middleware(['auth', 'roleid:1,2'])->group(function () use ($file) {
-                require $file;
-            });
-        }
+        require $file;
     }
 }
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-});
-
-// --- BLOQUEO DE SEGURIDAD ---
-// NO TOCAR ESTE ARCHIVO
+//NADIE DEBE TOCAR ESTE ARCHIVO WEB.PHP, SI CREEN QUE ES NECESARIO DEBEN CONSULTAR A SU
+//PRO MANAGER PRIMERO
