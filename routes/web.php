@@ -30,3 +30,4 @@ Route::middleware(['auth', 'roleid:1,2'])->group(function () {
 
 // NADIE DEBE TOCAR ESTE ARCHIVO WEB.PHP, SI CREEN QUE ES NECESARIO DEBEN CONSULTAR A SU
 // PRO MANAGER PRIMERO
+
