@@ -1,0 +1,435 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --azul-oscuro: #0b2c74;
+    --azul: #1f5fd3;
+    --verde: #28a745;
+    --rojo: #dc3545;
+    --cyan: #17a2b8;
+    --texto: #e5edf7;
+    --texto-panel: #1f2937;
+}
+
+html, body {
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: var(--texto);
+    padding: 25px;
+    position: relative;
+    background:
+        radial-gradient(circle at top left, rgba(31, 95, 211, 0.15), transparent 28%),
+        radial-gradient(circle at top right, rgba(23, 162, 184, 0.12), transparent 24%),
+        linear-gradient(180deg, #0b1220 0%, #101a2b 45%, #0a1320 100%);
+}
+
+.fondo-reporte {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.02), rgba(255,255,255,0.02)),
+        repeating-linear-gradient(
+            135deg,
+            rgba(255,255,255,0.02) 0px,
+            rgba(255,255,255,0.02) 12px,
+            transparent 12px,
+            transparent 24px
+        );
+}
+
+.contenedor-reporte {
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.encabezado-reporte {
+    background: linear-gradient(90deg, var(--azul-oscuro), var(--azul));
+    color: white;
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.encabezado-texto h1 {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+.encabezado-texto p {
+    font-size: 14px;
+    opacity: 0.96;
+}
+
+.encabezado-fecha {
+    text-align: right;
+}
+
+.encabezado-fecha span {
+    display: block;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.encabezado-fecha strong {
+    font-size: 20px;
+    display: block;
+    margin-top: 5px;
+}
+
+.mensaje-error {
+    background: #fdecea;
+    color: #b42318;
+    border: 1px solid #f5c2c7;
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+/* PANELES CLAROS */
+.panel {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(6px);
+    border-radius: 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.panel-header {
+    background: #f3f6fb;
+    border-bottom: 1px solid #dbe2ea;
+    padding: 18px 20px;
+}
+
+.panel-header h2 {
+    font-size: 18px;
+    color: #1f2937;
+}
+
+.panel-body {
+    padding: 22px 20px;
+    color: #1f2937;
+}
+
+/* FILTROS */
+.form-filtros {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 18px;
+    align-items: end;
+}
+
+.campo-filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.campo-filtro label {
+    font-weight: 700;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.control-filtro {
+    position: relative;
+}
+
+.control-filtro::after {
+    content: "▾";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4b5563;
+    pointer-events: none;
+    font-size: 14px;
+}
+
+.campo-filtro select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 100%;
+    height: 46px;
+    padding: 0 42px 0 14px;
+    border: 1px solid #cfd8e3;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    font-size: 14px;
+    color: #1f2937;
+    outline: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: all 0.2s ease;
+}
+
+.campo-filtro select:hover {
+    border-color: #9fb4d3;
+}
+
+.campo-filtro select:focus {
+    border-color: var(--azul);
+    box-shadow: 0 0 0 4px rgba(31, 95, 211, 0.12);
+}
+
+.acciones-filtro {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.btn-filtrar,
+.btn-limpiar,
+.btn-exportar-pdf,
+.btn-exportar-excel {
+    appearance: none;
+    -webkit-appearance: none;
+    text-decoration: none;
+    border: none;
+    border-radius: 12px;
+    min-width: 120px;
+    height: 46px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-filtrar {
+    background: linear-gradient(135deg, var(--azul-oscuro), var(--azul));
+    color: white;
+    box-shadow: 0 6px 16px rgba(11, 44, 116, 0.18);
+}
+
+.btn-filtrar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(11, 44, 116, 0.22);
+}
+
+.btn-limpiar {
+    background: #eef2f7;
+    color: #1f2937;
+    border: 1px solid #d6dee8;
+}
+
+.btn-limpiar:hover {
+    background: #e2e8f0;
+}
+
+/* BOTONES DE EXPORTACIÓN JUNTOS */
+.acciones-exportacion {
+    margin-top: 18px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-exportar-pdf {
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
+    color: white;
+    box-shadow: 0 6px 16px rgba(185, 28, 28, 0.22);
+}
+
+.btn-exportar-pdf:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(185, 28, 28, 0.28);
+}
+
+.btn-exportar-excel {
+    background: linear-gradient(135deg, #15803d, #22c55e);
+    color: white;
+    box-shadow: 0 6px 16px rgba(21, 128, 61, 0.22);
+}
+
+.btn-exportar-excel:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(21, 128, 61, 0.28);
+}
+
+/* TARJETAS */
+.tarjetas-resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.tarjeta {
+    border-radius: 16px;
+    color: white;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+}
+
+.tarjeta .icono {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.tarjeta .contenido h3 {
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.tarjeta .contenido p {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.tarjeta-aprobados {
+    background: linear-gradient(135deg, var(--verde), #1b7a31);
+}
+
+.tarjeta-rechazados {
+    background: linear-gradient(135deg, var(--rojo), #a11d2f);
+}
+
+.tarjeta-pendientes {
+    background: linear-gradient(135deg, var(--cyan), #0d7281);
+}
+
+/* GRÁFICA */
+.grafica-wrapper {
+    width: 100%;
+    height: 320px;
+    position: relative;
+}
+
+/* TABLA */
+.tabla-contenedor {
+    overflow-x: auto;
+}
+
+.tabla-reporte {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.tabla-reporte thead {
+    background: var(--azul-oscuro);
+    color: #ffffff;
+}
+
+.tabla-reporte thead th {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+.tabla-reporte th,
+.tabla-reporte td {
+    padding: 14px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+.tabla-reporte td {
+    color: #1f2937;
+}
+
+.tabla-reporte tbody tr:hover {
+    background: #f8fafc;
+}
+
+.estado {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.estado-pendiente {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.sin-datos {
+    text-align: center;
+    color: #6b7280;
+    padding: 20px;
+    font-style: italic;
+}
+
+@media (max-width: 1100px) {
+    .form-filtros {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+
+    .encabezado-reporte {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .encabezado-fecha {
+        text-align: left;
+    }
+
+    .grafica-wrapper {
+        height: 260px;
+    }
+
+    .form-filtros {
+        grid-template-columns: 1fr;
+    }
+
+    .acciones-filtro {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-filtrar,
+    .btn-limpiar,
+    .btn-exportar-pdf,
+    .btn-exportar-excel {
+        width: 100%;
+    }
+
+    .acciones-exportacion {
+        justify-content: stretch;
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
