@@ -53,4 +53,17 @@ Route::get('/cambio-carrera/secretaria/revisar/{id_tramite}', function ($id_tram
     return view('cambio_carrera_secretaria_revision', compact('id_tramite'));
 })->name('cambio-carrera.secretaria.revisar');
 
+/*
+    Vista principal de Coordinación para emitir dictamen final.
+*/
+Route::get('/cambio-carrera/coordinacion', function () {
+    return view('cambio_carrera_coordinacion');
+})->name('cambio-carrera.coordinacion');
+
+
+Route::get('/cambio-carrera/coordinacion/dictamen/{id_tramite}', function ($id_tramite) {
+    return view('cambio_carrera_coordinacion_dictamen', compact('id_tramite'));
+})->name('cambio-carrera.coordinacion.dictamen');
+
+
 

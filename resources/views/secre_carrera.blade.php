@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
-  <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/secre_carrera.css') }}">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
@@ -95,82 +95,27 @@
             </a>
           </li>
 
-          {{-- MÓDULOS DE TRÁMITES --}}
-          <li class="nav-item">
-            <a href="{{ route('cambio-carrera.index') }}" class="nav-link">
-              <i class="nav-icon fas fa-exchange-alt"></i>
-              <p>Cambio de Carrera</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="{{ route('cancelacion.index') }}" class="nav-link">
-              <i class="nav-icon fas fa-ban"></i>
-              <p>Cancelación Excepcional</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
+        {{-- MÓDULO EMPLEADOS --}}
+        <li class="nav-item">
             <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-file-signature"></i>
-              <p>Equivalencias de Plan</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-clipboard-list"></i>
-              <p>Gestión de Trámites</p>
-            </a>
-          </li>
-
-          {{-- CONTROL DE GESTIÓN --}}
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-chart-line"></i>
-              <p>
-                Control de Gestión
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview" style="display: none; background: rgba(255,255,255,0.05);">
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="fas fa-search-dollar nav-icon"></i>
-                  <p>Auditoría</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="fas fa-list-ul nav-icon"></i>
-                  <p>Bitácora</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-
-         <li class="nav-item">
-            <a href="{{ url('/reporte-tramites-vista') }}" class="nav-link {{ request()->is('reporte-tramites-vista') ? 'active' : '' }}">
               <i class="nav-icon fas fa-chart-bar"></i>
-              <p>Reportes</p>
+              <p>Revisión</p>
             </a>
-          </li>
+        </li>
 
-          {{-- BOTÓN DE SEGURIDAD ENLAZADO --}}
-          <li class="nav-item">
-            <a href="{{ route('seguridad.index') }}" class="nav-link" style="color: #ffc107;">
-              <i class="nav-icon fas fa-user-shield"></i>
-              <p>Seguridad</p>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-chart-bar"></i>
+              <p>Configuración</p>
             </a>
-          </li>
+        </li>
 
-          {{-- BOTÓN DE RESPALDO ENLAZADO CORRECTAMENTE --}}
-          <li class="nav-item">
-            <a href="{{ route('backup.index') }}" class="nav-link">
-              <i class="nav-icon fas fa-database"></i>
-              <p>Respaldo de Sistema</p>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-chart-bar"></i>
+              <p>Calendario</p>
             </a>
-          </li>
+        </li>
 
           <li class="nav-item">
             <form action="{{ route('logout') }}" method="POST" style="margin:0;">
@@ -228,54 +173,6 @@
       </div>
 
       <div class="info-boxes-row">
-        <div class="info-box-custom ibc-gold">
-          <i class="fas fa-user-graduate ibc-icon-bg"></i>
-          <div class="ibc-top">
-            <i class="fas fa-user-graduate ibc-icon-front"></i>
-            <div>
-              <div class="ibc-num">1,240</div>
-              <div class="ibc-label">Estudiantes Inscritos</div>
-            </div>
-          </div>
-          <div class="ibc-footer">Actualizado hoy</div>
-        </div>
-
-        <div class="info-box-custom ibc-blue">
-          <i class="fas fa-user-tie ibc-icon-bg"></i>
-          <div class="ibc-top">
-            <i class="fas fa-user-tie ibc-icon-front"></i>
-            <div>
-              <div class="ibc-num">12</div>
-              <div class="ibc-label">Secretarios Activos</div>
-            </div>
-          </div>
-          <div class="ibc-footer">Personal autorizado</div>
-        </div>
-
-        <div class="info-box-custom ibc-green">
-          <i class="fas fa-file-alt ibc-icon-bg"></i>
-          <div class="ibc-top">
-            <i class="fas fa-file-alt ibc-icon-front"></i>
-            <div>
-              <div class="ibc-num">85</div>
-              <div class="ibc-label">Trámites en Proceso</div>
-            </div>
-          </div>
-          <div class="ibc-footer">Semana actual</div>
-        </div>
-
-        <div class="info-box-custom ibc-cyan">
-          <i class="fas fa-clock ibc-icon-bg"></i>
-          <div class="ibc-top">
-            <i class="fas fa-clock ibc-icon-front"></i>
-            <div>
-              <div class="ibc-num">14</div>
-              <div class="ibc-label">Solicitudes Pendientes</div>
-            </div>
-          </div>
-          <div class="ibc-footer">Requieren atención</div>
-        </div>
-
         <div class="info-box-custom ibc-dark">
           <i class="fas fa-calendar-check ibc-icon-bg"></i>
           <div class="ibc-top">
