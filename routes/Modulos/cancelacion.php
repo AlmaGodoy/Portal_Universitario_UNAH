@@ -9,7 +9,6 @@ use App\Http\Controllers\DocumentoExcepcionalController;
 |--------------------------------------------------------------------------
 */
 
-// ── API (las que ya tenías, sin tocar) ──────────────────────────────────
 Route::prefix('api/cancelaciones')->group(function () {
     Route::post('crear',               [DocumentoExcepcionalController::class, 'subir']);
     Route::get('todas',                [DocumentoExcepcionalController::class, 'obtenerTodos']);
