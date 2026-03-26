@@ -149,8 +149,8 @@
             </ul>
           </li>
 
-          <li class="nav-item">
-            <a href="#" class="nav-link">
+         <li class="nav-item">
+            <a href="{{ url('/reporte-tramites-vista') }}" class="nav-link {{ request()->is('reporte-tramites-vista') ? 'active' : '' }}">
               <i class="nav-icon fas fa-chart-bar"></i>
               <p>Reportes</p>
             </a>
