@@ -9,7 +9,7 @@ Route::get('/', function () {
 
 //Autocarga de módulos
 
-$path = __DIR__ . '/Modulos';
+$path = _DIR_ . '/Modulos';
 
 if (is_dir($path)) {
     foreach (glob($path . "/*.php") as $file) {

@@ -21,6 +21,8 @@ Route::prefix('api/cambio-carrera')->group(function () {
     Route::get('secretaria/listado', [CambioCarreraController::class, 'listadoSecretaria']);
     Route::get('secretaria/detalle/{id_tramite}', [CambioCarreraController::class, 'detalleSecretaria']);
     Route::post('secretaria/guardar-revision', [CambioCarreraController::class, 'guardarRevisionSecretaria']);
+        Route::get('coordinacion/listado', [CambioCarreraController::class, 'listadoCoordinacion']);
+    Route::put('coordinacion/dictaminar/{id_tramite}', [CambioCarreraController::class, 'dictaminarCoordinacion']);
 });
 
 
@@ -64,6 +66,24 @@ Route::get('/cambio-carrera/coordinacion', function () {
 Route::get('/cambio-carrera/coordinacion/dictamen/{id_tramite}', function ($id_tramite) {
     return view('cambio_carrera_coordinacion_dictamen', compact('id_tramite'));
 })->name('cambio-carrera.coordinacion.dictamen');
+
+
+
+
+/*
+    Vista principal de Coordinación para emitir dictamen final.
+*/
+Route::get('/cambio-carrera/coordinacion', function () {
+    return view('cambio_carrera_coordinacion');
+})->name('cambio-carrera.coordinacion');
+
+
+Route::get('/cambio-carrera/coordinacion/dictamen/{id_tramite}', function ($id_tramite) {
+    return view('cambio_carrera_coordinacion_dictamen', compact('id_tramite'));
+})->name('cambio-carrera.coordinacion.dictamen');
+
+
+
 
 
 

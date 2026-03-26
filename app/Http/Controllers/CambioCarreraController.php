@@ -252,7 +252,7 @@ public function listadoSecretaria()
         ]);
     }
 
-    public function listadoCoordinacion()
+     public function listadoCoordinacion()
 {
     $tramites = DB::table('tbl_tramite as t')
         ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
@@ -314,6 +314,3 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
 
 
 }
-
-
-
