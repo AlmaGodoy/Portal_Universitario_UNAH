@@ -252,6 +252,65 @@ public function listadoSecretaria()
         ]);
     }
 
+     public function listadoCoordinacion()
+{
+    $tramites = DB::table('tbl_tramite as t')
+        ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
+        ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+        ->leftJoin('tbl_pago as pg', 't.id_tramite', '=', 'pg.id_tramite')
+        ->select(
+            't.id_tramite',
+            'p.nombre_persona as nombre_persona',
+            't.fecha_solicitud',
+            't.resolucion_de_tramite_academico as estado_tramite',
+            'c.nombre_carrera as carrera_destino',
+            'pg.estado_pago'
+        )
+        ->where('t.tipo_tramite_academico', 'cambio_carrera')
+        ->where('t.estado', 1)
+        ->orderByDesc('t.id_tramite')
+        ->get();
+
+    return response()->json($tramites);
+}
+
+/*
+    =========================================================
+    DICTAMEN FINAL DE COORDINACIÓN
+    =========================================================
+    
+*/
+public function dictaminarCoordinacion(Request $request, $id_tramite)
+{
+    $request->validate([
+        'estado' => 'required|in:aprobada,rechazada',
+        'observacion_dictamen' => 'nullable|string'
+    ]);
+
+    $tramite = DB::table('tbl_tramite')
+        ->where('id_tramite', $id_tramite)
+        ->first();
+
+    if (!$tramite) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No se encontró el trámite.'
+        ], 404);
+    }
+
+    DB::table('tbl_tramite')
+        ->where('id_tramite', $id_tramite)
+        ->update([
+            'resolucion_de_tramite_academico' => $request->estado,
+            'observacion_dictamen' => $request->observacion_dictamen
+        ]);
+
+    return response()->json([
+        'resultado' => 'OK',
+        'mensaje' => 'Dictamen final guardado correctamente.'
+    ]);
+}
+
 
 
 }
