@@ -9,23 +9,18 @@ class Empleado extends Model
 {
     use HasFactory;
 
-    // Nombre de la tabla (ajústalo si se llama diferente)
     protected $table = 'empleados';
 
-    // CAMPOS SEGUROS
     protected $fillable = [
         'user_id',
         'identidad',
-        'tipo_empleado', // 'docente', 'administrativo', 'mantenimiento'
+        'tipo_empleado', // 'secretaria_carrera', 'secretaria_academica', 'coordinador', 'administrador'
         'departamento',
         'estado'
     ];
 
-    /**
-     * Relación: Un empleado pertenece a un Usuario (User)
-     */
     public function usuario()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(Usuario::class, 'user_id', 'id_usuario');
     }
 }

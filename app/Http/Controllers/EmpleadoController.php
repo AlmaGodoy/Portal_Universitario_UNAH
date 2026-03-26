@@ -3,52 +3,60 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Empleado;
+use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 
 class EmpleadoController extends Controller
 {
-    /**
-     * PROCEDIMIENTO PRINCIPAL: Dirigir al empleado a su Dashboard correcto
-     */
     public function index()
     {
-        // 1. Obtener usuario autenticado
-        $user = Auth::user();
+        // 1. Obtener usuario con su relación de empleado cargada
+        $user = Auth::user()->load('empleado');
 
-        // 2. Seguridad extra: Si no hay sesión, al portal
-        if (!$user) {
-            return redirect()->route('portal');
+        // 2. Seguridad: Si no tiene datos de empleado o está inactivo
+        if (!$user || !$user->empleado || $user->empleado->estado !== 'activo') {
+            return redirect()->route('portal')->with('error', 'Acceso denegado o cuenta inactiva.');
         }
 
-        // 3. Lógica de redirección según el ROL (1=Admin, 2=Empleado)
-        // Aquí usamos el campo 'tipo_empleado' para decidir la vista
-        $tipo = $user->tipo_empleado;
+        // 3. Obtener el tipo desde la tabla empleados
+        $tipo = $user->empleado->tipo_empleado;
 
         return match ($tipo) {
-            'docente'        => $this->vistaDocente($user),
-            'administrativo' => $this->vistaAdmin($user),
-            'mantenimiento'  => $this->vistaManto($user),
-            default          => redirect()->route('portal')->with('error', 'Rol no reconocido'),
+            'secretaria_carrera', 'secretaria_academica' => $this->vistaSecretarias($user, $tipo),
+            'coordinador'                               => $this->vistaCoordinador($user),
+            'administrador'                             => $this->vistaAdministrador($user),
+            default => redirect()->route('portal')->with('error', 'Rol no reconocido.'),
         };
     }
 
-    private function vistaDocente($user)
+    // VISTA 1: Secretarías (Compartida para las dos secretarias)
+    private function vistaSecretarias($user, $tipo)
     {
-
-        $datos = ['titulo' => 'Portal del Docente', 'usuario' => $user->name];
-        return view('empleados.docente', compact('datos'));
+        $datos = [
+            'titulo' => ($tipo == 'secretaria_carrera') ? 'Gestión de Carrera' : 'Gestión Académica',
+            'usuario' => $user->id_persona,
+            'rol' => $tipo
+        ];
+        return view('empleados.gestion_secretaria', compact('datos'));
     }
 
-    private function vistaAdmin($user)
+    // VISTA 2: Coordinador (Tu panel)
+    private function vistaCoordinador($user)
     {
-        $datos = ['titulo' => 'Gestión Administrativa', 'usuario' => $user->name];
-        return view('empleados.administrativo', compact('datos'));
+        $datos = [
+            'titulo' => 'Panel de Control: Coordinación',
+            'usuario' => $user->id_persona
+        ];
+        return view('empleados.panel_coordinador', compact('datos'));
     }
 
-    private function vistaManto($user)
+    // VISTA 3: Administrador
+    private function vistaAdministrador($user)
     {
-        $datos = ['titulo' => 'Panel de Mantenimiento', 'usuario' => $user->name];
-        return view('empleados.mantenimiento', compact('datos'));
+        $datos = [
+            'titulo' => 'Mantenimiento del Sistema',
+            'usuario' => $user->id_persona
+        ];
+        return view('empleados.administracion_sistema', compact('datos'));
     }
 }
