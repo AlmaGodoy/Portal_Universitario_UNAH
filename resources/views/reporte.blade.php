@@ -105,11 +105,19 @@
             </form>
 
             <div class="acciones-exportacion">
-                <a href="{{ url('/reporte-tramites/pdf') }}?tipo_tramite={{ $tipoTramite }}&estado_resolucion={{ $estadoResolucion }}&mes_reporte={{ $mesReporte }}" class="btn-exportar-pdf">
+                <a href="{{ route('reporte.tramites.pdf', [
+                    'tipo_tramite' => $tipoTramite,
+                    'estado_resolucion' => $estadoResolucion,
+                    'mes_reporte' => $mesReporte
+                ]) }}" class="btn-exportar-pdf">
                     Exportar PDF
                 </a>
 
-                <a href="{{ url('/reporte-tramites/excel') }}?tipo_tramite={{ $tipoTramite }}&estado_resolucion={{ $estadoResolucion }}&mes_reporte={{ $mesReporte }}" class="btn-exportar-excel">
+                <a href="{{ route('reporte.tramites.excel', [
+                    'tipo_tramite' => $tipoTramite,
+                    'estado_resolucion' => $estadoResolucion,
+                    'mes_reporte' => $mesReporte
+                ]) }}" class="btn-exportar-excel">
                     Exportar Excel
                 </a>
             </div>
@@ -162,8 +170,8 @@
             <h2>Listado de estudiantes con trámites pendientes</h2>
         </div>
         <div class="panel-body">
-            <div class="tabla-contenedor">
-                <table class="tabla-reporte">
+            <div class="tabla-responsive">
+                <table class="tabla-tramites">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -177,19 +185,19 @@
                         @forelse($tramitesPendientes as $index => $tramite)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $tramite['estudiante'] }}</td>
-                                <td>{{ $tramite['tipo'] }}</td>
-                                <td>{{ $tramite['fecha_solicitud'] }}</td>
+                                <td>{{ $tramite['estudiante'] ?? 'Sin nombre' }}</td>
+                                <td>{{ $tramite['tipo'] ?? 'No definido' }}</td>
+                                <td>{{ $tramite['fecha_solicitud'] ?? 'Sin fecha' }}</td>
                                 <td>
-                                    <span class="estado estado-pendiente">
-                                        {{ $tramite['estado'] }}
+                                    <span class="estado estado-{{ strtolower($tramite['estado'] ?? 'pendiente') }}">
+                                        {{ ucfirst($tramite['estado'] ?? 'pendiente') }}
                                     </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="sin-datos">
-                                    No hay trámites pendientes registrados.
+                                <td colspan="5" class="sin-registros">
+                                    No hay trámites pendientes con los filtros seleccionados.
                                 </td>
                             </tr>
                         @endforelse
