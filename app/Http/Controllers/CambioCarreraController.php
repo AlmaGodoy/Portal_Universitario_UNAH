@@ -314,6 +314,3 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
 
 
 }
-
-
-
