@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -26,7 +25,7 @@ class Usuario extends Authenticatable
         'remember_token',
     ];
 
-    // Relación con la tabla empleados
+    // Relación con la tabla empleados.
     public function empleado()
     {
         return $this->hasOne(Empleado::class, 'user_id', 'id_usuario');
