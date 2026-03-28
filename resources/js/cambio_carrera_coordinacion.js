@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${t.nombre_persona ?? ''}</td>
                         <td>${t.carrera_destino ?? ''}</td>
                         <td>${t.estado_tramite ?? ''}</td>
-                        <td>${t.estado_pago ?? 'Sin pago'}</td>
                         <td>
                             <a href="/cambio-carrera/coordinacion/dictamen/${t.id_tramite}" class="btnLink">
                                 Dictaminar
