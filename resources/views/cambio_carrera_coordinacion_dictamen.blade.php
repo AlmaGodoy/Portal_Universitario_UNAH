@@ -23,8 +23,20 @@
         </div>
 
         <div class="topbar-center">Dictamen de Coordinación</div>
+        <div class="topbar-right">
+    <!-- BOTÓN ATRÁS -->
+    <button onclick="window.history.back()" class="btn-back">
+        ← Atrás
+    </button>
 
-        <div class="topbar-right">Cambio de Carrera</div>
+    <!-- CERRAR SESIÓN -->
+    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+        @csrf
+        <button type="submit" class="btn-logout">
+            Cerrar Sesión
+        </button>
+    </form>
+</div>
     </header>
 
     <div class="page-wrap">
@@ -90,10 +102,6 @@
                         <span id="dato-clases-aprobadas">Cargando...</span>
                     </div>
 
-                    <div class="estado-item">
-                        <strong>Estado del pago</strong>
-                        <span id="dato-estado-pago">Cargando...</span>
-                    </div>
                 </div>
             </div>
 
@@ -111,10 +119,6 @@
                         <span id="doc-historial">Cargando...</span>
                     </div>
 
-                    <div class="estado-item">
-                        <strong>Comprobante de pago</strong>
-                        <span id="doc-pago">Cargando...</span>
-                    </div>
                 </div>
             </div>
 

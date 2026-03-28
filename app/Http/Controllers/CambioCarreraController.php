@@ -134,17 +134,18 @@ public function listadoSecretaria()
     $tramites = DB::table('tbl_tramite as t')
         ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
         ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
-        ->leftJoin('tbl_pago as pg', 't.id_tramite', '=', 'pg.id_tramite')
         ->select(
             't.id_tramite',
             'p.nombre_persona as nombre_persona',
             't.fecha_solicitud',
             't.resolucion_de_tramite_academico as estado_tramite',
-            'c.nombre_carrera as carrera_destino',
-            'pg.estado_pago'
+            'c.nombre_carrera as carrera_destino'
         )
         ->where('t.tipo_tramite_academico', 'cambio_carrera')
         ->where('t.estado', 1)
+
+        ->whereNotIn('t.resolucion_de_tramite_academico', ['aprobada', 'rechazada'])
+
         ->orderByDesc('t.id_tramite')
         ->get();
 
@@ -161,8 +162,6 @@ public function listadoSecretaria()
 
             ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
 
-            ->leftJoin('tbl_pago as pg', 't.id_tramite', '=', 'pg.id_tramite')
-
             ->select(
                 't.id_tramite',
                 't.id_persona',
@@ -173,14 +172,10 @@ public function listadoSecretaria()
                 'c.nombre_carrera as carrera_destino',
                 'e.indice_periodo',
                 'e.indice_global',
-                'e.cantidad_clases_aprobadas',
-                'pg.id_pago',
-                'pg.estado_pago',
-                'pg.observaciones_pago'
+                'e.cantidad_clases_aprobadas'
             )
             ->where('t.id_tramite', $id_tramite)
 
-            ->orderByDesc('pg.id_pago')
             ->first();
 
         return response()->json($tramite);
@@ -199,8 +194,6 @@ public function listadoSecretaria()
             'indice_periodo' => 'nullable|numeric',
             'indice_global' => 'nullable|numeric',
             'clases_aprobadas' => 'nullable|integer',
-            'estado_pago' => 'required|in:validado,pendiente,rechazado',
-            'observaciones_pago' => 'nullable|string'
         ]);
 
         
@@ -225,19 +218,8 @@ public function listadoSecretaria()
             ]);
 
       
-        $pago = DB::table('tbl_pago')
-            ->where('id_tramite', $request->id_tramite)
-            ->orderByDesc('id_pago')
-            ->first();
-
-        if ($pago) {
-            DB::table('tbl_pago')
-                ->where('id_pago', $pago->id_pago)
-                ->update([
-                    'estado_pago' => $request->estado_pago,
-                    'observaciones_pago' => $request->observaciones_pago
-                ]);
-        }
+       
+        
 
     
         DB::table('tbl_tramite')
@@ -252,22 +234,29 @@ public function listadoSecretaria()
         ]);
     }
 
-     public function listadoCoordinacion()
+    public function listadoCoordinacion()
 {
     $tramites = DB::table('tbl_tramite as t')
         ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
         ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
-        ->leftJoin('tbl_pago as pg', 't.id_tramite', '=', 'pg.id_tramite')
         ->select(
             't.id_tramite',
             'p.nombre_persona as nombre_persona',
             't.fecha_solicitud',
             't.resolucion_de_tramite_academico as estado_tramite',
-            'c.nombre_carrera as carrera_destino',
-            'pg.estado_pago'
+            'c.nombre_carrera as carrera_destino'
         )
         ->where('t.tipo_tramite_academico', 'cambio_carrera')
         ->where('t.estado', 1)
+
+        /*
+            CORRECCIÓN:
+            En Coordinación solo deben aparecer los trámites
+            que ya fueron revisados por Secretaría y están listos
+            para dictamen final.
+        */
+        ->where('t.resolucion_de_tramite_academico', 'revision')
+
         ->orderByDesc('t.id_tramite')
         ->get();
 

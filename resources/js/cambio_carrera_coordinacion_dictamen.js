@@ -93,23 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            if (docPago) {
-                if (comprobantePago && comprobantePago.ruta_archivo) {
-                    docPago.innerHTML = `
-                        <a href="/storage/${comprobantePago.ruta_archivo}" target="_blank" class="btn-ver-doc">
-                            Ver comprobante
-                        </a>
-                    `;
-                } else {
-                    docPago.innerHTML = '<span class="sin-documento">No subido</span>';
-                }
-            }
-
         } catch (error) {
             console.error('Error cargando documentos del trámite:', error);
 
             if (docHistorial) docHistorial.innerHTML = '<span class="sin-documento">Error al cargar</span>';
-            if (docPago) docPago.innerHTML = '<span class="sin-documento">Error al cargar</span>';
         }
     }
 
