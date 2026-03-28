@@ -24,7 +24,20 @@
 
         <div class="topbar-center">Secretaría - Cambio de Carrera</div>
 
-        <div class="topbar-right">Revisión de trámites</div>
+     <div class="topbar-right">
+    <!-- BOTÓN ATRÁS -->
+    <button onclick="window.history.back()" class="btn-back">
+        ← Atrás
+    </button>
+
+    <!-- CERRAR SESIÓN -->
+    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+        @csrf
+        <button type="submit" class="btn-logout">
+            Cerrar Sesión
+        </button>
+    </form>
+</div>
     </header>
 
     <div class="page-wrap">
@@ -33,7 +46,7 @@
                 <div>
                     <h3>Trámites pendientes de revisión</h3>
                     <p>
-                        Aquí Secretaría podrá revisar el historial académico, el pago y validar la información del estudiante.
+                        Aquí Secretaría podrá revisar el historial académico.
                     </p>
                 </div>
 
@@ -50,7 +63,6 @@
                         <th>Nombre del Estudiante</th>
                         <th>Carrera Destino</th>
                         <th>Estado Trámite</th>
-                        <th>Pago</th>
                         <th>Acción</th>
                     </tr>
                 </thead>

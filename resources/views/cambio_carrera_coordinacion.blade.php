@@ -24,7 +24,21 @@
 
         <div class="topbar-center">Coordinación - Cambio de Carrera</div>
 
-        <div class="topbar-right">Dictamen final</div>
+        <div class="topbar-right">
+            <!-- BOTÓN ATRÁS -->
+            <button onclick="window.history.back()" class="btn-back">
+                ← Atrás
+            </button>
+
+            <!-- BOTÓN CERRAR SESIÓN -->
+            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                @csrf
+                <button type="submit" class="btn-logout">
+                    Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </header>
     </header>
 
     <div class="page-wrap">
@@ -50,7 +64,6 @@
                         <th>Nombre del Estudiante</th>
                         <th>Carrera Destino</th>
                         <th>Estado Trámite</th>
-                        <th>Pago</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
