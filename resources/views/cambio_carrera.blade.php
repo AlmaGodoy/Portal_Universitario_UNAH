@@ -23,12 +23,17 @@
         </div>
 
         <div class="topbar-center">Cambio de Carrera</div>
-
-        <div class="topbar-right">Login</div>
+<div class="topbar-right">
+            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                @csrf
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>
     </header>
 
     <div class="page-wrap">
         <nav class="subnav">
+            <a href="javascript:history.back()" class="btn-back">← Atrás</a>>
         <a href="/cambio-carrera" class="active">Nuevo trámite</a>
         <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
         <a href="/cambio-carrera/estado">Estado / Dictamen</a>
@@ -38,7 +43,7 @@
             <h2>Solicitud de Cambio de Carrera</h2>
 
             <p class="info">
-                Completa el formulario. Al crear el trámite, se habilitarán las secciones para subir tu <b>Historial Académico (PDF)</b> y registrar el <b>pago del trámite</b>.
+                Completa el formulario. Al crear el trámite, se habilitará la sección para subir tu <b>Historial Académico (PDF)</b>.
             </p>
 
             <form id="formCambioCarrera">
@@ -50,10 +55,10 @@
                     <option value="">Cargando carreras...</option>
                 </select>
 
-                <label for="direccion">Justificación por la cual solicita el cambio de carrera</label>
+                <label for="direccion">Motivo por el cual solicita el cambio de carrera</label>
               <textarea
                     id="direccion"
-                    placeholder="Escriba aquí la justificación por la cual solicita el cambio de carrera"
+                    placeholder="Escriba aquí el motivo por la cual solicita el cambio de carrera"
                     rows="4"
                     required
                 ></textarea>
@@ -88,57 +93,6 @@
 
 <button type="submit" id="btnSubirPDF">Subir PDF</button>
 
-                </form>
-            </div>
-
-             <hr>
-
-
-
-            <div id="msg" class="msg"></div>
-
-            <hr>
-               <div id="seccionPago" style="display:none;">
-                <h3>Registrar pago del trámite</h3>
-
-                 <p class="info">
-                    Este trámite requiere un pago de <b>L 200.00</b>. Adjunta tu comprobante de pago para que sea validado por secretaría o coordinación.
-                </p>
-
-                <form id="formPago" enctype="multipart/form-data">
-                     <input type="hidden" id="id_tramite_pago" value="">
-
-                    <label for="fecha_pago">Fecha de pago</label>
-                     <input type="date" id="fecha_pago" required>
-
-                    <label for="id_banco">Banco (opcional)</label>
-                    <select id="id_banco">
-                        <option value="">Seleccione un banco</option>
-                    </select>
-
-                    <label for="referencia_banco">Referencia bancaria (opcional)</label>
-                     <input type="text" id="referencia_banco" placeholder="Ingrese la referencia si la conoce">
-
-                    <label for="observaciones_pago">Observaciones (opcional)</label>
-                    <textarea
-                        id="observaciones_pago"
-                        rows="3"
-                        placeholder="Escriba aquí alguna observación sobre el pago"
-                    ></textarea>
-
-                    <label for="comprobante_pago">Comprobante de pago</label>
-                     <input type="file" id="comprobante_pago" accept=".pdf,.jpg,.jpeg,.png" required>
-                      <div id="previewComprobante" style="display:none;" class="preview-archivo">
-                        <p><strong>Archivo seleccionado:</strong> <span id="nombreComprobante"></span></p>
-                        <p><strong>Tamaño:</strong> <span id="tamanoComprobante"></span></p>
-
-                        <div class="preview-actions">
-                            <button type="button" id="btnVerComprobante">Ver archivo</button>
-                            <button type="button" id="btnQuitarComprobante">Quitar archivo</button>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btnRegistrarPago">Registrar pago</button>
                 </form>
             </div>
 

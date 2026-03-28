@@ -23,7 +23,12 @@
         </div>
 
         <div class="topbar-center">Cambio de Carrera</div>
-        <div class="topbar-right">Portal Académico</div>
+       <div class="topbar-right">
+            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                @csrf
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>
     </header>
 
     <main class="module-container">
@@ -32,7 +37,10 @@
             <p>Consulta el estado de tus solicitudes realizadas.</p>
         </section>
 
+
+    <div class="page-wrap">
         <nav class="subnav">
+            <a href="javascript:history.back()" class="btn-back">← Atrás</a>>
             <a href="/cambio-carrera">Nuevo trámite</a>
             <a href="/cambio-carrera/mis-tramites" class="active">Mis trámites</a>
             <a href="/cambio-carrera/estado">Estado / Dictamen</a>
@@ -43,7 +51,7 @@
 
             <div class="card-head">
                 <div>
-                    <h3>Listado de Trámites</h3>
+                    <h3>Trámites realizados por el estudiante</h3>
                     <p>Aquí puedes ver todos los cambios de carrera que has solicitado.</p>
                 </div>
                 <span class="badge-soft">Historial</span>
@@ -56,7 +64,7 @@
                         <th>Fecha</th>
                         <th>Carrera Destino</th>
                         <th>Estado</th>
-                        <th>Justificación</th>
+                        <th>Motivo por el cuál solicita el cambio de carrera</th>
                          <th>Documento</th>
                     </tr>
                 </thead>
