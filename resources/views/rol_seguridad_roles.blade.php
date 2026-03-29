@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Roles</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+@extends('layouts.app')
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    @vite(['resources/css/rolseguridad.css', 'resources/js/rolseguridad.js'])
-</head>
-<body>
+@section('titulo', 'Gestión de Roles')
 
+@section('content')
 <div class="container py-4 security-page">
 
     @if(session('status'))
@@ -27,7 +19,6 @@
 
     <div class="row g-4">
 
-        <!-- BLOQUE PRINCIPAL: LISTA DE ROLES -->
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
@@ -40,7 +31,7 @@
                         Volver a Seguridad
                     </a>
 
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
+                    <button class="btn btn-success" data-toggle="modal" data-target="#modalNuevoRol">
                         + Nuevo Rol
                     </button>
                 </div>
@@ -60,7 +51,7 @@
                                     <th>Rol</th>
                                     <th>Descripción</th>
                                     <th>Estado</th>
-                                    <th style="width: 140px;">Acciones</th>
+                                    <th class="col-acciones">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -78,8 +69,8 @@
                                         </td>
                                         <td>
                                             <button class="btn btn-primary btn-sm"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#modalEditarRol{{ $rol->id_rol }}">
+                                                    data-toggle="modal"
+                                                    data-target="#modalEditarRol{{ $rol->id_rol }}">
                                                 Editar
                                             </button>
                                         </td>
@@ -96,7 +87,6 @@
             </div>
         </div>
 
-        <!-- BLOQUE INFERIOR: ASIGNACIONES -->
         <div class="col-12">
             <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
@@ -152,16 +142,17 @@
     </div>
 </div>
 
-<!-- MODAL NUEVO ROL -->
-<div class="modal fade" id="modalNuevoRol" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="modalNuevoRol" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
             <form action="{{ route('seguridad.rol.store') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar este rol?">
                 @csrf
 
                 <div class="modal-header security-header">
                     <h5 class="modal-title text-white">Nuevo Rol</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
 
                 <div class="modal-body">
@@ -192,10 +183,9 @@
     </div>
 </div>
 
-<!-- MODALES EDITAR ROL -->
 @foreach($roles as $rol)
-<div class="modal fade" id="modalEditarRol{{ $rol->id_rol }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="modalEditarRol{{ $rol->id_rol }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
             <form action="{{ route('seguridad.rol.update', $rol->id_rol) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar los cambios de este rol?">
                 @csrf
@@ -203,7 +193,9 @@
 
                 <div class="modal-header security-header">
                     <h5 class="modal-title text-white">Editar Rol</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
 
                 <div class="modal-body">
@@ -238,7 +230,4 @@
     </div>
 </div>
 @endforeach
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+@endsection

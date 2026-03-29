@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Usuarios</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+@extends('layouts.app')
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    @vite(['resources/css/rolseguridad.css', 'resources/js/rolseguridad.js'])
-</head>
-<body>
+@section('titulo', 'Gestión de Usuarios')
 
+@section('content')
 <div class="container py-4 security-page">
 
     @if(session('status'))
@@ -52,7 +44,7 @@
                             <th>Tipo Usuario</th>
                             <th>Rol</th>
                             <th>Estado Cuenta</th>
-                            <th style="width: 140px;">Acciones</th>
+                            <th class="col-acciones">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,8 +64,8 @@
                                 </td>
                                 <td>
                                     <button class="btn btn-primary btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalEstadoUsuario{{ $usuario->id_usuario }}">
+                                            data-toggle="modal"
+                                            data-target="#modalEstadoUsuario{{ $usuario->id_usuario }}">
                                         Editar
                                     </button>
                                 </td>
@@ -94,8 +86,8 @@
 </div>
 
 @foreach($usuarios as $usuario)
-<div class="modal fade" id="modalEstadoUsuario{{ $usuario->id_usuario }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="modalEstadoUsuario{{ $usuario->id_usuario }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
             <form action="{{ route('seguridad.usuario.estado', $usuario->id_usuario) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar el cambio de estado de este usuario?">
                 @csrf
@@ -103,7 +95,9 @@
 
                 <div class="modal-header security-header">
                     <h5 class="modal-title text-white">Actualizar Estado de Usuario</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
 
                 <div class="modal-body">
@@ -134,7 +128,4 @@
     </div>
 </div>
 @endforeach
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+@endsection
