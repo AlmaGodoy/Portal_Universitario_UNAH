@@ -2,6 +2,13 @@
 
 @section('content')
 <div class="auth-container">
+
+    <div class="auth-back-wrap">
+        <a href="{{ route('portal') }}" class="btn btn-outline-light auth-back-btn">
+            ← Volver al portal
+        </a>
+    </div>
+
     <div class="auth-card">
 
         <h3 class="mb-4 text-center">Registro de usuario</h3>
@@ -215,7 +222,7 @@
             <div id="bloque_empleado" class="border rounded p-3 mb-3 hidden-field">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>Código empleado</label>
+                        <label>Numero de empleado</label>
                         <input name="cod_empleado" id="cod_empleado"
                                class="form-control @error('cod_empleado') is-invalid @enderror"
                                value="{{ old('cod_empleado') }}">
@@ -238,10 +245,6 @@
 
             <button class="btn btn-primary w-100">Registrar</button>
         </form>
-
-        <a href="{{ route('portal') }}" class="btn btn-outline-secondary w-100 mt-2">
-            Volver al portal
-        </a>
     </div>
 </div>
 @endsection
