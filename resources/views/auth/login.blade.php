@@ -2,13 +2,20 @@
 
 @section('content')
 <div class="auth-container">
+
+    <div class="auth-back-wrap">
+        <a href="{{ url('/portal') }}" class="btn btn-outline-light auth-back-btn">
+            ← Volver al portal
+        </a>
+    </div>
+
     <div class="auth-card" style="max-width: 520px;">
 
         @php
             $tipo = $tipo ?? session('login_tipo'); // estudiante | empleado | null
             $titulo = $tipo === 'estudiante'
-                        ? 'Iniciar Sesión - Estudiantes'
-                        : ($tipo === 'empleado' ? 'Iniciar Sesión - Empleados' : 'Iniciar Sesión');
+                        ? 'Iniciar Sesión'
+                        : ($tipo === 'empleado' ? 'Iniciar Sesión' : 'Iniciar Sesión');
         @endphp
 
         <h3 class="mb-4 text-center">{{ $titulo }}</h3>
@@ -69,10 +76,6 @@
                     <a href="{{ route('register.tipo', ['tipo' => $tipo]) }}">
                         ¿No tienes cuenta? Regístrate
                     </a>
-                </div>
-
-                <div class="text-center mt-2">
-                    <a href="{{ url('/portal') }}">← Volver al portal</a>
                 </div>
             </form>
 
