@@ -10,17 +10,22 @@ class Empleado extends Model
     use HasFactory;
 
     protected $table = 'empleados';
+    protected $primaryKey = 'id_empleado';
 
     protected $fillable = [
-        'user_id',
-        'identidad',
-        'tipo_empleado', // 'secretaria_carrera', 'secretaria_academica', 'coordinador', 'administrador'
-        'departamento',
-        'estado'
+        'id_usuario',
+        'id_unidad',
+        'tipo_usuario',
+        'estado_empleado'
     ];
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'user_id', 'id_usuario');
+        return $this->belongsTo(User::class, 'id_usuario', 'id_usuario');
+    }
+
+    public function unidad()
+    {
+        return $this->belongsTo(Unidad::class, 'id_unidad', 'id_unidad');
     }
 }

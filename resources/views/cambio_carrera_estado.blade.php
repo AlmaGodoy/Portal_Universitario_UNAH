@@ -23,7 +23,12 @@
         </div>
 
         <div class="topbar-center">Cambio de Carrera</div>
-        <div class="topbar-right">Portal Académico</div>
+        <div class="topbar-right">
+            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                @csrf
+                <button type="submit" class="btn-logout">Cerrar Sesión</button>
+            </form>
+        </div>
     </header>
 
     <main class="module-container">
@@ -32,7 +37,9 @@
             <p>Da seguimiento visual a tu solicitud de cambio de carrera.</p>
         </section>
 
+          <div class="page-wrap">
         <nav class="subnav">
+            <a href="javascript:history.back()" class="btn-back">← Atrás</a>>
             <a href="/cambio-carrera">Nuevo trámite</a>
             <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
             <a href="/cambio-carrera/estado" class="active">Estado / Dictamen</a>

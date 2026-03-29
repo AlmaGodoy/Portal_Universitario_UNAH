@@ -23,8 +23,20 @@
         </div>
 
         <div class="topbar-center">Revisión de Secretaría</div>
+        <div class="topbar-right">
+    <!-- BOTÓN ATRÁS -->
+    <button onclick="window.history.back()" class="btn-back">
+        ← Atrás
+    </button>
 
-        <div class="topbar-right">Cambio de Carrera</div>
+    <!-- CERRAR SESIÓN -->
+    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+        @csrf
+        <button type="submit" class="btn-logout">
+            Cerrar Sesión
+        </button>
+    </form>
+</div>
     </header>
 
     <div class="page-wrap">
@@ -33,7 +45,7 @@
                 <div>
                     <h3>Revisión del trámite</h3>
                     <p>
-                        Secretaría revisará el historial académico, el pago y la información académica del estudiante.
+                        Secretaría revisará el historial académico.
                     </p>
                 </div>
 
@@ -58,11 +70,7 @@
                         <span id="doc-historial">Cargando...</span>
                     </div>
 
-                    <div class="estado-item">
-                        <strong>Comprobante de pago</strong>
-                        <span id="doc-pago">Cargando...</span>
-                    </div>
-                </div>
+                    
             </div>
 
             <hr>
@@ -96,7 +104,7 @@
                     </div>
 
                     <div class="estado-item full">
-                        <strong>Justificación</strong>
+                        <strong>Motivo por el cuál solicita el cambio de carrera</strong>
                         <span id="dato-justificacion">Cargando...</span>
                     </div>
 
@@ -105,10 +113,6 @@
                         <span id="dato-estado-tramite">Cargando...</span>
                     </div>
 
-                    <div class="estado-item">
-                        <strong>Estado del pago</strong>
-                        <span id="dato-estado-pago">Cargando...</span>
-                    </div>
                 </div>
             </div>
 
@@ -117,7 +121,7 @@
             <div class="estado-resumen fade-in">
                 <div class="estado-principal">
                     <h4>Validación de Secretaría</h4>
-                    <p>Registrar datos académicos y revisar el estado del pago.</p>
+                    <p>Registrar datos académicos.</p>
                 </div>
 
                 <form id="formRevisionSecretaria">
@@ -131,20 +135,12 @@
                     <input type="number" id="clases_aprobadas" placeholder="Ej: 10">
 
                     
-                    <label for="pago_validado">Estado del pago</label>
-                    <select id="pago_validado">
-                        <option value="">Seleccione...</option>
-                        <option value="validado">Validado</option>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="rechazado">Rechazado</option>
-                    </select>
-
                     
                     <label for="observaciones_secretaria">Observaciones de Secretaría</label>
                     <textarea
                         id="observaciones_secretaria"
                         rows="4"
-                        placeholder="Escriba aquí observaciones sobre la revisión o sobre el pago"
+                        placeholder="Escriba aquí observaciones sobre la revisión"
                     ></textarea>
 
                     <button type="submit">Guardar revisión de Secretaría</button>
