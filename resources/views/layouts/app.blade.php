@@ -115,7 +115,7 @@
     <div class="content-wrapper">
         <section class="content dashboard-shell">
 
-            //aquí es donde se agrega lo nuevo
+            {{-- aquí se agrega el contenido --}}
             @yield('content')
 
         </section>

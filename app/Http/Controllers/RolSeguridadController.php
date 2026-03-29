@@ -15,25 +15,25 @@ class RolSeguridadController extends Controller
                 'titulo' => 'Gestión de Roles',
                 'descripcion' => 'Crear, editar, activar o desactivar roles.',
                 'ruta' => route('seguridad.roles'),
-                'icono' => 'bi-shield-lock'
+                'icono' => 'fas fa-user-tag'
             ],
             [
                 'titulo' => 'Gestión de Usuarios',
                 'descripcion' => 'Administrar usuarios del sistema y revisar su estado.',
                 'ruta' => route('seguridad.usuarios'),
-                'icono' => 'bi-people'
+                'icono' => 'fas fa-users'
             ],
             [
                 'titulo' => 'Gestión de Objetos',
                 'descripcion' => 'Administrar módulos y submódulos de seguridad.',
                 'ruta' => route('seguridad.objetos'),
-                'icono' => 'bi-diagram-3'
+                'icono' => 'fas fa-cubes'
             ],
             [
                 'titulo' => 'Gestión de Accesos',
                 'descripcion' => 'Administrar accesos y permisos por módulo.',
                 'ruta' => route('seguridad.accesos'),
-                'icono' => 'bi-key'
+                'icono' => 'fas fa-user-shield'
             ],
         ];
 
