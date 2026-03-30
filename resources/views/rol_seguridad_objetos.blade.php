@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Objetos</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+@extends('layouts.app')
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    @vite(['resources/css/rolseguridad.css', 'resources/js/rolseguridad.js'])
-</head>
-<body>
+@section('titulo', 'Gestión de Objetos')
 
+@section('content')
 <div class="container py-4 security-page">
 
     @if(session('status'))
@@ -36,7 +28,7 @@
                 Volver a Seguridad
             </a>
 
-            <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#modalNuevoObjeto">
+            <button class="btn btn-primary ms-2" data-toggle="modal" data-target="#modalNuevoObjeto">
                 + Nuevo Objeto
             </button>
         </div>
@@ -55,7 +47,7 @@
                             <th>ID</th>
                             <th>Nombre del Objeto</th>
                             <th>Tipo de Objeto</th>
-                            <th style="width: 120px;">Acciones</th>
+                            <th class="col-acciones-sm">Acciones</th>
                         </tr>
                     </thead>
 
@@ -67,8 +59,8 @@
                                 <td>{{ strtoupper($objeto->tipo_objeto) }}</td>
                                 <td>
                                     <button class="btn btn-primary btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalEditarObjeto{{ $objeto->id_objeto }}">
+                                            data-toggle="modal"
+                                            data-target="#modalEditarObjeto{{ $objeto->id_objeto }}">
                                         Editar
                                     </button>
                                 </td>
@@ -88,15 +80,17 @@
 
 </div>
 
-<div class="modal fade" id="modalNuevoObjeto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="modalNuevoObjeto" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
             <form action="{{ route('seguridad.objeto.store') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar este objeto?">
                 @csrf
 
                 <div class="modal-header security-header">
                     <h5 class="modal-title text-white">Nuevo Objeto</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
 
                 <div class="modal-body">
@@ -125,8 +119,8 @@
 </div>
 
 @foreach($objetos as $objeto)
-<div class="modal fade" id="modalEditarObjeto{{ $objeto->id_objeto }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="modalEditarObjeto{{ $objeto->id_objeto }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
             <form action="{{ route('seguridad.objeto.update', $objeto->id_objeto) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar los cambios de este objeto?">
                 @csrf
@@ -134,7 +128,9 @@
 
                 <div class="modal-header security-header">
                     <h5 class="modal-title text-white">Editar Objeto</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
 
                 <div class="modal-body">
@@ -165,7 +161,4 @@
     </div>
 </div>
 @endforeach
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+@endsection
