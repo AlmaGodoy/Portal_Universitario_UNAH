@@ -52,7 +52,10 @@ class UsuarioController extends Controller
         $request->merge(['correo' => $correo]);
 
         $request->validate([
-            'nombre' => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'primer_nombre' => ['required', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'segundo_nombre' => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/'],
+            'primer_apellido' => ['required', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'segundo_apellido' => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/'],
             'correo' => ['required', 'email', 'max:100'],
             'contrasena' => [
                 'required',
@@ -66,9 +69,13 @@ class UsuarioController extends Controller
             'id_carrera' => 'nullable|integer',
             'id_departamento' => 'nullable|integer',
             'cod_empleado' => 'nullable|string|max:50',
-            'tipo_empleado' => 'nullable|string|max:50',
         ], [
-            'nombre.regex' => 'El nombre solo debe contener letras y espacios.',
+            'primer_nombre.required' => 'El primer nombre es obligatorio.',
+            'primer_nombre.regex' => 'El primer nombre solo debe contener letras y espacios.',
+            'segundo_nombre.regex' => 'El segundo nombre solo debe contener letras y espacios.',
+            'primer_apellido.required' => 'El primer apellido es obligatorio.',
+            'primer_apellido.regex' => 'El primer apellido solo debe contener letras y espacios.',
+            'segundo_apellido.regex' => 'El segundo apellido solo debe contener letras y espacios.',
             'numero_cuenta.digits' => 'El número de cuenta debe tener exactamente 11 números.',
             'contrasena.confirmed' => 'Las contraseñas no coinciden.',
         ]);
@@ -87,6 +94,8 @@ class UsuarioController extends Controller
             ])->withInput();
         }
 
+        $tipoEmpleado = null;
+
         if ($tipo === 'estudiante') {
             $request->validate([
                 'numero_cuenta' => ['required', 'digits:11'],
@@ -97,32 +106,61 @@ class UsuarioController extends Controller
             ]);
 
             $request->merge([
-                'id_rol' => null, // el SP busca el rol estudiante dinámicamente
+                'id_rol' => null,
                 'id_departamento' => null,
                 'cod_empleado' => null,
-                'tipo_empleado' => null,
             ]);
         } else {
-            $request->validate([
-                'id_rol' => 'required|integer|in:4,5',
-                'id_departamento' => 'required|integer',
-                'cod_empleado' => 'required|string|max:50',
-                'tipo_empleado' => 'required|string|in:coordinador,secretario|max:50',
-            ], [
-                'tipo_empleado.in' => 'El tipo de empleado debe ser coordinador o secretario.'
-            ]);
+    $request->validate([
+        'id_rol' => 'required|integer|in:1,4,5',
+        'cod_empleado' => 'required|string|max:50',
+    ]);
 
-            $request->merge([
-                'numero_cuenta' => null,
-                'id_carrera' => null,
-            ]);
-        }
+    if ((int) $request->id_rol === 1) {
+        $tipoEmpleado = 'secretaria_general';
+
+        $request->merge([
+            'id_departamento' => null,
+        ]);
+
+    } elseif ((int) $request->id_rol === 4) {
+        $tipoEmpleado = 'coordinador';
+
+        $request->validate([
+            'id_departamento' => 'required|integer',
+        ]);
+
+    } elseif ((int) $request->id_rol === 5) {
+        $tipoEmpleado = 'secretario';
+
+        $request->validate([
+            'id_departamento' => 'required|integer',
+        ]);
+
+    } else {
+        return back()->withErrors([
+            'id_rol' => 'Rol de empleado inválido.'
+        ])->withInput();
+    }
+
+    $request->merge([
+        'numero_cuenta' => null,
+        'id_carrera' => null,
+    ]);
+}
+
+        $nombreCompleto = trim(implode(' ', array_filter([
+            trim((string) $request->primer_nombre),
+            trim((string) $request->segundo_nombre),
+            trim((string) $request->primer_apellido),
+            trim((string) $request->segundo_apellido),
+        ])));
 
         try {
             $passwordHash = Hash::make($request->contrasena);
 
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-                $request->nombre,
+                $nombreCompleto,
                 $request->correo,
                 $passwordHash,
                 $request->tipo_usuario,
@@ -131,7 +169,7 @@ class UsuarioController extends Controller
                 $request->id_carrera,
                 $request->id_departamento,
                 $request->cod_empleado,
-                $request->tipo_empleado,
+                $tipoEmpleado,
             ]);
 
             $row = $res[0] ?? null;
