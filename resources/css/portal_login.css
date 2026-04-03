@@ -163,3 +163,196 @@
     max-width: 950px;
   }
 }
+/* =========================================================
+   AJUSTES RESPONSIVE PARA REGISTER USER
+   ========================================================= */
+
+#registerForm {
+  width: 100%;
+  max-width: 100%;
+}
+
+#registerForm .row {
+  --bs-gutter-x: 1rem;
+}
+
+#registerForm .form-label {
+  display: block;
+  word-break: break-word;
+}
+
+#registerForm .form-control,
+#registerForm .form-select {
+  width: 100%;
+  min-width: 0;
+}
+
+#registerForm .input-group {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+#registerForm .input-group .form-control {
+  min-width: 0;
+}
+
+#registerForm #btn_toggle_pass,
+#registerForm #btn_toggle_pass2,
+#registerForm .toggle-password-btn {
+  width: 44px;
+  min-width: 44px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#registerForm small,
+#correo_hint,
+#pass_mismatch {
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+#registerForm .btn.w-100,
+#registerForm button[type="submit"] {
+  min-height: 46px;
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    display: block;
+    min-height: 100vh;
+    padding: 18px 12px 24px;
+    background-attachment: scroll;
+  }
+
+  .auth-back-wrap {
+    position: static;
+    width: 100%;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .auth-back-btn {
+    width: 100% !important;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 14px;
+    border-radius: 16px;
+  }
+
+  .auth-card h2,
+  .auth-card h3 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  #registerForm .row {
+    --bs-gutter-x: 0;
+  }
+
+  #registerForm .col-md-6,
+  #registerForm .col-md-12,
+  #registerForm .col-sm-6,
+  #registerForm .col-lg-6,
+  #registerForm .col-lg-12 {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  #registerForm .mb-3 {
+    margin-bottom: 14px !important;
+  }
+
+  #registerForm .form-label {
+    font-size: 0.96rem;
+    margin-bottom: 6px;
+  }
+
+  .auth-card input.form-control,
+  .auth-card select.form-select,
+  #registerForm .form-control,
+  #registerForm .form-select {
+    height: 46px;
+    min-height: 46px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  #registerForm .input-group .form-control {
+    height: 46px;
+  }
+
+  #registerForm #btn_toggle_pass,
+  #registerForm #btn_toggle_pass2,
+  #registerForm .toggle-password-btn {
+    height: 46px;
+    min-height: 46px;
+  }
+
+  #registerForm small,
+  #correo_hint,
+  #pass_mismatch {
+    font-size: 0.86rem;
+  }
+
+  .auth-card .btn-primary,
+  #registerForm .btn.w-100,
+  #registerForm button[type="submit"] {
+    width: 100%;
+    min-height: 48px;
+    font-size: 1rem;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 14px 10px 22px;
+  }
+
+  .auth-card {
+    padding: 16px 12px;
+    border-radius: 14px;
+  }
+
+  .auth-card h2,
+  .auth-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .auth-back-btn {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+
+  .auth-card input.form-control,
+  .auth-card select.form-select,
+  #registerForm .form-control,
+  #registerForm .form-select {
+    height: 44px;
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  #registerForm #btn_toggle_pass,
+  #registerForm #btn_toggle_pass2,
+  #registerForm .toggle-password-btn {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+}
