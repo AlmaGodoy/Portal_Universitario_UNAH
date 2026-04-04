@@ -5,9 +5,10 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/sass/app.scss',
                 'resources/js/app.js',
-                'resources/js/cancelacion.js'
+                'resources/css/app.css',
+                // Esto buscará cualquier archivo .css en la carpeta y subcarpetas
+                ...import.meta.glob('resources/css/**/*.css', { eager: true, import: 'default' }),
             ],
             refresh: true,
         }),
