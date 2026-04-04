@@ -10,11 +10,9 @@ use App\Http\Controllers\BitacoraController;
 */
 
 Route::prefix('api/bitacora')->group(function () {
-    Route::get('bitacora/index', [BitacoraController::class, 'index']);
-    Route::get('bitacora/ver/{fi}/{ff}', [BitacoraController::class, 'ver']);
-    Route::get('bitacora/ingresar/{id_usuario}/{id_objeto}/{accion}/{fecha}/{desc}', [BitacoraController::class, 'ingresar']);
+    Route::get('/ver/{fecha_inicial}/{fecha_final}', [BitacoraController::class, 'ver']);
+    Route::get('/ingresar/{id_usuario}/{id_objeto}/{p_accion}/{fecha_accion}/{p_descripcion}', [BitacoraController::class, 'ingresar']);
 });
 
-Route::get('/bitacora', function () {
-    return view('bitacora');
-})->name('bitacora.index');
+Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
+
