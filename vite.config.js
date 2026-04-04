@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
+import { glob } from 'glob';
 
 export default defineConfig({
     plugins: [
@@ -7,8 +8,7 @@ export default defineConfig({
             input: [
                 'resources/js/app.js',
                 'resources/css/app.css',
-                // Esto buscará cualquier archivo .css en la carpeta y subcarpetas
-                ...import.meta.glob('resources/css/**/*.css', { eager: true, import: 'default' }),
+                ...glob.sync('resources/css/*.css'),
             ],
             refresh: true,
         }),
