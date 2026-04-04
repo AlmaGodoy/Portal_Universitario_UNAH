@@ -26,19 +26,45 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const nombreInput = document.getElementById('nombre');
-    if (nombreInput) {
+    function aplicarSoloLetras(idCampo) {
+        const input = document.getElementById(idCampo);
+        if (!input) return;
+
         const re = /[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g;
 
-        nombreInput.addEventListener('input', function () {
-            this.value = this.value.replace(re, '');
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(re, '').replace(/\s{2,}/g, ' ');
         });
 
-        nombreInput.addEventListener('paste', function (e) {
+        input.addEventListener('paste', function (e) {
             e.preventDefault();
-            this.value = (e.clipboardData.getData('text') || '').replace(re, '');
+            this.value = (e.clipboardData.getData('text') || '')
+                .replace(re, '')
+                .replace(/\s{2,}/g, ' ');
         });
     }
+
+    function capitalizarTexto(input) {
+        if (!input) return;
+
+        input.addEventListener('blur', function () {
+            this.value = this.value
+                .toLowerCase()
+                .replace(/\b\w/g, function (letra) {
+                    return letra.toUpperCase();
+                });
+        });
+    }
+
+    aplicarSoloLetras('primer_nombre');
+    aplicarSoloLetras('segundo_nombre');
+    aplicarSoloLetras('primer_apellido');
+    aplicarSoloLetras('segundo_apellido');
+
+    capitalizarTexto(document.getElementById('primer_nombre'));
+    capitalizarTexto(document.getElementById('segundo_nombre'));
+    capitalizarTexto(document.getElementById('primer_apellido'));
+    capitalizarTexto(document.getElementById('segundo_apellido'));
 
     soloNumerosMax(document.getElementById('numero_cuenta'), 11);
 
@@ -78,14 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
     pass2?.addEventListener('input', validarMatch);
 
     const tipoSel = document.getElementById('tipo_usuario');
-    const boxDep = document.getElementById('box_departamento');
-    const depSel = document.getElementById('id_departamento');
-    const bloqueEst = document.getElementById('bloque_estudiante');
-    const bloqueEmp = document.getElementById('bloque_empleado');
-    const rolAutoBox = document.getElementById('rol_auto_box');
-    const rolManualBox = document.getElementById('rol_manual_box');
     const rolManualSel = document.getElementById('id_rol_manual');
-    const codEmp = document.getElementById('cod_empleado');
     const tipoEmp = document.getElementById('tipo_empleado');
     const correoHint = document.getElementById('correo_hint');
     const correoInput = document.getElementById('correo');
@@ -93,24 +112,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const carreras = JSON.parse(form.dataset.carreras || '[]');
     const oldCarrera = form.dataset.oldCarrera || '';
-
-    function cargarCarrerasTodas() {
-        if (!carSel) return;
-
-        carSel.innerHTML = '<option value="">Seleccione...</option>';
-
-        carreras.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id_carrera;
-            opt.textContent = c.nombre_carrera;
-
-            if (oldCarrera && String(oldCarrera) === String(c.id_carrera)) {
-                opt.selected = true;
-            }
-
-            carSel.appendChild(opt);
-        });
-    }
 
     function getTipoActual() {
         return (tipoSel?.value || '').toLowerCase().trim();
@@ -140,43 +141,88 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
-    function aplicarUI() {
-        const tipo = getTipoActual();
+    function cargarCarrerasTodas() {
+        if (!carSel) return;
 
-        ocultar(bloqueEst);
-        ocultar(bloqueEmp);
-        ocultar(boxDep);
-        ocultar(rolAutoBox);
-        ocultar(rolManualBox);
+        carSel.innerHTML = '<option value="">Seleccione...</option>';
 
-        if (depSel) depSel.required = false;
-        if (codEmp) codEmp.required = false;
-        if (tipoEmp) tipoEmp.required = false;
+        carreras.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id_carrera;
+            opt.textContent = c.nombre_carrera;
 
-        setCorreoRegla(tipo);
+            if (oldCarrera && String(oldCarrera) === String(c.id_carrera)) {
+                opt.selected = true;
+            }
 
-        if (tipo === 'estudiante') {
-            mostrar(bloqueEst);
-            cargarCarrerasTodas();
-            return;
-        }
-
-        if (tipo === 'empleado') {
-            mostrar(rolManualBox);
-            mostrar(boxDep);
-            mostrar(bloqueEmp);
-
-            if (depSel) depSel.required = true;
-            if (codEmp) codEmp.required = true;
-            if (tipoEmp) tipoEmp.required = true;
-
-            const rolTexto = rolManualSel?.selectedOptions?.[0]?.textContent?.toLowerCase()?.trim() || '';
-            if (tipoEmp) tipoEmp.value = rolTexto;
-        }
+            carSel.appendChild(opt);
+        });
     }
 
-    rolManualSel?.addEventListener('change', aplicarUI);
-    tipoSel?.addEventListener('change', aplicarUI);
+    function syncTipoEmpleado() {
+    if (!rolManualSel || !tipoEmp) return;
+
+    const rol = String(rolManualSel.value || '');
+    const departamentoInput = document.getElementById('id_departamento');
+    const departamentoCol = departamentoInput ? departamentoInput.closest('.col-md-6') : null;
+
+    if (rol === '1') {
+        tipoEmp.value = 'secretaria_general';
+
+        if (departamentoInput) {
+            departamentoInput.value = '';
+            departamentoInput.required = false;
+        }
+
+        if (departamentoCol) {
+            departamentoCol.classList.add('hidden-field');
+        }
+
+    } else if (rol === '4') {
+        tipoEmp.value = 'coordinador';
+
+        if (departamentoInput) {
+            departamentoInput.required = true;
+        }
+
+        if (departamentoCol) {
+            departamentoCol.classList.remove('hidden-field');
+        }
+
+    } else if (rol === '5') {
+        tipoEmp.value = 'secretario';
+
+        if (departamentoInput) {
+            departamentoInput.required = true;
+        }
+
+        if (departamentoCol) {
+            departamentoCol.classList.remove('hidden-field');
+        }
+
+    } else {
+        tipoEmp.value = '';
+
+        if (departamentoInput) {
+            departamentoInput.required = false;
+        }
+
+        if (departamentoCol) {
+            departamentoCol.classList.remove('hidden-field');
+        }
+    }
+}
+
+    const tipoActual = getTipoActual();
+    setCorreoRegla(tipoActual);
+
+    if (tipoActual === 'estudiante') {
+        cargarCarrerasTodas();
+    }
+
+    syncTipoEmpleado();
+
+    rolManualSel?.addEventListener('change', syncTipoEmpleado);
 
     correoInput?.addEventListener('input', () => {
         const tipo = getTipoActual();
@@ -185,5 +231,5 @@ document.addEventListener('DOMContentLoaded', function () {
         );
     });
 
-    aplicarUI();
+    validarMatch();
 });

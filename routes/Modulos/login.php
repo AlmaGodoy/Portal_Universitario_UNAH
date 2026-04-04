@@ -23,6 +23,17 @@ Route::prefix('api')->group(function () {
             ->whereIn('tipo', ['estudiante', 'empleado'])
             ->name('login.tipo.post');
 
+        /*
+        |--------------------------------------------------------------------------
+        | 2FA
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/2fa', [TwoFactorController::class, 'form'])
+            ->name('twofa.form');
+
+        Route::post('/2fa', [TwoFactorController::class, 'verify'])
+            ->name('twofa.verify');
+
         // Recuperación de contraseña
         Route::get('/password/request', [PasswordResetController::class, 'showRequestForm'])
             ->name('custom.password.request');
