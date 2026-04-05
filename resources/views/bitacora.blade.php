@@ -3,9 +3,23 @@
 @section('content')
 @vite(['resources/css/bitacora.css', 'resources/js/bitacora.js'])
 
-<div class="container">
+<div class="container py-4 security-page">
+    <div class="row g-4">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
 
-    <h3>Bitácora del Sistema</h3>
+    <header class="topbar">
+        <div class="brand">
+            <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
+
+
+            <div class="brand-text">
+                 <h1 class="brand-title">Bitácora del Sistema</h1>
+               <span class="brand-subtitle">FCEAC - UNAH</span>
+            </div>
+        </div>
+   </header>
+
 
     @if(session('error'))
         <div style="color:red; margin-bottom: 10px;">
@@ -26,14 +40,22 @@
             <input type="date" name="fecha_final" value="{{ request('fecha_final') }}">
         </div>
 
-        <button type="submit">Buscar</button>
+        <button type="submit" class="btn btn-primary me-2">Buscar</button>
+
+        <div >
+            <a href="{{ route('bitacora.index') }}"
+               class="btn btn-secondary">
+               Limpiar
+            </a>
+
+        </div>
     </form>
 
     <!-- TABLA DE RESULTADOS -->
-    <table border="1" width="100%">
-        <thead>
-            <tr>
-                <th>Usuario Responsable</th>
+    <table class="table table-bordered table-hover align-middle" style="width: 100%">
+        <thead class="table-light">
+            <tr class="text-center text-muted">
+                <th>Responsable</th>
                 <th>Operación Realizada</th>
                 <th>Detalle</th>
                 <th>Fecha</th>
@@ -49,15 +71,19 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4">No hay resultados</td>
+                    <td colspan="4" class="text-center text-muted">No hay resultados</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
     <div style="margin-top: 15px;">
-        {{ $bitacoras->links() }}
+        {{ $bitacoras->links('pagination::bootstrap-5') }}
     </div>
 
+
+        </div>
+    </div>
+  </div>
 </div>
 @endsection

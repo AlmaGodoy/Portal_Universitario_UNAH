@@ -2,61 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class EmpleadoController extends Controller
 {
     public function index()
     {
-        // 1. Obtener usuario con su relación de empleado cargada
-        $user = Auth::user()->load('empleado');
-
-        // 2. Seguridad: Si no tiene datos de empleado o está inactivo
-        if (!$user || !$user->empleado || $user->empleado->estado !== 'activo') {
-            return redirect()->route('portal')->with('error', 'Acceso denegado o cuenta inactiva.');
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
 
-        // 3. Obtener el tipo desde la tabla empleados
-        $tipo = $user->empleado->tipo_empleado;
+        $user = Auth::user();
+        $rol = session('rol_texto') ?? 'sin_rol';
 
-        return match ($tipo) {
-            'secretaria_carrera', 'secretaria_academica' => $this->vistaSecretarias($user, $tipo),
-            'coordinador'                               => $this->vistaCoordinador($user),
-            'administrador'                             => $this->vistaAdministrador($user),
-            default => redirect()->route('portal')->with('error', 'Rol no reconocido.'),
+        $data = [
+            'titulo'   => 'Gestión de Carrera - FCEAC',
+            'userName' => $user->name ?? 'Usuario',
+            'userRole' => $rol,
+        ];
+
+        return match ($rol) {
+            'secretario', 'secretaria' => view('secre_carrera', $data),
+            'secretaria_general'       => view('secre_academica', $data),
+            'coordinador'              => view('coordinador_carrera', $data),
+            default                    => view('dashboard', $data),
         };
     }
 
-    // VISTA 1: Secretarías (Compartida para las dos secretarias)
-    private function vistaSecretarias($user, $tipo)
-    {
-        $datos = [
-            'titulo' => ($tipo == 'secretaria_carrera') ? 'Gestión de Carrera' : 'Gestión Académica',
-            'usuario' => $user->id_persona,
-            'rol' => $tipo
-        ];
-        return view('empleados.gestion_secretaria', compact('datos'));
-    }
-
-    // VISTA 2: Coordinador (Tu panel)
-    private function vistaCoordinador($user)
-    {
-        $datos = [
-            'titulo' => 'Panel de Control: Coordinación',
-            'usuario' => $user->id_persona
-        ];
-        return view('empleados.panel_coordinador', compact('datos'));
-    }
-
-    // VISTA 3: Administrador
-    private function vistaAdministrador($user)
-    {
-        $datos = [
-            'titulo' => 'Mantenimiento del Sistema',
-            'usuario' => $user->id_persona
-        ];
-        return view('empleados.administracion_sistema', compact('datos'));
-    }
+    public function getEstadisticas() { return response()->json(['aprobados' => 312]); }
+    public function listarPorUnidad() { return response()->json([]); }
+    public function getNotificaciones() { return response()->json([]); }
 }

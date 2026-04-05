@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    background-image: url('/public/images/fondo_seguridad.png');
+    background-image: url('/images/fondo_seguridad.png');
     background-size: 100% auto;
     background-position: center;
     background-repeat: no-repeat;
@@ -20,7 +20,7 @@ body {
 
 .security-card,
 .card {
-    border-radius: 16px;
+    border-radius: 24px;
     background: rgba(255, 255, 255, 0.96);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
@@ -99,29 +99,283 @@ button {
 
 .security-title {
     font-weight: bold;
-    margin-bottom: 0;
-    color: #ffffff;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    margin-bottom: 6px;
+    color: #3f342c;
+    text-shadow:
+        0 2px 4px rgba(255, 255, 255, 0.35),
+        0 3px 10px rgba(0, 0, 0, 0.22);
 }
 
 .security-subtitle {
-    color: #ffffff;
-    margin-bottom: 0;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    color: #5a4c43;
+    margin-bottom: 18px;
+    text-shadow:
+        0 1px 3px rgba(255, 255, 255, 0.25),
+        0 2px 8px rgba(0, 0, 0, 0.16);
 }
 
 .fondo-seguridad {
     background: rgba(255, 255, 255, 0.68);
-    border-radius: 22px;
-    padding: 28px;
+    border-radius: 40px;
+    padding: 40px;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
+    transform: translateY(3px);
+    min-height: 80vh;
 }
 
-.security-card .card-body {
-    min-height: 260px;
+/* Hace que las tarjetas internas se apilen una debajo de otra */
+.fondo-seguridad .row.g-4 {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.security-card .text-muted.small {
-    min-height: 72px;
+/* Hace que cada columna ocupe casi todo el ancho */
+.fondo-seguridad .col-md-6,
+.fondo-seguridad .col-lg-3 {
+    max-width: 100%;
+    flex: 0 0 100%;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Tarjeta interior más ancha */
+.fondo-seguridad .security-card {
+    width: 100%;
+    margin-top: 0;
+    border-radius: 28px;
+}
+
+/* Convierte cada tarjeta en horizontal */
+.fondo-seguridad .security-card .card-body {
+    min-height: 170px;
+    display: grid !important;
+    grid-template-columns: 110px 1fr 220px;
+    align-items: center;
+    gap: 26px;
+    padding: 28px 32px;
+    text-align: left !important;
+}
+
+/* Bloque del icono */
+.fondo-seguridad .security-card .mb-3 {
+    margin-bottom: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tamaño del icono */
+.fondo-seguridad .security-card i {
+    font-size: 3rem;
+}
+
+/* Título de la tarjeta */
+.fondo-seguridad .security-card h5 {
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+/* Texto descriptivo */
+.fondo-seguridad .security-card .text-muted.small {
+    min-height: auto;
+    margin-bottom: 0;
+    font-size: 1.15rem;
+    line-height: 1.5;
+}
+
+/* Botón alineado a la derecha */
+.fondo-seguridad .security-card .btn,
+.fondo-seguridad .security-card .btn-primary {
+    width: 100% !important;
+    max-width: 210px;
+    margin-left: auto;
+    margin-top: 0 !important;
+    border-radius: 16px;
+    font-size: 1rem;
+    padding: 12px 18px;
+}
+
+.security-card .btn,
+.security-card .btn-primary,
+.security-card .btn-success,
+.security-card .btn-outline-secondary {
+    border-radius: 14px;
+}
+
+.col-acciones {
+    width: 140px;
+}
+
+.col-acciones-sm {
+    width: 120px;
+}
+
+/* =========================
+   RESPONSIVE - TABLETS
+   ========================= */
+@media (max-width: 1024px) {
+    .fondo-seguridad {
+        padding: 28px;
+        min-height: auto;
+        border-radius: 28px;
+    }
+
+    .fondo-seguridad .row.g-4 {
+        margin-top: 30px;
+        gap: 18px;
+    }
+
+    .fondo-seguridad .security-card .card-body {
+        grid-template-columns: 90px 1fr 180px;
+        min-height: 150px;
+        gap: 18px;
+        padding: 22px 24px;
+    }
+
+    .fondo-seguridad .security-card i {
+        font-size: 2.4rem;
+    }
+
+    .fondo-seguridad .security-card h5 {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+    }
+
+    .fondo-seguridad .security-card .text-muted.small {
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+
+    .fondo-seguridad .security-card .btn,
+    .fondo-seguridad .security-card .btn-primary {
+        max-width: 170px;
+        font-size: 0.95rem;
+        padding: 10px 14px;
+    }
+
+    .security-title {
+        font-size: 2.2rem;
+    }
+
+    .security-subtitle {
+        font-size: 1.1rem;
+    }
+}
+
+/* =========================
+   RESPONSIVE - CELULARES
+   ========================= */
+@media (max-width: 768px) {
+    body {
+        background-size: cover;
+        background-position: center;
+    }
+
+    .security-page {
+        padding: 18px 0;
+    }
+
+    .fondo-seguridad {
+        padding: 18px;
+        border-radius: 22px;
+        transform: translateY(0);
+        min-height: auto;
+    }
+
+    .fondo-seguridad .row.g-4 {
+        margin-top: 22px;
+        gap: 16px;
+    }
+
+    .fondo-seguridad .security-card {
+        border-radius: 22px;
+    }
+
+    .fondo-seguridad .security-card .card-body {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center;
+        justify-content: center;
+        text-align: center !important;
+        min-height: auto;
+        gap: 14px;
+        padding: 22px 18px;
+    }
+
+    .fondo-seguridad .security-card .mb-3 {
+        margin-bottom: 0 !important;
+    }
+
+    .fondo-seguridad .security-card i {
+        font-size: 2.2rem;
+    }
+
+    .fondo-seguridad .security-card h5 {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+    }
+
+    .fondo-seguridad .security-card .text-muted.small {
+        font-size: 1rem;
+        line-height: 1.45;
+        text-align: center !important;
+    }
+
+    .fondo-seguridad .security-card .btn,
+    .fondo-seguridad .security-card .btn-primary {
+        max-width: 100%;
+        width: 100% !important;
+        margin-left: 0;
+        font-size: 1rem;
+    }
+
+    .security-title {
+        font-size: 1.9rem;
+        line-height: 1.15;
+    }
+
+    .security-subtitle {
+        font-size: 1rem;
+        line-height: 1.4;
+        margin-bottom: 14px;
+    }
+}
+
+/* =========================
+   RESPONSIVE - CELULARES PEQUEÑOS
+   ========================= */
+@media (max-width: 480px) {
+    .fondo-seguridad {
+        padding: 14px;
+        border-radius: 18px;
+    }
+
+    .fondo-seguridad .row.g-4 {
+        margin-top: 18px;
+        gap: 14px;
+    }
+
+    .fondo-seguridad .security-card .card-body {
+        padding: 18px 14px;
+    }
+
+    .fondo-seguridad .security-card h5 {
+        font-size: 1.3rem;
+    }
+
+    .fondo-seguridad .security-card .text-muted.small {
+        font-size: 0.95rem;
+    }
+
+    .security-title {
+        font-size: 1.6rem;
+    }
+
+    .security-subtitle {
+        font-size: 0.95rem;
+    }
 }

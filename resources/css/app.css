@@ -3,8 +3,10 @@
 /* Si con ./ no da, se pone la ruta completa del recurso */
 @import "/resources/css/backup.css";
 @import "/resources/css/dashboard.css";
+@import "/resources/css/secre_carrera.css";
+@import "/resources/css/rolseguridad.css";
 /*@import "/resources/css/Cambio_Carrera.css";*/
-
+@import "/resources/css/reporte.css";
 @theme {
     --font-sans: 'Instrument Sans', sans-serif;
 }
