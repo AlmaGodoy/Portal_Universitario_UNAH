@@ -2,13 +2,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function iniciarGrafica() {
         const canvas = document.getElementById('graficaTramites');
 
-        if (!canvas) {
-            console.log('No existe el canvas graficaTramites');
-            return;
-        }
-
+        if (!canvas) return;
         if (typeof window.Chart === 'undefined') {
-            console.log('Chart.js todavía no está cargado, reintentando...');
             setTimeout(iniciarGrafica, 300);
             return;
         }
@@ -158,4 +153,3 @@ document.addEventListener('DOMContentLoaded', function () {
 
     iniciarGrafica();
 });
-
