@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('titulo', 'Reporte de Trámites - FCEAC')
+@section('titulo', 'Reporte de Trámites - Secretaría General')
 
 @section('content')
-    @vite(['resources/css/reporte.css', 'resources/js/reporte.js'])
+    @vite(['resources/css/reporte.css', 'resources/js/reporte_secretaria_general.js'])
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="pagina-reporte">
@@ -14,8 +14,8 @@
 
         <div class="encabezado-reporte">
             <div class="encabezado-texto">
-                <h1>Reporte de Trámites</h1>
-                <p>Resumen mensual y seguimiento general de trámites académicos.</p>
+                <h1>Reporte de Trámites - Secretaría General</h1>
+                <p>Consulta general por carrera o por el total acumulado de todas las carreras.</p>
             </div>
             <div class="encabezado-fecha">
                 <span>Mes de referencia</span>
@@ -42,9 +42,24 @@
 
             <div class="panel-body">
                 <form method="GET"
-                      action="{{ route('reporte.tramites.vista') }}"
+                      action="{{ route('reporte.tramites.secretaria_general.vista') }}"
                       class="form-filtros form-filtros-con-exportar"
-                      id="formFiltrosReporte">
+                      id="formFiltrosReporteSecretariaGeneral">
+
+                    <div class="campo-filtro">
+                        <label for="id_carrera">Carrera</label>
+                        <div class="control-filtro">
+                            <select name="id_carrera" id="id_carrera">
+                                <option value="0">Todas las carreras</option>
+                                @foreach($carreras as $carrera)
+                                    <option value="{{ $carrera->id_carrera }}"
+                                        {{ (string)($idCarrera ?? '') === (string)$carrera->id_carrera ? 'selected' : '' }}>
+                                        {{ $carrera->nombre_carrera }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
 
                     <div class="campo-filtro">
                         <label for="tipo_tramite">Tipo de trámite</label>
@@ -87,15 +102,15 @@
                         <div class="control-filtro">
                             <select name="mes_reporte" id="mes_reporte">
                                 <option value="">Totales</option>
-                                <option value="1" {{ ($mesReporte ?? '') == '1' ? 'selected' : '' }}>Enero</option>
-                                <option value="2" {{ ($mesReporte ?? '') == '2' ? 'selected' : '' }}>Febrero</option>
-                                <option value="3" {{ ($mesReporte ?? '') == '3' ? 'selected' : '' }}>Marzo</option>
-                                <option value="4" {{ ($mesReporte ?? '') == '4' ? 'selected' : '' }}>Abril</option>
-                                <option value="5" {{ ($mesReporte ?? '') == '5' ? 'selected' : '' }}>Mayo</option>
-                                <option value="6" {{ ($mesReporte ?? '') == '6' ? 'selected' : '' }}>Junio</option>
-                                <option value="7" {{ ($mesReporte ?? '') == '7' ? 'selected' : '' }}>Julio</option>
-                                <option value="8" {{ ($mesReporte ?? '') == '8' ? 'selected' : '' }}>Agosto</option>
-                                <option value="9" {{ ($mesReporte ?? '') == '9' ? 'selected' : '' }}>Septiembre</option>
+                                <option value="1"  {{ ($mesReporte ?? '') == '1' ? 'selected' : '' }}>Enero</option>
+                                <option value="2"  {{ ($mesReporte ?? '') == '2' ? 'selected' : '' }}>Febrero</option>
+                                <option value="3"  {{ ($mesReporte ?? '') == '3' ? 'selected' : '' }}>Marzo</option>
+                                <option value="4"  {{ ($mesReporte ?? '') == '4' ? 'selected' : '' }}>Abril</option>
+                                <option value="5"  {{ ($mesReporte ?? '') == '5' ? 'selected' : '' }}>Mayo</option>
+                                <option value="6"  {{ ($mesReporte ?? '') == '6' ? 'selected' : '' }}>Junio</option>
+                                <option value="7"  {{ ($mesReporte ?? '') == '7' ? 'selected' : '' }}>Julio</option>
+                                <option value="8"  {{ ($mesReporte ?? '') == '8' ? 'selected' : '' }}>Agosto</option>
+                                <option value="9"  {{ ($mesReporte ?? '') == '9' ? 'selected' : '' }}>Septiembre</option>
                                 <option value="10" {{ ($mesReporte ?? '') == '10' ? 'selected' : '' }}>Octubre</option>
                                 <option value="11" {{ ($mesReporte ?? '') == '11' ? 'selected' : '' }}>Noviembre</option>
                                 <option value="12" {{ ($mesReporte ?? '') == '12' ? 'selected' : '' }}>Diciembre</option>
@@ -106,23 +121,29 @@
                     <div class="acciones-filtro acciones-filtro-con-exportar">
                         <div class="acciones-filtro-izquierda">
                             <button type="submit" class="btn-filtrar">Filtrar</button>
-                            <a href="{{ route('reporte.tramites.vista') }}" class="btn-limpiar">Limpiar</a>
+                            <a href="{{ route('reporte.tramites.secretaria_general.vista') }}" class="btn-limpiar">Limpiar</a>
                         </div>
 
                         <div class="acciones-exportar acciones-exportar-derecha">
-                            <a href="{{ route('reporte.tramites.pdf', [
-                                'tipo_tramite' => $tipoTramite,
-                                'estado_resolucion' => $estadoResolucion,
-                                'mes_reporte' => $mesReporte
-                            ]) }}" class="btn-exportar btn-exportar-pdf">
+                            <a
+                                href="{{ route('reporte.tramites.pdf', [
+                                    'id_carrera' => request('id_carrera'),
+                                    'tipo_tramite' => request('tipo_tramite'),
+                                    'estado_resolucion' => request('estado_resolucion'),
+                                    'mes_reporte' => request('mes_reporte'),
+                                ]) }}"
+                                class="btn-exportar btn-exportar-pdf">
                                 Exportar PDF
                             </a>
 
-                            <a href="{{ route('reporte.tramites.excel', [
-                                'tipo_tramite' => $tipoTramite,
-                                'estado_resolucion' => $estadoResolucion,
-                                'mes_reporte' => $mesReporte
-                            ]) }}" class="btn-exportar btn-exportar-excel">
+                            <a
+                                href="{{ route('reporte.tramites.excel', [
+                                    'id_carrera' => request('id_carrera'),
+                                    'tipo_tramite' => request('tipo_tramite'),
+                                    'estado_resolucion' => request('estado_resolucion'),
+                                    'mes_reporte' => request('mes_reporte'),
+                                ]) }}"
+                                class="btn-exportar btn-exportar-excel">
                                 Exportar Excel
                             </a>
                         </div>
@@ -193,6 +214,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Estudiante</th>
+                                <th>Carrera</th>
                                 <th>Tipo de trámite</th>
                                 <th>Fecha de solicitud</th>
                                 <th>Estado</th>
@@ -209,6 +231,7 @@
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $tramite['estudiante'] ?? 'Sin nombre' }}</td>
+                                    <td>{{ $tramite['carrera'] ?? 'Sin carrera' }}</td>
                                     <td>{{ $tipoBonito }}</td>
                                     <td>{{ $tramite['fecha_solicitud'] ?? 'Sin fecha' }}</td>
                                     <td>
@@ -219,7 +242,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="sin-registros">
+                                    <td colspan="6" class="sin-registros">
                                         No hay trámites con los filtros seleccionados.
                                     </td>
                                 </tr>
