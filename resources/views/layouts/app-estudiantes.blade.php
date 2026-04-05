@@ -1,31 +1,43 @@
 @php
+    use Illuminate\Support\Facades\DB;
+
     $user = auth()->user();
-    $displayName = 'Usuario';
-    // Determinamos el rol para mostrarlo en el Sidebar
-    $displayRole = $userRole ?? 'Estudiante';
+
+    $displayName = 'Alumno';
+    $displayRole = 'Alumno';
 
     if ($user) {
-        if (isset($user->persona) && $user->persona && $user->persona->nombre_persona) {
-            $displayName = $user->persona->nombre_persona;
-        } elseif (isset($user->id_persona) && $user->id_persona) {
-            $persona = \DB::table('tbl_persona')
+        if (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
+            $displayName = trim($user->persona->nombre_persona);
+        } elseif (!empty($user->nombre_persona)) {
+            $displayName = trim($user->nombre_persona);
+        } elseif (!empty($user->name)) {
+            $displayName = trim($user->name);
+        } elseif (!empty($user->id_persona)) {
+            $persona = DB::table('tbl_persona')
                 ->where('id_persona', $user->id_persona)
                 ->first();
 
-            if ($persona && $persona->nombre_persona) {
-                $displayName = $persona->nombre_persona;
+            if ($persona && !empty($persona->nombre_persona)) {
+                $displayName = trim($persona->nombre_persona);
             }
-        } elseif (isset($user->name) && $user->name) {
-            $displayName = $user->name;
+        } elseif (!empty($user->email)) {
+            $displayName = trim($user->email);
         }
     }
 
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
+
     foreach (array_slice($parts, 0, 2) as $part) {
-        $initials .= strtoupper(mb_substr($part, 0, 1));
+        if (!empty($part)) {
+            $initials .= strtoupper(mb_substr($part, 0, 1));
+        }
     }
-    if ($initials === '') { $initials = 'U'; }
+
+    if ($initials === '') {
+        $initials = 'A';
+    }
 @endphp
 
 <!DOCTYPE html>
@@ -33,7 +45,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PumaGestión – @yield('titulo', 'Panel')</title>
+    <title>PumaGestión – @yield('titulo', 'Portal Estudiantil')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -45,7 +57,6 @@
 <body class="hold-transition dashboard-body">
 <div class="wrapper">
 
-    {{-- NAVBAR MÓVIL --}}
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
         <ul class="navbar-nav">
             <li class="nav-item">
@@ -57,19 +68,21 @@
         <span class="mobile-title">PumaGestión</span>
     </nav>
 
-    {{-- SIDEBAR (FIJO PARA TODOS) --}}
     <aside class="main-sidebar elevation-4">
         <div class="sidebar-bg" style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
         <div class="sidebar-overlay"></div>
 
         <a href="javascript:void(0)" class="brand-link">
             <div class="brand-top-glow"></div>
+
             <div class="brand-logo-wrap">
                 <img src="{{ asset('images/Logo.png') }}" alt="Logo PumaGestión" class="brand-logo-img">
             </div>
+
             <div class="brand-name">
                 <span class="brand-name-white">Puma</span><span class="brand-name-gold">Gestión</span>
             </div>
+
             <div class="brand-subtitle">FCEAC · UNAH</div>
         </a>
 
@@ -85,12 +98,30 @@
             <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
+
                         <li class="nav-item">
-                            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->is('dashboard*') ? 'active' : '' }}">
+                            <a href="{{ route('dashboard') }}"
+                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a href="javascript:void(0)" class="nav-link">
+                                <i class="nav-icon fas fa-folder-open"></i>
+                                <p>Mis trámites</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('configuracion.index') }}"
+                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-gear"></i>
+                                <p>Configuración</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item nav-item-logout">
                             <form action="{{ route('logout') }}" method="POST" style="margin:0;">
                                 @csrf
@@ -100,24 +131,20 @@
                                 </button>
                             </form>
                         </li>
+
                     </ul>
                 </nav>
             </div>
         </div>
     </aside>
 
-    {{-- BOTÓN TOGGLE SIDEBAR --}}
     <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
         <i class="fas fa-chevron-left"></i>
     </button>
 
-    {{-- CONTENIDO DINÁMICO --}}
     <div class="content-wrapper">
         <section class="content dashboard-shell">
-
-            {{-- aquí se agrega el contenido --}}
             @yield('content')
-
         </section>
     </div>
 
