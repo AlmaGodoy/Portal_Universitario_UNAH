@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class TwoFactorController extends Controller
 {
     private const ID_OBJETO_LOGIN = 12;
+    private const TRUSTED_DEVICE_COOKIE = 'trusted_device_token';
 
     public function form()
     {
@@ -77,6 +80,41 @@ class TwoFactorController extends Controller
                 ]);
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Marcar este dispositivo como confiable por 30 días
+            |--------------------------------------------------------------------------
+            */
+            $trustedToken = Str::random(64);
+            $trustedHash = hash('sha256', $trustedToken);
+
+            DB::select('CALL DEL_LOGIN_AUTHENTICATION_TIPO(?, ?)', [
+                $userId,
+                'trusted_device',
+            ]);
+
+            DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
+                $userId,
+                'trusted_device',
+                $trustedHash,
+                now()->addDays(30)->format('Y-m-d H:i:s'),
+                self::ID_OBJETO_LOGIN,
+                'dispositivo_confiable_registrado',
+                'Se registró dispositivo confiable por 30 días',
+            ]);
+
+            Cookie::queue(
+                cookie(
+                    self::TRUSTED_DEVICE_COOKIE,
+                    $trustedToken,
+                    60 * 24 * 30, // 30 días en minutos
+                    null,
+                    null,
+                    true,
+                    true
+                )
+            );
+
             $user = User::find($userId);
 
             if (!$user) {
@@ -96,6 +134,7 @@ class TwoFactorController extends Controller
                 2 => redirect()->route('dashboard'),
                 4 => redirect('dashboard'),
                 5 => redirect('dashboard'),
+                1 => redirect('dashboard'),
                 default => redirect('dashboard'),
             };
 

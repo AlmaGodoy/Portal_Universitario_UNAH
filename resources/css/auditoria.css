@@ -134,7 +134,7 @@ table tr:hover {
 
 .brand-title {
     display: flex;
-    align-items: baseline;
+    align-items:center;
     gap: 0;
     font-size: 1.08rem;
     font-weight: 700;
