@@ -6,14 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class TwoFactorController extends Controller
 {
     private const ID_OBJETO_LOGIN = 12;
-    private const TRUSTED_DEVICE_COOKIE = 'trusted_device_token';
 
     public function form()
     {
@@ -80,40 +77,11 @@ class TwoFactorController extends Controller
                 ]);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Marcar este dispositivo como confiable por 30 días
-            |--------------------------------------------------------------------------
-            */
-            $trustedToken = Str::random(64);
-            $trustedHash = hash('sha256', $trustedToken);
-
-            DB::select('CALL DEL_LOGIN_AUTHENTICATION_TIPO(?, ?)', [
-                $userId,
-                'trusted_device',
-            ]);
-
-            DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
-                $userId,
-                'trusted_device',
-                $trustedHash,
-                now()->addDays(30)->format('Y-m-d H:i:s'),
-                self::ID_OBJETO_LOGIN,
-                'dispositivo_confiable_registrado',
-                'Se registró dispositivo confiable por 30 días',
-            ]);
-
-            Cookie::queue(
-                cookie(
-                    self::TRUSTED_DEVICE_COOKIE,
-                    $trustedToken,
-                    60 * 24 * 30, // 30 días en minutos
-                    null,
-                    null,
-                    true,
-                    true
-                )
-            );
+            DB::table('tbl_usuario')
+                ->where('id_usuario', $userId)
+                ->update([
+                    'twofa_verified_at' => now(),
+                ]);
 
             $user = User::find($userId);
 
@@ -123,12 +91,17 @@ class TwoFactorController extends Controller
             }
 
             Auth::login($user);
-            session()->regenerate();
+            $request->session()->regenerate();
+
+            session([
+                'persona_id' => $user->id_persona ?? null,
+                'rol_texto' => $user->id_rol ?? null,
+            ]);
 
             session()->forget('twofa_user_id');
             session()->forget('twofa_login_tipo');
 
-            $idRol = (int) $user->id_rol;
+            $idRol = (int) ($user->id_rol ?? 0);
 
             return match ($idRol) {
                 2 => redirect()->route('dashboard'),
@@ -139,6 +112,8 @@ class TwoFactorController extends Controller
             };
 
         } catch (\Throwable $e) {
+            report($e);
+
             return back()->withErrors([
                 'code' => 'Ocurrió un error al verificar el código. Intenta nuevamente.'
             ]);
