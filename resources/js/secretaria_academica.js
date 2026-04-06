@@ -1,35 +1,108 @@
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("PumaGestión: Dashboard de Empleado cargado.");
+document.addEventListener('DOMContentLoaded', function () {
+    const data = window.secretariaAcademicaCharts || {};
 
-    const searchInput = document.getElementById('top-search');
+    const estadosLabels = data.estadosLabels || [];
+    const estadosValores = data.estadosValores || [];
 
-    // 1. Lógica de Búsqueda (Filtro visual por ahora)
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            let query = e.target.value.toLowerCase();
-            console.log("Filtrando expedientes por: " + query);
+    const carrerasLabels = data.carrerasLabels || [];
+    const carrerasValores = data.carrerasValores || [];
 
-            // Aquí podrás llamar a tu API en el futuro:
-            // fetch(`/api/empleados/buscar?q=${query}`).then(...)
+    const clasesLabels = data.clasesLabels || [];
+    const clasesValores = data.clasesValores || [];
+
+    const canvasEstados = document.getElementById('graficaEstadosGlobales');
+    const canvasCarreras = document.getElementById('graficaCarrerasGlobales');
+    const canvasClases = document.getElementById('graficaClasesCanceladas');
+
+    if (canvasEstados) {
+        new Chart(canvasEstados, {
+            type: 'doughnut',
+            data: {
+                labels: estadosLabels,
+                datasets: [{
+                    data: estadosValores,
+                    backgroundColor: ['#0f4c97', '#f4b400', '#16a1b8', '#d93025'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
         });
     }
 
-    // 2. Animación de entrada para las Info Boxes
-    const cards = document.querySelectorAll('.info-box-custom');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
+    if (canvasCarreras) {
+        new Chart(canvasCarreras, {
+            type: 'bar',
+            data: {
+                labels: carrerasLabels,
+                datasets: [{
+                    label: 'Trámites',
+                    data: carrerasValores,
+                    backgroundColor: ['#003c71', '#1d5fbf', '#17a2b8', '#ffc107', '#6f42c1'],
+                    borderRadius: 10,
+                    maxBarThickness: 56
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
 
-        setTimeout(() => {
-            card.style.transition = 'all 0.5s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, 100 * index);
-    });
-
-    // 3. Simulación de notificaciones
-    // Se puede conectar a la ruta api.empleados.notificaciones definida en tus rutas
-    function chequearNotificaciones() {
-        // Lógica para el punto rojo en el avatar si hay trámites pendientes
+    if (canvasClases) {
+        new Chart(canvasClases, {
+            type: 'bar',
+            data: {
+                labels: clasesLabels,
+                datasets: [{
+                    label: 'Cancelaciones',
+                    data: clasesValores,
+                    backgroundColor: ['#d93025', '#f4b400', '#0f4c97'],
+                    borderRadius: 12,
+                    maxBarThickness: 40
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
     }
 });

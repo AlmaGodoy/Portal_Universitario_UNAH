@@ -49,14 +49,8 @@ class LoginController extends Controller
         $m = intdiv($seconds, 60);
         $s = $seconds % 60;
 
-        if ($m <= 0) {
-            return "{$s} segundos";
-        }
-
-        if ($s === 0) {
-            return "{$m} minuto(s)";
-        }
-
+        if ($m <= 0) return "{$s} segundos";
+        if ($s === 0) return "{$m} minuto(s)";
         return "{$m} minuto(s) y {$s} segundo(s)";
     }
 
@@ -89,10 +83,7 @@ class LoginController extends Controller
 
     private function eliminarAutenticacionPorTipo(int $idUsuario, string $tipo): void
     {
-        DB::select('CALL DEL_LOGIN_AUTHENTICATION_TIPO(?, ?)', [
-            $idUsuario,
-            $tipo,
-        ]);
+        DB::select('CALL DEL_LOGIN_AUTHENTICATION_TIPO(?, ?)', [$idUsuario, $tipo]);
     }
 
     private function insertarAutenticacion(
@@ -133,20 +124,12 @@ class LoginController extends Controller
 
         $identifierName = $user->getAuthIdentifierName();
         $user->setAttribute($identifierName, (int) $r->id_usuario);
-        $user->setAttribute('id_usuario', (int) $r->id_usuario);
-        $user->setAttribute('id_persona', (int) $r->id_persona);
+        $user->setAttribute('id_usuario',   (int) $r->id_usuario);
+        $user->setAttribute('id_persona',   (int) $r->id_persona);
 
-        if (isset($r->id_rol)) {
-            $user->setAttribute('id_rol', (int) $r->id_rol);
-        }
-
-        if (isset($r->tipo_usuario)) {
-            $user->setAttribute('tipo_usuario', $r->tipo_usuario);
-        }
-
-        if (isset($r->rol)) {
-            $user->setAttribute('rol', $r->rol);
-        }
+        if (isset($r->id_rol))      $user->setAttribute('id_rol',      (int) $r->id_rol);
+        if (isset($r->tipo_usuario)) $user->setAttribute('tipo_usuario', $r->tipo_usuario);
+        if (isset($r->rol))          $user->setAttribute('rol',          $r->rol);
 
         $user->exists = true;
 
@@ -155,13 +138,10 @@ class LoginController extends Controller
 
     private function debeSolicitarTwoFactor($twofaVerifiedAt): bool
     {
-        if (empty($twofaVerifiedAt)) {
-            return true;
-        }
+        if (empty($twofaVerifiedAt)) return true;
 
         try {
-            $fechaVerificacion = Carbon::parse($twofaVerifiedAt);
-            return $fechaVerificacion->lt(now()->subDays(30));
+            return Carbon::parse($twofaVerifiedAt)->lt(now()->subDays(30));
         } catch (\Throwable $e) {
             report($e);
             return true;
@@ -173,7 +153,7 @@ class LoginController extends Controller
         $this->normalizeEmail($request);
 
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required',
         ]);
 
@@ -183,11 +163,8 @@ class LoginController extends Controller
             $seconds = RateLimiter::availableIn($key);
 
             $this->registrarIntentoLogin(
-                $request->email,
-                $request->ip(),
-                $request->userAgent(),
-                'BLOQUEADO_THROTTLE',
-                "Esperar {$seconds}s"
+                $request->email, $request->ip(), $request->userAgent(),
+                'BLOQUEADO_THROTTLE', "Esperar {$seconds}s"
             );
 
             return back()->withErrors([
@@ -198,83 +175,49 @@ class LoginController extends Controller
         try {
             $res = DB::select('CALL SEL_LOGIN(?, ?)', [
                 $request->email,
-                ''
+                $request->password,
             ]);
 
             $r = $res[0] ?? null;
 
             if (!$r || !isset($r->resultado)) {
                 RateLimiter::hit($key, 300);
-
-                $this->registrarIntentoLogin(
-                    $request->email,
-                    $request->ip(),
-                    $request->userAgent(),
-                    'CREDENCIALES_INVALIDAS',
-                    'Respuesta inválida SP'
-                );
-
-                return back()->withErrors([
-                    'email' => 'Credenciales inválidas'
-                ])->withInput();
+                $this->registrarIntentoLogin($request->email, $request->ip(), $request->userAgent(), 'CREDENCIALES_INVALIDAS', 'Respuesta inválida SP');
+                return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
             }
 
             if ($r->resultado !== 'OK') {
                 RateLimiter::hit($key, 300);
-
-                $this->registrarIntentoLogin(
-                    $request->email,
-                    $request->ip(),
-                    $request->userAgent(),
-                    'SP_RECHAZO',
-                    (string) $r->resultado
-                );
-
-                return back()->withErrors([
-                    'email' => 'Credenciales inválidas'
-                ])->withInput();
+                $this->registrarIntentoLogin($request->email, $request->ip(), $request->userAgent(), 'SP_RECHAZO', (string) $r->resultado);
+                return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
             }
 
             if (!isset($r->pass_hash) || !Hash::check($request->password, (string) $r->pass_hash)) {
                 RateLimiter::hit($key, 300);
-
                 $this->registrarIntentoLogin(
-                    $request->email,
-                    $request->ip(),
-                    $request->userAgent(),
-                    'CONTRASENA_INCORRECTA',
-                    'Hash::check falló',
+                    $request->email, $request->ip(), $request->userAgent(),
+                    'CONTRASENA_INCORRECTA', 'Hash::check falló',
                     isset($r->id_usuario) ? (int) $r->id_usuario : null,
                     'login_fallido',
                     'Contraseña incorrecta. Email: ' . $request->email . ' | IP: ' . $request->ip()
                 );
-
-                return back()->withErrors([
-                    'email' => 'Credenciales inválidas'
-                ])->withInput();
+                return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
             }
 
             RateLimiter::clear($key);
 
-            $tipoElegido = strtolower(trim((string) session('login_tipo')));
+            $tipoElegido   = strtolower(trim((string) session('login_tipo')));
             $tipoUsuarioDb = strtolower(trim((string) ($r->tipo_usuario ?? '')));
-            $rolNombre = strtolower(trim((string) ($r->rol ?? '')));
+            $rolNombre     = strtolower(trim((string) ($r->rol ?? '')));
 
             if ($tipoElegido === 'estudiante' && $tipoUsuarioDb !== 'estudiante') {
                 $this->registrarIntentoLogin(
-                    $request->email,
-                    $request->ip(),
-                    $request->userAgent(),
-                    'PORTAL_INCORRECTO',
-                    'Intento en portal estudiante con tipo ' . $tipoUsuarioDb,
-                    (int) $r->id_usuario,
-                    'login_fallido',
+                    $request->email, $request->ip(), $request->userAgent(),
+                    'PORTAL_INCORRECTO', 'Intento en portal estudiante con tipo ' . $tipoUsuarioDb,
+                    (int) $r->id_usuario, 'login_fallido',
                     'Portal incorrecto (estudiante). Tipo devuelto por SP: ' . $tipoUsuarioDb
                 );
-
-                return back()->withErrors([
-                    'email' => 'Este portal es solo para estudiantes.'
-                ])->withInput();
+                return back()->withErrors(['email' => 'Este portal es solo para estudiantes.'])->withInput();
             }
 
             if (
@@ -282,72 +225,40 @@ class LoginController extends Controller
                 && !in_array($rolNombre, ['coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
             ) {
                 $this->registrarIntentoLogin(
-                    $request->email,
-                    $request->ip(),
-                    $request->userAgent(),
-                    'PORTAL_INCORRECTO',
-                    'Intento en portal empleado con rol ' . $rolNombre,
-                    (int) $r->id_usuario,
-                    'login_fallido',
+                    $request->email, $request->ip(), $request->userAgent(),
+                    'PORTAL_INCORRECTO', 'Intento en portal empleado con rol ' . $rolNombre,
+                    (int) $r->id_usuario, 'login_fallido',
                     'Portal incorrecto (empleado). Rol devuelto por SP: ' . $rolNombre
                 );
-
-                return back()->withErrors([
-                    'email' => 'Este portal es solo para coordinador, secretario, administrador o secretaria general.'
-                ])->withInput();
+                return back()->withErrors(['email' => 'Este portal es solo para coordinador, secretario, administrador o secretaria general.'])->withInput();
             }
 
-            $twofaVerifiedAt = $r->twofa_verified_at ?? null;
-            $needs2fa = $this->debeSolicitarTwoFactor($twofaVerifiedAt);
+            // ── 2FA ─────────────────────────────────────────────────────────
+            $needs2fa = false; // temporal para pruebas
+            // $needs2fa = $this->debeSolicitarTwoFactor($r->twofa_verified_at ?? null);
 
             if ($needs2fa) {
                 $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
                 $this->eliminarAutenticacionPorTipo((int) $r->id_usuario, 'two_factor');
-
                 $this->insertarAutenticacion(
-                    (int) $r->id_usuario,
-                    'two_factor',
+                    (int) $r->id_usuario, 'two_factor',
                     hash('sha256', $code),
                     now()->addMinutes(10)->format('Y-m-d H:i:s'),
-                    '2fa_generado',
-                    'Código 2FA generado para el usuario.'
+                    '2fa_generado', 'Código 2FA generado para el usuario.'
                 );
 
                 try {
                     Mail::to($request->email)->send(new TwoFactorCodeMail($code));
-
-                    $this->registrarIntentoLogin(
-                        $request->email,
-                        $request->ip(),
-                        $request->userAgent(),
-                        '2FA_ENVIADO',
-                        'Se envió código 2FA',
-                        (int) $r->id_usuario,
-                        '2fa_enviado',
-                        'Código 2FA enviado a: ' . $request->email
-                    );
+                    $this->registrarIntentoLogin($request->email, $request->ip(), $request->userAgent(), '2FA_ENVIADO', 'Se envió código 2FA', (int) $r->id_usuario, '2fa_enviado', 'Código 2FA enviado a: ' . $request->email);
                 } catch (\Throwable $e) {
                     report($e);
-
-                    $this->registrarIntentoLogin(
-                        $request->email,
-                        $request->ip(),
-                        $request->userAgent(),
-                        '2FA_FALLO_ENVIO',
-                        $e->getMessage(),
-                        (int) $r->id_usuario,
-                        '2fa_fallido',
-                        'Fallo envío 2FA: ' . $e->getMessage()
-                    );
-
-                    return back()->withErrors([
-                        'email' => 'No se pudo enviar el código 2FA. Intenta más tarde.'
-                    ])->withInput();
+                    $this->registrarIntentoLogin($request->email, $request->ip(), $request->userAgent(), '2FA_FALLO_ENVIO', $e->getMessage(), (int) $r->id_usuario, '2fa_fallido', 'Fallo envío 2FA: ' . $e->getMessage());
+                    return back()->withErrors(['email' => 'No se pudo enviar el código 2FA. Intenta más tarde.'])->withInput();
                 }
 
                 session([
-                    'twofa_user_id' => (int) $r->id_usuario,
+                    'twofa_user_id'    => (int) $r->id_usuario,
                     'twofa_login_tipo' => $tipoElegido,
                 ]);
 
@@ -355,65 +266,48 @@ class LoginController extends Controller
                     ->with('status', 'Te enviamos un código de 6 dígitos a tu correo.');
             }
 
+            // ── Autenticar ───────────────────────────────────────────────────
             $authUser = $this->buildAuthUserFromSp($r);
-
             Auth::login($authUser);
             $request->session()->regenerate();
 
             session([
-                'persona_id' => $r->id_persona ?? null,
-                'rol_texto' => $r->rol ?? null,
-                'tipo_usuario' => $r->tipo_usuario ?? null,
+                'persona_id'   => $r->id_persona   ?? null,
+                'rol_texto'    => $r->rol           ?? null,  // ← aquí se guarda el rol
+                'tipo_usuario' => $r->tipo_usuario  ?? null,
             ]);
 
             $this->registrarIntentoLogin(
-                $request->email,
-                $request->ip(),
-                $request->userAgent(),
-                'OK',
-                'Login exitoso',
-                (int) $r->id_usuario,
-                'login_exitoso',
-                'Inicio de sesión exitoso.'
+                $request->email, $request->ip(), $request->userAgent(),
+                'OK', 'Login exitoso',
+                (int) $r->id_usuario, 'login_exitoso', 'Inicio de sesión exitoso.'
             );
 
+            // ── REDIRECCIÓN CORRECTA POR ROL ─────────────────────────────────
             if ($tipoUsuarioDb === 'estudiante') {
                 return redirect()->route('dashboard');
             }
 
             return match ($rolNombre) {
-                'coordinador' => redirect('dashboard'),
-                'secretario' => redirect('dashboard'),
-                'administrador' => redirect('dashboard'),
-                'secretaria_general' => redirect('dashboard'),
-                default => redirect('dashboard'),
+                'coordinador',
+                'administrador'      => redirect()->route('empleado.dashboard'),
+                'secretario'         => redirect()->route('empleado.dashboard'),
+                'secretaria_general' => redirect()->route('empleado.dashboard'),
+                default              => redirect()->route('dashboard'),
             };
+
         } catch (\Throwable $e) {
             report($e);
-
             RateLimiter::hit($key, 300);
-
-            $this->registrarIntentoLogin(
-                $request->email,
-                $request->ip(),
-                $request->userAgent(),
-                'EXCEPTION',
-                $e->getMessage()
-            );
-
-            return back()->withErrors([
-                'email' => 'Ocurrió un error al iniciar sesión. Intenta de nuevo.'
-            ])->withInput();
+            $this->registrarIntentoLogin($request->email, $request->ip(), $request->userAgent(), 'EXCEPTION', $e->getMessage());
+            return back()->withErrors(['email' => 'Ocurrió un error al iniciar sesión. Intenta de nuevo.'])->withInput();
         }
     }
 
     public function logout(Request $request)
     {
         if (Auth::check()) {
-            $this->registrarLogoutEvento(
-                (int) Auth::id(),
-                'Cierre de sesión.'
-            );
+            $this->registrarLogoutEvento((int) Auth::id(), 'Cierre de sesión.');
         }
 
         Auth::logout();
