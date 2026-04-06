@@ -1,10 +1,11 @@
 @php
     use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\Auth;
 
-    $user = auth()->user();
+    $user = Auth::user();
 
-    $displayName = 'Coordinador';
-    $displayRole = 'Coordinador';
+    $displayName = 'Secretaría Académica';
+    $displayRole = 'Secretaría Académica';
 
     if ($user) {
         if (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
@@ -36,7 +37,7 @@
     }
 
     if ($initials === '') {
-        $initials = 'C';
+        $initials = 'SA';
     }
 @endphp
 
@@ -45,7 +46,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PumaGestión – @yield('titulo', 'Panel de Coordinación')</title>
+    <title>PumaGestión – @yield('titulo', 'Secretaría Académica')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -53,6 +54,39 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+
+    <style>
+        .sidebar-user-role {
+            color: #d4af37 !important;
+        }
+
+        .nav-header-custom {
+            color: rgba(255,255,255,.55);
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 12px 18px 8px;
+        }
+
+        .academic-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(212, 175, 55, 0.16);
+            color: #f3d46b;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid rgba(212, 175, 55, 0.28);
+        }
+
+        .content-wrapper {
+            min-height: 100vh;
+        }
+    </style>
 </head>
 <body class="hold-transition dashboard-body">
 <div class="wrapper">
@@ -92,78 +126,49 @@
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name">{{ $displayName }}</div>
                     <div class="sidebar-user-role">{{ $displayRole }}</div>
+                    <div class="academic-badge">
+                        <i class="fas fa-building-columns"></i>
+                        Supervisión Global
+                    </div>
                 </div>
             </div>
 
             <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
                 <nav class="mt-2">
+                    <div class="nav-header-custom">Panel académico global</div>
+
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
-                        {{-- Dashboard --}}
                         <li class="nav-item">
-                            <a href="{{ route('dashboard') }}"
-                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
+                            <a href="{{ route('empleado.dashboard') }}"
+                               class="nav-link {{ request()->routeIs('empleado.dashboard') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
 
-                        {{-- Trámites --}}
+                        <li class="nav-item">
+                            <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
+                               class="nav-link {{ request()->routeIs('reporte.tramites.secretaria_general.vista') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-chart-column"></i>
+                                <p>Reportes Generales</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item">
                             <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-folder-open"></i>
-                                <p>Trámites</p>
+                                <i class="nav-icon fas fa-chart-pie"></i>
+                                <p>Gráficas Globales</p>
                             </a>
                         </li>
 
-                        {{-- Seguridad --}}
-                        <li class="nav-item has-treeview {{ request()->is('seguridad*') ? 'menu-open' : '' }}">
-                            <a href="javascript:void(0)"
-                               class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad <i class="right fas fa-angle-left"></i></p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Usuarios</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Roles y permisos</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        {{-- Reportes --}}
                         <li class="nav-item">
                             <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Reportes</p>
+                                <i class="nav-icon fas fa-building-columns"></i>
+                                <p>Resumen por Carreras</p>
                             </a>
                         </li>
 
-                        {{-- Auditoría --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
-                                <p>Auditoría</p>
-                            </a>
-                        </li>
-
-                        {{-- Bitácora --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-book"></i>
-                                <p>Bitácora</p>
-                            </a>
-                        </li>
-
-                        {{-- Configuración --}}
                         <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"
                                class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
@@ -172,7 +177,6 @@
                             </a>
                         </li>
 
-                        {{-- Cerrar sesión --}}
                         <li class="nav-item nav-item-logout">
                             <form action="{{ route('logout') }}" method="POST" style="margin:0;">
                                 @csrf

@@ -3,16 +3,19 @@ import laravel from 'laravel-vite-plugin';
 import { readdirSync } from 'fs';
 import { resolve } from 'path';
 
-// Detecta automáticamente todos los archivos CSS en resources/css/
 const cssFiles = readdirSync(resolve(__dirname, 'resources/css'))
     .filter(file => file.endsWith('.css'))
     .map(file => `resources/css/${file}`);
+
+const jsFiles = readdirSync(resolve(__dirname, 'resources/js'))
+    .filter(file => file.endsWith('.js'))
+    .map(file => `resources/js/${file}`);
 
 export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/js/app.js',
+                ...jsFiles,
                 ...cssFiles,
             ],
             refresh: true,
