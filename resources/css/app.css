@@ -6,6 +6,9 @@
 @import "/resources/css/secre_carrera.css";
 @import "/resources/css/rolseguridad.css";
 /*@import "/resources/css/Cambio_Carrera.css";*/
+@import "/resources/css/rolseguridad.css";
+@import "/resources/css/secretaria_academica.css";
+
 
 @theme {
     --font-sans: 'Instrument Sans', sans-serif;
