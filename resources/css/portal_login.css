@@ -19,31 +19,48 @@
   background-attachment: fixed;
 }
 
-.auth-back-wrap {
-  position: absolute;
-  top: 40px;
-  left: calc(50% - 710px);
-  z-index: 40;
-}
-
-.auth-back-btn {
-  width: auto !important;
-  min-width: 190px;
-  border-radius: 12px !important;
-  padding: 10px 18px;
-  font-weight: 600;
-  white-space: nowrap;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
-}
-
 .auth-card {
   background: rgba(0, 0, 0, 0.65);
   padding: 45px;
   border-radius: 18px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 14px 42px rgba(0, 0, 0, 0.48),
+    0 0 28px rgba(255, 255, 255, 0.14);
   width: 100%;
   max-width: 950px;
   animation: fadeInUp .8s ease;
+}
+
+.auth-card-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.auth-card-title {
+  color: #fff;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.auth-card-header-spacer {
+  width: 170px;
+}
+
+.auth-back-btn {
+  width: auto !important;
+  min-width: 170px;
+  border-radius: 12px !important;
+  padding: 10px 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
 }
 
 .auth-card h2,
@@ -64,6 +81,7 @@
   border-radius: 10px;
   border: 1.5px solid #ddd;
   font-size: 15px;
+  text-align: left;
 }
 
 .auth-card input.form-control:focus,
@@ -104,6 +122,10 @@
   }
 }
 
+/* =========================================================
+   PORTAL ESTUDIANTES / EMPLEADOS
+   ========================================================= */
+
 .portal-card {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 18px;
@@ -137,34 +159,8 @@
   min-width: 44px;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-  .auth-back-wrap {
-    left: 30px;
-    top: 30px;
-  }
-}
-
-@media (max-width: 992px) {
-  .auth-container {
-    align-items: flex-start;
-    padding-top: 90px;
-  }
-
-  .auth-back-wrap {
-    position: static;
-    margin-bottom: 18px;
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .auth-card {
-    max-width: 950px;
-  }
-}
 /* =========================================================
-   AJUSTES RESPONSIVE PARA REGISTER USER
+   AJUSTES REGISTER USER
    ========================================================= */
 
 #registerForm {
@@ -207,7 +203,6 @@
 }
 
 #registerForm small,
-#correo_hint,
 #pass_mismatch {
   word-break: break-word;
   line-height: 1.35;
@@ -218,6 +213,128 @@
   min-height: 46px;
 }
 
+/* =========================================================
+   HINTS DENTRO DEL INPUT
+   ========================================================= */
+
+.input-hint-wrap,
+.input-hint-password-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.inside-hint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  z-index: 5;
+}
+
+.left-hint {
+  left: 14px;
+  right: auto;
+  text-align: left;
+}
+
+.right-hint {
+  right: 14px;
+  left: auto;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.field-hint {
+  max-width: calc(100% - 28px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.password-mask {
+  max-width: calc(100% - 72px);
+  white-space: nowrap;
+}
+
+.hint-hidden {
+  opacity: 0;
+  transform: translateY(-50%);
+}
+
+/* CORRECCIÓN CLAVE:
+   el usuario escribe desde la izquierda normal */
+.input-with-help {
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
+
+.input-with-hint {
+  padding-left: 14px !important;
+  padding-right: 145px !important;
+}
+
+.input-with-inline-hint {
+  padding-left: 14px !important;
+  padding-right: 52px !important;
+}
+
+.password-help-text {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+.login-card {
+  max-width: 520px !important;
+}
+
+.login-title {
+  margin-bottom: 28px !important;
+}
+
+.login-back-btn {
+  min-width: 150px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+
+.auth-card-top-login {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+/* =========================================================
+   RESPONSIVE TABLET
+   ========================================================= */
+
+@media (max-width: 992px) {
+  .auth-container {
+    align-items: flex-start;
+    padding-top: 90px;
+  }
+
+  .auth-card {
+    max-width: 950px;
+  }
+}
+
+/* =========================================================
+   MOVIL
+   ========================================================= */
+
 @media (max-width: 768px) {
   .auth-container {
     display: block;
@@ -226,11 +343,26 @@
     background-attachment: scroll;
   }
 
-  .auth-back-wrap {
-    position: static;
+  .auth-card {
     width: 100%;
-    margin-bottom: 14px;
-    display: block;
+    max-width: 100%;
+    padding: 20px 14px;
+    border-radius: 16px;
+  }
+
+  .auth-card-header {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .auth-card-title {
+    text-align: center;
+    font-size: 1.5rem;
+  }
+
+  .auth-card-header-spacer {
+    display: none;
   }
 
   .auth-back-btn {
@@ -243,17 +375,9 @@
     text-align: center;
   }
 
-  .auth-card {
+  .auth-card-top-login {
     width: 100%;
-    max-width: 100%;
-    padding: 20px 14px;
-    border-radius: 16px;
-  }
-
-  .auth-card h2,
-  .auth-card h3 {
-    font-size: 1.5rem;
-    text-align: center;
+    margin-bottom: 18px;
   }
 
   #registerForm .row {
@@ -303,7 +427,6 @@
   }
 
   #registerForm small,
-  #correo_hint,
   #pass_mismatch {
     font-size: 0.86rem;
   }
@@ -315,6 +438,90 @@
     min-height: 48px;
     font-size: 1rem;
     margin-top: 6px;
+  }
+
+  .inside-hint {
+    font-size: 12px;
+  }
+
+  .left-hint {
+    left: 12px;
+  }
+
+  .right-hint {
+    right: 12px;
+  }
+
+  .field-hint {
+    max-width: calc(100% - 24px);
+  }
+
+  .password-mask {
+    max-width: calc(100% - 68px);
+  }
+
+  .input-with-help {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .input-with-hint {
+    padding-left: 12px !important;
+    padding-right: 125px !important;
+  }
+
+  .input-with-inline-hint {
+    padding-left: 12px !important;
+    padding-right: 52px !important;
+  }
+
+  .password-row .password-field-col {
+    margin-bottom: 14px !important;
+  }
+
+  .confirm-password-field-col {
+    margin-top: 0 !important;
+  }
+
+  .input-hint-password-wrap .input-group,
+  .confirm-password-field-col .input-group {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  .input-hint-password-wrap .form-control,
+  .confirm-password-field-col .form-control {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .password-help-text {
+    font-size: 11px;
+  }
+
+  .login-back-btn {
+    min-width: 0;
+    width: 100% !important;
+    max-width: 100%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 14px;
+    font-size: 0.92rem;
+  }
+
+  .login-title {
+    margin-bottom: 22px !important;
+  }
+
+  .portal-card {
+    padding: 28px 18px;
+  }
+
+  .portal-icon {
+    width: 110px;
+    margin-bottom: 12px;
   }
 }
 
@@ -344,7 +551,8 @@
   #registerForm .form-select {
     height: 44px;
     min-height: 44px;
-    padding: 10px 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 
   #registerForm #btn_toggle_pass,
@@ -355,4 +563,57 @@
     height: 44px;
     min-height: 44px;
   }
+
+  .inside-hint {
+    font-size: 11px;
+  }
+
+  .input-with-help {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .input-with-hint {
+    padding-left: 10px !important;
+    padding-right: 110px !important;
+  }
+
+  .input-with-inline-hint {
+    padding-left: 10px !important;
+    padding-right: 48px !important;
+  }
+
+  .password-mask {
+    max-width: calc(100% - 60px);
+  }
+
+  .password-help-text {
+    font-size: 10px;
+  }
+
+  .portal-card {
+    padding: 24px 16px;
+  }
+
+  .portal-icon {
+    width: 92px;
+  }
+}
+
+.register-word-gold {
+  color: #ffcc00;
+  font-weight: 700;
+}
+
+.auth-back-btn {
+  color: #ffcc00 !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.auth-back-btn:hover,
+.auth-back-btn:focus {
+  color: #d4a017 !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+  background-color: rgba(0, 0, 0, 0.18) !important;
+  text-decoration: none !important;
 }
