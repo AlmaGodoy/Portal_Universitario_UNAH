@@ -77,6 +77,12 @@ class TwoFactorController extends Controller
                 ]);
             }
 
+            DB::table('tbl_usuario')
+                ->where('id_usuario', $userId)
+                ->update([
+                    'twofa_verified_at' => now(),
+                ]);
+
             $user = User::find($userId);
 
             if (!$user) {
@@ -85,21 +91,29 @@ class TwoFactorController extends Controller
             }
 
             Auth::login($user);
-            session()->regenerate();
+            $request->session()->regenerate();
+
+            session([
+                'persona_id' => $user->id_persona ?? null,
+                'rol_texto' => $user->id_rol ?? null,
+            ]);
 
             session()->forget('twofa_user_id');
             session()->forget('twofa_login_tipo');
 
-            $idRol = (int) $user->id_rol;
+            $idRol = (int) ($user->id_rol ?? 0);
 
             return match ($idRol) {
                 2 => redirect()->route('dashboard'),
                 4 => redirect('dashboard'),
                 5 => redirect('dashboard'),
+                1 => redirect('dashboard'),
                 default => redirect('dashboard'),
             };
 
         } catch (\Throwable $e) {
+            report($e);
+
             return back()->withErrors([
                 'code' => 'Ocurrió un error al verificar el código. Intenta nuevamente.'
             ]);
