@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-coordinador')
 
 @section('titulo', 'Gestión de Roles')
 
