@@ -1,4 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.app-coordinador')
+@extends('layouts.app-secretaria-academica')
+
 
 @section('content')
 @vite(['resources/css/auditoria.css', 'resources/js/auditoria.js'])
