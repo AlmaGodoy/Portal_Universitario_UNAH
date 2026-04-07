@@ -1,4 +1,4 @@
-@extends('layouts.app-coordinador')
+@extends('layouts.app-secretaria')
 
 @section('titulo', 'Reporte de Trámites')
 
@@ -37,9 +37,9 @@
 
             <div class="panel-body">
                 <form method="GET"
-                      action="{{ route('reporte.tramites.vista') }}"
+                      action="{{ route('reporte.tramites.secretaria.vista') }}"
                       class="form-filtros form-filtros-con-exportar"
-                      id="formFiltrosReporte">
+                      id="formFiltrosReporteSecretaria">
 
                     <div class="campo-filtro">
                         <label for="tipo_tramite">Tipo de trámite</label>
@@ -101,7 +101,7 @@
                     <div class="acciones-filtro acciones-filtro-con-exportar">
                         <div class="acciones-filtro-izquierda">
                             <button type="submit" class="btn-filtrar">Filtrar</button>
-                            <a href="{{ route('reporte.tramites.vista') }}" class="btn-limpiar">Limpiar</a>
+                            <a href="{{ route('reporte.tramites.secretaria.vista') }}" class="btn-limpiar">Limpiar</a>
                         </div>
 
                         <div class="acciones-exportar acciones-exportar-derecha">
