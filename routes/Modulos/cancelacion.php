@@ -2,40 +2,45 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DocumentoExcepcionalController;
+use App\Http\Controllers\CancelacionPaso2Controller;
 
-/*
-|--------------------------------------------------------------------------
-| Rutas de PumaGestión - FCEAC
-|--------------------------------------------------------------------------
-*/
+Route::middleware('auth')->group(function () {
 
-Route::prefix('api/cancelaciones')->group(function () {
-    Route::post('crear',               [DocumentoExcepcionalController::class, 'subir']);
-    Route::get('todas',                [DocumentoExcepcionalController::class, 'obtenerTodos']);
-    Route::get('detalle/{id}',         [DocumentoExcepcionalController::class, 'obtenerCancelacion']);
-    Route::delete('eliminar/{id}',     [DocumentoExcepcionalController::class, 'eliminar']);
-    Route::post('guardar-documento',   [DocumentoExcepcionalController::class, 'guardarDocumento']);
-    Route::put('actualizar/{id}',      [DocumentoExcepcionalController::class, 'actualizar']);
+    Route::get('/cancelacion-excepcional', [DocumentoExcepcionalController::class, 'index'])
+        ->name('cancelacion.index');
+
+    Route::post('/cancelacion-excepcional/subir', [DocumentoExcepcionalController::class, 'subir'])
+        ->name('cancelacion.subir');
+
+    Route::get('/cancelacion-excepcional/paso2/{id_tramite}', [CancelacionPaso2Controller::class, 'index'])
+        ->whereNumber('id_tramite')
+        ->name('cancelacion.paso2');
+
+    Route::get('/cancelacion-excepcional/paso3/{id_tramite}', [CancelacionPaso2Controller::class, 'paso3'])
+        ->whereNumber('id_tramite')
+        ->name('cancelacion.paso3');
 });
 
-// ── Cancelación Excepcional — ────────────────
+Route::middleware('auth')->prefix('api/cancelacion-excepcional/paso2')->group(function () {
 
-// Paso 1: mostrar formulario
-Route::get('/cancelacion-excepcional', [DocumentoExcepcionalController::class, 'index'])
-    ->name('cancelacion.index');
+    Route::post('{id_tramite}/documentos/base', [CancelacionPaso2Controller::class, 'subirDocumentoBase'])
+        ->whereNumber('id_tramite')
+        ->name('cancelacion.paso2.base.upload');
 
-// Paso 1: procesar formulario → redirige al paso 2
-Route::post('/cancelacion-excepcional/subir', [DocumentoExcepcionalController::class, 'subir'])
-    ->name('cancelacion.subir');
+    Route::post('{id_tramite}/documentos/riesgo', [CancelacionPaso2Controller::class, 'subirDocumentoAltoRiesgo'])
+        ->whereNumber('id_tramite')
+        ->name('cancelacion.paso2.riesgo.upload');
 
-// Paso 2: mostrar formulario de documentos
-Route::get('/cancelacion-excepcional/paso2', [DocumentoExcepcionalController::class, 'paso2'])
-    ->name('cancelacion.paso2');
+    Route::post('{id_tramite}/documentos/flex', [CancelacionPaso2Controller::class, 'subirDocumentoFlexible'])
+        ->whereNumber('id_tramite')
+        ->name('cancelacion.paso2.flex.upload');
 
-// Paso 2: guardar documento PDF
-Route::post('/cancelacion-excepcional/guardar', [DocumentoExcepcionalController::class, 'guardarDocumento'])
-    ->name('cancelacion.guardar');
+    Route::delete('{id_tramite}/documentos/{id_documento}', [CancelacionPaso2Controller::class, 'eliminarDocumento'])
+        ->whereNumber('id_tramite')
+        ->whereNumber('id_documento')
+        ->name('cancelacion.paso2.eliminar');
 
-// Paso 3: pantalla de éxito
-Route::get('/cancelacion-excepcional/exito', [DocumentoExcepcionalController::class, 'exito'])
-    ->name('cancelacion.exito');
+    Route::post('{id_tramite}/validar', [CancelacionPaso2Controller::class, 'validarPaso2'])
+        ->whereNumber('id_tramite')
+        ->name('cancelacion.paso2.validar');
+});
