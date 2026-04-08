@@ -5,11 +5,13 @@
 @import "/resources/css/dashboard.css";
 @import "/resources/css/secre_carrera.css";
 @import "/resources/css/rolseguridad.css";
-/*@import "/resources/css/Cambio_Carrera.css";*/
 @import "/resources/css/rolseguridad.css";
 @import "/resources/css/secretaria_academica.css";
+@import "/resources/css/cancelacion_paso2.css";
 
 
+@import "/resources/css/reporte.css";
+@import "/resources/css/Cambio_Carrera.css";
 @theme {
     --font-sans: 'Instrument Sans', sans-serif;
 }

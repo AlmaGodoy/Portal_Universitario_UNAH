@@ -21,8 +21,13 @@ Route::prefix('api/cambio-carrera')->group(function () {
     Route::get('secretaria/listado', [CambioCarreraController::class, 'listadoSecretaria']);
     Route::get('secretaria/detalle/{id_tramite}', [CambioCarreraController::class, 'detalleSecretaria']);
     Route::post('secretaria/guardar-revision', [CambioCarreraController::class, 'guardarRevisionSecretaria']);
-        Route::get('coordinacion/listado', [CambioCarreraController::class, 'listadoCoordinacion']);
+    Route::get('coordinacion/listado', [CambioCarreraController::class, 'listadoCoordinacion']);
     Route::put('coordinacion/dictaminar/{id_tramite}', [CambioCarreraController::class, 'dictaminarCoordinacion']);
+
+    Route::get('secretaria/calendarios', [CambioCarreraController::class, 'listarCalendariosAcademicos']);
+    Route::post('secretaria/calendarios', [CambioCarreraController::class, 'crearCalendarioAcademico']);
+    Route::put('secretaria/calendarios/{id_calendario}', [CambioCarreraController::class, 'actualizarCalendarioAcademico']);
+    Route::put('secretaria/calendarios/estado/{id_calendario}', [CambioCarreraController::class, 'cambiarEstadoCalendarioAcademico']);
 });
 
 
@@ -54,6 +59,10 @@ Route::get('/cambio-carrera/secretaria', function () {
 Route::get('/cambio-carrera/secretaria/revisar/{id_tramite}', function ($id_tramite) {
     return view('cambio_carrera_secretaria_revision', compact('id_tramite'));
 })->name('cambio-carrera.secretaria.revisar');
+
+Route::get('/cambio-carrera/secretaria/calendarios', function () {
+    return view('cambio_carrera_secretaria_calendario');
+})->name('cambio-carrera.secretaria.calendarios');
 
 /*
     Vista principal de Coordinación para emitir dictamen final.

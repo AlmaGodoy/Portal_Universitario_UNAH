@@ -48,17 +48,44 @@ class ReporteTramiteController extends Controller
     }
 
     /**
-     * Vista del módulo de reportes para secretario/coordinador
+     * Vista del módulo de reportes para coordinador
      */
     public function vistaReporte(Request $request)
     {
         try {
             $datos = $this->obtenerDatosReporte($request);
 
-            return view('Reporte', array_merge($datos, $this->obtenerDatosLayoutEmpleado()));
+            return view('reporte', array_merge($datos, $this->obtenerDatosLayoutEmpleado()));
 
         } catch (\Exception $e) {
-            return view('Reporte', array_merge([
+            return view('reporte', array_merge([
+                'mesActual'          => ucfirst(Carbon::now()->locale('es')->translatedFormat('F Y')),
+                'aprobadosMes'       => 0,
+                'rechazadosMes'      => 0,
+                'pendientesTotal'    => 0,
+                'revisionTotal'      => 0,
+                'tramitesPendientes' => [],
+                'tramitesReporte'    => [],
+                'tipoTramite'        => '',
+                'estadoResolucion'   => '',
+                'mesReporte'         => '',
+                'error'              => $e->getMessage()
+            ], $this->obtenerDatosLayoutEmpleado()));
+        }
+    }
+
+    /**
+     * Vista del módulo de reportes para secretaría de carrera
+     */
+    public function vistaReporteSecretaria(Request $request)
+    {
+        try {
+            $datos = $this->obtenerDatosReporte($request);
+
+            return view('reporte_secretaria', array_merge($datos, $this->obtenerDatosLayoutEmpleado()));
+
+        } catch (\Exception $e) {
+            return view('reporte_secretaria', array_merge([
                 'mesActual'          => ucfirst(Carbon::now()->locale('es')->translatedFormat('F Y')),
                 'aprobadosMes'       => 0,
                 'rechazadosMes'      => 0,
@@ -82,10 +109,10 @@ class ReporteTramiteController extends Controller
         try {
             $datos = $this->obtenerDatosReporteSecretariaGeneral($request);
 
-            return view('ReporteSecretariaGeneral', array_merge($datos, $this->obtenerDatosLayoutEmpleado()));
+            return view('reportesecretariageneral', array_merge($datos, $this->obtenerDatosLayoutEmpleado()));
 
         } catch (\Exception $e) {
-            return view('ReporteSecretariaGeneral', array_merge([
+            return view('reportesecretariageneral', array_merge([
                 'mesActual'        => ucfirst(Carbon::now()->locale('es')->translatedFormat('F Y')),
                 'aprobadosMes'     => 0,
                 'rechazadosMes'    => 0,
@@ -153,7 +180,7 @@ class ReporteTramiteController extends Controller
     }
 
     /**
-     * Método interno reutilizable para secretario/coordinador
+     * Método interno reutilizable para coordinador y secretaría de carrera
      */
     private function obtenerDatosReporte(Request $request)
     {
