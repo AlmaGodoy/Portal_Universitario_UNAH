@@ -10,6 +10,7 @@ class RolController extends Controller
     public function panelRoles()
     {
         $roles = DB::table('tbl_rol')
+            ->where('estado_activo', 1)
             ->orderBy('id_rol')
             ->get();
 
@@ -18,6 +19,7 @@ class RolController extends Controller
             ->get();
 
         $objetos = DB::table('tbl_objeto')
+            ->where('estado_activo', 1)
             ->orderBy('id_objeto')
             ->get();
 
@@ -36,6 +38,9 @@ class RolController extends Controller
                 'o.nombre_objeto',
                 'o.tipo_objeto'
             )
+            ->where('rp.estado_activo', 1)
+            ->where('r.estado_activo', 1)
+            ->where('o.estado_activo', 1)
             ->orderBy('r.nombre_rol')
             ->orderBy('o.nombre_objeto')
             ->orderBy('p.nombre_permiso')
@@ -148,14 +153,14 @@ class RolController extends Controller
 
     public function deleteAsignacion($id)
     {
-        $res = DB::select('CALL DEL_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?)', [
+        $res = DB::select('CALL SOFT_DEL_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?)', [
             (int) $id,
             auth()->id()
         ]);
 
         $row = $res[0] ?? null;
         $resultado = $row->resultado ?? 'ERROR';
-        $mensaje = $row->mensaje ?? 'No se pudo eliminar la asignación.';
+        $mensaje = $row->mensaje ?? 'No se pudo desactivar la asignación.';
 
         if ($resultado !== 'OK') {
             return back()->withErrors([

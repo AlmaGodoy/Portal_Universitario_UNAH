@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const tbodyCoordinacion = document.getElementById('tbodyCoordinacion');
     const msg = document.getElementById('msg');
+    
 
     function setMsg(text, ok = false) {
         if (!msg) return;
