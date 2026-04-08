@@ -61,12 +61,16 @@
                             <th>Estado</th>
                             <th>Motivo por el cual solicita el cambio de carrera</th>
                             <th>Documento</th>
+
                             <th>Acciones</th>
+
                         </tr>
                     </thead>
                     <tbody id="tbodyTramites">
                         <tr>
                             <td colspan="7">Cargando trámites...</td>
+
+                            <td colspan="6">Cargando trámites...</td>
                         </tr>
                     </tbody>
                 </table>

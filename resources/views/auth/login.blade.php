@@ -2,23 +2,20 @@
 
 @section('content')
 <div class="auth-container">
-
-    <div class="auth-back-wrap">
-        <a href="{{ url('/portal') }}" class="btn btn-outline-light auth-back-btn">
-            ← Volver al portal
-        </a>
-    </div>
-
-    <div class="auth-card" style="max-width: 520px;">
+    <div class="auth-card login-card">
 
         @php
-            $tipo = $tipo ?? session('login_tipo'); // estudiante | empleado | null
-            $titulo = $tipo === 'estudiante'
-                        ? 'Iniciar Sesión'
-                        : ($tipo === 'empleado' ? 'Iniciar Sesión' : 'Iniciar Sesión');
+            $tipo = $tipo ?? session('login_tipo');
+            $titulo = 'INICIAR SESIÓN';
         @endphp
 
-        <h3 class="mb-4 text-center">{{ $titulo }}</h3>
+        <div class="auth-card-top-login">
+            <a href="{{ url('/portal') }}" class="btn btn-outline-light auth-back-btn">
+                ← Volver al portal
+            </a>
+        </div>
+
+        <h3 class="mb-4 text-center login-title">{{ $titulo }}</h3>
 
         @if($errors->any())
             <div class="alert alert-danger">
@@ -41,11 +38,11 @@
             <div class="alert alert-warning">
                 Selecciona primero un portal.
             </div>
+
             <div class="d-grid gap-2">
                 <a class="btn btn-primary" href="{{ url('/portal') }}">Ir al Portal</a>
             </div>
         @else
-
             <form method="POST" action="{{ route('login.tipo.post', ['tipo' => $tipo]) }}">
                 @csrf
 
@@ -61,7 +58,10 @@
 
                 <div class="mb-3">
                     <label class="form-label">Contraseña</label>
-                    <input type="password" name="password" class="form-control" required>
+                    <input type="password"
+                           name="password"
+                           class="form-control"
+                           required>
                 </div>
 
                 <button class="btn btn-primary w-100">Iniciar Sesión</button>
@@ -73,14 +73,14 @@
                 </div>
 
                 <div class="text-center mt-3">
-                    <a href="{{ route('register.tipo', ['tipo' => $tipo]) }}">
-                        ¿No tienes cuenta? Regístrate
-                    </a>
-                </div>
+    <a href="{{ route('register.tipo', ['tipo' => $tipo]) }}">
+        ¿No tienes cuenta? <span class="register-word-gold">Regístrate</span>
+    </a>
+</div>
             </form>
-
         @endif
 
     </div>
 </div>
 @endsection
+

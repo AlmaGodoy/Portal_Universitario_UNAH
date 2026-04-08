@@ -4,14 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Documento;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Validator;
 
 class DocumentoExcepcionalController extends Controller
 {
     /**
-     * Muestra el formulario principal (Paso 1 + Pantalla intro)
+     * Muestra la vista inicial de Cancelación Excepcional (Paso 1).
      */
     public function index()
     {
@@ -19,141 +17,127 @@ class DocumentoExcepcionalController extends Controller
     }
 
     /**
-     * Paso 1: Crear la solicitud de cancelación
-     * Recibe motivo_id + justificacion, llama al SP y redirige al Paso 2
+     * Paso 1:
+     * - valida motivo y justificación
+     * - crea el trámite por SP
+     * - guarda datos mínimos en sesión
+     * - redirige al Paso 2
      */
     public function subir(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'motivo_id'     => 'required|integer',
-            'justificacion' => 'required|string|min:10',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'motivo_id'     => 'required|integer',
+                'justificacion' => 'required|string|min:10|max:2000',
+            ],
+            [
+                'motivo_id.required'     => 'Debe seleccionar un motivo.',
+                'motivo_id.integer'      => 'El motivo seleccionado no es válido.',
+                'justificacion.required' => 'Debe ingresar una justificación.',
+                'justificacion.min'      => 'La justificación debe tener al menos 10 caracteres.',
+                'justificacion.max'      => 'La justificación no puede exceder 2000 caracteres.',
+            ]
+        );
 
-        // Si falla validación: regresa al formulario Y mantiene el step-form visible
         if ($validator->fails()) {
             return back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('show_form', true); // ← CLAVE: le dice a la vista que muestre paso 2
+                ->with('show_form', true);
         }
 
         try {
-            // Ajusta estos valores a tu sistema de autenticación
-            $id_persona = auth()->user()->id_persona ?? 8;
-            $id_usuario = auth()->id() ?? 4;
+            $usuario = auth()->user();
 
-            $resultado = DB::select('CALL INS_CANCE_EXCEP(?, ?, ?, ?)', [
-                $id_persona,
-                $request->motivo_id,      // → p_prioridad   (ID del motivo)
-                $request->justificacion,  // → p_observacion_inicial
-                $id_usuario
-            ]);
+            if (!$usuario) {
+                return redirect()->route('login')
+                    ->withErrors(['error' => 'Debe iniciar sesión para continuar.']);
+            }
 
-            if (isset($resultado[0])) {
-                $res = $resultado[0];
+            $idPersona = $usuario->id_persona ?? null;
+            $idUsuario = auth()->id();
 
-                if ($res->resultado === 'OK') {
-                    // Éxito: redirige al Paso 2 pasando el id_tramite por sesión
-                    // SP retorna el campo como 'id_tramite_creado'
-                    return redirect()->route('cancelacion.paso2')
-                        ->with('id_tramite', $res->id_tramite_creado ?? null)
-                        ->with('success', 'Solicitud registrada. Ahora adjunte su documentación.');
-                }
-
-                // SP respondió con error de negocio
+            if (!$idPersona || !$idUsuario) {
                 return back()
-                    ->withErrors(['error' => $res->mensaje])
+                    ->withErrors(['error' => 'No fue posible identificar el usuario autenticado.'])
                     ->withInput()
                     ->with('show_form', true);
             }
 
+            $resultado = DB::select('CALL INS_CANCE_EXCEP(?, ?, ?, ?)', [
+                $idPersona,
+                (int) $request->motivo_id,
+                trim($request->justificacion),
+                $idUsuario,
+            ]);
+
+            if (!isset($resultado[0])) {
+                return back()
+                    ->withErrors(['error' => 'No se recibió respuesta del servidor al crear la solicitud.'])
+                    ->withInput()
+                    ->with('show_form', true);
+            }
+
+            $res = $resultado[0];
+
+            if (($res->resultado ?? null) !== 'OK') {
+                return back()
+                    ->withErrors([
+                        'error' => $res->mensaje ?? 'No fue posible registrar la solicitud.'
+                    ])
+                    ->withInput()
+                    ->with('show_form', true);
+            }
+
+            $idTramite = $res->id_tramite_creado ?? null;
+
+            if (!$idTramite) {
+                return back()
+                    ->withErrors(['error' => 'La solicitud fue creada, pero no se recibió el id del trámite.'])
+                    ->withInput()
+                    ->with('show_form', true);
+            }
+
+            /**
+             * Guardamos en sesión para usarlo luego si hace falta.
+             * También guardamos el motivo para que el Paso 2 sepa
+             * qué documento de respaldo mostrar.
+             */
+            session([
+                'id_tramite' => $idTramite,
+                'cancelacion_excepcional.motivo_id' => (int) $request->motivo_id,
+                'cancelacion_excepcional.justificacion' => trim($request->justificacion),
+                'cancelacion_excepcional.causa_justificada' => $this->mapearMotivo($request->motivo_id),
+            ]);
+
+            return redirect()->route('cancelacion.paso2', [
+                'id_tramite' => $idTramite
+            ])->with('success', 'Solicitud registrada. Ahora adjunte su documentación.');
+
+        } catch (\Throwable $e) {
             return back()
-                ->withErrors(['error' => 'No se recibió respuesta del servidor.'])
+                ->withErrors([
+                    'error' => 'Error en el sistema: ' . $e->getMessage()
+                ])
                 ->withInput()
                 ->with('show_form', true);
-
-        } catch (\Exception $e) {
-            return back()
-                ->withErrors(['error' => 'Error en el sistema: ' . $e->getMessage()])
-                ->withInput()
-                ->with('show_form', true);
         }
     }
 
     /**
-     * Muestra el formulario del Paso 2 (subir documentos)
+     * Convierte el motivo_id del Paso 1 en una clave que el Paso 2 pueda usar.
+     * Ajusta este mapeo a los IDs reales de tu BD si fueran distintos.
      */
-    public function paso2()
+    private function mapearMotivo($motivoId): ?string
     {
-        // Si no viene id_tramite en sesión, no puede estar aquí
-        if (!session('id_tramite')) {
-            return redirect()->route('cancelacion.index')
-                ->withErrors(['error' => 'Debe completar el Paso 1 primero.']);
-        }
+        $motivoId = (int) $motivoId;
 
-        return view('cancelacion_paso2', [
-            'id_tramite' => session('id_tramite')
-        ]);
-    }
-
-    /**
-     * Paso 2: Guardar el archivo PDF
-     */
-    public function guardarDocumento(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'id_tramite'  => 'required|integer',
-            'archivo_pdf' => 'required|file|mimes:pdf|max:10240',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors(['error' => 'El archivo debe ser un PDF menor a 10MB.'])->withInput();
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $archivo       = $request->file('archivo_pdf');
-            $nombreArchivo = 'PUMA_' . time() . '_' . $archivo->getClientOriginalName();
-            $ruta          = $archivo->storeAs('public/cancelaciones', $nombreArchivo);
-
-            $nuevoDoc = new Documento();
-            $nuevoDoc->id_tramite       = $request->id_tramite;
-            $nuevoDoc->tipo_documento   = 'SOLICITUD_CANCELACION';
-            $nuevoDoc->nombre_documento = $nombreArchivo;
-            $nuevoDoc->hash_contenido   = hash_file('sha256', $archivo->getRealPath());
-            $nuevoDoc->ruta_archivo     = $ruta;
-            $nuevoDoc->numero_folio     = 1;
-            $nuevoDoc->estado           = 1;
-            $nuevoDoc->save();
-
-            DB::statement('CALL VAL_TRAMITE_ANTIFRAUDE(?)', [$request->id_tramite]);
-
-            DB::commit();
-
-            return redirect()->route('cancelacion.exito')
-                ->with('mensaje', 'Solicitud enviada correctamente a la facultad.');
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-            $mensaje = ($e->errorInfo[1] == 1062)
-                ? 'Este documento ya fue subido anteriormente.'
-                : $e->getMessage();
-            return back()->withErrors(['error' => $mensaje])->withInput();
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
-        }
-    }
-
-    /**
-     * Vista de éxito final
-     */
-    public function exito()
-    {
-        return view('cancelacion_exito', [
-            'mensaje' => session('mensaje', 'Solicitud procesada correctamente.')
-        ]);
+        return match ($motivoId) {
+            1 => 'ENFERMEDAD_ACCIDENTE',
+            2 => 'CALAMIDAD_DOMESTICA',
+            3 => 'PROBLEMAS_LABORALES',
+            default => null,
+        };
     }
 }
