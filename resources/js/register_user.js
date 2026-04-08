@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const texto = (e.clipboardData.getData('text') || '')
                 .replace(/\D/g, '')
                 .slice(0, max);
+
             this.value = texto;
+            this.dispatchEvent(new Event('input'));
         });
     }
 
@@ -41,6 +43,8 @@ document.addEventListener('DOMContentLoaded', function () {
             this.value = (e.clipboardData.getData('text') || '')
                 .replace(re, '')
                 .replace(/\s{2,}/g, ' ');
+
+            this.dispatchEvent(new Event('input'));
         });
     }
 
@@ -106,9 +110,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const tipoSel = document.getElementById('tipo_usuario');
     const rolManualSel = document.getElementById('id_rol_manual');
     const tipoEmp = document.getElementById('tipo_empleado');
-    const correoHint = document.getElementById('correo_hint');
     const correoInput = document.getElementById('correo');
+    const correoHintInside = document.getElementById('correo_hint_inside');
+    const passwordHintInside = document.getElementById('password_hint_inside');
     const carSel = document.getElementById('id_carrera');
+    const numeroCuentaInput = document.getElementById('numero_cuenta');
+    const codEmpleadoInput = document.getElementById('cod_empleado');
 
     const carreras = JSON.parse(form.dataset.carreras || '[]');
     const oldCarrera = form.dataset.oldCarrera || '';
@@ -118,14 +125,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setCorreoRegla(tipo) {
-        if (!correoHint) return;
+        if (!correoHintInside) return;
 
         if (tipo === 'estudiante') {
-            correoHint.textContent = 'Estudiante: solo correos @unah.hn';
+            correoHintInside.textContent = '@unah.hn';
         } else if (tipo === 'empleado') {
-            correoHint.textContent = 'Empleado: solo correos @unah.edu.hn';
+            correoHintInside.textContent = '@unah.edu.hn';
         } else {
-            correoHint.textContent = '';
+            correoHintInside.textContent = '';
         }
     }
 
@@ -160,58 +167,103 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncTipoEmpleado() {
-    if (!rolManualSel || !tipoEmp) return;
+        if (!rolManualSel || !tipoEmp) return;
 
-    const rol = String(rolManualSel.value || '');
-    const departamentoInput = document.getElementById('id_departamento');
-    const departamentoCol = departamentoInput ? departamentoInput.closest('.col-md-6') : null;
+        const rol = String(rolManualSel.value || '');
+        const departamentoInput = document.getElementById('id_departamento');
+        const departamentoCol = departamentoInput ? departamentoInput.closest('.col-md-6') : null;
 
-    if (rol === '1') {
-        tipoEmp.value = 'secretaria_general';
+        if (rol === '1') {
+            tipoEmp.value = 'secretaria_general';
 
-        if (departamentoInput) {
-            departamentoInput.value = '';
-            departamentoInput.required = false;
-        }
+            if (departamentoInput) {
+                departamentoInput.value = '';
+                departamentoInput.required = false;
+            }
 
-        if (departamentoCol) {
-            departamentoCol.classList.add('hidden-field');
-        }
+            if (departamentoCol) {
+                departamentoCol.classList.add('hidden-field');
+            }
 
-    } else if (rol === '4') {
-        tipoEmp.value = 'coordinador';
+        } else if (rol === '4') {
+            tipoEmp.value = 'coordinador';
 
-        if (departamentoInput) {
-            departamentoInput.required = true;
-        }
+            if (departamentoInput) {
+                departamentoInput.required = true;
+            }
 
-        if (departamentoCol) {
-            departamentoCol.classList.remove('hidden-field');
-        }
+            if (departamentoCol) {
+                departamentoCol.classList.remove('hidden-field');
+            }
 
-    } else if (rol === '5') {
-        tipoEmp.value = 'secretario';
+        } else if (rol === '5') {
+            tipoEmp.value = 'secretario';
 
-        if (departamentoInput) {
-            departamentoInput.required = true;
-        }
+            if (departamentoInput) {
+                departamentoInput.required = true;
+            }
 
-        if (departamentoCol) {
-            departamentoCol.classList.remove('hidden-field');
-        }
+            if (departamentoCol) {
+                departamentoCol.classList.remove('hidden-field');
+            }
 
-    } else {
-        tipoEmp.value = '';
+        } else {
+            tipoEmp.value = '';
 
-        if (departamentoInput) {
-            departamentoInput.required = false;
-        }
+            if (departamentoInput) {
+                departamentoInput.required = false;
+            }
 
-        if (departamentoCol) {
-            departamentoCol.classList.remove('hidden-field');
+            if (departamentoCol) {
+                departamentoCol.classList.remove('hidden-field');
+            }
         }
     }
-}
+
+    function toggleInsideHint(input, hint) {
+        if (!input || !hint) return;
+
+        const tieneTexto = (input.value || '').trim().length > 0;
+
+        if (tieneTexto || document.activeElement === input) {
+            hint.classList.add('hint-hidden');
+        } else {
+            hint.classList.remove('hint-hidden');
+        }
+    }
+
+    function inicializarHintInterno(input, hint) {
+        if (!input || !hint) return;
+
+        toggleInsideHint(input, hint);
+
+        input.addEventListener('focus', function () {
+            toggleInsideHint(input, hint);
+        });
+
+        input.addEventListener('blur', function () {
+            toggleInsideHint(input, hint);
+        });
+
+        input.addEventListener('input', function () {
+            toggleInsideHint(input, hint);
+        });
+    }
+
+    function inicializarHintsGenericos() {
+        const wrappers = form.querySelectorAll('.input-hint-wrap');
+
+        wrappers.forEach(wrapper => {
+            const input = wrapper.querySelector('input');
+            const hint = wrapper.querySelector('.inside-hint');
+
+            if (!input || !hint) return;
+
+            if (input.id === 'correo') return;
+
+            inicializarHintInterno(input, hint);
+        });
+    }
 
     const tipoActual = getTipoActual();
     setCorreoRegla(tipoActual);
@@ -226,10 +278,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     correoInput?.addEventListener('input', () => {
         const tipo = getTipoActual();
+
         correoInput.setCustomValidity(
             validarCorreoDominio(tipo) ? '' : 'Dominio inválido para este tipo.'
         );
     });
+
+    inicializarHintInterno(correoInput, correoHintInside);
+    inicializarHintInterno(pass1, passwordHintInside);
+    inicializarHintsGenericos();
+
+    if (numeroCuentaInput) {
+        const hintNumeroCuenta = numeroCuentaInput.closest('.input-hint-wrap')?.querySelector('.inside-hint');
+        inicializarHintInterno(numeroCuentaInput, hintNumeroCuenta);
+    }
+
+    if (codEmpleadoInput) {
+        const hintCodEmpleado = codEmpleadoInput.closest('.input-hint-wrap')?.querySelector('.inside-hint');
+        inicializarHintInterno(codEmpleadoInput, hintCodEmpleado);
+    }
 
     validarMatch();
 });
