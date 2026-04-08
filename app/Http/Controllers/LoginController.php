@@ -230,7 +230,7 @@ class LoginController extends Controller
                     (int) $r->id_usuario, 'login_fallido',
                     'Portal incorrecto (empleado). Rol devuelto por SP: ' . $rolNombre
                 );
-                return back()->withErrors(['email' => 'Este portal es solo para coordinador, secretario, administrador o secretaria general.'])->withInput();
+                return back()->withErrors(['email' => 'Este portal es exclusivo para empleados..'])->withInput();
             }
 
             // ── 2FA ─────────────────────────────────────────────────────────

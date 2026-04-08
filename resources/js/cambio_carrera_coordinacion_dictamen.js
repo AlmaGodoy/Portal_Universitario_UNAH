@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const inputTramite = document.getElementById('id_tramite');
     const msg = document.getElementById('msg');
+    const formDictamen = document.getElementById('formDictamenCoordinacion');
+
+    // Protección: solo correr en esta vista
+    if (!inputTramite || !formDictamen) return;
 
     const datoIdTramite = document.getElementById('dato-id-tramite');
     const datoFecha = document.getElementById('dato-fecha');
@@ -10,12 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const datoIndicePeriodo = document.getElementById('dato-indice-periodo');
     const datoIndiceGlobal = document.getElementById('dato-indice-global');
     const datoClasesAprobadas = document.getElementById('dato-clases-aprobadas');
-    const datoEstadoPago = document.getElementById('dato-estado-pago');
 
     const docHistorial = document.getElementById('doc-historial');
-    const docPago = document.getElementById('doc-pago');
 
-    const formDictamen = document.getElementById('formDictamenCoordinacion');
     const selectDictamen = document.getElementById('dictamen_final');
     const inputObservacion = document.getElementById('observacion_dictamen');
 
@@ -28,12 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
         msg.className = ok ? 'msg ok' : 'msg error';
     }
 
-    async function cargarDetalleTramite() {
-        if (!inputTramite || !inputTramite.value) {
-            setMsg('No se encontró el id del trámite.', false);
-            return;
-        }
+    const idTramite = parseInt(inputTramite.value, 10);
 
+    if (!idTramite) {
+        setMsg('No se encontró el id del trámite.', false);
+        return;
+    }
+
+    async function cargarDetalleTramite() {
         try {
             const res = await fetch(`/api/cambio-carrera/secretaria/detalle/${inputTramite.value}`, {
                 headers: { 'Accept': 'application/json' }
@@ -54,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (datoIndicePeriodo) datoIndicePeriodo.textContent = t.indice_periodo ?? '';
             if (datoIndiceGlobal) datoIndiceGlobal.textContent = t.indice_global ?? '';
             if (datoClasesAprobadas) datoClasesAprobadas.textContent = t.cantidad_clases_aprobadas ?? '';
-            if (datoEstadoPago) datoEstadoPago.textContent = t.estado_pago ?? 'Sin registro';
 
         } catch (error) {
             console.error('Error cargando detalle del trámite:', error);
@@ -63,8 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function cargarDocumentosTramite() {
-        if (!inputTramite || !inputTramite.value) return;
-
         try {
             const res = await fetch(`/api/documentos/ver/${inputTramite.value}`, {
                 headers: { 'Accept': 'application/json' }
@@ -73,13 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const docs = await res.json();
 
             if (!Array.isArray(docs) || docs.length === 0) {
-                if (docHistorial) docHistorial.innerHTML = '<span class="sin-documento">No subido</span>';
-                if (docPago) docPago.innerHTML = '<span class="sin-documento">No subido</span>';
+                if (docHistorial) {
+                    docHistorial.innerHTML = '<span class="sin-documento">No subido</span>';
+                }
                 return;
             }
 
             const historial = docs.find(d => d.tipo_documento === 'historial_academico');
-            const comprobantePago = docs.find(d => d.tipo_documento === 'comprobante_pago');
 
             if (docHistorial) {
                 if (historial && historial.ruta_archivo) {
@@ -96,50 +96,52 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error cargando documentos del trámite:', error);
 
-            if (docHistorial) docHistorial.innerHTML = '<span class="sin-documento">Error al cargar</span>';
+            if (docHistorial) {
+                docHistorial.innerHTML = '<span class="sin-documento">Error al cargar</span>';
+            }
         }
     }
 
-    if (formDictamen) {
-        formDictamen.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    formDictamen.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            if (!selectDictamen || !selectDictamen.value) {
-                setMsg('Debes seleccionar la resolución final.', false);
+        if (!selectDictamen || !selectDictamen.value) {
+            setMsg('Debes seleccionar la resolución final.', false);
+            return;
+        }
+
+        const payload = {
+            id_tramite: inputTramite.value,
+            estado: selectDictamen.value,
+            observacion_dictamen: inputObservacion ? inputObservacion.value : ''
+        };
+
+        try {
+            const res = await fetch(`/api/cambio-carrera/coordinacion/dictaminar/${payload.id_tramite}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.resultado === 'ERROR') {
+                setMsg(data.mensaje || 'No se pudo guardar el dictamen.', false);
                 return;
             }
 
-            const payload = {
-                id_tramite: inputTramite ? inputTramite.value : '',
-                estado: selectDictamen ? selectDictamen.value : '',
-                observacion_dictamen: inputObservacion ? inputObservacion.value : ''
-            };
+            setMsg('Dictamen final guardado correctamente.', true);
+            await cargarDetalleTramite();
 
-            try {
-                const res = await fetch(`/api/cambio-carrera/coordinacion/dictaminar/${payload.id_tramite}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-
-                if (!res.ok || data.resultado === 'ERROR') {
-                    setMsg(data.mensaje || 'No se pudo guardar el dictamen.', false);
-                    return;
-                }
-
-                setMsg('Dictamen final guardado correctamente.', true);
-                cargarDetalleTramite();
-            } catch (error) {
-                console.error('Error guardando dictamen:', error);
-                setMsg('Error al guardar el dictamen.', false);
-            }
-        });
-    }
+        } catch (error) {
+            console.error('Error guardando dictamen:', error);
+            setMsg('Error al guardar el dictamen.', false);
+        }
+    });
 
     cargarDetalleTramite();
     cargarDocumentosTramite();
