@@ -9,14 +9,18 @@ class Empleado extends Model
 {
     use HasFactory;
 
-    protected $table = 'empleados';
+    protected $table = 'tbl_empleados';
     protected $primaryKey = 'id_empleado';
+    public $timestamps = false;
 
     protected $fillable = [
-        'id_usuario',
-        'id_unidad',
+        'id_persona',
+        'id_departamento',
+        'id_carrera',
+        'cod_empleado',
         'tipo_usuario',
-        'estado_empleado'
+        'tel_contacto',
+        'fecha_creacion',
     ];
 
     public function usuario()
@@ -24,8 +28,8 @@ class Empleado extends Model
         return $this->belongsTo(User::class, 'id_usuario', 'id_usuario');
     }
 
-    public function unidad()
+    public function persona()
     {
-        return $this->belongsTo(Unidad::class, 'id_unidad', 'id_unidad');
+        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
     }
 }
