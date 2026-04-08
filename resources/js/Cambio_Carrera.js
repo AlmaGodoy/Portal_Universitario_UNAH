@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setMsg(
                     data.mensaje ||
-                    Object.values(data.errores || {}).flat().join(' | ') ||
+                    Object.values(data.errors || {}).flat().join(' | ') ||
                     'No se pudo crear el trámite.',
                     false
                 );
