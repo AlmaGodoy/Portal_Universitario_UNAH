@@ -52,4 +52,13 @@ class User extends Authenticatable
     {
         return $this->hasOne(Empleado::class, 'id_persona', 'id_persona');
     }
+
+    /**
+     * RELACIÓN CON ESTUDIANTE
+     * Obtiene el registro del estudiante usando id_persona
+     */
+    public function estudiante()
+    {
+        return $this->hasOne(Estudiante::class, 'id_persona', 'id_persona');
+    }
 }

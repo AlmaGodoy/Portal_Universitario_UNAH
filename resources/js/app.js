@@ -5,4 +5,4 @@ import './rolseguridad';
 import './dashboard.js';
 import './reporte.js';
 import './secretaria_academica.js';
-
+import './cancelacion_paso2.js';
