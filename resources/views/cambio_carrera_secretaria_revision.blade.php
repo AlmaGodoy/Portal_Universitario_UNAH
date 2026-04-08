@@ -1,55 +1,33 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+@extends('layouts.app-secretaria')
+
+@section('titulo', 'Revisión de Secretaría - Cambio de Carrera')
+
+@section('content')
+   
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revisión de Secretaría - Cambio de Carrera</title>
 
-    @vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera_secretaria_revision.js'])
-</head>
-<body>
+    <div class="cc-page">
+        <div class="cc-header">
+            <div class="cc-header-content">
+                <div>
+                    <h1>Revisión de Secretaría</h1>
+                    <p>Secretaría revisará el historial académico del estudiante.</p>
+                </div>
 
-    <header class="topbar">
-        <div class="brand">
-            <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
-
-            <div class="brand-text">
-                <h1 class="brand-title">
-                    <span class="puma">Puma</span><span class="gestion">Gestión</span>
-                </h1>
-                <span class="brand-subtitle">FCEAC - UNAH</span>
+                <a href="javascript:history.back()" class="cc-btn-volver">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
             </div>
         </div>
 
-        <div class="topbar-center">Revisión de Secretaría</div>
-        <div class="topbar-right">
-    <!-- BOTÓN ATRÁS -->
-    <button onclick="window.history.back()" class="btn-back">
-        ← Atrás
-    </button>
-
-    <!-- CERRAR SESIÓN -->
-    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-        @csrf
-        <button type="submit" class="btn-logout">
-            Cerrar Sesión
-        </button>
-    </form>
-</div>
-    </header>
-
-    <div class="page-wrap">
-        <div class="card main-card">
-            <div class="card-head">
+        <div class="cc-card">
+            <div class="cc-card-head">
                 <div>
                     <h3>Revisión del trámite</h3>
-                    <p>
-                        Secretaría revisará el historial académico.
-                    </p>
+                    <p>Secretaría revisará el historial académico.</p>
                 </div>
 
-                <span class="badge-soft">Trámite #{{ $id_tramite }}</span>
+                <span class="cc-badge">Trámite #{{ $id_tramite }}</span>
             </div>
 
             <input type="hidden" id="id_tramite" value="{{ $id_tramite }}">
@@ -69,13 +47,12 @@
                         <strong>Historial académico</strong>
                         <span id="doc-historial">Cargando...</span>
                     </div>
-
-                    
+                </div>
             </div>
 
             <hr>
 
-          
+            {{-- DATOS --}}
             <div class="estado-resumen fade-in">
                 <div class="estado-principal">
                     <h4>Datos del trámite</h4>
@@ -112,12 +89,12 @@
                         <strong>Estado del trámite</strong>
                         <span id="dato-estado-tramite">Cargando...</span>
                     </div>
-
                 </div>
             </div>
 
             <hr>
 
+            {{-- FORMULARIO --}}
             <div class="estado-resumen fade-in">
                 <div class="estado-principal">
                     <h4>Validación de Secretaría</h4>
@@ -134,8 +111,6 @@
                     <label for="clases_aprobadas">Cantidad de clases aprobadas</label>
                     <input type="number" id="clases_aprobadas" placeholder="Ej: 10">
 
-                    
-                    
                     <label for="observaciones_secretaria">Observaciones de Secretaría</label>
                     <textarea
                         id="observaciones_secretaria"
@@ -143,17 +118,19 @@
                         placeholder="Escriba aquí observaciones sobre la revisión"
                     ></textarea>
 
-                    <button type="submit">Guardar revisión de Secretaría</button>
+                    <button type="submit" class="cc-btn-primary">
+                        Guardar revisión de Secretaría
+                    </button>
                 </form>
             </div>
 
             <hr>
 
             <div class="registroBox">
-                <a class="btnLink" href="{{ route('cambio-carrera.secretaria') }}">Volver al listado</a>
+                <a class="btnLink" href="{{ route('cambio-carrera.secretaria') }}">
+                    Volver al listado
+                </a>
             </div>
         </div>
     </div>
-
-</body>
-</html>
+@endsection

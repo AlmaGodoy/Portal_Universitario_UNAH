@@ -7,7 +7,7 @@ use App\Http\Controllers\ReporteTramiteController;
 
 /*
 |--------------------------------------------------------------------------
-| MODULO: REPORTE DE TRÁMITES (API)
+| MÓDULO: TRÁMITES (API)
 |--------------------------------------------------------------------------
 */
 
@@ -23,11 +23,13 @@ Route::prefix('api/tramites')->group(function () {
 |--------------------------------------------------------------------------
 | API - REPORTE DE TRÁMITES
 |--------------------------------------------------------------------------
-| Estas rutas ahora funcionan tanto para:
-| - secretario / coordinador
+| Estas rutas sirven para:
+| - coordinador
+| - secretaría de carrera
 | - secretaría general
-| porque el controller ya decide el flujo según el rol.
+|--------------------------------------------------------------------------
 */
+
 Route::prefix('api/reporte-tramites')->group(function () {
     Route::get('reporte', [ReporteTramiteController::class, 'reporte'])
         ->name('reporte.tramites.reporte');
@@ -41,16 +43,27 @@ Route::prefix('api/reporte-tramites')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| FRONTEND - REPORTE SECRETARIO / COORDINADOR
+| FRONTEND - REPORTE COORDINADOR
 |--------------------------------------------------------------------------
 */
+
 Route::get('/empleado/reporte-tramites-vista', [ReporteTramiteController::class, 'vistaReporte'])
     ->name('reporte.tramites.vista');
+
+/*
+|--------------------------------------------------------------------------
+| FRONTEND - REPORTE SECRETARÍA DE CARRERA
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/empleado/reporte-tramites-secretaria', [ReporteTramiteController::class, 'vistaReporteSecretaria'])
+    ->name('reporte.tramites.secretaria.vista');
 
 /*
 |--------------------------------------------------------------------------
 | FRONTEND - REPORTE SECRETARÍA GENERAL
 |--------------------------------------------------------------------------
 */
+
 Route::get('/empleado/reporte-tramites-secretaria-general', [ReporteTramiteController::class, 'vistaReporteSecretariaGeneral'])
     ->name('reporte.tramites.secretaria_general.vista');

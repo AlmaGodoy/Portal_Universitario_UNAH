@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.js-confirm-delete').forEach(form => {
         form.addEventListener('submit', function (e) {
-            const mensaje = this.dataset.confirm || '¿Seguro que deseas eliminar este registro?';
+            const mensaje = this.dataset.confirm || '¿Seguro que deseas desactivar este registro?';
             if (!confirm(mensaje)) {
                 e.preventDefault();
             }
