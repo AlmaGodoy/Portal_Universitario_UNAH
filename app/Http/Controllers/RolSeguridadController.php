@@ -143,6 +143,7 @@ class RolSeguridadController extends Controller
             ->get();
 
         $objetos = DB::table('tbl_objeto')
+            ->where('estado_activo', 1)
             ->orderBy('nombre_objeto')
             ->get();
 
@@ -178,14 +179,14 @@ class RolSeguridadController extends Controller
 
     public function deleteAcceso($id)
     {
-        $res = DB::select('CALL DEL_ACCESOS_SEGURIDAD(?, ?)', [
+        $res = DB::select('CALL SOFT_DEL_ACCESOS_SEGURIDAD(?, ?)', [
             $id,
             Auth::id()
         ]);
 
         $row = $res[0] ?? null;
         $resultado = $row->resultado ?? 'ERROR';
-        $mensaje = $row->mensaje ?? 'No se pudo eliminar el acceso.';
+        $mensaje = $row->mensaje ?? 'No se pudo desactivar el acceso.';
 
         if ($resultado !== 'OK') {
             return back()->withErrors(['acceso' => $mensaje]);

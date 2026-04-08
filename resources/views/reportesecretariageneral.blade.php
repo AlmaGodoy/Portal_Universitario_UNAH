@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.app-secretaria-academica')
 
-@section('titulo', 'Reporte de Trámites - Secretaría General')
+@section('titulo', 'Reporte de Trámites')
 
 @section('content')
     @vite(['resources/css/reporte.css', 'resources/js/reporte_secretaria_general.js'])
@@ -14,12 +14,7 @@
 
         <div class="encabezado-reporte">
             <div class="encabezado-texto">
-                <h1>Reporte de Trámites - Secretaría General</h1>
-                <p>Consulta general por carrera o por el total acumulado de todas las carreras.</p>
-            </div>
-            <div class="encabezado-fecha">
-                <span>Mes de referencia</span>
-                <strong>{{ $mesActual }}</strong>
+                <h1>Reporte de Trámites</h1>
             </div>
         </div>
 
