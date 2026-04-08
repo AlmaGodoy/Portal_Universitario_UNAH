@@ -2,16 +2,17 @@
 
 @section('content')
 <div class="auth-container">
-
-    <div class="auth-back-wrap">
-        <a href="{{ route('portal') }}" class="btn btn-outline-light auth-back-btn">
-            ← Volver al portal
-        </a>
-    </div>
-
     <div class="auth-card">
 
-        <h3 class="mb-4 text-center">Registro de usuario</h3>
+        <div class="auth-card-header">
+            <a href="{{ route('portal') }}" class="btn btn-outline-light auth-back-btn">
+                ← Volver al portal
+            </a>
+
+            <h3 class="auth-card-title mb-0">Registro de usuario</h3>
+
+            <div class="auth-card-header-spacer"></div>
+        </div>
 
         @if(session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
@@ -42,11 +43,14 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Primer nombre</label>
-                    <input name="primer_nombre" id="primer_nombre"
-                           class="form-control @error('primer_nombre') is-invalid @enderror"
-                           value="{{ old('primer_nombre') }}"
-                           style="text-transform: capitalize;"
-                           required>
+                    <div class="input-hint-wrap">
+                        <input name="primer_nombre" id="primer_nombre"
+                               class="form-control input-with-help @error('primer_nombre') is-invalid @enderror"
+                               value="{{ old('primer_nombre') }}"
+                               style="text-transform: capitalize;"
+                               required>
+                        <span class="inside-hint field-hint left-hint">PRIMER NOMBRE</span>
+                    </div>
                     @error('primer_nombre')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -54,10 +58,13 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Segundo nombre</label>
-                    <input name="segundo_nombre" id="segundo_nombre"
-                           class="form-control @error('segundo_nombre') is-invalid @enderror"
-                           value="{{ old('segundo_nombre') }}"
-                           style="text-transform: capitalize;">
+                    <div class="input-hint-wrap">
+                        <input name="segundo_nombre" id="segundo_nombre"
+                               class="form-control input-with-help @error('segundo_nombre') is-invalid @enderror"
+                               value="{{ old('segundo_nombre') }}"
+                               style="text-transform: capitalize;">
+                        <span class="inside-hint field-hint left-hint">SEGUNDO NOMBRE</span>
+                    </div>
                     @error('segundo_nombre')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -67,11 +74,14 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Primer apellido</label>
-                    <input name="primer_apellido" id="primer_apellido"
-                           class="form-control @error('primer_apellido') is-invalid @enderror"
-                           value="{{ old('primer_apellido') }}"
-                           style="text-transform: capitalize;"
-                           required>
+                    <div class="input-hint-wrap">
+                        <input name="primer_apellido" id="primer_apellido"
+                               class="form-control input-with-help @error('primer_apellido') is-invalid @enderror"
+                               value="{{ old('primer_apellido') }}"
+                               style="text-transform: capitalize;"
+                               required>
+                        <span class="inside-hint field-hint left-hint">PRIMER APELLIDO</span>
+                    </div>
                     @error('primer_apellido')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -79,10 +89,13 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Segundo apellido</label>
-                    <input name="segundo_apellido" id="segundo_apellido"
-                           class="form-control @error('segundo_apellido') is-invalid @enderror"
-                           value="{{ old('segundo_apellido') }}"
-                           style="text-transform: capitalize;">
+                    <div class="input-hint-wrap">
+                        <input name="segundo_apellido" id="segundo_apellido"
+                               class="form-control input-with-help @error('segundo_apellido') is-invalid @enderror"
+                               value="{{ old('segundo_apellido') }}"
+                               style="text-transform: capitalize;">
+                        <span class="inside-hint field-hint left-hint">SEGUNDO APELLIDO</span>
+                    </div>
                     @error('segundo_apellido')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -95,53 +108,67 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Correo</label>
-                        <input type="email" name="correo" id="correo"
-                               class="form-control @error('correo') is-invalid @enderror"
-                               value="{{ old('correo') }}" required>
+                        <div class="input-hint-wrap">
+                            <input type="email"
+                                   name="correo"
+                                   id="correo"
+                                   class="form-control input-with-hint @error('correo') is-invalid @enderror"
+                                   value="{{ old('correo') }}"
+                                   required>
+                            <span class="inside-hint right-hint" id="correo_hint_inside">@UNAH.HN</span>
+                        </div>
                         @error('correo')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
-                        <small class="text-light" id="correo_hint">Estudiante: solo correos @unah.hn</small>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Contraseña</label>
-                        <div class="input-group">
-                            <input type="password"
-                                   name="contrasena"
-                                   id="contrasena"
-                                   class="form-control @error('contrasena') is-invalid @enderror"
-                                   required
-                                   autocomplete="new-password">
-                            <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
-                                    type="button"
-                                    id="btn_toggle_pass"
-                                    aria-label="Mostrar contraseña">🔓</button>
-                        </div>
-                        @error('contrasena')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                        <small class="text-light">
-                            Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.
-                        </small>
-                    </div>
-                </div>
-
-                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Número de cuenta</label>
-                        <input name="numero_cuenta"
-                               id="numero_cuenta"
-                               class="form-control @error('numero_cuenta') is-invalid @enderror"
-                               value="{{ old('numero_cuenta') }}"
-                               maxlength="11"
-                               inputmode="numeric">
+                        <div class="input-hint-wrap">
+                            <input name="numero_cuenta"
+                                   id="numero_cuenta"
+                                   class="form-control input-with-help @error('numero_cuenta') is-invalid @enderror"
+                                   value="{{ old('numero_cuenta') }}"
+                                   maxlength="11"
+                                   inputmode="numeric">
+                            <span class="inside-hint field-hint left-hint">NÚMERO DE CUENTA</span>
+                        </div>
                         @error('numero_cuenta')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
+                </div>
 
-                    <div class="col-md-6 mb-3">
+                <div class="row password-row">
+                    <div class="col-md-6 mb-3 password-field-col">
+                        <label class="form-label">Contraseña</label>
+                        <div class="input-hint-password-wrap">
+                            <div class="input-group">
+                                <input type="password"
+                                       name="contrasena"
+                                       id="contrasena"
+                                       class="form-control input-with-inline-hint @error('contrasena') is-invalid @enderror"
+                                       required
+                                       autocomplete="new-password">
+                                <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
+                                        type="button"
+                                        id="btn_toggle_pass"
+                                        aria-label="Mostrar contraseña">🔓</button>
+                            </div>
+
+                            <span class="inside-hint password-mask left-hint" id="password_hint_inside">**********</span>
+                        </div>
+
+                        <div class="password-help-text">
+                            CARACTERES, MAYÚSCULAS, MINÚSCULAS, NÚMEROS Y SÍMBOLOS.
+                        </div>
+
+                        @error('contrasena')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3 confirm-password-field-col">
                         <label class="form-label">Confirmar contraseña</label>
                         <div class="input-group">
                             <input type="password"
@@ -184,57 +211,64 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Correo</label>
-                        <input type="email" name="correo" id="correo"
-                               class="form-control @error('correo') is-invalid @enderror"
-                               value="{{ old('correo') }}" required>
+                        <div class="input-hint-wrap">
+                            <input type="email"
+                                   name="correo"
+                                   id="correo"
+                                   class="form-control input-with-hint @error('correo') is-invalid @enderror"
+                                   value="{{ old('correo') }}"
+                                   required>
+                            <span class="inside-hint right-hint" id="correo_hint_inside">@UNAH.EDU.HN</span>
+                        </div>
                         @error('correo')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
-                        <small class="text-light" id="correo_hint">Empleado: solo correos @unah.edu.hn</small>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Contraseña</label>
-                        <div class="input-group">
-                            <input type="password"
-                                   name="contrasena"
-                                   id="contrasena"
-                                   class="form-control @error('contrasena') is-invalid @enderror"
-                                   required
-                                   autocomplete="new-password">
-                            <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
-                                    type="button"
-                                    id="btn_toggle_pass"
-                                    aria-label="Mostrar contraseña">🔓</button>
+                        <label class="form-label">Número de empleado</label>
+                        <div class="input-hint-wrap">
+                            <input name="cod_empleado" id="cod_empleado"
+                                   class="form-control input-with-help @error('cod_empleado') is-invalid @enderror"
+                                   value="{{ old('cod_empleado') }}">
+                            <span class="inside-hint field-hint left-hint">NÚMERO DE EMPLEADO</span>
                         </div>
-                        @error('contrasena')
+                        @error('cod_empleado')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
-                        <small class="text-light">
-                            Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.
-                        </small>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Tipo de empleado</label>
-                        <select name="id_rol" id="id_rol_manual" class="form-select" required>
-                            <option value="">Seleccione...</option>
-                            @foreach($roles as $rol)
-                                @if(in_array((int)$rol->id_rol, [1,4,5]))
-                                    <option value="{{ $rol->id_rol }}" @selected(old('id_rol')==$rol->id_rol)>
-                                        {{ $rol->nombre_rol }}
-                                    </option>
-                                @endif
-                            @endforeach
-                        </select>
-                        @error('id_rol')
+                <div class="row password-row">
+                    <div class="col-md-6 mb-3 password-field-col">
+                        <label class="form-label">Contraseña</label>
+                        <div class="input-hint-password-wrap">
+                            <div class="input-group">
+                                <input type="password"
+                                       name="contrasena"
+                                       id="contrasena"
+                                       class="form-control input-with-inline-hint @error('contrasena') is-invalid @enderror"
+                                       required
+                                       autocomplete="new-password">
+                                <button class="btn btn-outline-secondary btn-sm toggle-password-btn"
+                                        type="button"
+                                        id="btn_toggle_pass"
+                                        aria-label="Mostrar contraseña">🔓</button>
+                            </div>
+
+                            <span class="inside-hint password-mask left-hint" id="password_hint_inside">**********</span>
+                        </div>
+
+                        <div class="password-help-text">
+                            CARACTERES, MAYÚSCULAS, MINÚSCULAS, NÚMEROS Y SÍMBOLOS.
+                        </div>
+
+                        @error('contrasena')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-3 confirm-password-field-col">
                         <label class="form-label">Confirmar contraseña</label>
                         <div class="input-group">
                             <input type="password"
@@ -261,11 +295,18 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Número de empleado</label>
-                        <input name="cod_empleado" id="cod_empleado"
-                               class="form-control @error('cod_empleado') is-invalid @enderror"
-                               value="{{ old('cod_empleado') }}">
-                        @error('cod_empleado')
+                        <label class="form-label">Tipo de empleado</label>
+                        <select name="id_rol" id="id_rol_manual" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            @foreach($roles as $rol)
+                                @if(in_array((int)$rol->id_rol, [1,4,5]))
+                                    <option value="{{ $rol->id_rol }}" @selected(old('id_rol') == $rol->id_rol)>
+                                        {{ $rol->nombre_rol }}
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('id_rol')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
@@ -275,7 +316,7 @@
                         <select name="id_departamento" id="id_departamento" class="form-select">
                             <option value="">Seleccione...</option>
                             @foreach($departamentos as $d)
-                                <option value="{{ $d->id_departamento }}" @selected(old('id_departamento')==$d->id_departamento)>
+                                <option value="{{ $d->id_departamento }}" @selected(old('id_departamento') == $d->id_departamento)>
                                     {{ $d->nombre_departamento }}
                                 </option>
                             @endforeach

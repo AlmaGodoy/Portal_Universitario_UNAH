@@ -1,113 +1,124 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+@extends('layouts.app-estudiantes')
+
+@section('titulo', 'Cambio de Carrera')
+
+@section('content')
+    
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cambio de Carrera</title>
 
-    @vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera.js'])
-</head>
-<body>
+    <div class="cc-page">
+        <div class="cc-header">
+            <div class="cc-header-content">
+                <div>
+                    <h1>Solicitud de Cambio de Carrera</h1>
+                    <p>Completa tu trámite, adjunta tu historial académico y da seguimiento a tu solicitud.</p>
+                </div>
 
-    <header class="topbar">
-        <div class="brand">
-            <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
-
-            <div class="brand-text">
-                <h1 class="brand-title">
-                    <span class="puma">Puma</span><span class="gestion">Gestión</span>
-                </h1>
-                <span class="brand-subtitle">FCEAC - UNAH</span>
+            
+                <a href="{{ route('dashboard') }}" class="cc-btn-volver">
+                    <i class="fas fa-arrow-left"></i> Volver al dashboard
+                </a>
             </div>
         </div>
 
-        <div class="topbar-center">Cambio de Carrera</div>
-<div class="topbar-right">
-            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                @csrf
-                <button type="submit" class="btn-logout">Cerrar Sesión</button>
-            </form>
+        <div class="cc-subnav-wrap">
+            <nav class="cc-subnav">
+                <a href="/cambio-carrera" class="active">Nuevo trámite</a>
+                <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
+                <a href="/cambio-carrera/estado">Estado / Dictamen</a>
+            </nav>
         </div>
-    </header>
 
-    <div class="page-wrap">
-        <nav class="subnav">
-            <a href="javascript:history.back()" class="btn-back">← Atrás</a>>
-        <a href="/cambio-carrera" class="active">Nuevo trámite</a>
-        <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
-        <a href="/cambio-carrera/estado">Estado / Dictamen</a>
-    </nav>
+        <div class="cc-card">
+           
+            <input type="hidden" id="id_persona" value="{{ session('persona_id') }}">
+            <input type="hidden" id="id_calendario" value="">
 
-        <div class="card">
-            <h2>Solicitud de Cambio de Carrera</h2>
+            <div class="cc-card-head">
+                <div>
+                    <h3>Formulario de solicitud</h3>
+                    <p>Registra tu solicitud para iniciar el proceso de cambio de carrera.</p>
+                </div>
+                <span class="cc-badge">Trámite estudiantil</span>
+            </div>
 
-            <p class="info">
-                Completa el formulario. Al crear el trámite, se habilitará la sección para subir tu <b>Historial Académico (PDF)</b>.
+            <p class="cc-info">
+                Completa el formulario. Al crear el trámite, se habilitará la sección para subir tu
+                <strong>Historial Académico (PDF)</strong>.
             </p>
 
-            <form id="formCambioCarrera">
-                <input type="hidden" id="id_persona" value="{{ session('persona_id') }}">
-                <input type="hidden" id="id_calendario" value="">
+            <form id="formCambioCarrera" class="cc-form">
+                <div class="cc-form-group">
+                    <label for="id_carrera_destino">Carrera destino</label>
+                    <select id="id_carrera_destino" required>
+                        <option value="">Cargando carreras...</option>
+                    </select>
+                </div>
 
-                <label for="id_carrera_destino">Carrera destino</label>
-                <select id="id_carrera_destino" required>
-                    <option value="">Cargando carreras...</option>
-                </select>
+                <div class="cc-form-group">
+                    <label for="direccion">Motivo por el cual solicita el cambio de carrera</label>
+                    <textarea
+                        id="direccion"
+                        placeholder="Escriba aquí el motivo por el cual solicita el cambio de carrera"
+                        rows="4"
+                        required
+                    ></textarea>
+                </div>
 
-                <label for="direccion">Motivo por el cual solicita el cambio de carrera</label>
-              <textarea
-                    id="direccion"
-                    placeholder="Escriba aquí el motivo por la cual solicita el cambio de carrera"
-                    rows="4"
-                    required
-                ></textarea>
-
-                <button type="submit" id="btnCrearTramite">Crear trámite</button>
+                <button type="submit" id="btnCrearTramite" class="cc-btn-primary">
+                    Crear trámite
+                </button>
             </form>
-
-            <hr>
-
-            <div id="seccionHistorial" style="display:none;">
-                <h3>Subir Historial Académico (PDF)</h3>
-
-                <p class="info">
-                    Sube el PDF de tu historial académico. Este documento respalda las validaciones del trámite.
-                </p>
-
-                <form id="formHistorial" enctype="multipart/form-data">
-                    <input type="hidden" id="id_tramite" value="">
-
-                    <label for="archivo">Selecciona tu PDF</label>
-                    <input type="file" id="archivo" accept="application/pdf" required>
-
-                    <div id="previewArchivo" style="display:none;" class="preview-archivo">
-                    <p><strong>Archivo seleccionado:</strong> <span id="nombreArchivo"></span></p>
-                    <p><strong>Tamaño:</strong> <span id="tamanoArchivo"></span></p>
-
-                    <div class="preview-actions">
-                     <button type="button" id="btnVerArchivo">Ver PDF</button>
-                     <button type="button" id="btnQuitarArchivo">Quitar archivo</button>
-    </div>
-</div>
-
-<button type="submit" id="btnSubirPDF">Subir PDF</button>
-
-                </form>
-            </div>
 
             <div id="msg" class="msg"></div>
 
-            <hr>
+       
+            <div id="seccionHistorial" class="cc-historial" style="display:none;">
+                <hr>
 
+                <h3>Subir Historial Académico (PDF)</h3>
 
+                <p class="cc-info">
+                    Sube el PDF de tu historial académico. Este documento respalda las validaciones del trámite.
+                </p>
 
-            <div class="registroBox">
-                <p><b>Nota:</b> Este sistema es de seguimiento. Para completar el proceso oficial, también debes realizarlo en Registro UNAH.</p>
-                <a class="btnLink" href="https://registro.unah.edu.hn/" target="_blank">Ir a Registro UNAH</a>
+  
+                <form id="formHistorial" enctype="multipart/form-data" class="cc-form">
+                    <input type="hidden" id="id_tramite" value="">
+
+                    <div class="cc-form-group">
+                        <label for="archivo">Selecciona tu PDF</label>
+                        <input type="file" id="archivo" accept="application/pdf" required>
+                    </div>
+
+                   
+                    <div id="previewArchivo" style="display:none;" class="cc-preview">
+                        <p><strong>Archivo seleccionado:</strong> <span id="nombreArchivo"></span></p>
+                        <p><strong>Tamaño:</strong> <span id="tamanoArchivo"></span></p>
+
+                        <div class="cc-preview-actions">
+                            <button type="button" id="btnVerArchivo" class="cc-btn-secondary">Ver PDF</button>
+                            <button type="button" id="btnQuitarArchivo" class="cc-btn-danger">Quitar archivo</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnSubirPDF" class="cc-btn-primary">
+                        Subir PDF
+                    </button>
+                </form>
             </div>
 
-    </div>
+            <hr>
 
-</body>
-</html>
+            <div class="cc-nota">
+                <p>
+                    <strong>Nota:</strong> Este sistema es de seguimiento. Para completar el proceso oficial,
+                    también debes realizarlo en Registro UNAH.
+                </p>
+                <a class="cc-btn-link" href="https://registro.unah.edu.hn/" target="_blank" rel="noopener noreferrer">
+                    Ir a Registro UNAH
+                </a>
+            </div>
+        </div>
+    </div>
+@endsection

@@ -41,7 +41,11 @@
             </button>
 
             <div class="text-center mt-3">
-                <a href="{{ route('portal') }}">← Volver al portal</a>
+                <div class="auth-card-top-login">
+    <a href="{{ url('/portal') }}" class="btn btn-outline-light auth-back-btn">
+        ← Volver al portal
+    </a>
+</div>
             </div>
         </form>
 
