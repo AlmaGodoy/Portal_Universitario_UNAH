@@ -11,7 +11,9 @@
         <div class="hero-wave wave-two"></div>
         <div class="hero-gold-ribbon"></div>
 
-        <div class="hero-photo" style="background-image: url('{{ asset('images/FCEAC.jpeg') }}');"></div>
+        <div class="hero-photo">
+            <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
+        </div>
 
         <div class="hero-content">
             <div class="hero-top-title">Portal Estudiantil UNAH</div>
@@ -72,7 +74,7 @@
                     <span class="step-number">1</span>
                     <div>
                         <strong>Selecciona el módulo</strong>
-                        <p>Elige entre Cambio de Carrera o Cancelación de Clases.</p>
+                        <p>Elige entre Cambio de Carrera, Cancelación de Clases o consulta de trámites.</p>
                     </div>
                 </div>
 
@@ -140,6 +142,27 @@
                 <a href="{{ route('cancelacion.index') }}" class="module-btn secondary">
                     <i class="fas fa-arrow-right"></i>
                     Ir al módulo
+                </a>
+            </div>
+        </div>
+
+        <div class="student-module-card">
+            <div class="module-badge">Consulta</div>
+            <div class="module-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+
+            <h2>Mis Trámites</h2>
+
+            <p>
+                Consulta el historial de tus solicitudes académicas y revisa el estado actual
+                de cada trámite registrado en el sistema.
+            </p>
+
+            <div class="module-actions">
+                <a href="{{ route('mis.tramites') }}" class="module-btn primary">
+                    <i class="fas fa-arrow-right"></i>
+                    Ver mis trámites
                 </a>
             </div>
         </div>
