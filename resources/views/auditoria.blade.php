@@ -77,9 +77,11 @@
                                          <tr class="text-center text-muted">
 
                                              <th>No.</th>
-                                             <th>Accion Realizada</th>
+                                             <th>Id Usuario</th>
+                                             <th>Código Empleado</th>
+                                             <th>Acción Realizada</th>
                                              <th>Detalle</th>
-                                             <th>Modulo Afectado</th>
+                                             <th>Módulo Afectado</th>
                                              <th>Fecha</th>
 
                                          </tr>
@@ -93,6 +95,14 @@
 
                                                  <td>
                                                      {{ $loop->iteration }}
+                                                 </td>
+
+                                                 <td>
+                                                     {{ $registro->id_usuario ?? '' }}
+                                                 </td>
+
+                                                 <td>
+                                                     {{ $registro->cod_empleado ?? '' }}
                                                  </td>
 
                                                  <td>
