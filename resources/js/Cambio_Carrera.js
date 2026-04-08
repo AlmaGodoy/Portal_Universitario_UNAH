@@ -203,67 +203,97 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (formCambio) {
-        formCambio.addEventListener('submit', async (e) => {
-            e.preventDefault();
+  if (formCambio) {
+    formCambio.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            if (!inputCalendario || !inputPersona || !selectCarreras) {
-                setMsg('Faltan datos del formulario.', false);
-                return;
-            }
+        if (!inputCalendario || !inputPersona || !selectCarreras) {
+            setMsg('Faltan datos del formulario.', false);
+            return;
+        }
 
-            if (!inputCalendario.value) {
-                setMsg('No hay calendario vigente. No se puede crear el trámite.', false);
-                return;
-            }
+        if (!inputCalendario.value) {
+            setMsg('No hay calendario vigente. No se puede crear el trámite.', false);
+            return;
+        }
 
-            const direccionInput = document.getElementById('direccion');
+        const direccionInput = document.getElementById('direccion');
 
-            const payload = {
-                id_persona: parseInt(inputPersona.value, 10),
-                id_calendario: parseInt(inputCalendario.value, 10),
-                id_carrera_destino: parseInt(selectCarreras.value, 10),
-                direccion: direccionInput ? direccionInput.value : ''
-            };
+        const payload = {
+            id_persona: parseInt(inputPersona.value, 10),
+            id_calendario: parseInt(inputCalendario.value, 10),
+            id_carrera_destino: parseInt(selectCarreras.value, 10),
+            direccion: direccionInput ? direccionInput.value : ''
+        };
 
+        // ==============================
+        // CAMBIO: esto es solo para depurar
+        // así veremos exactamente qué valor va enviando
+        // ==============================
+        console.log('PAYLOAD ENVIADO:', payload);
+
+        try {
+            const res = await fetch('/api/cambio-carrera/crear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const raw = await res.text();
+
+            let data;
             try {
-                const res = await fetch('/api/cambio-carrera/crear', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-
-                if (!res.ok || data.resultado === 'ERROR') {
-                    setMsg(data.mensaje || 'No se pudo crear el trámite.', false);
-                    return;
-                }
-
-                const idTramite = data.id_tramite || (Array.isArray(data) ? data[0]?.id_tramite : null);
-
-                if (!idTramite) {
-                    setMsg('Trámite creado pero no se recibió id_tramite.', false);
-                    return;
-                }
-
-                if (inputTramite) inputTramite.value = idTramite;
-                if (seccionHistorial) seccionHistorial.style.display = 'block';
-
-                setMsg(`Trámite creado (#${idTramite}). Ahora sube tu Historial Académico (PDF).`, true);
-
-                cargarMisTramites();
-
-            } catch (err) {
-                console.error('Error al crear trámite:', err);
-                setMsg('Error de conexión al crear trámite.', false);
+                data = JSON.parse(raw);
+            } catch (parseError) {
+                console.error('Respuesta no JSON al crear trámite:', raw);
+                setMsg('El servidor devolvió una respuesta inválida al crear el trámite.', false);
+                return;
             }
-        });
-    }
 
+            // ==============================
+            // CAMBIO: esto mostrará en consola
+            // exactamente qué validación falló
+            // ==============================
+            console.log('RESPUESTA BACKEND:', data);
+
+            if (!res.ok || data.resultado === 'ERROR') {
+                // CAMBIO: mostrar errores de validación reales
+                if (data.errores) {
+                    console.error('ERRORES DE VALIDACIÓN:', data.errores);
+                }
+
+                setMsg(
+                    data.mensaje ||
+                    Object.values(data.errors || {}).flat().join(' | ') ||
+                    'No se pudo crear el trámite.',
+                    false
+                );
+                return;
+            }
+
+            const idTramite = data.id_tramite || (Array.isArray(data) ? data[0]?.id_tramite : null);
+
+            if (!idTramite) {
+                setMsg('Trámite creado pero no se recibió id_tramite.', false);
+                return;
+            }
+
+            if (inputTramite) inputTramite.value = idTramite;
+            if (seccionHistorial) seccionHistorial.style.display = 'block';
+
+            setMsg(`Trámite creado (#${idTramite}). Ahora sube tu Historial Académico (PDF).`, true);
+
+            cargarMisTramites();
+        } catch (err) {
+            console.error('Error al crear trámite:', err);
+            setMsg('Error de conexión al crear trámite.', false);
+        }
+    });
+}
     if (formHistorial) {
         formHistorial.addEventListener('submit', async (e) => {
             e.preventDefault();

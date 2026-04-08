@@ -301,5 +301,108 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
 }
 
 
+/*
+        =========================================================
+        AQUÍ VAS A AGREGAR LOS NUEVOS MÉTODOS
+        DEL MÓDULO DE CALENDARIO PARA SECRETARÍA
+        =========================================================
+    */
+
+    // 1) LISTAR TODOS LOS CALENDARIOS
+    // Este método llamará al SP: SEL_CALENDARIOS_ACADEMICOS()
+    public function listarCalendariosAcademicos()
+    {
+        try {
+            $data = DB::select('CALL SEL_CALENDARIOS_ACADEMICOS()');
+
+            return response()->json($data, 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // 2) CREAR UN NUEVO CALENDARIO
+    // Este método llamará al SP: INS_CALENDARIO_ACADEMICO(?, ?, ?)
+    public function crearCalendarioAcademico(Request $request)
+    {
+        $request->validate([
+            'tipo_tramite_academico' => 'required|string|in:cambio_carrera,cancelacion',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin'    => 'required|date',
+        ]);
+
+        try {
+            $data = DB::select('CALL INS_CALENDARIO_ACADEMICO(?, ?, ?)', [
+                $request->tipo_tramite_academico,
+                $request->fecha_inicio,
+                $request->fecha_fin
+            ]);
+
+            return response()->json($data[0] ?? [
+                'resultado' => 'OK',
+                'mensaje'   => 'Calendario creado correctamente.'
+            ], 201);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // 3) EDITAR FECHAS DEL CALENDARIO
+    // Este método llamará al SP: UPD_CALENDARIO_ACADEMICO(?, ?, ?)
+    public function actualizarCalendarioAcademico(Request $request, $id_calendario)
+    {
+        $request->validate([
+            'fecha_inicio' => 'required|date',
+            'fecha_fin'    => 'required|date',
+        ]);
+
+        try {
+            $data = DB::select('CALL UPD_CALENDARIO_ACADEMICO(?, ?, ?)', [
+                $id_calendario,
+                $request->fecha_inicio,
+                $request->fecha_fin
+            ]);
+
+            return response()->json($data[0] ?? [
+                'resultado' => 'OK',
+                'mensaje'   => 'Calendario actualizado correctamente.'
+            ], 200);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cambiarEstadoCalendarioAcademico($id_calendario)
+    {
+        try {
+            $data = DB::select('CALL UPD_ESTADO_CALENDARIO_ACADEMICO(?)', [
+                $id_calendario
+            ]);
+
+            return response()->json($data[0] ?? [
+                'resultado' => 'OK',
+                'mensaje'   => 'Estado del calendario actualizado correctamente.'
+            ], 200);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 
 }

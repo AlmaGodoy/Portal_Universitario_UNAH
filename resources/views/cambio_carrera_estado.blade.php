@@ -1,66 +1,50 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+@extends('layouts.app-estudiantes')
+
+@section('titulo', 'Estado / Dictamen - Cambio de Carrera')
+
+@section('content')
+   
+
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estado / Dictamen - Cambio de Carrera</title>
 
-    @vite(['resources/css/cambio_carrera.css', 'resources/js/cambio_carrera_estado.js'])
-</head>
-<body>
+    <div class="cc-page">
+        <div class="cc-header">
+            <div class="cc-header-content">
+                <div>
+                    <h1>Estado / Dictamen</h1>
+                    <p>Da seguimiento visual a tu solicitud de cambio de carrera.</p>
+                </div>
 
-    <header class="topbar">
-        <div class="brand">
-            <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
-
-            <div class="brand-text">
-                <h1 class="brand-title">
-                    <span class="puma">Puma</span><span class="gestion">Gestión</span>
-                </h1>
-                <span class="brand-subtitle">FCEAC - UNAH</span>
+                <a href="{{ route('dashboard') }}" class="cc-btn-volver">
+                    <i class="fas fa-arrow-left"></i> Volver al dashboard
+                </a>
             </div>
         </div>
 
-        <div class="topbar-center">Cambio de Carrera</div>
-        <div class="topbar-right">
-            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                @csrf
-                <button type="submit" class="btn-logout">Cerrar Sesión</button>
-            </form>
+        <div class="cc-subnav-wrap">
+            <nav class="cc-subnav">
+                <a href="/cambio-carrera">Nuevo trámite</a>
+                <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
+                <a href="/cambio-carrera/estado" class="active">Estado / Dictamen</a>
+            </nav>
         </div>
-    </header>
 
-    <main class="module-container">
-        <section class="module-header">
-            <h2>Estado / Dictamen</h2>
-            <p>Da seguimiento visual a tu solicitud de cambio de carrera.</p>
-        </section>
+        <div class="cc-card">
+          
+            <input type="hidden" id="id_persona" value="{{ session('persona_id') }}">
 
-          <div class="page-wrap">
-        <nav class="subnav">
-            <a href="javascript:history.back()" class="btn-back">← Atrás</a>>
-            <a href="/cambio-carrera">Nuevo trámite</a>
-            <a href="/cambio-carrera/mis-tramites">Mis trámites</a>
-            <a href="/cambio-carrera/estado" class="active">Estado / Dictamen</a>
-        </nav>
-
-        <div class="card main-card">
-          <input type="hidden" id="id_persona" value="{{ session('persona_id') }}">
-
-            <div class="card-head">
+            <div class="cc-card-head">
                 <div>
                     <h3>Seguimiento del trámite</h3>
                     <p>Aquí puedes consultar el estado actual y la resolución de tu solicitud.</p>
                 </div>
-                <span class="badge-soft">Seguimiento</span>
+                <span class="cc-badge">Seguimiento</span>
             </div>
 
+            {{-- IMPORTANTE: se conserva este id porque el JS lo usa --}}
             <div id="estadoTramite">
-                <p class="info">Cargando estado del trámite...</p>
+                <p class="cc-info">Cargando estado del trámite...</p>
             </div>
         </div>
-    </main>
-
-</body>
-</html>
+    </div>
+@endsection
