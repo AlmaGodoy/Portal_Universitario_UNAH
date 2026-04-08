@@ -118,11 +118,11 @@
                                             <form action="{{ route('seguridad.asignacion.delete', $rp->id_rol_permiso) }}"
                                                   method="POST"
                                                   class="js-confirm-delete"
-                                                  data-confirm="¿Eliminar esta asignación?">
+                                                  data-confirm="¿Desactivar esta asignación?">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    Eliminar
+                                                <button type="submit" class="btn btn-warning btn-sm text-dark">
+                                                    Desactivar
                                                 </button>
                                             </form>
                                         </td>

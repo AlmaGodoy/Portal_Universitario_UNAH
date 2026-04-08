@@ -8,32 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class RolSeguridadController extends Controller
 {
-    /**
-     * Solo coordinador puede entrar al módulo de seguridad.
-     */
-    private function validarAccesoSeguridad()
-    {
-        if (!Auth::check()) {
-            abort(403, 'No autorizado.');
-        }
-
-        // Debe haber iniciado como empleado
-        if (session('login_tipo') !== 'empleado') {
-            abort(403, 'No autorizado.');
-        }
-
-        // Solo coordinador
-        $rol = strtolower(trim((string) session('rol_texto', '')));
-
-        if ($rol !== 'coordinador') {
-            abort(403, 'No autorizado.');
-        }
-    }
-
     public function index()
     {
-        $this->validarAccesoSeguridad();
-
         $modulos = [
             [
                 'titulo' => 'Gestión de Roles',
@@ -66,8 +42,6 @@ class RolSeguridadController extends Controller
 
     public function usuarios()
     {
-        $this->validarAccesoSeguridad();
-
         $usuarios = DB::select('CALL SEL_USUARIOS_SEGURIDAD()');
 
         return view('rol_seguridad_usuarios', compact('usuarios'));
@@ -75,8 +49,6 @@ class RolSeguridadController extends Controller
 
     public function updateEstadoUsuario(Request $request, $id)
     {
-        $this->validarAccesoSeguridad();
-
         $request->validate([
             'estado_cuenta' => 'required|in:0,1',
         ]);
@@ -101,8 +73,6 @@ class RolSeguridadController extends Controller
 
     public function objetos()
     {
-        $this->validarAccesoSeguridad();
-
         $objetos = DB::select('CALL SEL_MODULOS_SEGURIDAD()');
 
         return view('rol_seguridad_objetos', compact('objetos'));
@@ -110,8 +80,6 @@ class RolSeguridadController extends Controller
 
     public function storeObjeto(Request $request)
     {
-        $this->validarAccesoSeguridad();
-
         $request->validate([
             'nombre_objeto' => 'required|string|max:100',
             'tipo_objeto' => 'required|string|max:50',
@@ -137,8 +105,6 @@ class RolSeguridadController extends Controller
 
     public function updateObjeto(Request $request, $id)
     {
-        $this->validarAccesoSeguridad();
-
         $request->validate([
             'nombre_objeto' => 'required|string|max:100',
             'tipo_objeto' => 'required|string|max:50',
@@ -165,8 +131,6 @@ class RolSeguridadController extends Controller
 
     public function accesos()
     {
-        $this->validarAccesoSeguridad();
-
         $accesos = DB::select('CALL SEL_ACCESOS_SEGURIDAD()');
 
         $roles = DB::table('tbl_rol')
@@ -179,6 +143,7 @@ class RolSeguridadController extends Controller
             ->get();
 
         $objetos = DB::table('tbl_objeto')
+            ->where('estado_activo', 1)
             ->orderBy('nombre_objeto')
             ->get();
 
@@ -187,8 +152,6 @@ class RolSeguridadController extends Controller
 
     public function storeAcceso(Request $request)
     {
-        $this->validarAccesoSeguridad();
-
         $request->validate([
             'id_rol' => 'required|integer',
             'id_permiso' => 'required|integer',
@@ -216,16 +179,14 @@ class RolSeguridadController extends Controller
 
     public function deleteAcceso($id)
     {
-        $this->validarAccesoSeguridad();
-
-        $res = DB::select('CALL DEL_ACCESOS_SEGURIDAD(?, ?)', [
+        $res = DB::select('CALL SOFT_DEL_ACCESOS_SEGURIDAD(?, ?)', [
             $id,
             Auth::id()
         ]);
 
         $row = $res[0] ?? null;
         $resultado = $row->resultado ?? 'ERROR';
-        $mensaje = $row->mensaje ?? 'No se pudo eliminar el acceso.';
+        $mensaje = $row->mensaje ?? 'No se pudo desactivar el acceso.';
 
         if ($resultado !== 'OK') {
             return back()->withErrors(['acceso' => $mensaje]);

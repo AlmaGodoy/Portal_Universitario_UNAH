@@ -117,11 +117,11 @@
                                             <form action="{{ route('seguridad.acceso.delete', $acceso->id_rol_permiso) }}"
                                                   method="POST"
                                                   class="js-confirm-delete"
-                                                  data-confirm="¿Eliminar este acceso?">
+                                                  data-confirm="¿Desactivar este acceso?">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    Eliminar
+                                                <button type="submit" class="btn btn-warning btn-sm text-dark">
+                                                    Desactivar
                                                 </button>
                                             </form>
                                         </td>
