@@ -105,6 +105,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function obtenerBotonAccion(tramite) {
+    const estadoTramite = (tramite.estado_tramite || '').toString().trim().toLowerCase();
+    const estadoRegistro = Number(tramite.estado ?? 1);
+
+    if (estadoRegistro === 1 && estadoTramite === 'pendiente') {
+        return `
+            <button
+                type="button"
+                class="cc-btn-danger"
+                onclick="window.cancelarTramiteCambioCarrera(${tramite.id_tramite})"
+            >
+                Cancelar trámite
+            </button>
+        `;
+    }
+
+    return `<span class="sin-acciones">No disponible</span>`;
+}
+
     async function cargarMisTramites() {
         if (!tbody || !inputPersona) return;
 
@@ -112,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const idPersona = parseInt(inputPersona.value, 10);
 
             if (!idPersona) {
-                tbody.innerHTML = `<tr><td colspan="6">No se encontró el id de la persona.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7">No se encontró el id de la persona.</td></tr>`;
                 return;
             }
 
@@ -123,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             if (!Array.isArray(data) || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6">No tienes trámites registrados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7">No tienes trámites registrados.</td></tr>`;
                 return;
             }
 
@@ -131,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             for (const t of data) {
                 const botonDocumento = await obtenerBotonDocumento(t.id_tramite);
+                const botonAccion = obtenerBotonAccion(t);
 
                 tbody.innerHTML += `
                     <tr>
@@ -140,12 +160,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${t.estado_tramite ?? ''}</td>
                         <td>${t.direccion ?? ''}</td>
                         <td>${botonDocumento}</td>
+                        <td>${botonAccion}</td>
                     </tr>
                 `;
             }
         } catch (err) {
             console.error('Error cargando trámites:', err);
-            tbody.innerHTML = `<tr><td colspan="6">Error cargando trámites.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7">Error cargando trámites.</td></tr>`;
         }
     }
 
