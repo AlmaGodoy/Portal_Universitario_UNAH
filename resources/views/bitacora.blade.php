@@ -56,6 +56,8 @@
                             <table class="table table-bordered table-hover align-middle" style="width: 100%">
                                 <thead class="table-light">
                                     <tr class="text-center text-muted">
+                                        <th>Id Usuario</th>
+                                        <th>Correo Institucional</th>
                                         <th>Responsable</th>
                                         <th>Operación Realizada</th>
                                         <th>Detalle</th>
@@ -65,6 +67,8 @@
                                 <tbody>
                                     @forelse($bitacoras as $item)
                                         <tr>
+                                            <td>{{ $item->id_usuario ?? '' }}</td>
+                                            <td>{{ $item->correo_institucional ?? '' }}</td>
                                             <td>{{ $item->usuario_responsable ?? '' }}</td>
                                             <td>{{ $item->operacion_realizada ?? '' }}</td>
                                             <td>{{ $item->detalle ?? '' }}</td>
