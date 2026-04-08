@@ -12,11 +12,17 @@
     $partesNombre = preg_split('/\s+/', trim($nombreUsuario));
     $iniciales = '';
 
+<<<<<<< Updated upstream
     foreach (array_slice($partesNombre, 0, 2) as $parte) {
         if (!empty($parte)) {
             $iniciales .= strtoupper(mb_substr($parte, 0, 1));
         }
     }
+=======
+                <div class="hero-photo">
+                    <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
+                </div>
+>>>>>>> Stashed changes
 
     if ($iniciales === '') {
         $iniciales = 'SA';
@@ -177,6 +183,7 @@
                 </div>
             </div>
         </div>
+<<<<<<< Updated upstream
 
         <div class="sa-card">
             <div class="sa-card-header">
@@ -315,4 +322,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ asset('js/secre_academica.js') }}"></script>
+=======
+    </section>
+>>>>>>> Stashed changes
 @endsection
