@@ -17,6 +17,9 @@
             $iniciales .= strtoupper(mb_substr($parte, 0, 1));
         }
     }
+                <div class="hero-photo">
+                    <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
+                </div>
 
     if ($iniciales === '') {
         $iniciales = 'SA';
@@ -136,125 +139,142 @@
             <div class="hero-faculty-title">
                 FACULTAD DE CIENCIAS ECONÓMICAS,<br>
                 ADMINISTRATIVAS Y CONTABLES
+=======
+    @vite(['resources/css/graficas_secretarias.css', 'resources/js/graficas_secretarias.js'])
+
+    @php
+        $authUser = auth()->user();
+        $userName = $userName ?? optional($authUser->persona)->nombre_persona ?? 'Usuario';
+        $aniosDisponibles = $aniosDisponibles ?? [date('Y')];
+        $anioSeleccionado = $anio ?? request('anio') ?? ($aniosDisponibles[0] ?? date('Y'));
+        $idDepartamentoSeleccionado = $idDepartamentoSeleccionado ?? request('id_departamento') ?? '';
+    @endphp
+
+    <section class="content graf-wrap">
+        <div id="graficasDashboard"
+            data-api-url="{{ route('api.graficas.secretaria_academica') }}"
+            data-scope-label="facultad"
+            data-scope-note="Mostrando estadísticas de todos los departamentos."
+            data-breakdown-label="departamento">
+
+            {{-- BANNER NUEVO ESTILO ESTUDIANTE --}}
+            <div class="hero-banner">
+                <div class="hero-banner-bg"></div>
+                <div class="hero-wave wave-one"></div>
+                <div class="hero-wave wave-two"></div>
+                <div class="hero-gold-ribbon"></div>
+
+                <div class="hero-photo" style="background-image: url('{{ asset('images/FCEAC.jpeg') }}');"></div>
+
+                <div class="hero-content">
+                    <div class="hero-top-title">Secretaría Académica UNAH</div>
+
+                    <div class="hero-breadcrumb">
+                        <i class="fas fa-house"></i>
+                        <span>Inicio</span>
+                        <i class="fas fa-angle-right sep"></i>
+                        <span>Control Facultad</span>
+                    </div>
+
+                    <div class="hero-faculty-title">
+                        FACULTAD DE CIENCIAS ECONÓMICAS,<br>
+                        ADMINISTRATIVAS Y CONTABLES
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    {{-- FRANJA SUPERIOR --}}
-    <div class="sa-header-strip">
-        <div class="sa-header-text">
-            <h2>Secretaría Académica</h2>
-            <p>
-                Visualiza primero las gráficas globales y el comportamiento general de la facultad,
-                incluyendo las clases con mayor cancelación.
-            </p>
-        </div>
-
-        <div class="student-user-chip">
-            <div class="student-user-chip-avatar">{{ $iniciales }}</div>
-            <div class="student-user-chip-name">{{ $nombreUsuario }}</div>
-        </div>
-    </div>
-
-    {{-- GRAFICAS PRIMERO --}}
-    <div class="sa-section-heading">
-        <h3>Gráficas globales de facultad</h3>
-        <p>
-            Vista inicial orientada a análisis general. Los datos actuales son temporales para que luego
-            solo se conecte la lógica real.
-        </p>
-    </div>
-
-    <div class="sa-grid-two">
-        <div class="sa-card">
-            <div class="sa-card-header">
-                <i class="fas fa-chart-pie"></i>
-                <h3>Distribución general por estado</h3>
-            </div>
-            <div class="sa-card-body">
-                <div class="sa-chart-box">
-                    <canvas id="graficaEstadosGlobales"></canvas>
+            <div class="top-search-row">
+                <div class="tsr-input-wrap">
+                    <input type="text" placeholder="Buscar expediente en toda la facultad..." id="top-search">
+                </div>
+                <div class="tsr-user">
+                    <div class="tsr-avatar" style="background: var(--blue-unah); color: white;">
+                        {{ strtoupper(substr($userName, 0, 1)) }}{{ strtoupper(substr(explode(' ', $userName)[1] ?? '', 0, 1)) }}
+                    </div>
+                    <span class="tsr-name">{{ $userName }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="sa-card">
-            <div class="sa-card-header">
-                <i class="fas fa-chart-column"></i>
-                <h3>Trámites por carrera</h3>
-            </div>
-            <div class="sa-card-body">
-                <div class="sa-chart-box">
-                    <canvas id="graficaCarrerasGlobales"></canvas>
+            <div class="graf-toolbar">
+                <div class="graf-toolbar-left">
+                    <p class="graf-label mb-0">
+                        <i class="fas fa-filter"></i> Filtrar por año
+                    </p>
+
+                    <select id="anioSelectGraficas" class="graf-select">
+                        @forelse($aniosDisponibles as $anioItem)
+                            <option value="{{ $anioItem }}" {{ (string)$anioSeleccionado === (string)$anioItem ? 'selected' : '' }}>
+                                {{ $anioItem }}
+                            </option>
+                        @empty
+                            <option value="{{ date('Y') }}">{{ date('Y') }}</option>
+                        @endforelse
+                    </select>
+
+                    <select id="filtroDepartamento" class="graf-select">
+                        <option value="">Todos los departamentos</option>
+                        @foreach($departamentos as $departamento)
+                            <option value="{{ $departamento->id_departamento }}"
+                                {{ (string)$idDepartamentoSeleccionado === (string)$departamento->id_departamento ? 'selected' : '' }}>
+                                {{ $departamento->nombre_departamento }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="graf-status" id="estadoCargaGraficas">
+                    Listo para consultar estadísticas de facultad
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="sa-grid-one">
-        <div class="sa-card">
-            <div class="sa-card-header">
-                <i class="fas fa-ban"></i>
-                <h3>Top 3 clases más canceladas</h3>
+            <div class="scope-note-box" id="scopeNoteGraficas">
+                Mostrando estadísticas de todos los departamentos.
             </div>
-            <div class="sa-card-body">
-                <div class="sa-chart-box sa-chart-box-wide">
-                    <canvas id="graficaClasesCanceladas"></canvas>
+
+            <div class="stats-grid">
+                <div class="stat-card bg-a">
+                    <i class="fas fa-ban bg"></i>
+                    <div class="title">Cancelaciones Excepcionales</div>
+                    <div class="value" id="totalCancelaciones">0</div>
+                    <div class="foot">Total anual registrado</div>
+                </div>
+
+                <div class="stat-card bg-b">
+                    <i class="fas fa-right-left bg"></i>
+                    <div class="title">Cambios de Carrera</div>
+                    <div class="value" id="totalCambios">0</div>
+                    <div class="foot">Total anual registrado</div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    {{-- RESUMEN DESPUÉS --}}
-    <div class="sa-section-heading">
-        <h3>Resumen institucional</h3>
-        <p>Indicadores rápidos para lectura general del estado actual.</p>
-    </div>
+            <div class="donut-grid">
+                <div class="chart-card donut-card">
+                    <div class="chart-head">
+                        <h4>Distribución de Cancelaciones por Departamento</h4>
+                        <p>Pasa el cursor sobre el gráfico para ver el total por departamento</p>
+                    </div>
+                    <div class="chart-body donut-body">
+                        <div class="donut-canvas-wrap">
+                            <canvas id="donutCancelaciones"></canvas>
+                        </div>
+                        <div class="donut-empty" id="donutEmptyCancelaciones">Esperando datos...</div>
+                    </div>
+                </div>
 
-    <div class="sa-metrics-grid">
-        <div class="sa-metric-card">
-            <div class="sa-metric-title">
-                <i class="fas fa-folder-open"></i>
-                <span>Trámites globales</span>
+                <div class="chart-card donut-card">
+                    <div class="chart-head">
+                        <h4>Distribución de Cambios de Carrera por Departamento</h4>
+                        <p>Pasa el cursor sobre el gráfico para ver el total por departamento</p>
+                    </div>
+                    <div class="chart-body donut-body">
+                        <div class="donut-canvas-wrap">
+                            <canvas id="donutCambios"></canvas>
+                        </div>
+                        <div class="donut-empty" id="donutEmptyCambios">Esperando datos...</div>
+                    </div>
+                </div>
             </div>
-            <div class="sa-metric-number">{{ str_pad($tramitesGlobales, 2, '0', STR_PAD_LEFT) }}</div>
-            <div class="sa-metric-text">Total consolidado de trámites registrados.</div>
-        </div>
-
-        <div class="sa-metric-card">
-            <div class="sa-metric-title">
-                <i class="fas fa-circle-check"></i>
-                <span>Aprobados</span>
-            </div>
-            <div class="sa-metric-number">{{ str_pad($aprobados, 2, '0', STR_PAD_LEFT) }}</div>
-            <div class="sa-metric-text">Trámites aprobados en el consolidado general.</div>
-        </div>
-
-        <div class="sa-metric-card">
-            <div class="sa-metric-title">
-                <i class="fas fa-hourglass-half"></i>
-                <span>Pendientes</span>
-            </div>
-            <div class="sa-metric-number">{{ str_pad($pendientes, 2, '0', STR_PAD_LEFT) }}</div>
-            <div class="sa-metric-text">Solicitudes aún pendientes de resolución.</div>
-        </div>
-
-        <div class="sa-metric-card">
-            <div class="sa-metric-title">
-                <i class="fas fa-clipboard-check"></i>
-                <span>En revisión</span>
-            </div>
-            <div class="sa-metric-number">{{ str_pad($revision, 2, '0', STR_PAD_LEFT) }}</div>
-            <div class="sa-metric-text">Trámites en proceso de revisión.</div>
-        </div>
-
-        <div class="sa-metric-card">
-            <div class="sa-metric-title">
-                <i class="fas fa-circle-xmark"></i>
-                <span>Rechazados</span>
-            </div>
-            <div class="sa-metric-number">{{ str_pad($rechazados, 2, '0', STR_PAD_LEFT) }}</div>
-            <div class="sa-metric-text">Solicitudes rechazadas en el consolidado general.</div>
         </div>
     </div>
 
@@ -315,4 +335,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ asset('js/secre_academica.js') }}"></script>
+    </section>
+@endsection
+=======
+    </section>
 @endsection

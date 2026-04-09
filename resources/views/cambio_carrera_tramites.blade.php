@@ -47,6 +47,7 @@
                 </div>
                 <span class="cc-badge">Historial</span>
             </div>
+            <div id="msg" class="msg"></div>
 
             {{-- CAMBIO: se agrega un contenedor visual para la tabla,
                  pero se conserva el id de la tabla y del tbody --}}
@@ -60,10 +61,15 @@
                             <th>Estado</th>
                             <th>Motivo por el cual solicita el cambio de carrera</th>
                             <th>Documento</th>
+
+                            <th>Acciones</th>
+
                         </tr>
                     </thead>
                     <tbody id="tbodyTramites">
                         <tr>
+                            <td colspan="7">Cargando trámites...</td>
+
                             <td colspan="6">Cargando trámites...</td>
                         </tr>
                     </tbody>
