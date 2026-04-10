@@ -225,6 +225,7 @@ public function detalleSecretaria($id_tramite)
         ], 403);
     }
 
+
     $tramite = DB::table('tbl_tramite')
         ->where('id_tramite', $request->id_tramite)
         ->where('id_carrera_destino', $idCarreraSecretaria)
@@ -256,6 +257,7 @@ public function detalleSecretaria($id_tramite)
         'mensaje' => 'Revisión de Secretaría guardada correctamente.'
     ]);
 }
+
 
    public function listadoCoordinacion()
 {
@@ -492,6 +494,7 @@ private function obtenerCarreraCoordinadorAutenticado(): ?int
     return (int) $empleado->id_carrera;
 }
 
+
 private function obtenerCarreraSecretariaAutenticada(): ?int
 {
     if (!Auth::check()) {
@@ -515,6 +518,7 @@ private function obtenerCarreraSecretariaAutenticada(): ?int
 
     return (int) $empleado->id_carrera;
 }
+
 
 
 
