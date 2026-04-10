@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     background-image: url('/images/fondo_seguridad.png');
-    background-size: 100% auto;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -9,52 +9,167 @@ body {
 }
 
 .security-page {
-    padding: 30px 0;
+    padding: 28px 0 40px;
+}
+
+.security-title {
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: #3f342c;
+    text-shadow:
+        0 2px 4px rgba(255, 255, 255, 0.35),
+        0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.security-subtitle {
+    color: #5a4c43;
+    margin-bottom: 18px;
+    text-shadow:
+        0 1px 3px rgba(255, 255, 255, 0.25),
+        0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== TARJETAS ===== */
+.security-page .security-card,
+.security-page .card {
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+    border: 1px solid rgba(59, 130, 196, 0.10);
+    overflow: hidden;
+}
+
+.security-page .security-card {
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.security-page .security-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
 }
 
 .security-header {
     background: #3b82c4;
-    color: white;
+    color: #fff;
     border-bottom: none;
+    padding: 14px 20px;
 }
 
-.security-card,
-.card {
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+.security-page .card-body {
+    padding: 22px 22px 20px;
 }
 
-.security-card {
-    transition: all .2s ease;
+/* ===== FORMULARIOS ===== */
+.security-page label,
+.security-page .form-label {
+    font-weight: 700;
+    color: #23334d;
+    margin-bottom: 8px;
 }
 
-.security-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+.security-page input,
+.security-page select,
+.security-page textarea,
+.security-page button {
+    border-radius: 12px !important;
 }
 
-label,
-.form-label {
-    font-weight: bold;
+.security-page .form-control,
+.security-page .form-select {
+    min-height: 46px;
+    border: 1px solid #ced8e5;
+    box-shadow: none !important;
 }
 
-input,
-select,
-textarea,
-button {
-    border-radius: 6px !important;
+.security-page .form-control:focus,
+.security-page .form-select:focus {
+    border-color: #3b82c4;
+    box-shadow: 0 0 0 0.18rem rgba(59, 130, 196, 0.15) !important;
+}
+
+.security-page textarea.form-control {
+    min-height: 110px;
 }
 
 .input-highlight {
     background-color: #eef5be;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
 }
 
-.table th,
-.table td {
+.security-page .row.g-3 > [class*="col-"],
+.security-page .row.g-4 > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+}
+
+.security-page .btn,
+.security-page .btn-primary,
+.security-page .btn-success,
+.security-page .btn-outline-secondary,
+.security-page .btn-warning {
+    border-radius: 12px !important;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    font-weight: 700;
+}
+
+/* ===== TABLAS ===== */
+.security-page .table-responsive {
+    border-radius: 16px;
+    overflow: auto;
+}
+
+.security-page .table {
+    margin-bottom: 0;
+    background: #fff;
+}
+
+.security-page .table thead th {
     vertical-align: middle;
+    background: #f5f8fc;
+    color: #23334d;
+    border-bottom: 1px solid #d9e3ef;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.security-page .table th,
+.security-page .table td {
+    vertical-align: middle;
+    padding: 14px 12px;
+    border-color: #e2e8f0;
+}
+
+.security-page .table tbody tr:hover {
+    background: #f9fbfe;
+}
+
+.col-acciones {
+    width: 140px;
+    min-width: 140px;
+}
+
+.col-acciones-sm {
+    width: 120px;
+    min-width: 120px;
+}
+
+.security-page .badge {
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 999px;
+}
+
+/* ===== ALERTAS ===== */
+.security-page .alert {
+    border-radius: 14px;
+    border: none;
+    padding: 14px 16px;
 }
 
 .msg {
@@ -97,42 +212,23 @@ button {
     color: white;
 }
 
-.security-title {
-    font-weight: bold;
-    margin-bottom: 6px;
-    color: #3f342c;
-    text-shadow:
-        0 2px 4px rgba(255, 255, 255, 0.35),
-        0 3px 10px rgba(0, 0, 0, 0.22);
-}
-
-.security-subtitle {
-    color: #5a4c43;
-    margin-bottom: 18px;
-    text-shadow:
-        0 1px 3px rgba(255, 255, 255, 0.25),
-        0 2px 8px rgba(0, 0, 0, 0.16);
-}
-
+/* ===== INDEX DE SEGURIDAD ===== */
 .fondo-seguridad {
-    background: rgba(255, 255, 255, 0.68);
-    border-radius: 40px;
-    padding: 40px;
+    background: rgba(255, 255, 255, 0.70);
+    border-radius: 34px;
+    padding: 34px;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
-    transform: translateY(3px);
     min-height: 80vh;
 }
 
-/* Hace que las tarjetas internas se apilen una debajo de otra */
 .fondo-seguridad .row.g-4 {
-    margin-top: 50px;
+    margin-top: 34px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
-/* Hace que cada columna ocupe casi todo el ancho */
 .fondo-seguridad .col-md-6,
 .fondo-seguridad .col-lg-3 {
     max-width: 100%;
@@ -142,25 +238,22 @@ button {
     padding-right: 0;
 }
 
-/* Tarjeta interior más ancha */
 .fondo-seguridad .security-card {
     width: 100%;
     margin-top: 0;
-    border-radius: 28px;
+    border-radius: 24px;
 }
 
-/* Convierte cada tarjeta en horizontal */
 .fondo-seguridad .security-card .card-body {
-    min-height: 170px;
+    min-height: 158px;
     display: grid !important;
-    grid-template-columns: 110px 1fr 220px;
+    grid-template-columns: 100px 1fr 210px;
     align-items: center;
-    gap: 26px;
-    padding: 28px 32px;
+    gap: 22px;
+    padding: 24px 28px;
     text-align: left !important;
 }
 
-/* Bloque del icono */
 .fondo-seguridad .security-card .mb-3 {
     margin-bottom: 0 !important;
     display: flex;
@@ -168,107 +261,86 @@ button {
     justify-content: center;
 }
 
-/* Tamaño del icono */
 .fondo-seguridad .security-card i {
-    font-size: 3rem;
+    font-size: 2.7rem;
 }
 
-/* Título de la tarjeta */
 .fondo-seguridad .security-card h5 {
-    margin-bottom: 10px;
-    font-size: 2rem;
+    margin-bottom: 8px;
+    font-size: 1.7rem;
 }
 
-/* Texto descriptivo */
 .fondo-seguridad .security-card .text-muted.small {
     min-height: auto;
     margin-bottom: 0;
-    font-size: 1.15rem;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.45;
 }
 
-/* Botón alineado a la derecha */
 .fondo-seguridad .security-card .btn,
 .fondo-seguridad .security-card .btn-primary {
     width: 100% !important;
     max-width: 210px;
     margin-left: auto;
     margin-top: 0 !important;
-    border-radius: 16px;
+    border-radius: 14px !important;
     font-size: 1rem;
     padding: 12px 18px;
 }
 
-.security-card .btn,
-.security-card .btn-primary,
-.security-card .btn-success,
-.security-card .btn-outline-secondary {
-    border-radius: 14px;
+/* ===== MODALES ===== */
+.modal-content {
+    border-radius: 18px;
+    overflow: hidden;
+    border: none;
 }
 
-.col-acciones {
-    width: 140px;
+.modal-header.security-header {
+    padding: 14px 18px;
 }
 
-.col-acciones-sm {
-    width: 120px;
+.modal-body {
+    padding: 20px;
 }
 
-/* =========================
-   RESPONSIVE - TABLETS
-   ========================= */
+.modal-footer {
+    padding: 14px 18px;
+    border-top: 1px solid #e5eaf1;
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
     .fondo-seguridad {
-        padding: 28px;
+        padding: 26px;
         min-height: auto;
-        border-radius: 28px;
+        border-radius: 26px;
     }
 
     .fondo-seguridad .row.g-4 {
-        margin-top: 30px;
-        gap: 18px;
+        margin-top: 26px;
+        gap: 16px;
     }
 
     .fondo-seguridad .security-card .card-body {
-        grid-template-columns: 90px 1fr 180px;
-        min-height: 150px;
-        gap: 18px;
-        padding: 22px 24px;
+        grid-template-columns: 82px 1fr 170px;
+        min-height: 146px;
+        gap: 16px;
+        padding: 22px 22px;
     }
 
     .fondo-seguridad .security-card i {
-        font-size: 2.4rem;
-    }
-
-    .fondo-seguridad .security-card h5 {
-        font-size: 1.6rem;
-        margin-bottom: 8px;
-    }
-
-    .fondo-seguridad .security-card .text-muted.small {
-        font-size: 1rem;
-        line-height: 1.4;
-    }
-
-    .fondo-seguridad .security-card .btn,
-    .fondo-seguridad .security-card .btn-primary {
-        max-width: 170px;
-        font-size: 0.95rem;
-        padding: 10px 14px;
-    }
-
-    .security-title {
         font-size: 2.2rem;
     }
 
-    .security-subtitle {
-        font-size: 1.1rem;
+    .fondo-seguridad .security-card h5 {
+        font-size: 1.45rem;
+    }
+
+    .fondo-seguridad .security-card .text-muted.small {
+        font-size: .96rem;
     }
 }
 
-/* =========================
-   RESPONSIVE - CELULARES
-   ========================= */
 @media (max-width: 768px) {
     body {
         background-size: cover;
@@ -276,61 +348,7 @@ button {
     }
 
     .security-page {
-        padding: 18px 0;
-    }
-
-    .fondo-seguridad {
-        padding: 18px;
-        border-radius: 22px;
-        transform: translateY(0);
-        min-height: auto;
-    }
-
-    .fondo-seguridad .row.g-4 {
-        margin-top: 22px;
-        gap: 16px;
-    }
-
-    .fondo-seguridad .security-card {
-        border-radius: 22px;
-    }
-
-    .fondo-seguridad .security-card .card-body {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center;
-        justify-content: center;
-        text-align: center !important;
-        min-height: auto;
-        gap: 14px;
-        padding: 22px 18px;
-    }
-
-    .fondo-seguridad .security-card .mb-3 {
-        margin-bottom: 0 !important;
-    }
-
-    .fondo-seguridad .security-card i {
-        font-size: 2.2rem;
-    }
-
-    .fondo-seguridad .security-card h5 {
-        font-size: 1.5rem;
-        margin-bottom: 4px;
-    }
-
-    .fondo-seguridad .security-card .text-muted.small {
-        font-size: 1rem;
-        line-height: 1.45;
-        text-align: center !important;
-    }
-
-    .fondo-seguridad .security-card .btn,
-    .fondo-seguridad .security-card .btn-primary {
-        max-width: 100%;
-        width: 100% !important;
-        margin-left: 0;
-        font-size: 1rem;
+        padding: 18px 0 30px;
     }
 
     .security-title {
@@ -343,32 +361,69 @@ button {
         line-height: 1.4;
         margin-bottom: 14px;
     }
+
+    .security-page .card-body {
+        padding: 18px;
+    }
+
+    .security-page .table th,
+    .security-page .table td {
+        padding: 12px 10px;
+    }
+
+    .fondo-seguridad {
+        padding: 18px;
+        border-radius: 22px;
+    }
+
+    .fondo-seguridad .row.g-4 {
+        margin-top: 22px;
+        gap: 14px;
+    }
+
+    .fondo-seguridad .security-card {
+        border-radius: 20px;
+    }
+
+    .fondo-seguridad .security-card .card-body {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center;
+        justify-content: center;
+        text-align: center !important;
+        min-height: auto;
+        gap: 14px;
+        padding: 20px 16px;
+    }
+
+    .fondo-seguridad .security-card i {
+        font-size: 2.1rem;
+    }
+
+    .fondo-seguridad .security-card h5 {
+        font-size: 1.35rem;
+        margin-bottom: 4px;
+    }
+
+    .fondo-seguridad .security-card .text-muted.small {
+        font-size: .95rem;
+        line-height: 1.4;
+        text-align: center !important;
+    }
+
+    .fondo-seguridad .security-card .btn,
+    .fondo-seguridad .security-card .btn-primary {
+        max-width: 100%;
+        width: 100% !important;
+        margin-left: 0;
+        font-size: 1rem;
+    }
 }
 
-/* =========================
-   RESPONSIVE - CELULARES PEQUEÑOS
-   ========================= */
 @media (max-width: 480px) {
     .fondo-seguridad {
         padding: 14px;
         border-radius: 18px;
-    }
-
-    .fondo-seguridad .row.g-4 {
-        margin-top: 18px;
-        gap: 14px;
-    }
-
-    .fondo-seguridad .security-card .card-body {
-        padding: 18px 14px;
-    }
-
-    .fondo-seguridad .security-card h5 {
-        font-size: 1.3rem;
-    }
-
-    .fondo-seguridad .security-card .text-muted.small {
-        font-size: 0.95rem;
     }
 
     .security-title {
@@ -377,5 +432,13 @@ button {
 
     .security-subtitle {
         font-size: 0.95rem;
+    }
+
+    .security-page .btn,
+    .security-page .btn-primary,
+    .security-page .btn-success,
+    .security-page .btn-outline-secondary,
+    .security-page .btn-warning {
+        width: 100%;
     }
 }

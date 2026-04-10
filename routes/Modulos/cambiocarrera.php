@@ -76,6 +76,11 @@ Route::get('/cambio-carrera/coordinacion/dictamen/{id_tramite}', function ($id_t
     return view('cambio_carrera_coordinacion_dictamen', compact('id_tramite'));
 })->name('cambio-carrera.coordinacion.dictamen');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/coordinador/cambio-carrera', [CambioCarreraController::class, 'vistaCoordinador'])
+        ->name('coordinador.cambio-carrera.index');
+});
+
 
 
 
