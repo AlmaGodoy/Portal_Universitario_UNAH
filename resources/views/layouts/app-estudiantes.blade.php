@@ -72,7 +72,7 @@
         <div class="sidebar-bg" style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
         <div class="sidebar-overlay"></div>
 
-        <a href="javascript:void(0)" class="brand-link">
+        <a href="{{ route('dashboard') }}" class="brand-link">
             <div class="brand-top-glow"></div>
 
             <div class="brand-logo-wrap">
@@ -108,7 +108,8 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ route('mis.tramites') }}"
+                               class="nav-link {{ request()->routeIs('mis.tramites') || request()->is('mis-tramites') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-folder-open"></i>
                                 <p>Mis trámites</p>
                             </a>
