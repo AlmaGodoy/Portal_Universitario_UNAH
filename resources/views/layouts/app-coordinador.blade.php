@@ -101,51 +101,61 @@
 
                         {{-- Dashboard --}}
                         <li class="nav-item">
-                            <a href="{{ route('dashboard') }}"
+                           <a href="{{ url('/empleado/dashboard') }}"
                                class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
+                            <a href="{{ route('empleado.dashboard') }}"
+                               class="nav-link {{ request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
 
                         {{-- Trámites --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-folder-open"></i>
-                                <p>Trámites</p>
-                            </a>
-                        </li>
+                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
+    <a href="javascript:void(0)"
+       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-folder-open"></i>
+        <p>
+            Trámites
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
 
-                        {{-- Seguridad --}}
-                        <li class="nav-item has-treeview {{ request()->is('seguridad*') ? 'menu-open' : '' }}">
-                            <a href="javascript:void(0)"
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cambio-carrera.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cambio de carrera</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cancelacion.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cancelacion.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cancelación</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
+                        {{-- Seguridad: SOLO BOTÓN DIRECTO --}}
+                        <li class="nav-item">
+                            <a href="{{ route('seguridad.index') }}"
                                class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad <i class="right fas fa-angle-left"></i></p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Usuarios</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Roles y permisos</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        {{-- Reportes --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Reportes</p>
+                                <p>Seguridad</p>
                             </a>
                         </li>
+{{-- Reportes --}}
+<li class="nav-item">
+    <a href="{{ route('reporte.tramites.vista') }}"
+       class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-chart-bar"></i>
+        <p>Reportes</p>
+    </a>
+</li>
 
                         {{-- Auditoría --}}
                         <li class="nav-item">
