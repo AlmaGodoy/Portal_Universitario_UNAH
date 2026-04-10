@@ -135,6 +135,12 @@ public function carreras()
 
 public function listadoSecretaria()
 {
+    $idCarreraSecretaria = $this->obtenerCarreraSecretariaAutenticada();
+
+    if (!$idCarreraSecretaria) {
+        return response()->json([]);
+    }
+
     $tramites = DB::table('tbl_tramite as t')
         ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
         ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
@@ -147,43 +153,53 @@ public function listadoSecretaria()
         )
         ->where('t.tipo_tramite_academico', 'cambio_carrera')
         ->where('t.estado', 1)
-
         ->whereNotIn('t.resolucion_de_tramite_academico', ['aprobada', 'rechazada'])
-
+        ->where('t.id_carrera_destino', $idCarreraSecretaria)
         ->orderByDesc('t.id_tramite')
         ->get();
 
     return response()->json($tramites);
 }
+public function detalleSecretaria($id_tramite)
+{
+    $idCarreraSecretaria = $this->obtenerCarreraSecretariaAutenticada();
 
- public function detalleSecretaria($id_tramite)
-    {
-        $tramite = DB::table('tbl_tramite as t')
-
-            ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
-
-            ->leftJoin('tbl_estudiante as e', 't.id_persona', '=', 'e.id_persona')
-
-            ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
-
-            ->select(
-                't.id_tramite',
-                't.id_persona',
-                't.fecha_solicitud',
-                't.direccion',
-                't.resolucion_de_tramite_academico as estado_tramite',
-                'p.nombre_persona as estudiante',
-                'c.nombre_carrera as carrera_destino',
-                'e.indice_periodo',
-                'e.indice_global',
-                'e.cantidad_clases_aprobadas'
-            )
-            ->where('t.id_tramite', $id_tramite)
-
-            ->first();
-
-        return response()->json($tramite);
+    if (!$idCarreraSecretaria) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No tienes una carrera asignada como secretaria.'
+        ], 403);
     }
+
+    $tramite = DB::table('tbl_tramite as t')
+        ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
+        ->leftJoin('tbl_estudiante as e', 't.id_persona', '=', 'e.id_persona')
+        ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+        ->select(
+            't.id_tramite',
+            't.id_persona',
+            't.fecha_solicitud',
+            't.direccion',
+            't.resolucion_de_tramite_academico as estado_tramite',
+            'p.nombre_persona as estudiante',
+            'c.nombre_carrera as carrera_destino',
+            'e.indice_periodo',
+            'e.indice_global',
+            'e.cantidad_clases_aprobadas'
+        )
+        ->where('t.id_tramite', $id_tramite)
+        ->where('t.id_carrera_destino', $idCarreraSecretaria)
+        ->first();
+
+    if (!$tramite) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No puedes revisar un trámite que no pertenece a tu carrera.'
+        ], 403);
+    }
+
+    return response()->json($tramite);
+}
 
     /*
         =========================================================
@@ -191,52 +207,55 @@ public function listadoSecretaria()
         =========================================================
         
     */
-    public function guardarRevisionSecretaria(Request $request)
-    {
-        $request->validate([
-            'id_tramite' => 'required|integer',
-            'indice_periodo' => 'nullable|numeric',
-            'indice_global' => 'nullable|numeric',
-            'clases_aprobadas' => 'nullable|integer',
-        ]);
+   public function guardarRevisionSecretaria(Request $request)
+{
+    $request->validate([
+        'id_tramite' => 'required|integer',
+        'indice_periodo' => 'nullable|numeric',
+        'indice_global' => 'nullable|numeric',
+        'clases_aprobadas' => 'nullable|integer',
+    ]);
 
-        
-        $tramite = DB::table('tbl_tramite')
-            ->where('id_tramite', $request->id_tramite)
-            ->first();
+    $idCarreraSecretaria = $this->obtenerCarreraSecretariaAutenticada();
 
-        if (!$tramite) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje' => 'No se encontró el trámite.'
-            ], 404);
-        }
-
-        
-        DB::table('tbl_estudiante')
-            ->where('id_persona', $tramite->id_persona)
-            ->update([
-                'indice_periodo' => $request->indice_periodo,
-                'indice_global' => $request->indice_global,
-                'cantidad_clases_aprobadas' => $request->clases_aprobadas
-            ]);
-
-      
-       
-        
-
-    
-        DB::table('tbl_tramite')
-            ->where('id_tramite', $request->id_tramite)
-            ->update([
-                'resolucion_de_tramite_academico' => 'revision'
-            ]);
-
+    if (!$idCarreraSecretaria) {
         return response()->json([
-            'resultado' => 'OK',
-            'mensaje' => 'Revisión de Secretaría guardada correctamente.'
-        ]);
+            'resultado' => 'ERROR',
+            'mensaje' => 'No tienes una carrera asignada como secretaria.'
+        ], 403);
     }
+
+    $tramite = DB::table('tbl_tramite')
+        ->where('id_tramite', $request->id_tramite)
+        ->where('id_carrera_destino', $idCarreraSecretaria)
+        ->first();
+
+    if (!$tramite) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No puedes revisar un trámite que no pertenece a tu carrera.'
+        ], 403);
+    }
+
+    DB::table('tbl_estudiante')
+        ->where('id_persona', $tramite->id_persona)
+        ->update([
+            'indice_periodo' => $request->indice_periodo,
+            'indice_global' => $request->indice_global,
+            'cantidad_clases_aprobadas' => $request->clases_aprobadas
+        ]);
+
+    DB::table('tbl_tramite')
+        ->where('id_tramite', $request->id_tramite)
+        ->update([
+            'resolucion_de_tramite_academico' => 'revision'
+        ]);
+
+    return response()->json([
+        'resultado' => 'OK',
+        'mensaje' => 'Revisión de Secretaría guardada correctamente.'
+    ]);
+}
 
    public function listadoCoordinacion()
 {
@@ -464,6 +483,30 @@ private function obtenerCarreraCoordinadorAutenticado(): ?int
     $empleado = DB::table('tbl_empleados')
         ->where('id_persona', $idPersona)
         ->where('tipo_usuario', 'coordinador')
+        ->first();
+
+    if (!$empleado || empty($empleado->id_carrera)) {
+        return null;
+    }
+
+    return (int) $empleado->id_carrera;
+}
+
+private function obtenerCarreraSecretariaAutenticada(): ?int
+{
+    if (!Auth::check()) {
+        return null;
+    }
+
+    $idPersona = Auth::user()->id_persona ?? null;
+
+    if (!$idPersona) {
+        return null;
+    }
+
+    $empleado = DB::table('tbl_empleados')
+        ->where('id_persona', $idPersona)
+        ->where('tipo_usuario', 'secretario')
         ->first();
 
     if (!$empleado || empty($empleado->id_carrera)) {
