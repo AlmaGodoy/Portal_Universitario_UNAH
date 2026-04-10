@@ -1,4 +1,10 @@
-@extends('layouts.app-coordinador')
+@php
+    $layoutSeguridad = session('rol_texto') === 'secretaria_general'
+        ? 'layouts.app-secretaria-academica'
+        : 'layouts.app-coordinador';
+@endphp
+
+@extends($layoutSeguridad)
 
 @section('titulo', 'Gestión de Objetos')
 
@@ -17,26 +23,30 @@
         </div>
     @endif
 
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="security-title">Gestión de Objetos</h2>
-            <p class="security-subtitle">Administración de módulos y submódulos de seguridad.</p>
+            <p class="security-subtitle">Administración global de módulos, pantallas y submódulos de seguridad.</p>
         </div>
 
-        <div>
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('seguridad.index') }}" class="btn btn-outline-secondary">
                 Volver a Seguridad
             </a>
 
-            <button class="btn btn-primary ms-2" data-toggle="modal" data-target="#modalNuevoObjeto">
+            <button class="btn btn-primary" data-toggle="modal" data-target="#modalNuevoObjeto">
                 + Nuevo Objeto
             </button>
         </div>
     </div>
 
     <div class="card shadow border-0 security-card">
-        <div class="card-header security-header">
+        <div class="card-header security-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-bold text-white">Lista de Objetos / Módulos</span>
+
+            <span class="badge bg-light text-dark">
+                Total objetos: {{ count($objetos) }}
+            </span>
         </div>
 
         <div class="card-body bg-white">
@@ -154,7 +164,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
                 </div>
             </form>
         </div>

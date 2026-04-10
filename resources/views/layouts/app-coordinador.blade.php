@@ -103,6 +103,8 @@
                         <li class="nav-item">
                            <a href="{{ url('/empleado/dashboard') }}"
                                class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
+                            <a href="{{ route('empleado.dashboard') }}"
+                               class="nav-link {{ request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
@@ -138,27 +140,13 @@
     </ul>
 </li>
 
-                        {{-- Seguridad --}}
-                        <li class="nav-item has-treeview {{ request()->is('seguridad*') ? 'menu-open' : '' }}">
-                            <a href="javascript:void(0)"
+                        {{-- Seguridad: SOLO BOTÓN DIRECTO --}}
+                        <li class="nav-item">
+                            <a href="{{ route('seguridad.index') }}"
                                class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad <i class="right fas fa-angle-left"></i></p>
+                                <p>Seguridad</p>
                             </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Usuarios</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Roles y permisos</p>
-                                    </a>
-                                </li>
-                            </ul>
                         </li>
 {{-- Reportes --}}
 <li class="nav-item">
