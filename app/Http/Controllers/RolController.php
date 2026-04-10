@@ -7,55 +7,50 @@ use Illuminate\Support\Facades\DB;
 
 class RolController extends Controller
 {
-    public function panelRoles()
+    public function panelRoles(Request $request)
     {
-        $roles = DB::table('tbl_rol')
-            ->where('estado_activo', 1)
-            ->orderBy('id_rol')
-            ->get();
+        if (!$this->esSecretariaGeneral()) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'rol' => 'Solo Secretaría General puede administrar roles.'
+                ]);
+        }
 
-        $permisos = DB::table('tbl_permiso')
-            ->orderBy('id_permiso')
-            ->get();
+        $buscar = trim((string) $request->get('buscar', ''));
+        $estado = $request->get('estado_activo', '');
 
-        $objetos = DB::table('tbl_objeto')
-            ->where('estado_activo', 1)
-            ->orderBy('id_objeto')
-            ->get();
+        $roles = DB::select('CALL SEL_ROLES_SEGURIDAD_FILTRO(?, ?)', [
+            $buscar !== '' ? $buscar : null,
+            ($estado !== '' && in_array($estado, ['0', '1'], true)) ? (int) $estado : null
+        ]);
 
-        $rolPermisos = DB::table('tbl_rol_permiso as rp')
-            ->join('tbl_rol as r', 'r.id_rol', '=', 'rp.id_rol')
-            ->join('tbl_permiso as p', 'p.id_permiso', '=', 'rp.id_permiso')
-            ->join('tbl_objeto as o', 'o.id_objeto', '=', 'rp.id_objeto')
-            ->select(
-                'rp.id_rol_permiso',
-                'rp.id_rol',
-                'rp.id_permiso',
-                'rp.id_objeto',
-                'rp.fecha_asignacion',
-                'r.nombre_rol',
-                'p.nombre_permiso',
-                'o.nombre_objeto',
-                'o.tipo_objeto'
-            )
-            ->where('rp.estado_activo', 1)
-            ->where('r.estado_activo', 1)
-            ->where('o.estado_activo', 1)
-            ->orderBy('r.nombre_rol')
-            ->orderBy('o.nombre_objeto')
-            ->orderBy('p.nombre_permiso')
-            ->get();
+        $permisos = DB::select('CALL SEL_PERMISOS_SEGURIDAD()');
+        $objetos = DB::select('CALL SEL_MODULOS_SEGURIDAD()');
+        $rolPermisos = DB::select('CALL SEL_ACCESOS_SEGURIDAD()');
 
-        return view('rol_seguridad_roles', compact(
-            'roles',
-            'permisos',
-            'objetos',
-            'rolPermisos'
-        ));
+        return view('rol_seguridad_roles', [
+            'roles' => collect($roles),
+            'permisos' => collect($permisos),
+            'objetos' => collect($objetos),
+            'rolPermisos' => collect($rolPermisos),
+            'filtros' => [
+                'buscar' => $buscar,
+                'estado_activo' => $estado,
+            ],
+        ]);
     }
 
     public function storeRol(Request $request)
     {
+        if (!$this->esSecretariaGeneral()) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'rol' => 'Solo Secretaría General puede crear roles.'
+                ]);
+        }
+
         $request->validate([
             'nombre_rol'    => 'required|string|max:100',
             'descripcion'   => 'required|string|max:255',
@@ -83,6 +78,14 @@ class RolController extends Controller
 
     public function updateRol(Request $request, $id)
     {
+        if (!$this->esSecretariaGeneral()) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'rol' => 'Solo Secretaría General puede actualizar roles.'
+                ]);
+        }
+
         $request->validate([
             'nombre_rol'    => 'required|string|max:100',
             'descripcion'   => 'required|string|max:255',
@@ -90,7 +93,7 @@ class RolController extends Controller
         ]);
 
         $res = DB::select('CALL UPD_ROL_SEGURIDAD(?, ?, ?, ?, ?)', [
-            $id,
+            (int) $id,
             $request->nombre_rol,
             $request->descripcion,
             (int) $request->estado_activo,
@@ -111,6 +114,14 @@ class RolController extends Controller
 
     public function asignarPermisosObjeto(Request $request)
     {
+        if (!$this->esSecretariaGeneral()) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'permiso' => 'Solo Secretaría General puede asignar permisos a los roles.'
+                ]);
+        }
+
         $request->validate([
             'id_rol'     => 'required|integer',
             'id_objeto'  => 'required|integer',
@@ -123,6 +134,8 @@ class RolController extends Controller
         ]);
 
         $errores = [];
+        $creados = 0;
+        $existentes = 0;
 
         foreach ($request->permisos as $idPermiso) {
             $res = DB::select('CALL INS_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?, ?, ?)', [
@@ -136,7 +149,11 @@ class RolController extends Controller
             $resultado = $row->resultado ?? 'ERROR';
             $mensaje = $row->mensaje ?? 'No se pudo asignar el permiso.';
 
-            if (!in_array($resultado, ['OK', 'EXISTE'], true)) {
+            if ($resultado === 'OK') {
+                $creados++;
+            } elseif ($resultado === 'EXISTE') {
+                $existentes++;
+            } else {
                 $errores[] = $mensaje;
             }
         }
@@ -147,12 +164,25 @@ class RolController extends Controller
             ])->withInput();
         }
 
+        $mensajeFinal = 'Permisos procesados correctamente.';
+        if ($creados > 0 || $existentes > 0) {
+            $mensajeFinal = "Permisos procesados correctamente. Nuevos: {$creados}. Ya existentes: {$existentes}.";
+        }
+
         return redirect()->route('seguridad.roles')
-            ->with('status', 'Permisos asignados correctamente.');
+            ->with('status', $mensajeFinal);
     }
 
     public function deleteAsignacion($id)
     {
+        if (!$this->esSecretariaGeneral()) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'permiso' => 'Solo Secretaría General puede desactivar asignaciones.'
+                ]);
+        }
+
         $res = DB::select('CALL SOFT_DEL_PERMISO_ROL_OBJETO_SEGURIDAD(?, ?)', [
             (int) $id,
             auth()->id()
@@ -170,5 +200,10 @@ class RolController extends Controller
 
         return redirect()->route('seguridad.roles')
             ->with('status', $mensaje);
+    }
+
+    private function esSecretariaGeneral(): bool
+    {
+        return strtolower((string) session('rol_texto', 'sin_rol')) === 'secretaria_general';
     }
 }
