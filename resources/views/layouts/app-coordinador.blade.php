@@ -101,7 +101,7 @@
 
                         {{-- Dashboard --}}
                         <li class="nav-item">
-                            <a href="{{ route('dashboard') }}"
+                           <a href="{{ url('/empleado/dashboard') }}"
                                class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
@@ -109,12 +109,34 @@
                         </li>
 
                         {{-- Trámites --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-folder-open"></i>
-                                <p>Trámites</p>
-                            </a>
-                        </li>
+                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
+    <a href="javascript:void(0)"
+       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-folder-open"></i>
+        <p>
+            Trámites
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cambio-carrera.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cambio de carrera</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cancelacion.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cancelacion.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cancelación</p>
+            </a>
+        </li>
+    </ul>
+</li>
 
                         {{-- Seguridad --}}
                         <li class="nav-item has-treeview {{ request()->is('seguridad*') ? 'menu-open' : '' }}">
@@ -138,14 +160,14 @@
                                 </li>
                             </ul>
                         </li>
-
-                        {{-- Reportes --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Reportes</p>
-                            </a>
-                        </li>
+{{-- Reportes --}}
+<li class="nav-item">
+    <a href="{{ route('reporte.tramites.vista') }}"
+       class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-chart-bar"></i>
+        <p>Reportes</p>
+    </a>
+</li>
 
                         {{-- Auditoría --}}
                         <li class="nav-item">
