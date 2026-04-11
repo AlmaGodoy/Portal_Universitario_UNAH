@@ -72,7 +72,7 @@
         <div class="sidebar-bg" style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
         <div class="sidebar-overlay"></div>
 
-        <a href="javascript:void(0)" class="brand-link">
+        <a href="{{ route('dashboard') }}" class="brand-link">
             <div class="brand-top-glow"></div>
 
             <div class="brand-logo-wrap">
@@ -103,12 +103,21 @@
                             <a href="{{ route('dashboard') }}"
                                class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Dashboard</p>
+                                <p>Panel institucional</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ url('/equivalencias') }}"
+                               class="nav-link {{ request()->is('equivalencias') || request()->is('equivalencias*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-shuffle"></i>
+                                <p>Equivalencias</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('mis.tramites') }}"
+                               class="nav-link {{ request()->routeIs('mis.tramites') || request()->is('mis-tramites') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-folder-open"></i>
                                 <p>Mis trámites</p>
                             </a>
@@ -119,6 +128,14 @@
                                class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ url('/soporte') }}"
+                               class="nav-link {{ request()->is('soporte') || request()->is('soporte*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-headset"></i>
+                                <p>Soporte</p>
                             </a>
                         </li>
 

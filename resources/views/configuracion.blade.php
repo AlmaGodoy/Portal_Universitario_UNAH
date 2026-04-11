@@ -1,4 +1,25 @@
-@extends('layouts.app-estudiantes')
+@php
+    $loginTipo = session('login_tipo');
+    $rolTexto = strtolower((string) (session('rol_texto') ?? ''));
+
+    $layout = 'layouts.app-estudiantes';
+    $dashboardUrl = route('dashboard');
+    $portalTexto = 'portal estudiantil';
+
+    if ($loginTipo === 'empleado') {
+        if (str_contains($rolTexto, 'coordinador')) {
+            $layout = 'layouts.app-coordinador';
+            $dashboardUrl = route('coordinador.cambio-carrera.index');
+            $portalTexto = 'panel de coordinación';
+        } elseif (str_contains($rolTexto, 'secretar')) {
+            $layout = 'layouts.app-secretaria';
+            $dashboardUrl = route('cambio-carrera.secretaria');
+            $portalTexto = 'panel de secretaría';
+        }
+    }
+@endphp
+
+@extends($layout)
 
 @section('titulo', 'Configuración')
 
