@@ -207,7 +207,7 @@ public function detalleSecretaria($id_tramite)
         =========================================================
         
     */
-   public function guardarRevisionSecretaria(Request $request)
+  public function guardarRevisionSecretaria(Request $request)
 {
     $request->validate([
         'id_tramite' => 'required|integer',
@@ -224,7 +224,6 @@ public function detalleSecretaria($id_tramite)
             'mensaje' => 'No tienes una carrera asignada como secretaria.'
         ], 403);
     }
-
 
     $tramite = DB::table('tbl_tramite')
         ->where('id_tramite', $request->id_tramite)
@@ -519,6 +518,25 @@ private function obtenerCarreraSecretariaAutenticada(): ?int
     return (int) $empleado->id_carrera;
 }
 
+public function eliminarCalendarioAcademico($id_calendario)
+{
+    try {
+        $data = DB::select('CALL DEL_LOGICO_CALENDARIO_ACADEMICO(?)', [
+            $id_calendario
+        ]);
+
+        return response()->json($data[0] ?? [
+            'resultado' => 'OK',
+            'mensaje'   => 'Calendario eliminado correctamente.'
+        ], 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $e->getMessage()
+        ], 500);
+    }
+}
 
 
 
