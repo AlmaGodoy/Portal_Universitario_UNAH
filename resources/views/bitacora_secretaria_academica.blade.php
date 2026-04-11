@@ -1,4 +1,4 @@
-@extends('layouts.app-coordinador')
+@extends('layouts.app-secretaria-academica')
 
 
 @section('content')
@@ -11,7 +11,7 @@
 
                         <header class="topbar">
                             <div class="brand">
-                                <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
+                                <img alt="Logo PumaGestión" class="brand-logo">
 
 
                                 <div class="brand-text">
