@@ -426,6 +426,16 @@
                             </a>
                         </li>
 
+                        <li class="nav-item nav-item-logout">
+                            <form action="{{ route('logout') }}" method="POST" style="margin:0;">
+                                @csrf
+                                <button type="submit" class="nav-link logout-btn">
+                                    <i class="nav-icon fas fa-right-from-bracket"></i>
+                                    <p>Cerrar sesión</p>
+                                </button>
+                            </form>
+                        </li>
+
                     </ul>
                 </nav>
             </div>

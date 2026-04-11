@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
+use Illuminate\Support\Facades\Auth;
 
 class CambioCarreraController extends Controller
 {
@@ -39,11 +41,13 @@ class CambioCarreraController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
+          'mensaje'   => $this->obtenerMensajeLimpio(
+                    $e,
+                    'No fue posible crear la solicitud de cambio de carrera.'
+                )
+            ], $this->obtenerCodigoHttp($e, 500));
         }
     }
-
     // Consultar (según tu SP: por id_tramite o id_persona) con accion='tramite'
     public function ver($codigo)
     {
@@ -234,8 +238,14 @@ public function listadoSecretaria()
         ]);
     }
 
-    public function listadoCoordinacion()
+   public function listadoCoordinacion()
 {
+    $idCarreraCoordinador = $this->obtenerCarreraCoordinadorAutenticado();
+
+    if (!$idCarreraCoordinador) {
+        return response()->json([]);
+    }
+
     $tramites = DB::table('tbl_tramite as t')
         ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
         ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
@@ -248,21 +258,13 @@ public function listadoSecretaria()
         )
         ->where('t.tipo_tramite_academico', 'cambio_carrera')
         ->where('t.estado', 1)
-
-        /*
-            CORRECCIÓN:
-            En Coordinación solo deben aparecer los trámites
-            que ya fueron revisados por Secretaría y están listos
-            para dictamen final.
-        */
         ->where('t.resolucion_de_tramite_academico', 'revision')
-
+        ->where('t.id_carrera_destino', $idCarreraCoordinador)
         ->orderByDesc('t.id_tramite')
         ->get();
 
     return response()->json($tramites);
 }
-
 /*
     =========================================================
     DICTAMEN FINAL DE COORDINACIÓN
@@ -309,7 +311,7 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
     */
 
     // 1) LISTAR TODOS LOS CALENDARIOS
-    // Este método llamará al SP: SEL_CALENDARIOS_ACADEMICOS()
+
     public function listarCalendariosAcademicos()
     {
         try {
@@ -325,7 +327,7 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
     }
 
     // 2) CREAR UN NUEVO CALENDARIO
-    // Este método llamará al SP: INS_CALENDARIO_ACADEMICO(?, ?, ?)
+   
     public function crearCalendarioAcademico(Request $request)
     {
         $request->validate([
@@ -402,6 +404,74 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
             ], 500);
         }
     }
+
+   private function obtenerMensajeLimpio(Throwable $e, string $mensajeGenerico): string
+{
+
+    if ($e instanceof QueryException) {
+        $mensajeBD = trim((string)($e->errorInfo[2] ?? ''));
+
+        if ($mensajeBD !== '') {
+            
+            $mensajeBD = preg_replace('/^\d+\s*/', '', $mensajeBD);
+            return trim($mensajeBD);
+        }
+    }
+
+    $mensajeCompleto = trim($e->getMessage());
+
+    if ($mensajeCompleto !== '') {
+       
+        if (preg_match('/:\s*\d+\s+(.*?)(?:\s+\(Connection:|\s+SQL:|$)/u', $mensajeCompleto, $coincidencias)) {
+            return trim($coincidencias[1]);
+        }
+    }
+
+   
+    return $mensajeGenerico;
+}
+    private function obtenerCodigoHttp(Throwable $e, int $codigoPorDefecto = 500): int
+    {
+       
+        if ($e instanceof QueryException) {
+            $codigoMysql = isset($e->errorInfo[1]) ? (int) $e->errorInfo[1] : 0;
+
+            if ($codigoMysql === 1644) {
+                return 422;
+            }
+        }
+
+        return $codigoPorDefecto;
+    }
+
+public function vistaCoordinador()
+{
+    return view('cambio_carrera_coordinacion');
+}
+
+private function obtenerCarreraCoordinadorAutenticado(): ?int
+{
+    if (!Auth::check()) {
+        return null;
+    }
+
+    $idPersona = Auth::user()->id_persona ?? null;
+
+    if (!$idPersona) {
+        return null;
+    }
+
+    $empleado = DB::table('tbl_empleados')
+        ->where('id_persona', $idPersona)
+        ->where('tipo_usuario', 'coordinador')
+        ->first();
+
+    if (!$empleado || empty($empleado->id_carrera)) {
+        return null;
+    }
+
+    return (int) $empleado->id_carrera;
+}
 
 
 

@@ -99,37 +99,47 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
-                        {{-- Revisión de documentos --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)"
-                               class="nav-link {{ request()->is('documentos*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-file-circle-check"></i>
-                                <p>Revisión de documentos</p>
-                            </a>
-                        </li>
 
-                        {{-- Gestión de fechas --}}
-                        <li class="nav-item has-treeview {{ request()->is('fechas*') ? 'menu-open' : '' }}">
-                            <a href="javascript:void(0)"
-                               class="nav-link {{ request()->is('fechas*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-calendar-days"></i>
-                                <p>Fechas <i class="right fas fa-angle-left"></i></p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Establecer fechas</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Calendario de trámites</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
+                        {{-- Revisión de documentos --}}
+<li class="nav-item has-treeview {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'menu-open' : '' }}">
+    <a href="javascript:void(0)"
+       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-file-circle-check"></i>
+        <p>
+            Revisión de documentos
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ route('cambio-carrera.secretaria') }}"
+               class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cambio de carrera</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="javascript:void(0)"
+               class="nav-link {{ request()->routeIs('cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cancelación</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
+
+
+                        {{-- Fechas --}}
+<li class="nav-item">
+    <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"
+       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria.calendarios') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-calendar-days"></i>
+        <p>Fechas</p>
+    </a>
+</li>
 
                         {{-- Configuración --}}
                         <li class="nav-item">

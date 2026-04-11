@@ -2,117 +2,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const root = document.getElementById('graficasDashboard');
     if (!root) return;
 
-    const apiUrl = root.dataset.apiUrl;
+    const apiUrl = root.dataset.apiUrl || '';
     const scopeLabel = root.dataset.scopeLabel || 'módulo';
-    const fallbackScopeNote = root.dataset.scopeNote || '';
+    const fallbackScopeNote = root.dataset.scopeNote || 'Mostrando estadísticas.';
     const breakdownLabel = root.dataset.breakdownLabel || 'grupo';
 
     const anioSelect = document.getElementById('anioSelectGraficas');
-    const estadoCarga = document.getElementById('estadoCargaGraficas');
-    const scopeNote = document.getElementById('scopeNoteGraficas');
-
+    const mesSelect = document.getElementById('mesSelectGraficas');
     const filtroDepartamento = document.getElementById('filtroDepartamento');
     const filtroCarrera = document.getElementById('filtroCarrera');
 
-    function setText(id, text) {
+    const estadoCarga = document.getElementById('estadoCargaGraficas');
+    const scopeNote = document.getElementById('scopeNoteGraficas');
+
+    function setText(id, value) {
         const el = document.getElementById(id);
-        if (el) el.textContent = text;
+        if (el) el.textContent = value ?? '';
     }
 
-    function escapeHtml(value) {
-        return String(value ?? '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+    function escapeHtml(text) {
+        return String(text ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
     }
 
     function normalizeSpecialLabel(label) {
-        const text = String(label ?? '').trim();
+        const txt = String(label ?? '').trim();
 
-        if (/^sin carrera asignada$/i.test(text)) {
+        if (/^sin carrera asignada$/i.test(txt)) {
             return 'Sin carrera relacionada';
         }
 
-        if (/^sin departamento asignado$/i.test(text)) {
+        if (/^sin departamento asignado$/i.test(txt)) {
             return 'Sin departamento relacionado';
         }
 
-        return text;
-    }
-
-    function buildSpecialNote(items) {
-        return '';
-    }
-
-    function renderHtmlBars(containerId, noteId, payload) {
-        const container = document.getElementById(containerId);
-        const note = document.getElementById(noteId);
-
-        if (!container) return;
-
-        const labels = payload?.labels ?? [];
-        const data = payload?.data ?? [];
-
-        if (!labels.length || !data.length) {
-            container.classList.remove('bar-chart-host');
-            container.classList.add('bar-chart-placeholder');
-
-            container.innerHTML = `
-                <div>
-                    No hay datos disponibles para el año seleccionado.
-                </div>
-            `;
-
-            if (note) {
-                note.textContent = 'Sin información para el período seleccionado.';
-            }
-            return;
-        }
-
-        const maxValue = Math.max(...data, 1);
-
-        const rows = labels.map((label, index) => {
-            const value = Number(data[index] ?? 0);
-            const width = Math.max((value / maxValue) * 100, value > 0 ? 6 : 0);
-
-            return `
-                <div class="bar-row">
-                    <div class="bar-label">${escapeHtml(label)}</div>
-                    <div class="bar-track">
-                        <div class="bar-fill" style="width: ${width}%"></div>
-                    </div>
-                    <div class="bar-value">${value}</div>
-                </div>
-            `;
-        }).join('');
-
-        container.classList.remove('bar-chart-placeholder');
-        container.classList.add('bar-chart-host');
-
-        container.innerHTML = `
-            <div class="bar-chart">
-                ${rows}
-            </div>
-        `;
-
-        if (note) {
-            note.textContent = `Total anual: ${payload?.total_anual ?? 0}`;
-        }
+        return txt;
     }
 
     function construirQueryString() {
         const params = new URLSearchParams();
 
-        const anio = anioSelect?.value || '';
-        if (anio) params.set('anio', anio);
+        if (anioSelect?.value) {
+            params.set('anio', anioSelect.value);
+        }
 
-        if (filtroDepartamento && filtroDepartamento.value) {
+        if (mesSelect?.value) {
+            params.set('mes', mesSelect.value);
+        }
+
+        if (filtroDepartamento?.value) {
             params.set('id_departamento', filtroDepartamento.value);
         }
 
-        if (filtroCarrera && filtroCarrera.value) {
+        if (filtroCarrera?.value) {
             params.set('id_carrera', filtroCarrera.value);
         }
 
@@ -141,12 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from({ length: total }, (_, index) => colors[index % colors.length]);
     }
 
-    function renderSvgDonut({
-        hostId,
-        emptyId,
-        payload,
-        typeName
-    }) {
+    function renderSvgDonut({ hostId, emptyId, payload, typeName }) {
         const currentHost = document.getElementById(hostId);
         const emptyBox = document.getElementById(emptyId);
 
@@ -174,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 emptyBox.style.display = 'block';
                 emptyBox.textContent = `No hay datos de ${typeName} por ${breakdownLabel} para el filtro seleccionado.`;
             }
-
             return;
         }
 
@@ -183,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const size = 280;
-        const strokeWidth = 56;
+        const strokeWidth = 54;
         const radius = (size - strokeWidth) / 2;
         const circumference = 2 * Math.PI * radius;
         const colors = buildDonutColors(labels.length);
@@ -220,51 +160,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const legend = items.map((item, index) => `
             <div class="donut-legend-item">
-                <span class="donut-legend-dot" style="background:${colors[index]}"></span>
+                <span class="donut-legend-color" style="background:${colors[index]}"></span>
                 <span class="donut-legend-text">${escapeHtml(item.label)}</span>
             </div>
         `).join('');
 
-        const infoNote = buildSpecialNote(items);
-
         wrap.innerHTML = `
-            <div id="${hostId}" class="donut-render-host">
-                <div class="donut-svg-box">
-                    <div class="donut-tooltip"></div>
-
-                    <svg class="donut-svg" viewBox="0 0 ${size} ${size}" aria-label="Gráfico circular de ${typeName}">
+            <div class="donut-render-host modern-donut-layout" id="${hostId}">
+                <div class="modern-donut-graphic">
+                    <svg viewBox="0 0 ${size} ${size}" class="donut-svg" aria-label="Gráfico donut de ${typeName}">
                         <circle
-                            class="donut-base-ring"
                             cx="${size / 2}"
                             cy="${size / 2}"
                             r="${radius}"
                             fill="none"
-                            stroke="#e8eef6"
+                            stroke="#eef3f9"
                             stroke-width="${strokeWidth}">
                         </circle>
-
                         ${segments}
+                        <circle
+                            cx="${size / 2}"
+                            cy="${size / 2}"
+                            r="${radius - strokeWidth / 2 + 8}"
+                            fill="#ffffff">
+                        </circle>
+                        <text x="50%" y="47%" text-anchor="middle" class="donut-total-value">${total}</text>
+                        <text x="50%" y="60%" text-anchor="middle" class="donut-total-label">Total</text>
                     </svg>
-
-                    <div class="donut-center-text">
-                        <span>Total</span>
-                        <strong>${total}</strong>
-                    </div>
+                    <div class="donut-tooltip" id="${hostId}Tooltip"></div>
                 </div>
 
-                <div class="donut-legend">
+                <div class="donut-legend modern-donut-legend">
                     ${legend}
                 </div>
-
-                ${infoNote}
             </div>
         `;
 
         const host = document.getElementById(hostId);
-        const tooltip = host?.querySelector('.donut-tooltip');
-        const segmentNodes = host?.querySelectorAll('.donut-segment') ?? [];
+        const tooltip = document.getElementById(`${hostId}Tooltip`);
+        const hostSegments = host?.querySelectorAll('.donut-segment') ?? [];
 
-        segmentNodes.forEach(segment => {
+        hostSegments.forEach(segment => {
             segment.addEventListener('mousemove', (event) => {
                 if (!tooltip || !host) return;
 
@@ -297,9 +233,68 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function renderHtmlBars(containerId, noteId, payload) {
+        const container = document.getElementById(containerId);
+        const note = document.getElementById(noteId);
+
+        if (!container) return;
+
+        const labels = payload?.labels ?? [];
+        const data = (payload?.data ?? []).map(item => Number(item ?? 0));
+
+        if (!labels.length || !data.length) {
+            container.classList.remove('bar-chart-host');
+            container.classList.add('bar-chart-placeholder');
+            container.innerHTML = `<div>No hay datos disponibles para el período seleccionado.</div>`;
+
+            if (note) {
+                note.textContent = 'Sin información para el período seleccionado.';
+            }
+            return;
+        }
+
+        const maxValue = Math.max(...data, 1);
+
+        const gridLines = [100, 75, 50, 25, 0].map(percent => {
+            const top = `${100 - percent}%`;
+            return `<span class="bar-grid-line" style="top:${top}"></span>`;
+        }).join('');
+
+        const bars = labels.map((label, index) => {
+            const value = Number(data[index] ?? 0);
+            const height = Math.max((value / maxValue) * 190, value > 0 ? 18 : 0);
+
+            return `
+                <div class="bar-modern-item">
+                    <div class="bar-modern-value">${value}</div>
+                    <div class="bar-modern-track">
+                        <div class="bar-modern-fill" style="height:${height}px;"></div>
+                    </div>
+                    <div class="bar-modern-label">${escapeHtml(label)}</div>
+                </div>
+            `;
+        }).join('');
+
+        container.classList.remove('bar-chart-placeholder');
+        container.classList.add('bar-chart-host');
+
+        container.innerHTML = `
+            <div class="bar-modern-surface">
+                <div class="bar-modern-gridlines">${gridLines}</div>
+                <div class="bar-modern-columns">
+                    ${bars}
+                </div>
+            </div>
+        `;
+
+        if (note) {
+            note.textContent = `Total acumulado: ${payload?.total_anual ?? 0}`;
+        }
+    }
+
     async function cargarGraficas() {
         const queryString = construirQueryString();
-        estadoCarga.textContent = `Cargando estadísticas de ${scopeLabel}...`;
+        estadoCarga.textContent = `Cargando estadísticas de ${scopeLabel}.`;
 
         try {
             const response = await fetch(`${apiUrl}?${queryString}`, {
@@ -333,7 +328,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             scopeNote.textContent = result.nota || fallbackScopeNote || `Mostrando estadísticas de ${scopeLabel}.`;
-            estadoCarga.textContent = `Mostrando estadísticas de ${scopeLabel} para el año ${anioSelect?.value || ''}`;
+
+            const partesEstado = [`Mostrando estadísticas de ${scopeLabel}`];
+
+            if (anioSelect?.value) {
+                partesEstado.push(`año ${anioSelect.value}`);
+            }
+
+            if (mesSelect?.value) {
+                const labelMes = mesSelect.options[mesSelect.selectedIndex]?.text || mesSelect.value;
+                partesEstado.push(`mes ${labelMes}`);
+            }
+
+            estadoCarga.textContent = partesEstado.join(' · ');
 
             const nuevaUrl = queryString
                 ? `${window.location.pathname}?${queryString}`
@@ -345,8 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setText('noteCancelaciones', error.message);
             setText('noteCambios', error.message);
 
-            const ids = ['chartCancelaciones', 'chartCambios'];
-            ids.forEach(id => {
+            ['chartCancelaciones', 'chartCambios'].forEach(id => {
                 const container = document.getElementById(id);
                 if (container) {
                     container.classList.remove('bar-chart-host');
@@ -371,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     anioSelect?.addEventListener('change', cargarGraficas);
+    mesSelect?.addEventListener('change', cargarGraficas);
     filtroDepartamento?.addEventListener('change', cargarGraficas);
     filtroCarrera?.addEventListener('change', cargarGraficas);
 
