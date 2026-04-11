@@ -28,6 +28,7 @@ Route::prefix('api/cambio-carrera')->group(function () {
     Route::post('secretaria/calendarios', [CambioCarreraController::class, 'crearCalendarioAcademico']);
     Route::put('secretaria/calendarios/{id_calendario}', [CambioCarreraController::class, 'actualizarCalendarioAcademico']);
     Route::put('secretaria/calendarios/estado/{id_calendario}', [CambioCarreraController::class, 'cambiarEstadoCalendarioAcademico']);
+    Route::delete('secretaria/calendarios/{id_calendario}', [CambioCarreraController::class, 'eliminarCalendarioAcademico']);
 });
 
 
