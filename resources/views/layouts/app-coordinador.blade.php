@@ -159,19 +159,22 @@
 
                         {{-- Auditoría --}}
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ route('auditoria') }}" class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
                         {{-- Bitácora --}}
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-book"></i>
-                                <p>Bitácora</p>
-                            </a>
-                        </li>
+@if (Route::has('bitacora.index'))
+    <li class="nav-item">
+        <a href="{{ route('bitacora.index') }}"
+           class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Bitácora</p>
+        </a>
+    </li>
+@endif
 
                         {{-- Configuración --}}
                         <li class="nav-item">
