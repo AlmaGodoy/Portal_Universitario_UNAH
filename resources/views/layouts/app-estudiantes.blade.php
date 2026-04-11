@@ -103,7 +103,15 @@
                             <a href="{{ route('dashboard') }}"
                                class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Dashboard</p>
+                                <p>Panel institucional</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ url('/equivalencias') }}"
+                               class="nav-link {{ request()->is('equivalencias') || request()->is('equivalencias*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-shuffle"></i>
+                                <p>Equivalencias</p>
                             </a>
                         </li>
 
@@ -120,6 +128,14 @@
                                class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ url('/soporte') }}"
+                               class="nav-link {{ request()->is('soporte') || request()->is('soporte*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-headset"></i>
+                                <p>Soporte</p>
                             </a>
                         </li>
 
