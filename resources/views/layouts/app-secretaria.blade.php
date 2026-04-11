@@ -99,7 +99,7 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
-                        
+
                         {{-- Revisión de documentos --}}
 <li class="nav-item has-treeview {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'menu-open' : '' }}">
     <a href="javascript:void(0)"
@@ -129,9 +129,9 @@
         </li>
     </ul>
 </li>
-                       
 
-                  
+
+
                         {{-- Fechas --}}
 <li class="nav-item">
     <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"

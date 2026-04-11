@@ -2,40 +2,71 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Graficas;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Graficas;
 
 class EmpleadoController extends Controller
 {
-    public function index()
+    protected Graficas $graficas;
+
+    public function __construct(Graficas $graficas)
+    {
+        $this->graficas = $graficas;
+    }
+
+    public function index(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
-        $rol = session('rol_texto') ?? 'sin_rol';
+        $rol = strtolower((string) (session('rol_texto') ?? 'sin_rol'));
 
-        $graficas = app(Graficas::class);
-
-        $anio = request('anio');
-        $aniosDisponibles = $graficas->obtenerAniosDisponibles();
+        $anio = $request->get('anio');
+        $aniosDisponibles = $this->graficas->obtenerAniosDisponibles();
 
         $data = [
-            'titulo'   => 'Gestión de Carrera - FCEAC',
+            'titulo' => 'Gestión de Carrera - FCEAC',
             'userName' => $user->persona->nombre_persona ?? ($user->name ?? 'Usuario'),
             'userRole' => $rol,
-            'anio'     => $anio,
+            'anio' => $anio,
             'aniosDisponibles' => $aniosDisponibles,
         ];
 
         return match ($rol) {
             'secretario', 'secretaria' => $this->vistaSecretariaCarrera($data),
             'secretaria_general'       => $this->vistaSecretariaAcademica($data),
-            'coordinador'              => view('coordinador_carrera', $data),
+            'coordinador'              => $this->vistaCoordinador($data),
             default                    => view('dashboard', $data),
         };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | VISTA COORDINADOR
+    |--------------------------------------------------------------------------
+    */
+    protected function vistaCoordinador(array $data)
+    {
+        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+
+        $carreras = collect();
+        if ($idCarreraActual) {
+            $carrera = $this->graficas->obtenerCarrerasDisponibles()
+                ->firstWhere('id_carrera', $idCarreraActual);
+
+            if ($carrera) {
+                $carreras = collect([$carrera]);
+            }
+        }
+
+        return view('coordinador_carrera', array_merge($data, [
+            'carreras' => $carreras,
+            'idCarreraSeleccionada' => $idCarreraActual,
+        ]));
     }
 
     /*
@@ -45,30 +76,32 @@ class EmpleadoController extends Controller
     */
     protected function vistaSecretariaCarrera(array $data)
     {
-        $carreras = DB::table('tbl_carrera')
-            ->select('id_carrera', 'nombre_carrera')
-            ->orderBy('nombre_carrera')
-            ->get();
+        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
 
-        $idCarreraSeleccionada = request('id_carrera');
+        $carreras = collect();
+        if ($idCarreraActual) {
+            $carrera = $this->graficas->obtenerCarrerasDisponibles()
+                ->firstWhere('id_carrera', $idCarreraActual);
+
+            if ($carrera) {
+                $carreras = collect([$carrera]);
+            }
+        }
 
         return view('secre_carrera', array_merge($data, [
             'carreras' => $carreras,
-            'idCarreraSeleccionada' => $idCarreraSeleccionada,
+            'idCarreraSeleccionada' => $idCarreraActual,
         ]));
     }
 
     /*
     |--------------------------------------------------------------------------
-    | VISTA SECRETARÍA ACADÉMICA
+    | VISTA SECRETARÍA GENERAL
     |--------------------------------------------------------------------------
     */
     protected function vistaSecretariaAcademica(array $data)
     {
-        $departamentos = DB::table('tbl_departamento')
-            ->select('id_departamento', 'nombre_departamento')
-            ->orderBy('nombre_departamento')
-            ->get();
+        $departamentos = $this->graficas->obtenerDepartamentosDisponibles();
 
         $idDepartamentoSeleccionado = request('id_departamento');
 
@@ -96,5 +129,44 @@ class EmpleadoController extends Controller
     public function getNotificaciones()
     {
         return response()->json([]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+    protected function obtenerIdPersonaAutenticada(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return null;
+        }
+
+        return isset($user->id_persona) ? (int) $user->id_persona : null;
+    }
+
+    protected function obtenerIdCarreraEmpleadoActual(): ?int
+    {
+        $idPersona = $this->obtenerIdPersonaAutenticada();
+
+        if (!$idPersona) {
+            return null;
+        }
+
+        $res = DB::select('CALL SEL_CARRERA_EMPLEADO_POR_PERSONA(?)', [
+            $idPersona
+        ]);
+
+        $row = $res[0] ?? null;
+
+        if (!$row || ($row->resultado ?? 'ERROR') !== 'OK') {
+            return null;
+        }
+
+        return !empty($row->id_carrera)
+            ? (int) $row->id_carrera
+            : null;
     }
 }

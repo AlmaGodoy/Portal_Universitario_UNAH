@@ -159,7 +159,7 @@
 
                         {{-- Auditoría --}}
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ route('auditoria') }}" class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
@@ -167,7 +167,7 @@
 
                         {{-- Bitácora --}}
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ route('bitacora.index') }}" class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Bitácora</p>
                             </a>
