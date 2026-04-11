@@ -41,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button onclick="toggleEstado(${c.id_calendario_academico})" class="cc-btn-secondary">
                                 Activar / Desactivar
                             </button>
+
+                            <button onclick="eliminarCalendario(${c.id_calendario_academico})" class="cc-btn-danger">
+                                Eliminar
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -119,6 +123,38 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error(error);
             setMsg('Error al cambiar estado', false);
+        }
+    }
+
+    // ===============================
+    // ELIMINAR LÓGICAMENTE
+    // ===============================
+    window.eliminarCalendario = async function(id) {
+        const confirmado = confirm('¿Seguro que deseas eliminar este calendario?');
+
+        if (!confirmado) return;
+
+        try {
+            const res = await fetch(`/api/cambio-carrera/secretaria/calendarios/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrf
+                }
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.resultado === 'ERROR') {
+                setMsg(data.mensaje || 'Error al eliminar calendario', false);
+                return;
+            }
+
+            setMsg('Calendario eliminado correctamente', true);
+            cargarCalendarios();
+
+        } catch (error) {
+            console.error(error);
+            setMsg('Error al eliminar calendario', false);
         }
     }
 

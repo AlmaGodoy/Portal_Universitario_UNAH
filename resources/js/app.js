@@ -13,5 +13,5 @@ import './cambio_carrera_secretaria_revision.js';
 import './cambio_carrera_coordinacion.js';
 import './cambio_carrera_coordinacion_dictamen.js';
 import './resolucion_cancelacion_coordinador.js';
-
+import './soporte.js';
 
