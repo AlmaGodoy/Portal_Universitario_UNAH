@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
 
 class CambioCarreraController extends Controller
 {
@@ -285,6 +286,59 @@ public function detalleSecretaria($id_tramite)
 
     return response()->json($tramites);
 }
+
+
+/*
+    =========================================================
+    DETALLE DEL TRÁMITE PARA COORDINACIÓN
+    =========================================================
+*/
+public function detalleCoordinacion($id_tramite)
+{
+    // AQUÍ se obtiene la carrera del coordinador autenticado
+    $idCarreraCoordinador = $this->obtenerCarreraCoordinadorAutenticado();
+
+    // AQUÍ se valida si el coordinador tiene carrera asignada
+    if (!$idCarreraCoordinador) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No tienes una carrera asignada como coordinador.'
+        ], 403);
+    }
+
+    // AQUÍ se consulta el trámite pero usando la carrera del coordinador
+    $tramite = DB::table('tbl_tramite as t')
+        ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
+        ->leftJoin('tbl_estudiante as e', 't.id_persona', '=', 'e.id_persona')
+        ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+        ->select(
+            't.id_tramite',
+            't.id_persona',
+            't.fecha_solicitud',
+            't.direccion',
+            't.resolucion_de_tramite_academico as estado_tramite',
+            't.observacion_dictamen',
+            'p.nombre_persona as estudiante',
+            'c.nombre_carrera as carrera_destino',
+            'e.indice_periodo',
+            'e.indice_global',
+            'e.cantidad_clases_aprobadas'
+        )
+        ->where('t.id_tramite', $id_tramite)
+        ->where('t.id_carrera_destino', $idCarreraCoordinador)
+        ->where('t.resolucion_de_tramite_academico', 'revision')
+        ->first();
+
+    // AQUÍ se valida que el trámite sí pertenezca a la carrera del coordinador
+    if (!$tramite) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No puedes revisar un trámite que no pertenece a tu carrera o que aún no está en revisión.'
+        ], 403);
+    }
+
+    return response()->json($tramite);
+}
 /*
     =========================================================
     DICTAMEN FINAL DE COORDINACIÓN
@@ -298,15 +352,29 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
         'observacion_dictamen' => 'nullable|string'
     ]);
 
+    // AQUÍ se obtiene la carrera del coordinador autenticado
+    $idCarreraCoordinador = $this->obtenerCarreraCoordinadorAutenticado();
+
+    // AQUÍ se valida si el coordinador tiene carrera asignada
+    if (!$idCarreraCoordinador) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No tienes una carrera asignada como coordinador.'
+        ], 403);
+    }
+
+    // AQUÍ se busca el trámite pero restringido a la carrera del coordinador
     $tramite = DB::table('tbl_tramite')
         ->where('id_tramite', $id_tramite)
+        ->where('id_carrera_destino', $idCarreraCoordinador)
+        ->where('resolucion_de_tramite_academico', 'revision')
         ->first();
 
     if (!$tramite) {
         return response()->json([
             'resultado' => 'ERROR',
-            'mensaje' => 'No se encontró el trámite.'
-        ], 404);
+            'mensaje' => 'No puedes dictaminar un trámite que no pertenece a tu carrera o que aún no está en revisión.'
+        ], 403);
     }
 
     DB::table('tbl_tramite')
@@ -321,31 +389,6 @@ public function dictaminarCoordinacion(Request $request, $id_tramite)
         'mensaje' => 'Dictamen final guardado correctamente.'
     ]);
 }
-
-
-/*
-        =========================================================
-        AQUÍ VAS A AGREGAR LOS NUEVOS MÉTODOS
-        DEL MÓDULO DE CALENDARIO PARA SECRETARÍA
-        =========================================================
-    */
-
-    // 1) LISTAR TODOS LOS CALENDARIOS
-
-    public function listarCalendariosAcademicos()
-    {
-        try {
-            $data = DB::select('CALL SEL_CALENDARIOS_ACADEMICOS()');
-
-            return response()->json($data, 200);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
-        }
-    }
-
     // 2) CREAR UN NUEVO CALENDARIO
    
     public function crearCalendarioAcademico(Request $request)
