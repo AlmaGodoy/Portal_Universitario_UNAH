@@ -97,12 +97,13 @@
 
             <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
+                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu"
+                        data-widget="treeview"
+                        role="menu"
+                        data-accordion="false">
 
                         {{-- Dashboard --}}
                         <li class="nav-item">
-                           <a href="{{ url('/empleado/dashboard') }}"
-                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                             <a href="{{ route('empleado.dashboard') }}"
                                class="nav-link {{ request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
@@ -111,36 +112,36 @@
                         </li>
 
                         {{-- Trámites --}}
-                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
-    <a href="javascript:void(0)"
-       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-folder-open"></i>
-        <p>
-            Trámites
-            <i class="right fas fa-angle-left"></i>
-        </p>
-    </a>
+                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'resolucion.cancelacion.*') ? 'menu-open' : '' }}">
+                            <a href="javascript:void(0)"
+                               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'resolucion.cancelacion.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-folder-open"></i>
+                                <p>
+                                    Trámites
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
 
-    <ul class="nav nav-treeview">
-        <li class="nav-item">
-            <a href="{{ route('coordinador.cambio-carrera.index') }}"
-               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cambio de carrera</p>
-            </a>
-        </li>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('coordinador.cambio-carrera.index') }}"
+                                       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Cambio de carrera</p>
+                                    </a>
+                                </li>
 
-        <li class="nav-item">
-            <a href="{{ route('coordinador.cancelacion.index') }}"
-               class="nav-link {{ request()->routeIs('coordinador.cancelacion.*') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cancelación</p>
-            </a>
-        </li>
-    </ul>
-</li>
+                                <li class="nav-item">
+                                    <a href="{{ route('resolucion.cancelacion.vista') }}"
+                                       class="nav-link {{ request()->routeIs('resolucion.cancelacion.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Cancelación</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
 
-                        {{-- Seguridad: SOLO BOTÓN DIRECTO --}}
+                        {{-- Seguridad --}}
                         <li class="nav-item">
                             <a href="{{ route('seguridad.index') }}"
                                class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
@@ -148,18 +149,20 @@
                                 <p>Seguridad</p>
                             </a>
                         </li>
-{{-- Reportes --}}
-<li class="nav-item">
-    <a href="{{ route('reporte.tramites.vista') }}"
-       class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-chart-bar"></i>
-        <p>Reportes</p>
-    </a>
-</li>
+
+                        {{-- Reportes --}}
+                        <li class="nav-item">
+                            <a href="{{ route('reporte.tramites.vista') }}"
+                               class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>Reportes</p>
+                            </a>
+                        </li>
 
                         {{-- Auditoría --}}
                         <li class="nav-item">
-                            <a href="{{ route('auditoria') }}" class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
+                            <a href="{{ route('auditoria') }}"
+                               class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
@@ -175,6 +178,15 @@
         </a>
     </li>
 @endif
+                        @if (Route::has('bitacora.index'))
+                            <li class="nav-item">
+                                <a href="{{ route('bitacora.index') }}"
+                                   class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-book"></i>
+                                    <p>Bitácora</p>
+                                </a>
+                            </li>
+                        @endif
 
                         {{-- Configuración --}}
                         <li class="nav-item">
@@ -202,7 +214,10 @@
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
+    <button id="sidebarToggleBtn"
+            class="sidebar-float-toggle d-none d-lg-flex"
+            type="button"
+            title="Colapsar/Expandir menú">
         <i class="fas fa-chevron-left"></i>
     </button>
 
