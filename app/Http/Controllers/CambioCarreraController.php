@@ -8,6 +8,7 @@ use Throwable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\QueryException;
 
+
 class CambioCarreraController extends Controller
 {
     public function crear(Request $request)
@@ -88,20 +89,28 @@ class CambioCarreraController extends Controller
             ], 500);
         }
     }
+// Soft delete / inactivar
+public function eliminar($id_tramite)
+{
+    try {
+        $data = DB::select('CALL SOFT_DEL_CAMBIO_CARRERA(?)', [$id_tramite]);
 
-    // Soft delete / inactivar
-    public function eliminar($id_tramite)
-    {
-        try {
-            $data = DB::select('CALL SOFT_DEL_CAMBIO_CARRERA(?)', [$id_tramite]);
-            return response()->json($data[0] ?? $data, 200);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
+        $respuesta = (array) ($data[0] ?? []);
+
+    
+        if (($respuesta['resultado'] ?? '') === 'OK') {
+            $respuesta['mensaje'] = 'Trámite cancelado correctamente.';
         }
+
+        return response()->json($respuesta, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $e->getMessage()
+        ], 500);
     }
+}
 
     public function calendarioVigente()
 {
@@ -581,6 +590,49 @@ public function eliminarCalendarioAcademico($id_calendario)
     }
 }
 
+public function verDocumento($id_tramite)
+{
+    try {
+        $documento = DB::table('tbl_documento')
+            ->where('id_tramite', $id_tramite)
+            ->where('tipo_documento', 'historial_academico')
+            ->first();
 
+        if (!$documento) {
+            return response("No se encontró registro del documento para el trámite #{$id_tramite}.", 404);
+        }
+
+        if (empty($documento->ruta_archivo)) {
+            return response("El documento fue encontrado, pero ruta_archivo está vacío.", 500);
+        }
+
+        $rutaRelativa = ltrim($documento->ruta_archivo, '/');
+
+        // Primero intentamos en storage/app/
+        $rutaArchivo = storage_path('app/' . $rutaRelativa);
+
+        // Si no existe ahí, intentamos en storage/app/public/
+        if (!file_exists($rutaArchivo)) {
+            $rutaArchivo = storage_path('app/public/' . $rutaRelativa);
+        }
+
+        if (!file_exists($rutaArchivo)) {
+            return response("El archivo no existe en ninguna ruta válida. Revisado: app/ y app/public/ para {$rutaRelativa}", 404);
+        }
+
+        return response()->file($rutaArchivo, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . basename($rutaArchivo) . '"'
+        ]);
+
+    } catch (\Throwable $e) {
+        return response(
+            "Error en verDocumento(): " . $e->getMessage()
+            . " | Línea: " . $e->getLine()
+            . " | Archivo: " . $e->getFile(),
+            500
+        );
+    }
+}
 
 }

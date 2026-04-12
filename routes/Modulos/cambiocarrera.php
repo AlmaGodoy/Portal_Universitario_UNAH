@@ -83,6 +83,8 @@ Route::middleware('auth')->group(function () {
         ->name('coordinador.cambio-carrera.index');
 });
 
+Route::get('/empleado/cambio-carrera/documento/{id_tramite}', [CambioCarreraController::class, 'verDocumento'])
+    ->name('cambio-carrera.documento');
 
 
 

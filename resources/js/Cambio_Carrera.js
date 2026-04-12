@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         msg.className = ok ? 'msg ok' : 'msg error';
     }
 
- 
     function obtenerMensajeError(data, fallback = 'No se pudo crear el trámite.') {
         if (!data) return fallback;
 
@@ -205,6 +204,95 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // =========================================================
+    // CORRECCIÓN 1:
+    // AQUÍ ESTABA EL PROBLEMA PRINCIPAL
+    //
+    // En tu HTML generado llamabas:
+    // window.cancelarTramiteCambioCarrera(id)
+    //
+    // pero esa función NO existía en tu JS.
+    //
+    // Por eso el botón "Cancelar trámite" no hacía nada.
+    // Aquí la creamos de forma global en window para que
+    // el onclick sí la encuentre.
+    // =========================================================
+    window.cancelarTramiteCambioCarrera = async function(idTramite) {
+        if (!idTramite) {
+            setMsg('No se encontró el ID del trámite.', false);
+            return;
+        }
+
+        const confirmar = confirm('¿Estás seguro de cancelar este trámite?');
+
+        if (!confirmar) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/cambio-carrera/eliminar/${idTramite}`, {
+                method: 'DELETE',
+
+                // =========================================================
+                // CORRECCIÓN 2:
+                // Se manda el token CSRF y cabeceras correctas
+                // para que Laravel acepte la petición DELETE.
+                // =========================================================
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            // =========================================================
+            // CORRECCIÓN 3:
+            // Leemos primero como texto y luego intentamos parsear JSON,
+            // así evitamos que el JS se rompa si el backend devuelve
+            // algo inesperado.
+            // =========================================================
+            const raw = await res.text();
+
+            let data = null;
+
+            try {
+                data = raw ? JSON.parse(raw) : null;
+            } catch (parseError) {
+                console.error('Respuesta no JSON al cancelar trámite:', raw);
+                setMsg('El servidor devolvió una respuesta inválida al cancelar el trámite.', false);
+                return;
+            }
+
+            // =========================================================
+            // CORRECCIÓN 4:
+            // Validación de errores del backend
+            // =========================================================
+            if (!res.ok || data?.resultado === 'ERROR' || data?.success === false) {
+                setMsg(obtenerMensajeError(data, 'No se pudo cancelar el trámite.'), false);
+                return;
+            }
+
+            setMsg(
+                data?.message ||
+                data?.mensaje ||
+                'Trámite cancelado correctamente.',
+                true
+            );
+
+            // =========================================================
+            // CORRECCIÓN 5:
+            // Recargamos la tabla después de cancelar para que
+            // desaparezca el botón o cambie el estado.
+            // =========================================================
+            cargarMisTramites();
+
+        } catch (error) {
+            console.error('Error al cancelar trámite:', error);
+            setMsg('Error de conexión al cancelar el trámite.', false);
+        }
+    };
+
     if (fileInput && previewArchivo && nombreArchivo && tamanoArchivo) {
         fileInput.addEventListener('change', () => {
             const archivo = fileInput.files[0];
@@ -315,7 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                
                 if (!res.ok || data?.resultado === 'ERROR') {
                     const mensaje = obtenerMensajeError(data, 'No se pudo crear el trámite.');
                     setMsg(mensaje, false);
