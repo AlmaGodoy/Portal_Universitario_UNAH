@@ -130,9 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (docHistorial) {
                 if (historial && historial.ruta_archivo) {
                     docHistorial.innerHTML = `
-                        <a href="/storage/${historial.ruta_archivo}" target="_blank" class="btn-ver-doc">
+                        <a href="/empleado/cambio-carrera/documento/${inputTramite.value}" target="_blank" class="btn-ver-doc">
                             Ver historial
                         </a>
+                        
                     `;
                 } else {
                     docHistorial.innerHTML = '<span class="sin-documento">No subido</span>';
