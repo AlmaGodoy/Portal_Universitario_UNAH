@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Resolucion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -10,39 +11,41 @@ use Illuminate\Support\Facades\Validator;
 class ResolucionCancelacionController extends Controller
 {
     /**
-     * Carga la vista principal del módulo
+     * Vista principal del módulo
      */
     public function vista()
     {
-        $contexto = $this->obtenerContextoUsuario();
-
-        if (!$contexto) {
+        if (!Auth::check()) {
             return redirect()->route('login');
         }
 
+        $contexto = $this->obtenerContextoCoordinador();
+
+        if (!$contexto) {
+            abort(403, 'Este módulo es exclusivo para coordinadores activos.');
+        }
+
         return view('resolucion_cancelacion_coordinador', [
-            'coordinador' => $contexto
+            'coordinador' => $contexto,
         ]);
     }
 
     /**
-     * API: listado de solicitudes de cancelación
+     * API: listar solicitudes de cancelación
      */
     public function listar(Request $request)
     {
         try {
-            $contexto = $this->obtenerContextoUsuario();
+            $contexto = $this->obtenerContextoCoordinador();
 
             if (!$contexto) {
                 return response()->json([
                     'resultado' => 'ERROR',
-                    'mensaje'   => 'No hay un usuario autenticado válido.'
+                    'mensaje'   => 'Acceso no autorizado.',
                 ], 403);
             }
 
-            $tramites = DB::table('tbl_tramite as t')
-                ->join('tbl_cancelacion as c', 'c.id_tramite', '=', 't.id_tramite')
-                ->join('tbl_persona as p', 'p.id_persona', '=', 't.id_persona')
+            $tramites = $this->queryTramitesPermitidos($contexto)
                 ->leftJoin(DB::raw('
                     (
                         SELECT id_tramite, COUNT(*) AS total_documentos
@@ -64,62 +67,58 @@ class ResolucionCancelacionController extends Controller
                     't.id_tramite',
                     't.id_persona',
                     't.fecha_solicitud',
+                    't.tipo_tramite_academico',
                     't.resolucion_de_tramite_academico',
                     'c.id_cancelacion',
                     'c.motivo',
                     'c.explicacion',
                     'p.nombre_persona as estudiante',
-                    DB::raw('COALESCE(r.estado_validacion, t.resolucion_de_tramite_academico, "pendiente") as estado_actual'),
+                    'ca.id_carrera',
+                    'ca.nombre_carrera',
+                    DB::raw("COALESCE(r.estado_validacion, t.resolucion_de_tramite_academico, 'pendiente') as estado_actual"),
                     DB::raw('COALESCE(docs.total_documentos, 0) as total_documentos')
                 )
-                ->where('t.estado', 1)
-                ->where(function ($query) {
-                    $query->whereRaw("LOWER(t.tipo_tramite_academico) = 'cancelacion'")
-                          ->orWhereRaw("LOWER(t.tipo_tramite_academico) = 'cancelacion_excepcional'");
-                })
                 ->orderByDesc('t.fecha_solicitud')
                 ->get();
 
             return response()->json([
                 'resultado' => 'OK',
                 'usuario'   => $contexto,
-                'data'      => $tramites
+                'data'      => $tramites,
             ], 200);
-
         } catch (\Throwable $e) {
             return response()->json([
                 'resultado' => 'ERROR',
                 'mensaje'   => 'No se pudo obtener el listado de cancelaciones.',
-                'detalle'   => $e->getMessage()
+                'detalle'   => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * API: detalle de una solicitud concreta
+     * API: detalle de una solicitud
      */
     public function detalle($idTramite)
     {
         if (!is_numeric($idTramite)) {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje'   => 'ID de trámite inválido.'
+                'mensaje'   => 'ID de trámite inválido.',
             ], 400);
         }
 
         try {
-            $contexto = $this->obtenerContextoUsuario();
+            $contexto = $this->obtenerContextoCoordinador();
 
             if (!$contexto) {
                 return response()->json([
                     'resultado' => 'ERROR',
-                    'mensaje'   => 'No hay un usuario autenticado válido.'
+                    'mensaje'   => 'Acceso no autorizado.',
                 ], 403);
             }
 
-            $detalle = DB::table('tbl_tramite as t')
-                ->join('tbl_cancelacion as c', 'c.id_tramite', '=', 't.id_tramite')
-                ->join('tbl_persona as p', 'p.id_persona', '=', 't.id_persona')
+            $detalle = $this->queryTramitesPermitidos($contexto)
+                ->where('t.id_tramite', (int) $idTramite)
                 ->select(
                     't.id_tramite',
                     't.id_persona',
@@ -131,21 +130,24 @@ class ResolucionCancelacionController extends Controller
                     'c.motivo',
                     'c.explicacion',
                     'c.fecha_solicitud as fecha_cancelacion',
-                    'p.nombre_persona as estudiante'
+                    'p.nombre_persona as estudiante',
+                    'ca.id_carrera',
+                    'ca.nombre_carrera'
                 )
-                ->where('t.id_tramite', $idTramite)
-                ->where('t.estado', 1)
                 ->first();
 
             if (!$detalle) {
                 return response()->json([
                     'resultado' => 'ERROR',
-                    'mensaje'   => 'No se encontró la solicitud de cancelación.'
+                    'mensaje'   => 'No se encontró la solicitud o no pertenece a su ámbito.',
                 ], 404);
             }
 
             $documentos = DB::table('tbl_documento')
-                ->select(
+                ->where('id_tramite', (int) $idTramite)
+                ->where('estado', 1)
+                ->orderByDesc('fecha_carga')
+                ->get([
                     'id_documento',
                     'id_tramite',
                     'numero_folio',
@@ -155,15 +157,14 @@ class ResolucionCancelacionController extends Controller
                     'ruta_archivo',
                     'fecha_carga',
                     'autenticidad_documento',
-                    'estado'
-                )
-                ->where('id_tramite', $idTramite)
-                ->where('estado', 1)
-                ->orderByDesc('fecha_carga')
-                ->get();
+                    'estado',
+                ]);
 
             $resolucionActual = DB::table('tbl_resolucion')
-                ->select(
+                ->where('id_tramite', (int) $idTramite)
+                ->where('estado', 1)
+                ->orderByDesc('id_resolucion')
+                ->first([
                     'id_resolucion',
                     'id_tramite',
                     'id_coordinador',
@@ -172,12 +173,8 @@ class ResolucionCancelacionController extends Controller
                     'fecha_resolucion',
                     'fecha_anulacion',
                     'documento_resolucion',
-                    'estado'
-                )
-                ->where('id_tramite', $idTramite)
-                ->where('estado', 1)
-                ->orderByDesc('id_resolucion')
-                ->first();
+                    'estado',
+                ]);
 
             return response()->json([
                 'resultado' => 'OK',
@@ -185,28 +182,27 @@ class ResolucionCancelacionController extends Controller
                     'detalle'          => $detalle,
                     'documentos'       => $documentos,
                     'resolucionActual' => $resolucionActual,
-                    'usuario'          => $contexto
-                ]
+                    'usuario'          => $contexto,
+                ],
             ], 200);
-
         } catch (\Throwable $e) {
             return response()->json([
                 'resultado' => 'ERROR',
                 'mensaje'   => 'No se pudo obtener el detalle de la solicitud.',
-                'detalle'   => $e->getMessage()
+                'detalle'   => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * API: guardar resolución
+     * API: guardar dictamen
      */
     public function resolver(Request $request, $idTramite)
     {
         if (!is_numeric($idTramite)) {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje'   => 'ID de trámite inválido.'
+                'mensaje'   => 'ID de trámite inválido.',
             ], 400);
         }
 
@@ -214,14 +210,14 @@ class ResolucionCancelacionController extends Controller
             'decision'      => 'required|string|max:20',
             'observaciones' => 'nullable|string|max:1000',
         ], [
-            'decision.required' => 'Debe seleccionar una decisión.'
+            'decision.required' => 'Debe seleccionar una decisión.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'resultado' => 'ERROR',
                 'mensaje'   => 'Error de validación.',
-                'errors'    => $validator->errors()
+                'errors'    => $validator->errors(),
             ], 422);
         }
 
@@ -231,81 +227,60 @@ class ResolucionCancelacionController extends Controller
         if (!$decision) {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje'   => 'La decisión seleccionada no es válida.'
+                'mensaje'   => 'La decisión seleccionada no es válida.',
             ], 422);
         }
 
-        if (in_array($decision, ['rechazada', 'revision']) && $observaciones === '') {
+        if (in_array($decision, ['rechazada', 'revision'], true) && $observaciones === '') {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje'   => 'Debe escribir observaciones cuando rechaza o envía a revisión.'
+                'mensaje'   => 'Debe escribir observaciones cuando rechaza o envía a revisión.',
             ], 422);
         }
 
         if ($decision === 'aprobada' && $observaciones === '') {
-            $observaciones = 'Resolución emitida por coordinación.';
+            $observaciones = 'Dictamen emitido por coordinación.';
         }
 
         try {
-            $contexto = $this->obtenerContextoUsuario();
+            $contexto = $this->obtenerContextoCoordinador();
 
             if (!$contexto) {
                 return response()->json([
                     'resultado' => 'ERROR',
-                    'mensaje'   => 'No hay un usuario autenticado válido.'
+                    'mensaje'   => 'Acceso no autorizado.',
                 ], 403);
             }
 
-            $tramite = DB::table('tbl_tramite')
-                ->where('id_tramite', $idTramite)
-                ->where('estado', 1)
+            $tramite = $this->queryTramitesPermitidos($contexto)
+                ->where('t.id_tramite', (int) $idTramite)
+                ->select('t.id_tramite', 't.resolucion_de_tramite_academico', 'c.id_cancelacion')
                 ->first();
 
             if (!$tramite) {
                 return response()->json([
                     'resultado' => 'ERROR',
-                    'mensaje'   => 'El trámite no existe o no está activo.'
+                    'mensaje'   => 'El trámite no existe o no pertenece a su ámbito.',
                 ], 404);
             }
 
-            $cancelacion = DB::table('tbl_cancelacion')
-                ->where('id_tramite', $idTramite)
-                ->first();
-
-            if (!$cancelacion) {
-                return response()->json([
-                    'resultado' => 'ERROR',
-                    'mensaje'   => 'El trámite indicado no corresponde a una cancelación registrada.'
-                ], 404);
-            }
-
-            DB::beginTransaction();
-
-            DB::table('tbl_tramite')
-                ->where('id_tramite', $idTramite)
-                ->update([
-                    'resolucion_de_tramite_academico' => $decision,
-                ]);
-
-            $resolucionExistente = DB::table('tbl_resolucion')
-                ->where('id_tramite', $idTramite)
-                ->where('estado', 1)
-                ->orderByDesc('id_resolucion')
-                ->first();
-
-            if ($resolucionExistente) {
-                DB::table('tbl_resolucion')
-                    ->where('id_resolucion', $resolucionExistente->id_resolucion)
+            DB::transaction(function () use ($idTramite, $decision, $observaciones, $contexto) {
+                DB::table('tbl_tramite')
+                    ->where('id_tramite', (int) $idTramite)
                     ->update([
-                        'id_coordinador'    => $contexto->id_coordinador,
-                        'estado_validacion' => $decision,
-                        'observaciones'     => $observaciones,
-                        'fecha_resolucion'  => now(),
-                        'estado'            => 1,
+                        'resolucion_de_tramite_academico' => $decision,
                     ]);
-            } else {
-                DB::table('tbl_resolucion')->insert([
-                    'id_tramite'           => $idTramite,
+
+                Resolucion::query()
+                    ->where('id_tramite', (int) $idTramite)
+                    ->where('estado', 1)
+                    ->update([
+                        'estado'          => 0,
+                        'fecha_anulacion' => now(),
+                    ]);
+
+                Resolucion::create([
+                    'id_tramite'           => (int) $idTramite,
                     'id_coordinador'       => $contexto->id_coordinador,
                     'estado_validacion'    => $decision,
                     'observaciones'        => $observaciones,
@@ -314,45 +289,40 @@ class ResolucionCancelacionController extends Controller
                     'documento_resolucion' => null,
                     'estado'               => 1,
                 ]);
-            }
 
-            try {
-                DB::table('tbl_bitacora')->insert([
-                    'id_usuario'   => $contexto->id_usuario,
-                    'id_objeto'    => 1,
-                    'accion'       => 'RESOLVER_CANCELACION',
-                    'fecha_accion' => now(),
-                    'descripcion'  => 'Se resolvió el trámite #' . $idTramite . ' con estado: ' . $decision . '. Observaciones: ' . $observaciones,
-                ]);
-            } catch (\Throwable $e) {
-                // No detener flujo por bitácora
-            }
-
-            DB::commit();
+                try {
+                    DB::table('tbl_bitacora')->insert([
+                        'id_usuario'   => $contexto->id_usuario,
+                        'id_objeto'    => 1,
+                        'accion'       => 'RESOLVER_CANCELACION',
+                        'fecha_accion' => now(),
+                        'descripcion'  => 'Se emitió dictamen al trámite #' . $idTramite . ' con estado: ' . $decision . '. Observaciones: ' . $observaciones,
+                    ]);
+                } catch (\Throwable $e) {
+                    // No romper el flujo principal por bitácora
+                }
+            });
 
             return response()->json([
                 'resultado' => 'OK',
-                'mensaje'   => 'La resolución se guardó correctamente.',
+                'mensaje'   => 'El dictamen se guardó correctamente.',
                 'data'      => [
                     'id_tramite'     => (int) $idTramite,
                     'estado'         => $decision,
-                    'id_coordinador' => $contexto->id_coordinador
-                ]
+                    'id_coordinador' => $contexto->id_coordinador,
+                ],
             ], 200);
-
         } catch (\Throwable $e) {
-            DB::rollBack();
-
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje'   => 'No se pudo guardar la resolución.',
-                'detalle'   => $e->getMessage()
+                'mensaje'   => 'No se pudo guardar el dictamen.',
+                'detalle'   => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * API/WEB: abrir documento físico
+     * API/WEB: abrir documento adjunto autorizado
      */
     public function documento($idDocumento)
     {
@@ -360,58 +330,134 @@ class ResolucionCancelacionController extends Controller
             abort(404);
         }
 
+        $contexto = $this->obtenerContextoCoordinador();
+
+        if (!$contexto) {
+            abort(403, 'Acceso no autorizado.');
+        }
+
         $documento = DB::table('tbl_documento')
-            ->where('id_documento', $idDocumento)
+            ->where('id_documento', (int) $idDocumento)
             ->where('estado', 1)
             ->first();
 
-        if (!$documento || empty($documento->ruta_archivo)) {
-            abort(404, 'Documento no encontrado en la base de datos.');
+        if (!$documento) {
+            abort(404, 'Documento no encontrado.');
         }
 
-        $candidatas = $this->construirRutasCandidatas(
-            (string) $documento->ruta_archivo,
-            (string) ($documento->nombre_documento ?? '')
-        );
+        $tramiteAutorizado = $this->queryTramitesPermitidos($contexto)
+            ->where('t.id_tramite', $documento->id_tramite)
+            ->select('t.id_tramite')
+            ->first();
 
-        foreach ($candidatas as $rutaAbsoluta) {
-            if ($rutaAbsoluta && file_exists($rutaAbsoluta) && is_file($rutaAbsoluta)) {
-                return response()->file($rutaAbsoluta);
-            }
+        if (!$tramiteAutorizado) {
+            abort(404, 'El documento no pertenece a un trámite autorizado.');
         }
 
-        // Búsqueda más tolerante por nombre dentro de carpetas frecuentes
-        $encontradoPorNombre = $this->buscarArchivoPorNombre((string) $documento->nombre_documento);
+        $rutaAbsoluta = $this->resolverRutaDocumento($documento);
 
-        if ($encontradoPorNombre) {
-            return response()->file($encontradoPorNombre);
+        if (!$rutaAbsoluta) {
+            abort(404, 'El archivo existe en la BD, pero no se encontró físicamente.');
         }
 
-        abort(404, 'El archivo existe en la BD pero no se encontró físicamente. Ruta registrada: ' . $documento->ruta_archivo);
+        return response()->file($rutaAbsoluta);
     }
 
     /**
-     * Construye varias rutas posibles para encontrar el archivo
+     * Query base de trámites visibles para la coordinadora
      */
-    private function construirRutasCandidatas(string $rutaOriginal, string $nombreDocumento = ''): array
+    private function queryTramitesPermitidos(object $contexto)
     {
-        $rutaOriginal = trim(str_replace('\\', '/', $rutaOriginal), '/');
+        return DB::table('tbl_tramite as t')
+            ->join('tbl_cancelacion as c', 'c.id_tramite', '=', 't.id_tramite')
+            ->join('tbl_persona as p', 'p.id_persona', '=', 't.id_persona')
+            ->leftJoin('tbl_estudiante as e', 'e.id_persona', '=', 't.id_persona')
+            ->leftJoin('tbl_carrera as ca', 'ca.id_carrera', '=', 'e.id_carrera')
+            ->where('t.estado', 1)
+            ->whereRaw("LOWER(t.tipo_tramite_academico) IN ('cancelacion', 'cancelacion_excepcional')")
+            ->where('ca.id_departamento', $contexto->id_departamento);
+    }
+
+    /**
+     * Obtiene el contexto del coordinador autenticado
+     */
+    private function obtenerContextoCoordinador(): ?object
+    {
+        if (!Auth::check()) {
+            return null;
+        }
+
+        $user = Auth::user();
+        $idPersona = $user->id_persona ?? null;
+
+        if (!$idPersona) {
+            return null;
+        }
+
+        $coordinador = DB::table('tbl_coordinador as c')
+            ->join('tbl_persona as p', 'p.id_persona', '=', 'c.id_persona')
+            ->where('c.id_persona', $idPersona)
+            ->where('c.estado_coordinador', 1)
+            ->select(
+                'c.id_coordinador',
+                'c.id_persona',
+                'c.id_departamento',
+                'c.estado_coordinador',
+                'p.nombre_persona as nombre_coordinador'
+            )
+            ->first();
+
+        if (!$coordinador) {
+            return null;
+        }
+
+        return (object) [
+            'id_usuario'         => Auth::id(),
+            'id_persona'         => $coordinador->id_persona,
+            'id_coordinador'     => $coordinador->id_coordinador,
+            'id_departamento'    => $coordinador->id_departamento,
+            'nombre_coordinador' => $coordinador->nombre_coordinador,
+            'es_coordinador_bd'  => true,
+        ];
+    }
+
+    /**
+     * Normaliza el estado del dictamen
+     */
+    private function normalizarEstado($valor): ?string
+    {
+        $valor = mb_strtolower(trim((string) $valor));
+
+        return match ($valor) {
+            'aprobada', 'aprobado', 'aceptada', 'aceptado' => 'aprobada',
+            'rechazada', 'rechazado', 'denegada', 'denegado' => 'rechazada',
+            'revision', 'revisión', 'devuelto', 'devuelta' => 'revision',
+            default => null,
+        };
+    }
+
+    /**
+     * Resuelve la ruta física del archivo
+     */
+    private function resolverRutaDocumento(object $documento): ?string
+    {
+        $rutaOriginal = trim(str_replace('\\', '/', (string) ($documento->ruta_archivo ?? '')), '/');
+        $nombreDocumento = trim((string) ($documento->nombre_documento ?? ''));
+        $nombreBase = $rutaOriginal !== '' ? basename($rutaOriginal) : '';
 
         $rutaSinPublic = preg_replace('#^public/#', '', $rutaOriginal);
         $rutaSinStorage = preg_replace('#^storage/#', '', $rutaOriginal);
-        $nombreBase = trim(basename($rutaOriginal));
-        $nombreDocumento = trim($nombreDocumento);
 
-        return array_values(array_unique(array_filter([
-            storage_path('app/' . $rutaOriginal),
-            storage_path('app/' . $rutaSinPublic),
-            storage_path('app/public/' . $rutaOriginal),
-            storage_path('app/public/' . $rutaSinPublic),
+        $candidatas = array_values(array_unique(array_filter([
+            $rutaOriginal ? storage_path('app/' . $rutaOriginal) : null,
+            $rutaSinPublic ? storage_path('app/' . $rutaSinPublic) : null,
+            $rutaOriginal ? storage_path('app/public/' . $rutaOriginal) : null,
+            $rutaSinPublic ? storage_path('app/public/' . $rutaSinPublic) : null,
 
-            public_path($rutaOriginal),
-            public_path($rutaSinStorage),
-            public_path('storage/' . $rutaOriginal),
-            public_path('storage/' . $rutaSinPublic),
+            $rutaOriginal ? public_path($rutaOriginal) : null,
+            $rutaSinStorage ? public_path($rutaSinStorage) : null,
+            $rutaOriginal ? public_path('storage/' . $rutaOriginal) : null,
+            $rutaSinPublic ? public_path('storage/' . $rutaSinPublic) : null,
 
             $nombreBase ? storage_path('app/documentos/' . $nombreBase) : null,
             $nombreBase ? storage_path('app/public/documentos/' . $nombreBase) : null,
@@ -423,10 +469,18 @@ class ResolucionCancelacionController extends Controller
             $nombreDocumento ? public_path('storage/documentos/' . $nombreDocumento) : null,
             $nombreDocumento ? public_path('documentos/' . $nombreDocumento) : null,
         ])));
+
+        foreach ($candidatas as $rutaAbsoluta) {
+            if ($rutaAbsoluta && file_exists($rutaAbsoluta) && is_file($rutaAbsoluta)) {
+                return $rutaAbsoluta;
+            }
+        }
+
+        return $this->buscarArchivoPorNombre($nombreDocumento ?: $nombreBase);
     }
 
     /**
-     * Busca el archivo por nombre dentro de varias carpetas comunes
+     * Busca archivo por nombre
      */
     private function buscarArchivoPorNombre(string $nombreArchivo): ?string
     {
@@ -459,80 +513,10 @@ class ResolucionCancelacionController extends Controller
                     }
                 }
             } catch (\Throwable $e) {
-                // Ignorar errores de lectura de carpeta y continuar
+                // Ignorar errores de lectura
             }
         }
 
         return null;
-    }
-
-    /**
-     * Obtiene el contexto del usuario autenticado.
-     * Si existe registro en tbl_coordinador, lo toma.
-     * Si no existe, igual permite trabajar con el usuario autenticado.
-     */
-    private function obtenerContextoUsuario()
-    {
-        if (!Auth::check()) {
-            return null;
-        }
-
-        $user = Auth::user();
-        $idPersona = $user->id_persona ?? null;
-
-        $registroCoordinador = null;
-
-        if ($idPersona) {
-            $registroCoordinador = DB::table('tbl_coordinador as c')
-                ->leftJoin('tbl_persona as p', 'p.id_persona', '=', 'c.id_persona')
-                ->select(
-                    'c.id_coordinador',
-                    'c.id_persona',
-                    'c.id_departamento',
-                    'c.estado_coordinador',
-                    'p.nombre_persona as nombre_coordinador'
-                )
-                ->where('c.id_persona', $idPersona)
-                ->where('c.estado_coordinador', 1)
-                ->first();
-        }
-
-        $nombre = null;
-
-        if ($registroCoordinador && !empty($registroCoordinador->nombre_coordinador)) {
-            $nombre = $registroCoordinador->nombre_coordinador;
-        } elseif (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
-            $nombre = $user->persona->nombre_persona;
-        } elseif (!empty($user->nombre_persona)) {
-            $nombre = $user->nombre_persona;
-        } elseif (!empty($user->name)) {
-            $nombre = $user->name;
-        } else {
-            $nombre = 'Coordinación';
-        }
-
-        return (object) [
-            'id_usuario'         => Auth::id(),
-            'id_persona'         => $idPersona,
-            'id_coordinador'     => $registroCoordinador->id_coordinador ?? null,
-            'id_departamento'    => $registroCoordinador->id_departamento ?? null,
-            'nombre_coordinador' => $nombre,
-            'es_coordinador_bd'  => $registroCoordinador ? true : false,
-        ];
-    }
-
-    /**
-     * Normaliza estados para guardarlos según tu tabla real
-     */
-    private function normalizarEstado($valor)
-    {
-        $valor = mb_strtolower(trim((string) $valor));
-
-        return match ($valor) {
-            'aprobada', 'aprobado', 'aceptada', 'aceptado' => 'aprobada',
-            'rechazada', 'rechazado' => 'rechazada',
-            'revision', 'revisión', 'devuelto', 'devuelta' => 'revision',
-            default => null,
-        };
     }
 }

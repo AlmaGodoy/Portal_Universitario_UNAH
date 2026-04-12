@@ -1,10 +1,4 @@
-@php
-    $layoutSeguridad = session('rol_texto') === 'secretaria_general'
-        ? 'layouts.app-secretaria-academica'
-        : 'layouts.app-coordinador';
-@endphp
-
-@extends($layoutSeguridad)
+@extends('layouts.app-coordinador')
 
 @section('titulo', 'Módulo de Seguridad')
 
@@ -25,20 +19,9 @@
 
     <div class="mb-4">
         <h2 class="security-title">Módulo de Seguridad</h2>
-
-        @if($esSecretariaGeneral ?? false)
-            <p class="security-subtitle">
-                Administración global de roles, usuarios, objetos y accesos del sistema.
-            </p>
-        @elseif($esCoordinador ?? false)
-            <p class="security-subtitle">
-                Consulta y administración de usuarios pertenecientes únicamente a tu carrera.
-            </p>
-        @else
-            <p class="security-subtitle">
-                Consulta de opciones de seguridad según tu ámbito autorizado.
-            </p>
-        @endif
+        <p class="security-subtitle">
+            Administración de seguridad correspondiente únicamente a la carrera del coordinador.
+        </p>
     </div>
 
     <div class="row g-4">
@@ -75,3 +58,5 @@
 
 </div>
 @endsection
+
+
