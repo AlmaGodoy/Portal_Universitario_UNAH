@@ -25,6 +25,14 @@ class CancelacionPaso2Controller extends Controller
     ];
 
     /**
+     * Documentos de identidad.
+     */
+    private const TIPOS_IDENTIDAD = [
+        'DNI_FRENTE',
+        'DNI_REVERSO',
+    ];
+
+    /**
      * Documentos de alto riesgo.
      */
     private const TIPOS_RIESGO = [
@@ -109,11 +117,12 @@ class CancelacionPaso2Controller extends Controller
 
         $validator = Validator::make($request->all(), [
             'tipo_documento' => ['required', Rule::in(self::TIPOS_BASE)],
-            'archivo'        => ['required', 'file'],
+            'archivo'        => ['required', 'file', 'max:10240'],
         ], [
             'tipo_documento.required' => 'Debe indicar el tipo de documento.',
             'tipo_documento.in'       => 'El tipo de documento base no es válido.',
             'archivo.required'        => 'Debe seleccionar un archivo.',
+            'archivo.max'             => 'El archivo no puede superar los 10 MB.',
         ]);
 
         if ($validator->fails()) {
@@ -123,7 +132,7 @@ class CancelacionPaso2Controller extends Controller
             ], 422);
         }
 
-        $tipoDocumento = strtoupper(trim($request->tipo_documento));
+        $tipoDocumento = strtoupper(trim((string) $request->input('tipo_documento')));
         $archivo       = $request->file('archivo');
 
         try {
@@ -145,6 +154,7 @@ class CancelacionPaso2Controller extends Controller
             Log::error('Error subirDocumentoBase', [
                 'id_tramite'     => $id_tramite,
                 'tipo_documento' => $tipoDocumento,
+                'nombre_archivo' => $archivo?->getClientOriginalName(),
                 'error'          => $e->getMessage(),
             ]);
 
@@ -188,7 +198,7 @@ class CancelacionPaso2Controller extends Controller
             ], 422);
         }
 
-        $tipoDocumento   = strtoupper(trim($request->tipo_documento));
+        $tipoDocumento   = strtoupper(trim((string) $request->input('tipo_documento')));
         $archivo         = $request->file('archivo');
         $tieneReferencia = filter_var($request->input('tiene_referencia', false), FILTER_VALIDATE_BOOL);
         $numeroFolio     = trim((string) $request->input('numero_folio', ''));
@@ -220,6 +230,7 @@ class CancelacionPaso2Controller extends Controller
                 'id_tramite'     => $id_tramite,
                 'tipo_documento' => $tipoDocumento,
                 'numero_folio'   => $numeroFolio,
+                'nombre_archivo' => $archivo?->getClientOriginalName(),
                 'error'          => $e->getMessage(),
             ]);
 
@@ -260,7 +271,7 @@ class CancelacionPaso2Controller extends Controller
             ], 422);
         }
 
-        $tipoDocumento = strtoupper(trim($request->tipo_documento));
+        $tipoDocumento = strtoupper(trim((string) $request->input('tipo_documento')));
         $archivo       = $request->file('archivo');
 
         try {
@@ -280,6 +291,7 @@ class CancelacionPaso2Controller extends Controller
             Log::error('Error subirDocumentoFlexible', [
                 'id_tramite'     => $id_tramite,
                 'tipo_documento' => $tipoDocumento,
+                'nombre_archivo' => $archivo?->getClientOriginalName(),
                 'error'          => $e->getMessage(),
             ]);
 
@@ -413,7 +425,7 @@ class CancelacionPaso2Controller extends Controller
             }
 
             session([
-                'cancelacion_excepcional.paso2_validado' => true,
+                'cancelacion_excepcional.paso2_validado'      => true,
                 'cancelacion_excepcional.id_tramite_validado' => $id_tramite,
             ]);
 
@@ -470,6 +482,8 @@ class CancelacionPaso2Controller extends Controller
         ?string $numeroFolio = null,
         bool $antifraude = false,
     ): array {
+        $idPersona = null;
+
         if ($antifraude) {
             $idPersona = Auth::user()->id_persona ?? null;
 
@@ -478,7 +492,7 @@ class CancelacionPaso2Controller extends Controller
             }
         }
 
-        $hash          = $this->generarHashArchivo($archivo);
+        $hash          = $this->generarHashArchivo($archivo, $tipoDocumento);
         $nombreArchivo = $this->generarNombreArchivo($tipoDocumento, $archivo);
         $rutaArchivo   = $this->guardarArchivo($archivo, $nombreArchivo, $idTramite);
 
@@ -530,9 +544,11 @@ class CancelacionPaso2Controller extends Controller
                 throw new \RuntimeException('El archivo debe ser PDF, JPG o PNG.');
             }
 
-            if ($sizeKb > 8192) {
-                throw new \RuntimeException('El archivo supera el tamaño máximo permitido de 8 MB.');
+            if ($sizeKb > 10240) {
+                throw new \RuntimeException('El archivo supera el tamaño máximo permitido de 10 MB.');
             }
+
+            return;
         }
 
         if ($tipoDocumento === 'HISTORIAL_ACADEMICO') {
@@ -543,12 +559,22 @@ class CancelacionPaso2Controller extends Controller
             if ($sizeKb > 10240) {
                 throw new \RuntimeException('El historial académico supera el tamaño máximo permitido de 10 MB.');
             }
+
+            return;
         }
+
+        throw new \RuntimeException('El tipo de documento base no es válido.');
     }
 
-    private function generarHashArchivo(UploadedFile $archivo): string
+    private function generarHashArchivo(UploadedFile $archivo, ?string $tipoDocumento = null): string
     {
-        return hash_file('sha256', $archivo->getRealPath());
+        $hashBase = hash_file('sha256', $archivo->getRealPath());
+
+        if (in_array((string) $tipoDocumento, self::TIPOS_IDENTIDAD, true)) {
+            return hash('sha256', $hashBase . '|' . $tipoDocumento);
+        }
+
+        return $hashBase;
     }
 
     private function generarNombreArchivo(string $tipoDocumento, UploadedFile $archivo): string
@@ -600,6 +626,10 @@ class CancelacionPaso2Controller extends Controller
     {
         $mensaje = $e->getMessage();
 
+        if (str_contains($mensaje, 'Este documento ya fue subido anteriormente')) {
+            return 'Este documento ya fue cargado anteriormente. Si desea volver a subirlo, primero elimine el documento actual del trámite.';
+        }
+
         if (str_contains($mensaje, 'Duplicate entry')) {
             return 'Ya existe un documento con un identificador igual en el sistema.';
         }
@@ -614,6 +644,10 @@ class CancelacionPaso2Controller extends Controller
 
         if (str_contains($mensaje, 'ERROR:')) {
             return trim(str_replace('ERROR:', '', $mensaje));
+        }
+
+        if (str_contains($mensaje, 'SQLSTATE')) {
+            return 'Ocurrió un problema al guardar el documento en la base de datos. Verifique si ya existe uno igual cargado para este trámite.';
         }
 
         return 'Ocurrió un problema al procesar el documento. Intente nuevamente.';
