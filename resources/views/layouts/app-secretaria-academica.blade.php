@@ -147,14 +147,6 @@
                             </a>
                         </li>
 
-                        {{-- NUEVO BOTÓN DE SEGURIDAD --}}
-                        <li class="nav-item">
-                            <a href="{{ route('seguridad.index') }}"
-                               class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad</p>
-                            </a>
-                        </li>
 
                         <li class="nav-item">
                             <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
