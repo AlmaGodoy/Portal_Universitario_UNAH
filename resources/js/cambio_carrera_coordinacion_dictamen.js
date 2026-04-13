@@ -36,33 +36,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    async function cargarDetalleTramite() {
-        try {
-            const res = await fetch(`/api/cambio-carrera/secretaria/detalle/${inputTramite.value}`, {
-                headers: { 'Accept': 'application/json' }
-            });
+   async function cargarDetalleTramite() {
+    try {
+        const res = await fetch(`/api/cambio-carrera/coordinacion/detalle/${inputTramite.value}`, {
+            headers: { 'Accept': 'application/json' }
+        });
 
-            const t = await res.json();
+        const t = await res.json();
 
-            if (!res.ok || !t || t.resultado === 'ERROR') {
-                setMsg(t?.mensaje || 'No se encontró información del trámite.', false);
-                return;
-            }
-
-            if (datoIdTramite) datoIdTramite.textContent = t.id_tramite ?? '';
-            if (datoFecha) datoFecha.textContent = t.fecha_solicitud ?? '';
-            if (datoEstudiante) datoEstudiante.textContent = t.estudiante ?? '';
-            if (datoCarrera) datoCarrera.textContent = t.carrera_destino ?? '';
-            if (datoJustificacion) datoJustificacion.textContent = t.direccion ?? '';
-            if (datoIndicePeriodo) datoIndicePeriodo.textContent = t.indice_periodo ?? '';
-            if (datoIndiceGlobal) datoIndiceGlobal.textContent = t.indice_global ?? '';
-            if (datoClasesAprobadas) datoClasesAprobadas.textContent = t.cantidad_clases_aprobadas ?? '';
-
-        } catch (error) {
-            console.error('Error cargando detalle del trámite:', error);
-            setMsg('Error al cargar la información del trámite.', false);
+        if (!res.ok || !t || t.resultado === 'ERROR') {
+            setMsg(t?.mensaje || 'No se encontró información del trámite.', false);
+            return;
         }
+
+        if (datoIdTramite) datoIdTramite.textContent = t.id_tramite ?? '';
+        if (datoFecha) datoFecha.textContent = t.fecha_solicitud ?? '';
+        if (datoEstudiante) datoEstudiante.textContent = t.estudiante ?? '';
+        if (datoCarrera) datoCarrera.textContent = t.carrera_destino ?? '';
+        if (datoJustificacion) datoJustificacion.textContent = t.direccion ?? '';
+        if (datoIndicePeriodo) datoIndicePeriodo.textContent = t.indice_periodo ?? '';
+        if (datoIndiceGlobal) datoIndiceGlobal.textContent = t.indice_global ?? '';
+        if (datoClasesAprobadas) datoClasesAprobadas.textContent = t.cantidad_clases_aprobadas ?? '';
+
+    } catch (error) {
+        console.error('Error cargando detalle del trámite:', error);
+        setMsg('Error al cargar la información del trámite.', false);
     }
+}
 
     async function cargarDocumentosTramite() {
         try {

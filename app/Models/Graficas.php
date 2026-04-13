@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class Graficas extends Model
 {
@@ -11,41 +12,172 @@ class Graficas extends Model
     public $timestamps = false;
     protected $guarded = [];
 
-    public function obtenerCancelacionesPorPeriodoYAnio(?int $anio = null, ?int $idDepartamento = null, ?int $idCarrera = null): array
+    /*
+    |--------------------------------------------------------------------------
+    | CATÁLOGOS DESDE PROCEDIMIENTO
+    |--------------------------------------------------------------------------
+    */
+    protected function obtenerCatalogos(): Collection
     {
-        return $this->obtenerTramitesPorCalendario(
+        return collect(DB::select('CALL SEL_GRAFICAS_CATALOGOS()'));
+    }
+
+    public function obtenerAniosDisponibles(): array
+    {
+        return $this->obtenerCatalogos()
+            ->where('tipo_catalogo', 'anio')
+            ->pluck('id_referencia')
+            ->map(fn($anio) => (int) $anio)
+            ->sortDesc()
+            ->values()
+            ->toArray();
+    }
+
+    public function obtenerCarrerasDisponibles(): Collection
+    {
+        return $this->obtenerCatalogos()
+            ->where('tipo_catalogo', 'carrera')
+            ->map(function ($item) {
+                return (object) [
+                    'id_carrera' => (int) $item->id_referencia,
+                    'nombre_carrera' => $item->nombre_referencia,
+                    'id_departamento' => $item->id_padre ? (int) $item->id_padre : null,
+                ];
+            })
+            ->values();
+    }
+
+    public function obtenerDepartamentosDisponibles(): Collection
+    {
+        return $this->obtenerCatalogos()
+            ->where('tipo_catalogo', 'departamento')
+            ->map(function ($item) {
+                return (object) [
+                    'id_departamento' => (int) $item->id_referencia,
+                    'nombre_departamento' => $item->nombre_referencia,
+                ];
+            })
+            ->values();
+    }
+
+    public function obtenerNombreCarrera(?int $idCarrera): ?string
+    {
+        if (empty($idCarrera)) {
+            return null;
+        }
+
+        $carrera = $this->obtenerCarrerasDisponibles()
+            ->firstWhere('id_carrera', (int) $idCarrera);
+
+        return $carrera->nombre_carrera ?? null;
+    }
+
+    public function obtenerNombreDepartamento(?int $idDepartamento): ?string
+    {
+        if (empty($idDepartamento)) {
+            return null;
+        }
+
+        $departamento = $this->obtenerDepartamentosDisponibles()
+            ->firstWhere('id_departamento', (int) $idDepartamento);
+
+        return $departamento->nombre_departamento ?? null;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOTALES
+    |--------------------------------------------------------------------------
+    */
+    public function obtenerCancelacionesPorPeriodoYAnio(
+        ?int $anio = null,
+        ?int $idDepartamento = null,
+        ?int $idCarrera = null,
+        ?int $mes = null
+    ): array {
+        return $this->obtenerTotalesTramites(
             'CANCELACION',
             $anio,
+            $mes,
             $idDepartamento,
-            $idCarrera,
-            'cancelacion'
+            $idCarrera
         );
     }
 
-    public function obtenerCambiosCarreraPorPeriodoYAnio(?int $anio = null, ?int $idDepartamento = null, ?int $idCarrera = null): array
-    {
-        return $this->obtenerTramitesPorCalendario(
+    public function obtenerCambiosCarreraPorPeriodoYAnio(
+        ?int $anio = null,
+        ?int $idDepartamento = null,
+        ?int $idCarrera = null,
+        ?int $mes = null
+    ): array {
+        return $this->obtenerTotalesTramites(
             'CAMBIO_CARRERA',
             $anio,
+            $mes,
             $idDepartamento,
-            $idCarrera,
-            'cambio_carrera'
+            $idCarrera
         );
     }
 
+    protected function obtenerTotalesTramites(
+        string $tipoTramite,
+        ?int $anio = null,
+        ?int $mes = null,
+        ?int $idDepartamento = null,
+        ?int $idCarrera = null
+    ): array {
+        $rows = collect(DB::select('CALL SEL_GRAFICAS_TOTALES(?, ?, ?, ?, ?)', [
+            $tipoTramite,
+            $anio,
+            $mes,
+            $idDepartamento,
+            $idCarrera
+        ]));
+
+        $labels = [];
+        $data = [];
+        $totalAnual = 0;
+        $detalle = [];
+
+        foreach ($rows as $row) {
+            $label = $row->mes_nombre ?? ('Mes ' . ($row->mes_numero ?? ''));
+            $valor = (int) ($row->total ?? 0);
+
+            $labels[] = $label;
+            $data[] = $valor;
+            $totalAnual += $valor;
+            $detalle[] = $row;
+        }
+
+        return [
+            'anio'        => $anio,
+            'mes'         => $mes,
+            'labels'      => $labels,
+            'data'        => $data,
+            'total_anual' => $totalAnual,
+            'detalle'     => $detalle,
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DISTRIBUCIONES
+    |--------------------------------------------------------------------------
+    */
     public function obtenerDistribucionCancelaciones(
         ?int $anio = null,
         string $agrupacion = 'departamento',
         ?int $idDepartamento = null,
-        ?int $idCarrera = null
+        ?int $idCarrera = null,
+        ?int $mes = null
     ): array {
         return $this->obtenerDistribucionTramites(
             'CANCELACION',
-            $anio,
             $agrupacion,
+            $anio,
+            $mes,
             $idDepartamento,
-            $idCarrera,
-            'cancelacion'
+            $idCarrera
         );
     }
 
@@ -53,198 +185,70 @@ class Graficas extends Model
         ?int $anio = null,
         string $agrupacion = 'departamento',
         ?int $idDepartamento = null,
-        ?int $idCarrera = null
+        ?int $idCarrera = null,
+        ?int $mes = null
     ): array {
         return $this->obtenerDistribucionTramites(
             'CAMBIO_CARRERA',
-            $anio,
             $agrupacion,
+            $anio,
+            $mes,
             $idDepartamento,
-            $idCarrera,
-            'cambio_carrera'
+            $idCarrera
         );
     }
 
     protected function obtenerDistribucionTramites(
         string $tipoTramite,
-        ?int $anio = null,
         string $agrupacion = 'departamento',
+        ?int $anio = null,
+        ?int $mes = null,
         ?int $idDepartamento = null,
-        ?int $idCarrera = null,
-        ?string $modo = null
+        ?int $idCarrera = null
     ): array {
-        $query = DB::table('tbl_tramite as t')
-            ->join('tbl_calendario_academico as ca', 't.id_calendario_academico', '=', 'ca.id_calendario_academico')
-            ->whereRaw('UPPER(t.tipo_tramite_academico) = ?', [strtoupper($tipoTramite)])
-            ->where('t.estado', '=', 1);
-
-        /*
-        |--------------------------------------------------------------------------
-        | RELACIONES PARA AGRUPAR
-        |--------------------------------------------------------------------------
-        | Se usan LEFT JOIN para no perder registros.
-        */
-        if ($modo === 'cancelacion') {
-            $query->leftJoin('tbl_estudiante as e', 'e.id_persona', '=', 't.id_persona')
-                ->leftJoin('tbl_carrera as c', 'c.id_carrera', '=', 'e.id_carrera')
-                ->leftJoin('tbl_departamento as d', 'd.id_departamento', '=', 'c.id_departamento');
-        }
-
-        if ($modo === 'cambio_carrera') {
-            $query->leftJoin('tbl_carrera as c', 'c.id_carrera', '=', 't.id_carrera_destino')
-                ->leftJoin('tbl_departamento as d', 'd.id_departamento', '=', 'c.id_departamento');
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | FILTROS
-        |--------------------------------------------------------------------------
-        */
-        if (!empty($anio)) {
-            $query->whereYear('ca.fecha_inicio_calendario_academico', $anio);
-        }
-
-        if (!empty($idCarrera)) {
-            $query->where('c.id_carrera', '=', $idCarrera);
-        } elseif (!empty($idDepartamento)) {
-            $query->where('c.id_departamento', '=', $idDepartamento);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | AGRUPACIÓN
-        |--------------------------------------------------------------------------
-        | Si no tiene carrera/departamento, igual se cuenta.
-        */
-        if ($agrupacion === 'carrera') {
-            $query->selectRaw("
-                COALESCE(c.id_carrera, 0) as id_agrupacion,
-                COALESCE(c.nombre_carrera, 'Sin carrera asignada') as nombre_agrupacion,
-                COUNT(DISTINCT t.id_tramite) as total
-            ")
-            ->groupBy(
-                DB::raw("COALESCE(c.id_carrera, 0)"),
-                DB::raw("COALESCE(c.nombre_carrera, 'Sin carrera asignada')")
-            )
-            ->orderByDesc('total');
-        } else {
-            $query->selectRaw("
-                COALESCE(d.id_departamento, 0) as id_agrupacion,
-                COALESCE(d.nombre_departamento, 'Sin departamento asignado') as nombre_agrupacion,
-                COUNT(DISTINCT t.id_tramite) as total
-            ")
-            ->groupBy(
-                DB::raw("COALESCE(d.id_departamento, 0)"),
-                DB::raw("COALESCE(d.nombre_departamento, 'Sin departamento asignado')")
-            )
-            ->orderByDesc('total');
-        }
-
-        $rows = $query->get();
+        $rows = collect(DB::select('CALL SEL_GRAFICAS_DISTRIBUCION(?, ?, ?, ?, ?, ?)', [
+            $tipoTramite,
+            $agrupacion,
+            $anio,
+            $mes,
+            $idDepartamento,
+            $idCarrera
+        ]));
 
         $labels = [];
         $data = [];
         $totalGeneral = 0;
+        $detalle = [];
 
         foreach ($rows as $row) {
-            $labels[] = $row->nombre_agrupacion;
-            $data[] = (int) $row->total;
-            $totalGeneral += (int) $row->total;
+            $label = $this->normalizarEtiquetaEspecial($row->nombre_agrupacion ?? '');
+            $valor = (int) ($row->total ?? 0);
+
+            $labels[] = $label;
+            $data[] = $valor;
+            $totalGeneral += $valor;
+            $detalle[] = (object) [
+                'id_agrupacion' => $row->id_agrupacion ?? null,
+                'nombre_agrupacion' => $label,
+                'total' => $valor,
+            ];
         }
 
         return [
             'anio'        => $anio,
+            'mes'         => $mes,
             'labels'      => $labels,
             'data'        => $data,
             'total_anual' => $totalGeneral,
-            'detalle'     => $rows,
+            'detalle'     => $detalle,
         ];
     }
 
-    protected function obtenerTramitesPorCalendario(
-        string $tipoTramite,
-        ?int $anio = null,
-        ?int $idDepartamento = null,
-        ?int $idCarrera = null,
-        ?string $modo = null
-    ): array {
-        $query = DB::table('tbl_tramite as t')
-            ->join('tbl_calendario_academico as ca', 't.id_calendario_academico', '=', 'ca.id_calendario_academico')
-            ->whereRaw('UPPER(t.tipo_tramite_academico) = ?', [strtoupper($tipoTramite)])
-            ->where('t.estado', '=', 1);
-
-        /*
-        |--------------------------------------------------------------------------
-        | RELACIONES PARA FILTRAR
-        |--------------------------------------------------------------------------
-        */
-        if ($modo === 'cancelacion') {
-            $query->leftJoin('tbl_estudiante as e', 'e.id_persona', '=', 't.id_persona')
-                ->leftJoin('tbl_carrera as c', 'c.id_carrera', '=', 'e.id_carrera');
-        }
-
-        if ($modo === 'cambio_carrera') {
-            $query->leftJoin('tbl_carrera as c', 'c.id_carrera', '=', 't.id_carrera_destino');
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | FILTROS
-        |--------------------------------------------------------------------------
-        */
-        if (!empty($idCarrera)) {
-            $query->where('c.id_carrera', '=', $idCarrera);
-        } elseif (!empty($idDepartamento)) {
-            $query->where('c.id_departamento', '=', $idDepartamento);
-        }
-
-        if (!empty($anio)) {
-            $query->whereYear('ca.fecha_inicio_calendario_academico', $anio);
-        }
-
-        $query->selectRaw("
-            YEAR(ca.fecha_inicio_calendario_academico) AS anio,
-            ca.id_calendario_academico,
-            CONCAT(
-                DATE_FORMAT(ca.fecha_inicio_calendario_academico, '%d/%m/%Y'),
-                ' - ',
-                DATE_FORMAT(ca.fecha_final_calendario_academico, '%d/%m/%Y')
-            ) AS periodo,
-            COUNT(DISTINCT t.id_tramite) AS total
-        ")
-        ->groupBy(
-            'ca.id_calendario_academico',
-            'ca.fecha_inicio_calendario_academico',
-            'ca.fecha_final_calendario_academico'
-        )
-        ->orderBy('ca.fecha_inicio_calendario_academico', 'asc');
-
-        $rows = $query->get();
-
-        $labels = [];
-        $data = [];
-        $anioSeleccionado = $anio;
-        $totalAnual = 0;
-
-        foreach ($rows as $row) {
-            $labels[] = $row->periodo;
-            $data[] = (int) $row->total;
-            $totalAnual += (int) $row->total;
-
-            if (empty($anioSeleccionado)) {
-                $anioSeleccionado = (int) $row->anio;
-            }
-        }
-
-        return [
-            'anio'        => $anioSeleccionado,
-            'labels'      => $labels,
-            'data'        => $data,
-            'total_anual' => $totalAnual,
-            'detalle'     => $rows,
-        ];
-    }
-
+    /*
+    |--------------------------------------------------------------------------
+    | PENDIENTES / PLACEHOLDERS
+    |--------------------------------------------------------------------------
+    */
     public function obtenerLoginsAlumnosPorPeriodoYAnio(?int $anio = null): array
     {
         return [
@@ -271,14 +275,23 @@ class Graficas extends Model
         ];
     }
 
-    public function obtenerAniosDisponibles(): array
+    /*
+    |--------------------------------------------------------------------------
+    | AUXILIARES
+    |--------------------------------------------------------------------------
+    */
+    protected function normalizarEtiquetaEspecial(string $label): string
     {
-        return DB::table('tbl_calendario_academico')
-            ->selectRaw('YEAR(fecha_inicio_calendario_academico) AS anio')
-            ->distinct()
-            ->orderBy('anio', 'desc')
-            ->pluck('anio')
-            ->map(fn ($anio) => (int) $anio)
-            ->toArray();
+        $text = trim($label);
+
+        if (preg_match('/^sin carrera asignada$/i', $text)) {
+            return 'Sin carrera relacionada';
+        }
+
+        if (preg_match('/^sin departamento asignado$/i', $text)) {
+            return 'Sin departamento relacionado';
+        }
+
+        return $text;
     }
 }

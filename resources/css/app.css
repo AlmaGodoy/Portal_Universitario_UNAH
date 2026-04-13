@@ -12,6 +12,9 @@
 @import "/resources/css/resolucion_cancelacion_coordinador.css";
 @import "/resources/css/reporte.css";
 @import "/resources/css/Cambio_Carrera.css";
+@import "/resources/css/equivalencias.css";
+@import "/resources/css/soporte.css";
+
 @theme {
     --font-sans: 'Instrument Sans', sans-serif;
 }

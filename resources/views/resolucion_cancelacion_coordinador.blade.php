@@ -5,18 +5,29 @@
 @section('content')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    @vite([
+        'resources/css/resolucion_cancelacion_coordinador.css',
+        'resources/js/resolucion_cancelacion_coordinador.js'
+    ])
+
     <div
         id="resolucionCancelacionApp"
         class="rc-page"
-        data-url-listado="{{ route('api.resolucion.cancelacion.listado') }}"
+        data-url-listado="{{ route('resolucion.cancelacion.listar') }}"
         data-url-detalle-base="{{ url('/api/resolucion-cancelacion/detalle') }}"
         data-url-resolver-base="{{ url('/api/resolucion-cancelacion/resolver') }}"
-        data-url-documento-base="{{ url('/api/resolucion-cancelacion/documento') }}"
+        data-url-documento-base="{{ url('/empleado/resolucion-cancelacion/documento') }}"
         data-csrf-token="{{ csrf_token() }}"
     >
         <div class="rc-shell">
             <div class="rc-header">
-                <h1 class="rc-title">Resolución de Cancelación Excepcional</h1>
+                <div>
+                    <h1 class="rc-title">Resolución de Cancelación Excepcional</h1>
+                    <p class="rc-subtitle">
+                        Revise la solicitud del estudiante, consulte la documentación adjunta
+                        y emita el dictamen correspondiente.
+                    </p>
+                </div>
             </div>
 
             @if ($errors->any())
@@ -58,6 +69,7 @@
                         <div class="rc-field-inline">
                             <label for="rcFiltroEstado">Estado</label>
                             <select id="rcFiltroEstado" class="form-select">
+                                <option value="" selected>Todos</option>
                                 <option value="pendiente">Pendiente</option>
                                 <option value="revision">Revisión</option>
                                 <option value="aprobada">Aprobada</option>

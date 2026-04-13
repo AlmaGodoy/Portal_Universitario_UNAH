@@ -43,4 +43,9 @@ Route::middleware('auth')->prefix('api/cancelacion-excepcional/paso2')->group(fu
     Route::post('{id_tramite}/validar', [CancelacionPaso2Controller::class, 'validarPaso2'])
         ->whereNumber('id_tramite')
         ->name('cancelacion.paso2.validar');
+
+        Route::middleware('auth')->group(function () {
+    Route::get('/coordinador/cancelacion', [ResolucionCancelacionController::class, 'vista'])
+        ->name('coordinador.cancelacion.index');
+});
 });

@@ -17,26 +17,30 @@
         </div>
     @endif
 
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="security-title">Gestión de Objetos</h2>
-            <p class="security-subtitle">Administración de módulos y submódulos de seguridad.</p>
+            <p class="security-subtitle">Administración de objetos o módulos correspondientes únicamente a tu carrera.</p>
         </div>
 
-        <div>
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('seguridad.index') }}" class="btn btn-outline-secondary">
                 Volver a Seguridad
             </a>
 
-            <button class="btn btn-primary ms-2" data-toggle="modal" data-target="#modalNuevoObjeto">
+            <button class="btn btn-primary" data-toggle="modal" data-target="#modalNuevoObjeto">
                 + Nuevo Objeto
             </button>
         </div>
     </div>
 
     <div class="card shadow border-0 security-card">
-        <div class="card-header security-header">
-            <span class="fw-bold text-white">Lista de Objetos / Módulos</span>
+        <div class="card-header security-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-bold text-white">Lista de Objetos por Carrera</span>
+
+            <span class="badge bg-light text-dark">
+                Total objetos: {{ count($objetos) }}
+            </span>
         </div>
 
         <div class="card-body bg-white">
@@ -44,9 +48,10 @@
                 <table class="table table-bordered table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
+                            <th>ID Objeto Carrera</th>
                             <th>Nombre del Objeto</th>
                             <th>Tipo de Objeto</th>
+                            <th>Estado</th>
                             <th class="col-acciones-sm">Acciones</th>
                         </tr>
                     </thead>
@@ -54,21 +59,28 @@
                     <tbody>
                         @forelse($objetos as $objeto)
                             <tr>
-                                <td>{{ $objeto->id_objeto }}</td>
+                                <td>{{ $objeto->id_objeto_carrera }}</td>
                                 <td>{{ strtoupper($objeto->nombre_objeto) }}</td>
                                 <td>{{ strtoupper($objeto->tipo_objeto) }}</td>
                                 <td>
+                                    @if((int)$objeto->estado_activo === 1)
+                                        <span class="badge bg-success">Activo</span>
+                                    @else
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    @endif
+                                </td>
+                                <td>
                                     <button class="btn btn-primary btn-sm"
                                             data-toggle="modal"
-                                            data-target="#modalEditarObjeto{{ $objeto->id_objeto }}">
+                                            data-target="#modalEditarObjeto{{ $objeto->id_objeto_carrera }}">
                                         Editar
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    No hay objetos registrados.
+                                <td colspan="5" class="text-center text-muted">
+                                    No hay objetos registrados para tu carrera.
                                 </td>
                             </tr>
                         @endforelse
@@ -93,25 +105,21 @@
                     </button>
                 </div>
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre del objeto:</label>
-                        <input type="text" name="nombre_objeto" class="form-control input-highlight" required>
+                <div class="modal-body bg-white">
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Nombre del Objeto:</label>
+                        <input type="text" name="nombre_objeto" class="form-control" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Tipo de objeto:</label>
-                        <select name="tipo_objeto" class="form-select" required>
-                            <option value="">- SELECCIONE -</option>
-                            <option value="MODULO">MODULO</option>
-                            <option value="SUBMODULO">SUBMODULO</option>
-                            <option value="PANTALLA">PANTALLA</option>
-                        </select>
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Tipo del Objeto:</label>
+                        <input type="text" name="tipo_objeto" class="form-control" required>
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Guardar</button>
+                <div class="modal-footer bg-white">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
                 </div>
             </form>
         </div>
@@ -119,10 +127,10 @@
 </div>
 
 @foreach($objetos as $objeto)
-<div class="modal fade" id="modalEditarObjeto{{ $objeto->id_objeto }}" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="modalEditarObjeto{{ $objeto->id_objeto_carrera }}" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
-            <form action="{{ route('seguridad.objeto.update', $objeto->id_objeto) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar los cambios de este objeto?">
+            <form action="{{ route('seguridad.objeto.update', $objeto->id_objeto_carrera) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas actualizar este objeto?">
                 @csrf
                 @method('PUT')
 
@@ -133,28 +141,29 @@
                     </button>
                 </div>
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre del objeto:</label>
-                        <input type="text"
-                               name="nombre_objeto"
-                               class="form-control input-highlight"
-                               value="{{ strtoupper($objeto->nombre_objeto) }}"
-                               required>
+                <div class="modal-body bg-white">
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Nombre del Objeto:</label>
+                        <input type="text" name="nombre_objeto" class="form-control" value="{{ $objeto->nombre_objeto }}" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Tipo de objeto:</label>
-                        <select name="tipo_objeto" class="form-select" required>
-                            <option value="MODULO" {{ strtoupper($objeto->tipo_objeto) === 'MODULO' ? 'selected' : '' }}>MODULO</option>
-                            <option value="SUBMODULO" {{ strtoupper($objeto->tipo_objeto) === 'SUBMODULO' ? 'selected' : '' }}>SUBMODULO</option>
-                            <option value="PANTALLA" {{ strtoupper($objeto->tipo_objeto) === 'PANTALLA' ? 'selected' : '' }}>PANTALLA</option>
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Tipo del Objeto:</label>
+                        <input type="text" name="tipo_objeto" class="form-control" value="{{ $objeto->tipo_objeto }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Estado:</label>
+                        <select name="estado_activo" class="form-select" required>
+                            <option value="1" {{ (int)$objeto->estado_activo === 1 ? 'selected' : '' }}>Activo</option>
+                            <option value="0" {{ (int)$objeto->estado_activo === 0 ? 'selected' : '' }}>Inactivo</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Guardar</button>
+                <div class="modal-footer bg-white">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
                 </div>
             </form>
         </div>
@@ -162,3 +171,5 @@
 </div>
 @endforeach
 @endsection
+
+
