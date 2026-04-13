@@ -1,4 +1,93 @@
 document.addEventListener('DOMContentLoaded', function () {
+    /* =========================================================
+       TOPBAR: notificaciones, mensajes y usuario
+    ========================================================= */
+    const btnNotif = document.getElementById('btnNotif');
+    const dropNotif = document.getElementById('dropNotif');
+
+    const btnMsg = document.getElementById('btnMsg');
+    const dropMsg = document.getElementById('dropMsg');
+
+    const btnUser = document.getElementById('btnUser');
+    const dropUser = document.getElementById('dropUser');
+
+    const dropdowns = [dropNotif, dropMsg, dropUser].filter(Boolean);
+
+    function closeAllDropdowns() {
+        dropdowns.forEach((drop) => {
+            drop.style.display = 'none';
+            drop.classList.remove('is-open');
+        });
+    }
+
+    function toggleDropdown(drop) {
+        if (!drop) return;
+
+        const isVisible = drop.style.display === 'block';
+
+        closeAllDropdowns();
+
+        if (!isVisible) {
+            drop.style.display = 'block';
+            drop.classList.add('is-open');
+        }
+    }
+
+    if (btnNotif && dropNotif) {
+        dropNotif.style.display = 'none';
+
+        btnNotif.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDropdown(dropNotif);
+        });
+
+        dropNotif.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    }
+
+    if (btnMsg && dropMsg) {
+        dropMsg.style.display = 'none';
+
+        btnMsg.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDropdown(dropMsg);
+        });
+
+        dropMsg.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    }
+
+    if (btnUser && dropUser) {
+        dropUser.style.display = 'none';
+
+        btnUser.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDropdown(dropUser);
+        });
+
+        dropUser.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    }
+
+    document.addEventListener('click', function () {
+        closeAllDropdowns();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAllDropdowns();
+        }
+    });
+
+    /* =========================================================
+       GRÁFICAS
+    ========================================================= */
     const data = window.secretariaAcademicaCharts || {};
 
     const estadosLabels = data.estadosLabels || [];
