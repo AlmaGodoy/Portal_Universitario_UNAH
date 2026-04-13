@@ -1,10 +1,4 @@
-@php
-    $layoutSeguridad = session('rol_texto') === 'secretaria_general'
-        ? 'layouts.app-secretaria-academica'
-        : 'layouts.app-coordinador';
-@endphp
-
-@extends($layoutSeguridad)
+@extends('layouts.app-coordinador')
 
 @section('titulo', 'Gestión de Roles')
 
@@ -29,7 +23,9 @@
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h2 class="security-title">Gestión de Roles</h2>
-                    <p class="security-subtitle">Administración global de roles del sistema. Exclusivo para Secretaría General.</p>
+                    <p class="security-subtitle">
+                        Administración de roles correspondientes únicamente a tu carrera.
+                    </p>
                 </div>
 
                 <div class="d-flex gap-2">
@@ -91,7 +87,7 @@
         <div class="col-12">
             <div class="card shadow border-0 security-card">
                 <div class="card-header security-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <span class="fw-bold text-white">Lista de Roles</span>
+                    <span class="fw-bold text-white">Lista de Roles por Carrera</span>
 
                     <span class="badge bg-light text-dark">
                         Total roles: {{ count($roles) }}
@@ -103,7 +99,7 @@
                         <table class="table table-bordered table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>#</th>
+                                    <th>ID Rol Carrera</th>
                                     <th>Rol</th>
                                     <th>Descripción</th>
                                     <th>Estado</th>
@@ -113,7 +109,7 @@
                             <tbody>
                                 @forelse($roles as $rol)
                                     <tr>
-                                        <td>{{ $rol->id_rol }}</td>
+                                        <td>{{ $rol->id_rol_carrera }}</td>
                                         <td>{{ strtoupper($rol->nombre_rol) }}</td>
                                         <td>{{ $rol->descripcion }}</td>
                                         <td>
@@ -126,7 +122,7 @@
                                         <td>
                                             <button class="btn btn-primary btn-sm"
                                                     data-toggle="modal"
-                                                    data-target="#modalEditarRol{{ $rol->id_rol }}">
+                                                    data-target="#modalEditarRol{{ $rol->id_rol_carrera }}">
                                                 Editar
                                             </button>
                                         </td>
@@ -134,7 +130,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="5" class="text-center text-muted">
-                                            No hay roles registrados con los filtros seleccionados.
+                                            No hay roles registrados para tu carrera.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -157,11 +153,11 @@
 
                         <div class="row g-3">
                             <div class="col-md-6 col-lg-4">
-                                <label class="form-label fw-bold">Rol</label>
-                                <select name="id_rol" class="form-select" required>
+                                <label class="form-label fw-bold">Rol:</label>
+                                <select name="id_rol_carrera" class="form-select" required>
                                     <option value="">- SELECCIONE ROL -</option>
                                     @foreach($roles as $rol)
-                                        <option value="{{ $rol->id_rol }}">
+                                        <option value="{{ $rol->id_rol_carrera }}">
                                             {{ strtoupper($rol->nombre_rol) }}
                                         </option>
                                     @endforeach
@@ -169,35 +165,30 @@
                             </div>
 
                             <div class="col-md-6 col-lg-4">
-                                <label class="form-label fw-bold">Objeto</label>
-                                <select name="id_objeto" class="form-select" required>
+                                <label class="form-label fw-bold">Objeto:</label>
+                                <select name="id_objeto_carrera" class="form-select" required>
                                     <option value="">- SELECCIONE OBJETO -</option>
                                     @foreach($objetos as $objeto)
-                                        <option value="{{ $objeto->id_objeto }}">
+                                        <option value="{{ $objeto->id_objeto_carrera }}">
                                             {{ strtoupper($objeto->nombre_objeto) }} ({{ strtoupper($objeto->tipo_objeto) }})
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <div class="col-12">
-                                <label class="form-label fw-bold d-block mb-2">Permisos</label>
-
-                                <div class="row">
+                            <div class="col-md-12 col-lg-4">
+                                <label class="form-label fw-bold">Permisos:</label>
+                                <div class="d-flex flex-wrap gap-3">
                                     @foreach($permisos as $permiso)
-                                        <div class="col-md-6 col-lg-3 mb-2">
-                                            <div class="form-check">
-                                                <input
-                                                    class="form-check-input"
-                                                    type="checkbox"
-                                                    name="permisos[]"
-                                                    value="{{ $permiso->id_permiso }}"
-                                                    id="permiso{{ $permiso->id_permiso }}"
-                                                >
-                                                <label class="form-check-label" for="permiso{{ $permiso->id_permiso }}">
-                                                    {{ strtoupper($permiso->nombre_permiso) }}
-                                                </label>
-                                            </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="permisos[]"
+                                                   value="{{ $permiso->id_permiso }}"
+                                                   id="permiso{{ $permiso->id_permiso }}">
+                                            <label class="form-check-label" for="permiso{{ $permiso->id_permiso }}">
+                                                {{ strtoupper($permiso->nombre_permiso) }}
+                                            </label>
                                         </div>
                                     @endforeach
                                 </div>
@@ -217,7 +208,7 @@
         <div class="col-12">
             <div class="card shadow border-0 security-card">
                 <div class="card-header security-header">
-                    <span class="fw-bold text-white">Asignaciones de Roles</span>
+                    <span class="fw-bold text-white">Asignaciones Actuales por Carrera</span>
                 </div>
 
                 <div class="card-body bg-white">
@@ -227,28 +218,28 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Rol</th>
-                                    <th>Objeto</th>
                                     <th>Permiso</th>
+                                    <th>Objeto</th>
                                     <th>Fecha</th>
-                                    <th>Acción</th>
+                                    <th class="col-acciones-sm">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($rolPermisos as $rp)
+                                @forelse($rolPermisos as $asignacion)
                                     <tr>
-                                        <td>{{ $rp->id_rol_permiso }}</td>
-                                        <td>{{ strtoupper($rp->nombre_rol) }}</td>
-                                        <td>{{ strtoupper($rp->nombre_objeto) }}</td>
-                                        <td>{{ strtoupper($rp->nombre_permiso) }}</td>
-                                        <td>{{ $rp->fecha_asignacion }}</td>
+                                        <td>{{ $asignacion->id_rol_permiso_carrera }}</td>
+                                        <td>{{ $asignacion->nombre_rol }}</td>
+                                        <td>{{ $asignacion->nombre_permiso }}</td>
+                                        <td>{{ $asignacion->nombre_objeto }}</td>
+                                        <td>{{ $asignacion->fecha_asignacion }}</td>
                                         <td>
-                                            <form action="{{ route('seguridad.asignacion.delete', $rp->id_rol_permiso) }}"
+                                            <form action="{{ route('seguridad.asignacion.delete', $asignacion->id_rol_permiso_carrera) }}"
                                                   method="POST"
                                                   class="js-confirm-delete"
-                                                  data-confirm="¿Desactivar esta asignación?">
+                                                  data-confirm="¿Seguro que deseas desactivar esta asignación?">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-warning btn-sm text-dark">
+                                                <button type="submit" class="btn btn-danger btn-sm">
                                                     Desactivar
                                                 </button>
                                             </form>
@@ -257,7 +248,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center text-muted">
-                                            No hay asignaciones registradas.
+                                            No hay asignaciones activas para tu carrera.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -271,6 +262,7 @@
     </div>
 </div>
 
+{{-- MODAL NUEVO ROL --}}
 <div class="modal fade" id="modalNuevoRol" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
@@ -284,27 +276,28 @@
                     </button>
                 </div>
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Rol:</label>
-                        <input type="text" name="nombre_rol" class="form-control input-highlight" required>
+                <div class="modal-body bg-white">
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Nombre del Rol:</label>
+                        <input type="text" name="nombre_rol" class="form-control" required>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label class="form-label fw-bold">Descripción:</label>
                         <textarea name="descripcion" class="form-control" rows="3" required></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Estado del Rol:</label>
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Estado:</label>
                         <select name="estado_activo" class="form-select" required>
-                            <option value="1">ACTIVO</option>
-                            <option value="0">INACTIVO</option>
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                <div class="modal-footer bg-white">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success">Guardar</button>
                 </div>
             </form>
@@ -312,11 +305,12 @@
     </div>
 </div>
 
+{{-- MODALES EDITAR --}}
 @foreach($roles as $rol)
-<div class="modal fade" id="modalEditarRol{{ $rol->id_rol }}" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="modalEditarRol{{ $rol->id_rol_carrera }}" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content shadow">
-            <form action="{{ route('seguridad.rol.update', $rol->id_rol) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar los cambios de este rol?">
+            <form action="{{ route('seguridad.rol.update', $rol->id_rol_carrera) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas actualizar este rol?">
                 @csrf
                 @method('PUT')
 
@@ -327,32 +321,29 @@
                     </button>
                 </div>
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Rol:</label>
-                        <input type="text"
-                               name="nombre_rol"
-                               class="form-control input-highlight"
-                               value="{{ strtoupper($rol->nombre_rol) }}"
-                               required>
+                <div class="modal-body bg-white">
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Nombre del Rol:</label>
+                        <input type="text" name="nombre_rol" class="form-control" value="{{ $rol->nombre_rol }}" required>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label class="form-label fw-bold">Descripción:</label>
                         <textarea name="descripcion" class="form-control" rows="3" required>{{ $rol->descripcion }}</textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Estado del Rol:</label>
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Estado:</label>
                         <select name="estado_activo" class="form-select" required>
-                            <option value="1" {{ (int)$rol->estado_activo === 1 ? 'selected' : '' }}>ACTIVO</option>
-                            <option value="0" {{ (int)$rol->estado_activo === 0 ? 'selected' : '' }}>INACTIVO</option>
+                            <option value="1" {{ (int)$rol->estado_activo === 1 ? 'selected' : '' }}>Activo</option>
+                            <option value="0" {{ (int)$rol->estado_activo === 0 ? 'selected' : '' }}>Inactivo</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                <div class="modal-footer bg-white">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
                 </div>
             </form>
         </div>
@@ -360,3 +351,5 @@
 </div>
 @endforeach
 @endsection
+
+

@@ -169,6 +169,15 @@
                         </li>
 
                         {{-- Bitácora --}}
+@if (Route::has('bitacora.index'))
+    <li class="nav-item">
+        <a href="{{ route('bitacora.index') }}"
+           class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Bitácora</p>
+        </a>
+    </li>
+@endif
                         @if (Route::has('bitacora.index'))
                             <li class="nav-item">
                                 <a href="{{ route('bitacora.index') }}"
