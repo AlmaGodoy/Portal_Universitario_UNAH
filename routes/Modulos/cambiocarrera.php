@@ -22,6 +22,7 @@ Route::prefix('api/cambio-carrera')->group(function () {
     Route::get('secretaria/detalle/{id_tramite}', [CambioCarreraController::class, 'detalleSecretaria']);
     Route::post('secretaria/guardar-revision', [CambioCarreraController::class, 'guardarRevisionSecretaria']);
     Route::get('coordinacion/listado', [CambioCarreraController::class, 'listadoCoordinacion']);
+    Route::get('coordinacion/detalle/{id_tramite}', [CambioCarreraController::class, 'detalleCoordinacion']);
     Route::put('coordinacion/dictaminar/{id_tramite}', [CambioCarreraController::class, 'dictaminarCoordinacion']);
 
     Route::get('secretaria/calendarios', [CambioCarreraController::class, 'listarCalendariosAcademicos']);
@@ -82,6 +83,8 @@ Route::middleware('auth')->group(function () {
         ->name('coordinador.cambio-carrera.index');
 });
 
+Route::get('/empleado/cambio-carrera/documento/{id_tramite}', [CambioCarreraController::class, 'verDocumento'])
+    ->name('cambio-carrera.documento');
 
 
 
