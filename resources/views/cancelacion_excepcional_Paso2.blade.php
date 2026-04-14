@@ -28,6 +28,9 @@
             ?? $mapaDocs->get('TESTIMONIO_PADRES')
             ?? $mapaDocs->get('OTRO_RESPALDO');
 
+        $docDniVista = $docDniFrente ?? $docDniReverso;
+        $dniCompleto = !empty($docDniFrente) && !empty($docDniReverso);
+
         $urlBaseUpload   = route('cancelacion.paso2.base.upload', ['id_tramite' => $tramite->id_tramite]);
         $urlRiesgoUpload = route('cancelacion.paso2.riesgo.upload', ['id_tramite' => $tramite->id_tramite]);
         $urlFlexUpload   = route('cancelacion.paso2.flex.upload', ['id_tramite' => $tramite->id_tramite]);
@@ -109,7 +112,7 @@
                     <h3 class="cc2-info-box__title">Documentación requerida</h3>
 
                     <ul class="cc2-doc-list">
-                        <li>Tarjeta de identidad: frente y reverso, en foto o escaneo legible.</li>
+                        <li>Tarjeta de identidad en un solo PDF, incluyendo frente y reverso.</li>
                         <li>Historial académico en PDF.</li>
                         <li>Forma 003 en PDF o captura completa y legible.</li>
                         <li>Documento de respaldo según la causa justificada seleccionada.</li>
@@ -164,122 +167,76 @@
                     <span>Documentos base obligatorios</span>
                 </div>
 
-                {{-- TARJETA DE IDENTIDAD UNIFICADA EN UNA SOLA SECCIÓN --}}
-                <div class="cc2-doc-card">
+                {{-- TARJETA DE IDENTIDAD --}}
+                <div class="cc2-doc-card" data-doc-card="DNI_UNIFICADO">
                     <div class="cc2-doc-card__head">
                         <div>
                             <h3 class="cc2-doc-card__title">Tarjeta de identidad</h3>
                             <p class="cc2-doc-card__text">
-                                Suba una foto o escaneo legible del frente y reverso de su tarjeta de identidad.
+                                Suba un único PDF que contenga el frente y el reverso de la tarjeta de identidad.
+                                Lo ideal es que el frente vaya en la primera página y el reverso en la segunda.
                             </p>
                         </div>
                         <span class="cc2-badge cc2-badge--required">Obligatorio</span>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:18px;">
-                        
-                        {{-- FRENTE --}}
-                        <div style="border:1px solid #e5e7eb; border-radius:16px; padding:18px; background:#fff;">
-                            <h4 style="margin:0 0 12px 0; font-size:1.05rem; font-weight:700; color:#0f2d52;">
-                                Frente
-                            </h4>
+                    <form class="cc2-upload-form" data-upload-kind="identidad-unificada">
+                        @csrf
 
-                            <form class="cc2-upload-form"
-                                  data-upload-kind="base"
-                                  data-tipo-documento="DNI_FRENTE">
-                                @csrf
-
-                                <div class="cc2-upload-area" data-upload-area>
-                                    <div class="cc2-upload-area__icon">🪪</div>
-                                    <p class="cc2-upload-area__title">Subir frente de identidad</p>
-                                    <p class="cc2-upload-area__subtitle">PDF, JPG o PNG</p>
-                                    <p class="cc2-file-name" data-file-name></p>
-                                </div>
-
-                                <input type="file"
-                                       name="archivo"
-                                       accept=".pdf,.jpg,.jpeg,.png"
-                                       hidden
-                                       data-file-input>
-
-                                <div class="cc2-inline-actions">
-                                    <button type="submit" class="cc2-btn cc2-btn--primary-soft">Guardar frente</button>
-                                </div>
-
-                                <div class="cc2-form-msg" data-form-msg></div>
-                            </form>
-
-                            <div class="cc2-doc-state">
-                                @if($docDniFrente)
-                                    <div class="cc2-doc-state__ok">
-                                        <span>✅ Cargado:</span>
-                                        <strong>{{ $docDniFrente->nombre_documento }}</strong>
-                                    </div>
-                                    <div class="cc2-doc-state__actions">
-                                        <a href="{{ asset('storage/' . $docDniFrente->ruta_archivo) }}" target="_blank" class="cc2-link-btn">Ver archivo</a>
-                                        <button type="button" class="cc2-link-btn cc2-link-btn--danger"
-                                                data-delete-doc
-                                                data-id-documento="{{ $docDniFrente->id_documento }}">
-                                            Quitar
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                                @endif
+                        <div style="border:1px solid #e5e7eb; border-radius:18px; padding:18px; background:#fff;">
+                            <div class="cc2-upload-area" data-upload-area>
+                                <div class="cc2-upload-area__icon">🪪</div>
+                                <p class="cc2-upload-area__title">Subir PDF de identidad</p>
+                                <p class="cc2-upload-area__subtitle">Un solo PDF con frente y reverso</p>
+                                <p class="cc2-file-name" data-file-name></p>
                             </div>
-                        </div>
 
-                        {{-- REVERSO --}}
-                        <div style="border:1px solid #e5e7eb; border-radius:16px; padding:18px; background:#fff;">
-                            <h4 style="margin:0 0 12px 0; font-size:1.05rem; font-weight:700; color:#0f2d52;">
-                                Reverso
-                            </h4>
+                            <input type="file"
+                                   name="archivo_identidad"
+                                   accept=".pdf"
+                                   hidden
+                                   data-file-input>
 
-                            <form class="cc2-upload-form"
-                                  data-upload-kind="base"
-                                  data-tipo-documento="DNI_REVERSO">
-                                @csrf
-
-                                <div class="cc2-upload-area" data-upload-area>
-                                    <div class="cc2-upload-area__icon">🪪</div>
-                                    <p class="cc2-upload-area__title">Subir reverso de identidad</p>
-                                    <p class="cc2-upload-area__subtitle">PDF, JPG o PNG</p>
-                                    <p class="cc2-file-name" data-file-name></p>
-                                </div>
-
-                                <input type="file"
-                                       name="archivo"
-                                       accept=".pdf,.jpg,.jpeg,.png"
-                                       hidden
-                                       data-file-input>
-
-                                <div class="cc2-inline-actions">
-                                    <button type="submit" class="cc2-btn cc2-btn--primary-soft">Guardar reverso</button>
-                                </div>
-
-                                <div class="cc2-form-msg" data-form-msg></div>
-                            </form>
-
-                            <div class="cc2-doc-state">
-                                @if($docDniReverso)
-                                    <div class="cc2-doc-state__ok">
-                                        <span>✅ Cargado:</span>
-                                        <strong>{{ $docDniReverso->nombre_documento }}</strong>
-                                    </div>
-                                    <div class="cc2-doc-state__actions">
-                                        <a href="{{ asset('storage/' . $docDniReverso->ruta_archivo) }}" target="_blank" class="cc2-link-btn">Ver archivo</a>
-                                        <button type="button" class="cc2-link-btn cc2-link-btn--danger"
-                                                data-delete-doc
-                                                data-id-documento="{{ $docDniReverso->id_documento }}">
-                                            Quitar
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                                @endif
+                            <div style="margin-top:12px; font-size:.92rem; color:#64748b;">
+                                Solo se permite <strong>PDF</strong>. Tamaño máximo: <strong>10 MB</strong>.
                             </div>
-                        </div>
 
+                            <div class="cc2-form-msg" data-form-msg></div>
+                        </div>
+                    </form>
+
+                    <div class="cc2-doc-state" style="margin-top:18px;">
+                        @if($docDniVista)
+                            <div class="cc2-doc-state__ok">
+                                <span>✅ Cargado:</span>
+                                <strong>{{ $docDniVista->nombre_documento }}</strong>
+                            </div>
+
+                            <div class="cc2-doc-state__meta" style="margin-top:8px;">
+                                <span>
+                                    Estado actual:
+                                    <strong>{{ $dniCompleto ? 'Frente y reverso registrados' : 'Documento parcial cargado' }}</strong>
+                                </span>
+                            </div>
+
+                            <div class="cc2-doc-state__actions">
+                                <a href="{{ asset('storage/' . $docDniVista->ruta_archivo) }}"
+                                   target="_blank"
+                                   class="cc2-link-btn">
+                                    Ver PDF
+                                </a>
+
+                                <button type="button"
+                                        class="cc2-link-btn cc2-link-btn--danger"
+                                        data-delete-identidad
+                                        data-id-frente="{{ $docDniFrente->id_documento ?? '' }}"
+                                        data-id-reverso="{{ $docDniReverso->id_documento ?? '' }}">
+                                    Quitar
+                                </button>
+                            </div>
+                        @else
+                            <div class="cc2-doc-state__pending">Pendiente de cargar</div>
+                        @endif
                     </div>
                 </div>
 
@@ -313,10 +270,6 @@
                                    accept=".pdf"
                                    hidden
                                    data-file-input>
-
-                            <div class="cc2-inline-actions">
-                                <button type="submit" class="cc2-btn cc2-btn--primary-soft">Guardar documento</button>
-                            </div>
 
                             <div class="cc2-form-msg" data-form-msg></div>
                         </form>
@@ -369,10 +322,6 @@
                                    accept=".pdf,.jpg,.jpeg,.png"
                                    hidden
                                    data-file-input>
-
-                            <div class="cc2-inline-actions">
-                                <button type="submit" class="cc2-btn cc2-btn--primary-soft">Guardar documento</button>
-                            </div>
 
                             <div class="cc2-form-msg" data-form-msg></div>
                         </form>
@@ -450,10 +399,6 @@
                                            maxlength="100"
                                            placeholder="Ejemplo: MED-2026-00125">
                                 </div>
-                            </div>
-
-                            <div class="cc2-inline-actions">
-                                <button type="submit" class="cc2-btn cc2-btn--primary-soft">Guardar constancia médica</button>
                             </div>
 
                             <div class="cc2-form-msg" data-form-msg></div>
@@ -535,10 +480,6 @@
                                 </div>
                             </div>
 
-                            <div class="cc2-inline-actions">
-                                <button type="submit" class="cc2-btn cc2-btn--primary-soft">Guardar constancia laboral</button>
-                            </div>
-
                             <div class="cc2-form-msg" data-form-msg></div>
                         </form>
 
@@ -581,8 +522,7 @@
                         </div>
 
                         <form class="cc2-upload-form"
-                              data-upload-kind="flex"
-                              data-tipo-documento="RESPALDO_CALAMIDAD">
+                              data-upload-kind="flex">
                             @csrf
 
                             <div class="cc2-field-grid">
@@ -612,10 +552,6 @@
                                 </div>
                             </div>
 
-                            <div class="cc2-inline-actions">
-                                <button type="submit" class="cc2-btn cc2-btn--primary-soft">Guardar respaldo</button>
-                            </div>
-
                             <div class="cc2-form-msg" data-form-msg></div>
                         </form>
 
@@ -639,6 +575,24 @@
                         </div>
                     </div>
                 @endif
+
+                <div class="cc2-section">
+                    <span>Guardar archivos seleccionados</span>
+                </div>
+
+                <div class="cc2-finish-box">
+                    <p class="cc2-finish-box__text">
+                        Después de seleccionar los archivos que desea subir, presione este único botón para guardarlos.
+                    </p>
+
+                    <div class="cc2-actions">
+                        <button type="button" id="btn-guardar-documentos" class="cc2-btn cc2-btn--primary-soft">
+                            Guardar documentos seleccionados
+                        </button>
+                    </div>
+
+                    <div id="cc2-upload-msg" class="cc2-form-msg cc2-form-msg--final"></div>
+                </div>
 
                 <div class="cc2-section">
                     <span>Finalizar este paso</span>

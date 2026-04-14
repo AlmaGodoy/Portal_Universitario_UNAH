@@ -14,133 +14,65 @@
         $idCarreraSeleccionada = $idCarreraSeleccionada ?? request('id_carrera') ?? '';
     @endphp
 
-    <section class="content graf-wrap">
-        <div id="graficasDashboard"
-            data-api-url="{{ route('api.graficas.secretaria_carrera') }}"
-            data-scope-label="carrera"
-            data-scope-note="Mostrando estadísticas de todas las carreras."
-            data-breakdown-label="carrera">
+    {{-- BANNER --}}
+    <div class="hero-banner">
+        <div class="hero-banner-bg"></div>
+        <div class="hero-wave wave-one"></div>
+        <div class="hero-wave wave-two"></div>
+        <div class="hero-gold-ribbon"></div>
 
-            {{-- BANNER NUEVO ESTILO ESTUDIANTE --}}
-            <div class="hero-banner">
-                <div class="hero-banner-bg"></div>
-                <div class="hero-wave wave-one"></div>
-                <div class="hero-wave wave-two"></div>
-                <div class="hero-gold-ribbon"></div>
+        <div class="hero-photo">
+            <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
+        </div>
 
                 <div class="hero-photo" style="background-image: url('{{ asset('images/FCEAC.jpeg') }}');"></div>
                 <div class="hero-photo">
     <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
 </div>
+        <div class="hero-content">
+            <div class="hero-top-title">Secretaría de Carrera UNAH</div>
 
-                <div class="hero-content">
-                    <div class="hero-top-title">Secretaría de Carrera UNAH</div>
-
-                    <div class="hero-breadcrumb">
-                        <i class="fas fa-house"></i>
-                        <span>Inicio</span>
-                        <i class="fas fa-angle-right sep"></i>
-                        <span>Gestión de Carrera</span>
-                    </div>
-
-                    <div class="hero-faculty-title">
-                        FACULTAD DE CIENCIAS ECONÓMICAS,<br>
-                        ADMINISTRATIVAS Y CONTABLES
-                    </div>
-                </div>
+            <div class="hero-breadcrumb">
+                <i class="fas fa-house"></i>
+                <span>Inicio</span>
+                <i class="fas fa-angle-right sep"></i>
+                <span>Gestión de Carrera</span>
             </div>
 
-            <div class="top-search-row">
-                <div class="tsr-input-wrap">
-                    <input type="text" placeholder="Buscar trámite o estudiante..." id="top-search">
-                </div>
-                <div class="tsr-user">
-                    <div class="tsr-avatar" id="top-initials">
-                        {{ strtoupper(substr($userName, 0, 1)) }}{{ strtoupper(substr(explode(' ', $userName)[1] ?? '', 0, 1)) }}
-                    </div>
-                    <span class="tsr-name" id="top-username">{{ $userName }}</span>
-                </div>
-            </div>
-
-            <div class="graf-toolbar">
-                <div class="graf-toolbar-left">
-                    <p class="graf-label mb-0">
-                        <i class="fas fa-filter"></i> Filtrar por año
-                    </p>
-
-                    <select id="anioSelectGraficas" class="graf-select">
-                        @forelse($aniosDisponibles as $anioItem)
-                            <option value="{{ $anioItem }}" {{ (string)$anioSeleccionado === (string)$anioItem ? 'selected' : '' }}>
-                                {{ $anioItem }}
-                            </option>
-                        @empty
-                            <option value="{{ date('Y') }}">{{ date('Y') }}</option>
-                        @endforelse
-                    </select>
-
-                    <select id="filtroCarrera" class="graf-select">
-                        <option value="">Todas las carreras</option>
-                        @foreach($carreras as $carrera)
-                            <option value="{{ $carrera->id_carrera }}"
-                                {{ (string)$idCarreraSeleccionada === (string)$carrera->id_carrera ? 'selected' : '' }}>
-                                {{ $carrera->nombre_carrera }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="graf-status" id="estadoCargaGraficas">
-                    Listo para consultar estadísticas de carrera
-                </div>
-            </div>
-
-            <div class="scope-note-box" id="scopeNoteGraficas">
-                Mostrando estadísticas de todas las carreras.
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card bg-a">
-                    <i class="fas fa-ban bg"></i>
-                    <div class="title">Cancelaciones Excepcionales</div>
-                    <div class="value" id="totalCancelaciones">0</div>
-                    <div class="foot">Total anual registrado</div>
-                </div>
-
-                <div class="stat-card bg-b">
-                    <i class="fas fa-right-left bg"></i>
-                    <div class="title">Cambios de Carrera</div>
-                    <div class="value" id="totalCambios">0</div>
-                    <div class="foot">Total anual registrado</div>
-                </div>
-            </div>
-
-            <div class="donut-grid">
-                <div class="chart-card donut-card">
-                    <div class="chart-head">
-                        <h4>Distribución de Cancelaciones por Carrera</h4>
-                        <p>Pasa el cursor sobre el gráfico para ver el total por carrera</p>
-                    </div>
-                    <div class="chart-body donut-body">
-                        <div class="donut-canvas-wrap">
-                            <canvas id="donutCancelaciones"></canvas>
-                        </div>
-                        <div class="donut-empty" id="donutEmptyCancelaciones">Esperando datos...</div>
-                    </div>
-                </div>
-
-                <div class="chart-card donut-card">
-                    <div class="chart-head">
-                        <h4>Distribución de Cambios de Carrera por Carrera</h4>
-                        <p>Pasa el cursor sobre el gráfico para ver el total por carrera</p>
-                    </div>
-                    <div class="chart-body donut-body">
-                        <div class="donut-canvas-wrap">
-                            <canvas id="donutCambios"></canvas>
-                        </div>
-                        <div class="donut-empty" id="donutEmptyCambios">Esperando datos...</div>
-                    </div>
-                </div>
+            <div class="hero-faculty-title">
+                FACULTAD DE CIENCIAS ECONÓMICAS,<br>
+                ADMINISTRATIVAS Y CONTABLES
             </div>
         </div>
-    </section>
+    </div>
+
+    <div class="student-intro-strip">
+        <div class="student-intro-text">
+            <h2>Resumen gráfico de trámites</h2>
+            <p>
+                Visualiza el comportamiento de cancelaciones excepcionales y cambios de carrera
+                correspondientes a la carrera asignada a secretaría.
+            </p>
+        </div>
+
+        <div class="student-user-chip">
+            <div class="student-user-chip-avatar">
+                {{ strtoupper(substr($userName, 0, 1)) }}{{ strtoupper(substr(explode(' ', $userName)[1] ?? '', 0, 1)) }}
+            </div>
+            <div class="student-user-chip-name">{{ $userName }}</div>
+        </div>
+    </div>
+
+    @include('graficas_dashboard', [
+        'apiUrl' => route('api.graficas.secretaria_carrera'),
+        'scopeLabel' => 'carrera',
+        'scopeNote' => 'Mostrando estadísticas de la carrera asignada a secretaría.',
+        'breakdownLabel' => 'carrera',
+        'modoFiltro' => 'ninguno',
+        'aniosDisponibles' => $aniosDisponibles ?? [],
+        'carreras' => $carreras ?? collect(),
+        'idCarreraSeleccionada' => $idCarreraSeleccionada ?? null,
+        'anio' => $anioSeleccionado ?? null,
+        'rootId' => 'graficasDashboard',
+    ])
 @endsection
