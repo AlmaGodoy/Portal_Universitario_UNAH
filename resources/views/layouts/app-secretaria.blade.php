@@ -38,6 +38,18 @@
     if ($initials === '') {
         $initials = 'S';
     }
+
+    $menuRevisionOpen = request()->routeIs(
+        'cambio-carrera.secretaria',
+        'cambio-carrera.secretaria.revisar'
+    ) || request()->routeIs('cancelacion.secretaria.*');
+
+    $menuCambioCarreraActive = request()->routeIs(
+        'cambio-carrera.secretaria',
+        'cambio-carrera.secretaria.revisar'
+    );
+
+    $menuCancelacionActive = request()->routeIs('cancelacion.secretaria.*');
 @endphp
 
 <!DOCTYPE html>
@@ -45,14 +57,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PumaGestión – @yield('titulo', 'Secretaría de Carrera')</title>
+    <title>PumaGestión – @yield('title', 'Secretaría de Carrera')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
+    {{-- Todo el CSS de resources/css se carga aquí por Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 </head>
 <body class="hold-transition dashboard-body">
 <div class="wrapper">
@@ -99,47 +111,43 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
-
                         {{-- Revisión de documentos --}}
-<li class="nav-item has-treeview {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'menu-open' : '' }}">
-    <a href="javascript:void(0)"
-       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-file-circle-check"></i>
-        <p>
-            Revisión de documentos
-            <i class="right fas fa-angle-left"></i>
-        </p>
-    </a>
+                        <li class="nav-item has-treeview {{ $menuRevisionOpen ? 'menu-open' : '' }}">
+                            <a href="javascript:void(0)" class="nav-link {{ $menuRevisionOpen ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-file-circle-check"></i>
+                                <p>
+                                    Revisión de documentos
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
 
-    <ul class="nav nav-treeview">
-        <li class="nav-item">
-            <a href="{{ route('cambio-carrera.secretaria') }}"
-               class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cambio de carrera</p>
-            </a>
-        </li>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('cambio-carrera.secretaria') }}"
+                                       class="nav-link {{ $menuCambioCarreraActive ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Cambio de carrera</p>
+                                    </a>
+                                </li>
 
-        <li class="nav-item">
-            <a href="javascript:void(0)"
-               class="nav-link {{ request()->routeIs('cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cancelación</p>
-            </a>
-        </li>
-    </ul>
-</li>
-
-
+                                <li class="nav-item">
+                                    <a href="{{ route('cancelacion.secretaria.index') }}"
+                                       class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Cancelación</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
 
                         {{-- Fechas --}}
-<li class="nav-item">
-    <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"
-       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria.calendarios') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-calendar-days"></i>
-        <p>Fechas</p>
-    </a>
-</li>
+                        <li class="nav-item">
+                            <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"
+                               class="nav-link {{ request()->routeIs('cambio-carrera.secretaria.calendarios') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-days"></i>
+                                <p>Fechas</p>
+                            </a>
+                        </li>
 
                         {{-- Configuración --}}
                         <li class="nav-item">

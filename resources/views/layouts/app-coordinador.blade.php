@@ -3,8 +3,8 @@
 
     $user = auth()->user();
 
-    $displayName = 'Coordinador';
-    $displayRole = 'Coordinador';
+    $displayName = 'Coordinadora';
+    $displayRole = 'Coordinadora';
 
     if ($user) {
         if (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
@@ -38,6 +38,28 @@
     if ($initials === '') {
         $initials = 'C';
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DE CANCELACIÓN PARA COORDINADORA
+    |--------------------------------------------------------------------------
+    */
+    $cancelacionRouteName = null;
+
+    if (Route::has('cancelacion.coordinadora.index')) {
+        $cancelacionRouteName = 'cancelacion.coordinadora.index';
+    } elseif (Route::has('resolucion.cancelacion.vista')) {
+        $cancelacionRouteName = 'resolucion.cancelacion.vista';
+    }
+
+    $cancelacionUrl = $cancelacionRouteName
+        ? route($cancelacionRouteName)
+        : 'javascript:void(0)';
+
+    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
+    $cambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
+    $cancelacionActive = request()->routeIs('cancelacion.coordinadora.*') || request()->routeIs('resolucion.cancelacion.*');
+    $tramitesMenuOpen = $cambioCarreraActive || $cancelacionActive;
 @endphp
 
 <!DOCTYPE html>
@@ -45,7 +67,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PumaGestión – @yield('titulo', 'Panel de Coordinación')</title>
+    <title>PumaGestión – @yield('title', 'Panel de Coordinación')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -105,16 +127,16 @@
                         {{-- Dashboard --}}
                         <li class="nav-item">
                             <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*') ? 'active' : '' }}">
+                               class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
 
                         {{-- Trámites --}}
-                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'resolucion.cancelacion.*') ? 'menu-open' : '' }}">
+                        <li class="nav-item has-treeview {{ $tramitesMenuOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)"
-                               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'resolucion.cancelacion.*') ? 'active' : '' }}">
+                               class="nav-link {{ $tramitesMenuOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-folder-open"></i>
                                 <p>
                                     Trámites
@@ -125,15 +147,15 @@
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
                                     <a href="{{ route('coordinador.cambio-carrera.index') }}"
-                                       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                                       class="nav-link {{ $cambioCarreraActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cambio de carrera</p>
                                     </a>
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="{{ route('resolucion.cancelacion.vista') }}"
-                                       class="nav-link {{ request()->routeIs('resolucion.cancelacion.*') ? 'active' : '' }}">
+                                    <a href="{{ $cancelacionUrl }}"
+                                       class="nav-link {{ $cancelacionActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cancelación</p>
                                     </a>
@@ -169,15 +191,6 @@
                         </li>
 
                         {{-- Bitácora --}}
-@if (Route::has('bitacora.index'))
-    <li class="nav-item">
-        <a href="{{ route('bitacora.index') }}"
-           class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
-            <i class="nav-icon fas fa-book"></i>
-            <p>Bitácora</p>
-        </a>
-    </li>
-@endif
                         @if (Route::has('bitacora.index'))
                             <li class="nav-item">
                                 <a href="{{ route('bitacora.index') }}"
