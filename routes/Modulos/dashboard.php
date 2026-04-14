@@ -3,8 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
-Route::middleware(['auth'])->get('/dashboard', function () {
+Route::middleware(['auth', 'session.timeout'])->get('/dashboard', function () {
 
     $user = Auth::user();
     $displayName = 'Alumno';
@@ -29,7 +30,6 @@ Route::middleware(['auth'])->get('/dashboard', function () {
         }
     }
 
-    // Iniciales (máx. 2 letras)
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
 
@@ -46,3 +46,35 @@ Route::middleware(['auth'])->get('/dashboard', function () {
     return view('dashboard', compact('displayName', 'initials'));
 
 })->name('dashboard');
+
+Route::middleware('auth')->post('/session/keep-alive', function (Request $request) {
+    $request->session()->put('last_activity_time', time());
+
+    return response()->json([
+        'ok' => true,
+        'message' => 'Sesión renovada correctamente.'
+    ]);
+})->name('session.keepalive');
+
+Route::middleware('auth')->post('/session/logout-inactive', function (Request $request) {
+    $loginTipo = session('login_tipo');
+
+    Auth::logout();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    $redirectUrl = '/portal';
+
+    if ($loginTipo === 'estudiante') {
+        $redirectUrl = route('login.tipo', ['tipo' => 'estudiante']);
+    } elseif ($loginTipo === 'empleado') {
+        $redirectUrl = route('login.tipo', ['tipo' => 'empleado']);
+    }
+
+    return response()->json([
+        'ok' => true,
+        'redirect' => $redirectUrl,
+        'message' => 'La sesión expiró por inactividad.'
+    ]);
+})->name('session.logout.inactive');

@@ -9,7 +9,7 @@ use App\Http\Controllers\ResolucionCancelacionController;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
