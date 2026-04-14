@@ -15,6 +15,8 @@
 @import "/resources/css/equivalencias.css";
 @import "/resources/css/soporte.css";
 @import "/resources/css/cancelacion_detalle.css";
+@import "/resources/css/mis_tramites.css";
+
 
 @theme {
     --font-sans: 'Instrument Sans', sans-serif;

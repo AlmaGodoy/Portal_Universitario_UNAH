@@ -1,0 +1,361 @@
+:root{
+    --mt-blue-950:#0c2558;
+    --mt-blue-900:#123b88;
+    --mt-blue-800:#1d57ae;
+    --mt-blue-700:#2c6fcd;
+    --mt-blue-100:#eef4ff;
+
+    --mt-gold:#efbe1a;
+    --mt-gold-dark:#d6a90f;
+
+    --mt-text:#24324b;
+    --mt-muted:#74829a;
+    --mt-bg:#eef2f8;
+    --mt-card:#ffffff;
+    --mt-border:#d9e2ef;
+
+    --mt-success:#1f8d42;
+    --mt-success-bg:#ecfff1;
+    --mt-danger:#b53333;
+    --mt-danger-bg:#fff2f2;
+    --mt-warning:#9b6e00;
+    --mt-warning-bg:#fff8e8;
+    --mt-info:#1d61cb;
+    --mt-info-bg:#eef5ff;
+    --mt-secondary:#67758b;
+    --mt-secondary-bg:#f1f4f8;
+
+    --mt-shadow-sm:0 8px 18px rgba(18, 43, 90, .06);
+    --mt-shadow:0 14px 30px rgba(18, 43, 90, .10);
+
+    --mt-radius-xl:24px;
+    --mt-radius-lg:18px;
+    --mt-radius-md:14px;
+    --mt-radius-sm:10px;
+}
+
+/* CONTENEDOR GENERAL */
+.container-fluid.py-4{
+    width:min(1380px, calc(100% - 28px));
+    margin:0 auto;
+    padding-top:18px !important;
+    padding-bottom:72px !important;
+    color:var(--mt-text);
+}
+
+/* TARJETAS GENERALES */
+.container-fluid.py-4 .card{
+    border:1px solid var(--mt-border) !important;
+    border-radius:var(--mt-radius-xl) !important;
+    background:var(--mt-card) !important;
+    box-shadow:var(--mt-shadow-sm) !important;
+    overflow:hidden;
+}
+
+/* TARJETA HERO SUPERIOR */
+.container-fluid.py-4 > .card:first-of-type{
+    background:linear-gradient(135deg, var(--mt-blue-900), var(--mt-blue-800)) !important;
+    border:none !important;
+    box-shadow:var(--mt-shadow) !important;
+}
+
+.container-fluid.py-4 > .card:first-of-type .card-body{
+    padding:22px 24px !important;
+}
+
+.container-fluid.py-4 > .card:first-of-type h2{
+    color:#fff !important;
+    font-size:2rem;
+    font-weight:900 !important;
+    line-height:1.08;
+    letter-spacing:.01em;
+    margin-bottom:6px !important;
+}
+
+.container-fluid.py-4 > .card:first-of-type p{
+    color:rgba(255,255,255,.92) !important;
+    font-size:.96rem;
+    line-height:1.55;
+}
+
+.container-fluid.py-4 > .card:first-of-type .badge{
+    background:#fff !important;
+    color:var(--mt-blue-900) !important;
+    border:1px solid rgba(255,255,255,.7);
+    border-radius:999px !important;
+    padding:12px 18px !important;
+    font-size:.96rem !important;
+    font-weight:900 !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.08);
+}
+
+/* ALERTAS */
+.container-fluid.py-4 .alert{
+    border:none !important;
+    border-radius:18px !important;
+    padding:14px 18px !important;
+    box-shadow:var(--mt-shadow-sm);
+    font-weight:700;
+    line-height:1.55;
+}
+
+.container-fluid.py-4 .alert-danger{
+    background:var(--mt-danger-bg) !important;
+    color:var(--mt-danger) !important;
+}
+
+/* TARJETA LISTADO */
+.container-fluid.py-4 .card-header{
+    background:#f5f8fd !important;
+    border-bottom:1px solid var(--mt-border) !important;
+    padding-top:16px !important;
+    padding-bottom:16px !important;
+}
+
+.container-fluid.py-4 .card-header h5{
+    color:var(--mt-blue-950) !important;
+    font-size:1.08rem;
+    font-weight:900 !important;
+    margin-bottom:4px !important;
+}
+
+.container-fluid.py-4 .card-header small{
+    color:var(--mt-muted) !important;
+    font-size:.9rem;
+    line-height:1.5;
+}
+
+/* TABLA */
+.container-fluid.py-4 .table-responsive{
+    overflow:auto;
+}
+
+.container-fluid.py-4 .table{
+    margin-bottom:0 !important;
+    min-width:880px;
+    --bs-table-bg:transparent;
+    --bs-table-striped-bg:transparent;
+    --bs-table-hover-bg:transparent;
+}
+
+.container-fluid.py-4 .table thead.table-light{
+    --bs-table-bg:#f5f8fd !important;
+}
+
+.container-fluid.py-4 .table thead th{
+    color:#647894 !important;
+    font-size:.79rem;
+    font-weight:900 !important;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    border-bottom:1px solid var(--mt-border) !important;
+    white-space:nowrap;
+    padding-top:15px !important;
+    padding-bottom:15px !important;
+    background:#f5f8fd !important;
+}
+
+.container-fluid.py-4 .table tbody td{
+    color:var(--mt-text) !important;
+    font-size:.94rem;
+    vertical-align:middle;
+    border-top:none !important;
+    border-bottom:1px solid #edf2f8 !important;
+    padding-top:16px !important;
+    padding-bottom:16px !important;
+    background:#fff;
+}
+
+.container-fluid.py-4 .table tbody tr:nth-child(even) td{
+    background:#fcfdff;
+}
+
+.container-fluid.py-4 .table-hover tbody tr:hover td{
+    background:#f7fbff !important;
+}
+
+/* TEXTOS EN CELDAS */
+.container-fluid.py-4 .table tbody td .fw-bold.text-primary{
+    color:var(--mt-blue-900) !important;
+    font-size:1rem;
+    font-weight:900 !important;
+}
+
+.container-fluid.py-4 .table tbody td .fw-semibold.text-dark,
+.container-fluid.py-4 .table tbody td .text-dark.fw-semibold,
+.container-fluid.py-4 .table tbody td .text-dark{
+    color:var(--mt-text) !important;
+}
+
+.container-fluid.py-4 .table tbody td small.text-muted{
+    display:block;
+    margin-top:3px;
+    color:var(--mt-muted) !important;
+    font-size:.84rem;
+    line-height:1.45;
+}
+
+/* BADGES DE ESTADO */
+.container-fluid.py-4 .table tbody td .badge,
+.container-fluid.py-4 .card .badge{
+    border-radius:999px !important;
+    padding:8px 14px !important;
+    font-size:.75rem !important;
+    font-weight:900 !important;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    border:1px solid transparent;
+    box-shadow:none !important;
+}
+
+.container-fluid.py-4 .badge.bg-success{
+    background:var(--mt-success-bg) !important;
+    color:var(--mt-success) !important;
+    border-color:#bde8cb !important;
+}
+
+.container-fluid.py-4 .badge.bg-danger{
+    background:var(--mt-danger-bg) !important;
+    color:var(--mt-danger) !important;
+    border-color:#efc0c0 !important;
+}
+
+.container-fluid.py-4 .badge.bg-warning{
+    background:var(--mt-warning-bg) !important;
+    color:var(--mt-warning) !important;
+    border-color:#ecd8a0 !important;
+}
+
+.container-fluid.py-4 .badge.bg-info{
+    background:var(--mt-info-bg) !important;
+    color:var(--mt-info) !important;
+    border-color:#c7d9f8 !important;
+}
+
+.container-fluid.py-4 .badge.bg-primary{
+    background:var(--mt-info-bg) !important;
+    color:var(--mt-blue-900) !important;
+    border-color:#c7d9f8 !important;
+}
+
+.container-fluid.py-4 .badge.bg-secondary{
+    background:var(--mt-secondary-bg) !important;
+    color:var(--mt-secondary) !important;
+    border-color:#d8e0ea !important;
+}
+
+/* ESTADO EN CENTRO */
+.container-fluid.py-4 .table tbody td.text-center{
+    text-align:center !important;
+}
+
+/* TARJETA VACÍA */
+.container-fluid.py-4 .card-body.text-center.py-5{
+    padding:64px 20px !important;
+}
+
+.container-fluid.py-4 .card-body.text-center.py-5 i{
+    color:var(--mt-blue-800) !important;
+    opacity:.95;
+    margin-bottom:14px !important;
+}
+
+.container-fluid.py-4 .card-body.text-center.py-5 h4{
+    color:var(--mt-blue-950);
+    font-size:1.35rem;
+    font-weight:900 !important;
+    margin-bottom:8px !important;
+}
+
+.container-fluid.py-4 .card-body.text-center.py-5 p{
+    color:var(--mt-muted) !important;
+    font-size:.96rem;
+    max-width:520px;
+    margin:0 auto;
+    line-height:1.6;
+}
+
+/* DETALLE CLAVE */
+.container-fluid.py-4 .table tbody td:nth-child(4) .text-dark{
+    line-height:1.55;
+}
+
+/* AJUSTES DE ESPACIADO */
+.container-fluid.py-4 .mb-4{
+    margin-bottom:18px !important;
+}
+
+.container-fluid.py-4 .rounded-4{
+    border-radius:var(--mt-radius-xl) !important;
+}
+
+.container-fluid.py-4 .shadow-sm{
+    box-shadow:var(--mt-shadow-sm) !important;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px){
+    .container-fluid.py-4{
+        width:min(100% - 16px, 100%);
+    }
+
+    .container-fluid.py-4 > .card:first-of-type .card-body{
+        padding:20px 18px !important;
+    }
+
+    .container-fluid.py-4 > .card:first-of-type h2{
+        font-size:1.7rem;
+    }
+
+    .container-fluid.py-4 > .card:first-of-type .badge{
+        width:100%;
+        justify-content:center;
+    }
+}
+
+@media (max-width: 768px){
+    .container-fluid.py-4{
+        padding-top:12px !important;
+        padding-bottom:64px !important;
+    }
+
+    .container-fluid.py-4 .card-header,
+    .container-fluid.py-4 .card-body{
+        padding-left:14px !important;
+        padding-right:14px !important;
+    }
+
+    .container-fluid.py-4 > .card:first-of-type h2{
+        font-size:1.5rem;
+    }
+
+    .container-fluid.py-4 > .card:first-of-type p{
+        font-size:.92rem;
+    }
+
+    .container-fluid.py-4 .table{
+        min-width:760px;
+    }
+}
+
+@media (max-width: 576px){
+    .container-fluid.py-4 > .card:first-of-type .card-body{
+        padding:18px 14px !important;
+    }
+
+    .container-fluid.py-4 > .card:first-of-type h2{
+        font-size:1.35rem;
+    }
+
+    .container-fluid.py-4 .card{
+        border-radius:18px !important;
+    }
+
+    .container-fluid.py-4 .table{
+        min-width:700px;
+    }
+
+    .container-fluid.py-4 .card-body.text-center.py-5{
+        padding:48px 16px !important;
+    }
+}
