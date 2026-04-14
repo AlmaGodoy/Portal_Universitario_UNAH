@@ -20,7 +20,7 @@ use App\Http\Controllers\ResolucionCancelacionController;
 | que usa el coordinador al entrar desde el portal.
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->group(function () {
     Route::get('/empleado/resolucion-cancelacion-vista', [ResolucionCancelacionController::class, 'vista'])
         ->name('resolucion.cancelacion.vista');
 });
@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
 | Todas las operaciones funcionales del módulo se consumen por API.
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('api/resolucion-cancelacion')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->prefix('api/resolucion-cancelacion')->group(function () {
 
     // Listado de solicitudes
     Route::get('listado', [ResolucionCancelacionController::class, 'listar'])
