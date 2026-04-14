@@ -1,23 +1,23 @@
 <?php
 
+namespace App\Models\Modulos;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BitacoraController;
 
+
 Route::middleware(['auth'])->group(function () {
 
-    // 🔵 Coordinador
-    Route::get('/bitacora/coordinador', [BitacoraController::class, 'coordinador'])
-        ->name('bitacora.coordinador')
-        ->middleware('role:2');
+    Route::get('/bitacora', [BitacoraController::class, 'index'])
+        ->name('bitacora.index');
 
-    // 🟡 Secretaria Académica
-    Route::get('/bitacora/secretaria-academica', [BitacoraController::class, 'secretariaAcademica'])
-        ->name('bitacora.secretaria')
-        ->middleware('role:4');
+   Route::get('/bitacora/secretaria-academica',
+    [BitacoraController::class, 'secretariaAcademica'])->name('bitacora.secretaria_academica');
 
-    // 🔴 Secretaria General
-    Route::get('/bitacora/secretaria-general', [BitacoraController::class, 'secretariaGeneral'])
-        ->name('bitacora.general')
-        ->middleware('role:1');
+    // 🏛️ Secretaría General
+    Route::get(
+        '/bitacora/secretaria-general',
+        [BitacoraController::class, 'secretariaGeneral']
+    )->name('bitacora.secretaria_general');
+
 
 });

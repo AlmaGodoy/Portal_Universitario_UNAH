@@ -141,6 +141,23 @@
     </a>
 </li>
 
+                        {{-- Auditoría --}}
+                        <li class="nav-item">
+                            <a href="{{ route('auditoria') }}" class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
+                                <p>Auditoría</p>
+                            </a>
+                        </li>
+
+                        {{-- Bitácora --}}
+                        <li class="nav-item">
+                            <a href="{{ route('bitacora.secretaria_general') }}"
+class="nav-link {{ request()->routeIs('bitacora.secretaria_general') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
+
                         {{-- Configuración --}}
                         <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"

@@ -5,170 +5,238 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\Auditoria; // Importamos el modelo de la bitacora
 
 class AuditoriaController extends Controller
 {
-    public function index(Request $request)
+
+        public function index(Request $request)
     {
-        $fechaInicial = $request->input('fecha_inicial');
-        $fechaFinal   = $request->input('fecha_final');
-        $vista        = $this->obtenerVistaAuditoria();
+        // Usuario autenticado
+        $user = auth()->user();
 
-        try {
-            $resultado = DB::select('CALL SEL_AUDITORIA(?, ?)', [
-                $fechaInicial,
-                $fechaFinal
-            ]);
+        // Fechas del filtro
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin = $request->fecha_fin;
 
-            $collection = collect($resultado);
+        // Datos del usuario
+        $id_usuario = $user->id_usuario;
+        $id_rol = $user->id_rol;
+        $id_carrera = $user->id_carrera ?? null;
 
-            $perPage = 10;
-            $page = LengthAwarePaginator::resolveCurrentPage();
+        $auditorias = [];
 
-            $items = $collection
-                ->slice(($page - 1) * $perPage, $perPage)
-                ->values();
 
-            $registros = new LengthAwarePaginator(
-                $items,
-                $collection->count(),
-                $perPage,
-                $page,
+        // Solo ejecuta si hay fechas
+        if ($fecha_inicio && $fecha_fin) {
+
+            $auditorias = DB::select(
+                'CALL SEL_AUDITORIA(?,?,?,?,?)',
                 [
-                    'path'  => $request->url(),
-                    'query' => $request->query(),
+                    $fecha_inicio,
+                    $fecha_fin,
+                    $id_usuario,
+                    $id_rol,
+                    $id_carrera
                 ]
             );
 
-            return view($vista, compact(
-                'registros',
-                'fechaInicial',
-                'fechaFinal'
-            ));
-        } catch (\Throwable $e) {
-            $registros = new LengthAwarePaginator(
-                collect([]),
-                0,
-                10,
-                1,
+        }
+
+        $perPage = 10;
+        $page = request()->get('page', 1);
+
+        $registros = new LengthAwarePaginator(
+            array_slice($resultados, ($page - 1) * $perPage, $perPage),
+            count($resultados),
+            $perPage,
+            $page,
+            ['path' => request()->url()]
+        );
+
+        return view(
+            'auditoria',
+            compact(
+                'auditorias',
+                'fecha_inicio',
+                'fecha_fin',
+                'id_rol'
+            )
+        );
+    }
+
+
+
+    public function redirectAuditoria()
+    {
+        $user = auth()->user();
+
+        if ($user->id_rol == 1) {
+
+            return redirect()->route('auditoria.administrativa');
+
+        } elseif ($user->id_rol == 4) {
+
+            return redirect()->route('auditoria.coordinador');
+
+        } elseif ($user->id_rol == 5) {
+
+            return redirect()->route('auditoria.general');
+
+        }
+
+        abort(403);
+    }
+
+    /* =====================================================
+       SECRETARIA ADMINISTRATIVA (ROL 1)
+       SOLO VE SUS REGISTROS
+    ===================================================== */
+
+    public function administrativa(Request $request)
+    {
+        $user = auth()->user();
+
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin = $request->fecha_fin;
+
+        $id_usuario = $user->id_usuario;
+        $id_rol = $user->id_rol;
+        $id_carrera = null;
+
+        $auditorias = [];
+
+        if ($fecha_inicio && $fecha_fin) {
+
+            $auditorias = DB::select(
+                'CALL SEL_AUDITORIA(?,?,?,?,?)',
                 [
-                    'path'  => $request->url(),
-                    'query' => $request->query(),
+                    $fecha_inicio,
+                    $fecha_fin,
+                    $id_usuario,
+                    $id_rol,
+                    $id_carrera
                 ]
             );
 
-            return view($vista, compact(
-                'registros',
-                'fechaInicial',
-                'fechaFinal'
-            ))->with(
-                'error',
-                'Error al consultar la auditoría: ' . $e->getMessage()
-            );
         }
+
+        return view(
+            'auditoria_secretaria_academica',
+            compact(
+                'auditorias',
+                'fecha_inicio',
+                'fecha_fin'
+            )
+        );
     }
 
-    // 1. Consulta
-    public function ver($fecha_inicial, $fecha_final)
+    /* =====================================================
+       COORDINADOR (ROL 4)
+       VE SU CARRERA
+    ===================================================== */
+
+    public function coordinador(Request $request)
     {
-        try {
-            $registros = DB::select('CALL SEL_AUDITORIA(?, ?)', [
-                $fecha_inicial,
-                $fecha_final
-            ]);
 
-            return response()->json($registros, 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
-        }
-    }
+         $user = auth()->user();
 
-    // 2. INGRESAR
-    public function ingresar($p_id_usuario, $p_id_objeto, $p_accion, $p_descripcion, $p_fecha)
-    {
-        try {
-            $registros = DB::select('CALL INS_AUDITORA(?,?,?,?,?)', [
-                $p_id_usuario,
-                $p_id_objeto,
-                $p_accion,
-                $p_descripcion,
-                $p_fecha
-            ]);
+    $fecha_inicio = $request->fecha_inicio;
+    $fecha_fin = $request->fecha_fin;
 
-            return response()->json($registros[0] ?? [
-                'resultado' => 'OK',
-                'mensaje'   => 'Auditoría ingresada correctamente'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
-        }
-    }
 
-    // ELIMINAR
-    public function eliminar($id_auditoria)
-    {
-        try {
-            $registros = DB::select('CALL SOFT_DEL_AUDITORIA(?)', [$id_auditoria]);
 
-            return response()->json($registros[0] ?? [
-                'resultado' => 'OK',
-                'mensaje'   => 'Auditoría eliminada correctamente'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
-        }
-    }
+    $id_usuario = $user->id_usuario;
+    $id_rol = $user->id_rol;
+    $id_carrera = $user->id_carrera;
 
-    // ACTUALIZAR
-    public function actualizar($id_auditoria, $id_usuario, $id_objeto, $descripcion)
-    {
-        try {
-            $registros = DB::select('CALL UPD_AUDITORIA(?,?,?,?)', [
-                $id_auditoria,
+    // ✅ Inicializar variable
+    $resultados = [];
+
+    if ($fecha_inicio && $fecha_fin) {
+
+        $resultados = DB::select(
+            'CALL SEL_AUDITORIA(?,?,?,?,?)',
+            [
+                $fecha_inicio,
+                $fecha_fin,
                 $id_usuario,
-                $id_objeto,
-                $descripcion
-            ]);
+                $id_rol,
+                $id_carrera
+            ]
+        );
 
-            return response()->json($registros[0] ?? [
-                'resultado' => 'OK',
-                'mensaje'   => 'Auditoría actualizada correctamente'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
-        }
+
     }
 
-    private function obtenerVistaAuditoria(): string
+    // 🔹 PAGINACIÓN
+    $perPage = 10;
+    $page = request()->get('page', 1);
+
+    $registros = new LengthAwarePaginator(
+        array_slice($resultados, ($page - 1) * $perPage, $perPage),
+        count($resultados),
+        $perPage,
+        $page,
+        [
+            'path' => request()->url(),
+            'query' => request()->query()
+        ]
+    );
+
+    return view(
+        'auditoria_coordinador',
+        compact(
+            'registros',
+            'fecha_inicio',
+            'fecha_fin'
+        )
+    );
+
+    }
+
+    /* =====================================================
+       SECRETARIA GENERAL (ROL 5)
+       VE TODO
+    ===================================================== */
+
+    public function general(Request $request)
     {
-        $rol = strtolower(session('rol_texto', ''));
+        $user = auth()->user();
 
-        return match ($rol) {
-            'coordinador' => 'auditoria_coordinador',
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin = $request->fecha_fin;
 
-            'secretaria_academica',
-            'secretario_academico',
-            'secretario académico',
-            'secretaría académica' => 'auditoria_secretaria_academica',
+        $id_usuario = null;
+        $id_rol = $user->id_rol;
+        $id_carrera = null;
 
-            'secretaria_general',
-            'secretario_general',
-            'secretario general',
-            'secretaría general' => 'auditoria_secretaria_general',
+        $auditorias = [];
 
-            default => 'auditoria_coordinador',
-        };
+        if ($fecha_inicio && $fecha_fin) {
+
+            $auditorias = DB::select(
+                'CALL SEL_AUDITORIA(?,?,?,?,?)',
+                [
+                    $fecha_inicio,
+                    $fecha_fin,
+                    $id_usuario,
+                    $id_rol,
+                    $id_carrera
+                ]
+            );
+
+        }
+
+        return view(
+            'auditoria_secretaria_general',
+            compact(
+                'auditorias',
+                'fecha_inicio',
+                'fecha_fin'
+            )
+        );
     }
+
+
 }
