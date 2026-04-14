@@ -1,6 +1,7 @@
 @php
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\Route;
 
     $user = Auth::user();
 
@@ -39,6 +40,19 @@
     if ($initials === '') {
         $initials = 'SA';
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DE RESPALDO / SOPORTE
+    |--------------------------------------------------------------------------
+    */
+    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
+
+    $soporteUrl = $soporteRouteName
+        ? route($soporteRouteName)
+        : 'javascript:void(0)';
+
+    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
 @endphp
 
 <!DOCTYPE html>
@@ -252,6 +266,14 @@
                             <a href="javascript:void(0)" class="nav-link">
                                 <i class="nav-icon fas fa-building-columns"></i>
                                 <p>Resumen por Carreras</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $soporteUrl }}"
+                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-database"></i>
+                                <p>Respaldo</p>
                             </a>
                         </li>
 
