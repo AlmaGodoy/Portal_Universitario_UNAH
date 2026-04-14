@@ -57,6 +57,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>PumaGestión – @yield('title', 'Secretaría de Carrera')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -65,6 +66,84 @@
 
     {{-- Todo el CSS de resources/css se carga aquí por Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        .session-timeout-modal .modal-content {
+            border: none;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(17,43,94,.28);
+        }
+
+        .session-timeout-header {
+            background: linear-gradient(135deg, #17346c 0%, #1d4f9f 100%);
+            color: #fff;
+            padding: 18px 22px;
+            border-bottom: none;
+        }
+
+        .session-timeout-header .modal-title {
+            font-weight: 800;
+            font-size: 1.15rem;
+            margin: 0;
+        }
+
+        .session-timeout-body {
+            padding: 24px 22px 18px;
+            color: #24324b;
+        }
+
+        .session-timeout-body p {
+            margin-bottom: 10px;
+            font-size: .98rem;
+        }
+
+        .session-timeout-note {
+            color: #6f7b92;
+            font-size: .92rem;
+        }
+
+        .session-timeout-countdown {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(239,190,26,.16);
+            color: #7a5b00;
+            font-weight: 800;
+            font-size: .92rem;
+        }
+
+        .session-timeout-footer {
+            padding: 0 22px 22px;
+            border-top: none;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-session-continue {
+            border-radius: 999px;
+            padding: 10px 18px;
+            font-weight: 700;
+            border: none;
+            background: linear-gradient(135deg, #f1be1a 0%, #e0aa00 100%);
+            color: #17346c;
+        }
+
+        .btn-session-continue:hover {
+            color: #17346c;
+            filter: brightness(.98);
+        }
+
+        .btn-session-logout {
+            border-radius: 999px;
+            padding: 10px 18px;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body class="hold-transition dashboard-body">
 <div class="wrapper">
@@ -190,9 +269,204 @@
     </footer>
 </div>
 
+<div class="modal fade session-timeout-modal"
+     id="sessionTimeoutModal"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="sessionTimeoutModalLabel"
+     aria-hidden="true"
+     data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="session-timeout-header">
+                <h5 class="modal-title" id="sessionTimeoutModalLabel">¿Sigues ahí?</h5>
+            </div>
+
+            <div class="session-timeout-body">
+                <p>Tu sesión está por expirar por inactividad.</p>
+                <p class="session-timeout-note">Presiona <strong>“Continuar sesión”</strong> para seguir trabajando.</p>
+
+                <div class="session-timeout-countdown">
+                    <i class="fas fa-hourglass-half"></i>
+                    <span>Se cerrará en <span id="sessionCountdownText">180</span> segundos</span>
+                </div>
+            </div>
+
+            <div class="session-timeout-footer">
+                <button type="button" class="btn btn-outline-secondary btn-session-logout" id="sessionLogoutNowBtn">
+                    Cerrar sesión
+                </button>
+
+                <button type="button" class="btn btn-session-continue" id="sessionContinueBtn">
+                    Continuar sesión
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
 <script src="{{ asset('js/dashboard.js') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    /*
+    |--------------------------------------------------------------------------
+    | TIEMPOS
+    |--------------------------------------------------------------------------
+    | WARNING_TIME_MS = 28 minutos
+    | LOGOUT_TIME_MS  = 31 minutos
+    |--------------------------------------------------------------------------
+    */
+    const WARNING_TIME_MS = 28 * 60 * 1000;
+    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const modalElement = $('#sessionTimeoutModal');
+    const continueBtn = document.getElementById('sessionContinueBtn');
+    const logoutNowBtn = document.getElementById('sessionLogoutNowBtn');
+    const countdownText = document.getElementById('sessionCountdownText');
+
+    let warningTimer = null;
+    let logoutTimer = null;
+    let countdownInterval = null;
+    let modalVisible = false;
+    let secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
+
+    function clearAllTimers() {
+        if (warningTimer) clearTimeout(warningTimer);
+        if (logoutTimer) clearTimeout(logoutTimer);
+        if (countdownInterval) clearInterval(countdownInterval);
+    }
+
+    function updateCountdownText() {
+        if (countdownText) {
+            countdownText.textContent = String(secondsLeft);
+        }
+    }
+
+    function startCountdown() {
+        secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
+        updateCountdownText();
+
+        countdownInterval = setInterval(() => {
+            secondsLeft--;
+            updateCountdownText();
+
+            if (secondsLeft <= 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+    }
+
+    function showWarningModal() {
+        modalVisible = true;
+        startCountdown();
+        modalElement.modal('show');
+    }
+
+    function hideWarningModal() {
+        modalVisible = false;
+        if (countdownInterval) clearInterval(countdownInterval);
+        modalElement.modal('hide');
+    }
+
+    function resetSessionTimers() {
+        clearAllTimers();
+
+        warningTimer = setTimeout(() => {
+            showWarningModal();
+        }, WARNING_TIME_MS);
+
+        logoutTimer = setTimeout(() => {
+            forceLogoutByInactivity();
+        }, LOGOUT_TIME_MS);
+    }
+
+    async function continueSession() {
+        continueBtn.disabled = true;
+
+        try {
+            const response = await fetch('{{ route('session.keepalive') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo renovar la sesión.');
+            }
+
+            hideWarningModal();
+            resetSessionTimers();
+        } catch (error) {
+            await forceLogoutByInactivity();
+        } finally {
+            continueBtn.disabled = false;
+        }
+    }
+
+    async function forceLogoutByInactivity() {
+        clearAllTimers();
+
+        try {
+            const response = await fetch('{{ route('session.logout.inactive') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo cerrar la sesión automáticamente.');
+            }
+
+            const data = await response.json();
+            window.location.href = data.redirect || '{{ url('/portal') }}';
+        } catch (error) {
+            window.location.href = '{{ url('/portal') }}';
+        }
+    }
+
+    const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+
+    activityEvents.forEach((eventName) => {
+        window.addEventListener(eventName, function () {
+            if (modalVisible) return;
+            resetSessionTimers();
+        }, { passive: true });
+    });
+
+    if (continueBtn) {
+        continueBtn.addEventListener('click', function () {
+            continueSession();
+        });
+    }
+
+    if (logoutNowBtn) {
+        logoutNowBtn.addEventListener('click', function () {
+            forceLogoutByInactivity();
+        });
+    }
+
+    modalElement.on('hidden.bs.modal', function () {
+        if (!modalVisible && countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+    });
+
+    resetSessionTimers();
+});
+</script>
 </body>
 </html>
