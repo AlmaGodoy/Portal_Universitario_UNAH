@@ -635,5 +635,20 @@ public function verDocumento($id_tramite)
     }
 }
 
+public function listarCalendariosAcademicos()
+{
+    try {
+        $data = DB::select('CALL SEL_CALENDARIOS_ACADEMICOS()');
+
+        return response()->json($data, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $e->getMessage()
+        ], 500);
+    }
+}
+
 
 }
