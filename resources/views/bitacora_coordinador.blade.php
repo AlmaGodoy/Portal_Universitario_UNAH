@@ -3,139 +3,204 @@
 @section('content')
 @vite(['resources/css/bitacora.css', 'resources/js/bitacora.js'])
 
-<div class="container py-4 security-page">
-    <div class="row g-4">
-        <div class="col-12">
 
-            <!-- 🔷 ENCABEZADO DEL MÓDULO -->
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <header class="topbar">
-                    <div class="brand">
-                        <img alt="Logo PumaGestión" class="brand-logo">
+<div class="container-fluid py-4">
 
-                        <div class="brand-text">
-                            <h1 class="brand-title">Bitácora - Coordinador</h1>
-                            <span class="brand-subtitle">FCEAC - UNAH</span>
-                        </div>
+    <!-- 📌 TÍTULO -->
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">
+            Bitácora de Trámites - Coordinador
+        </h2>
+        <p class="text-muted">
+            Consulta y seguimiento de trámites por rango de fechas
+        </p>
+    </div>
+
+    <!-- 📅 FILTRO POR FECHAS -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <form method="GET" action="{{ route('bitacora.index') }}">
+
+                <div class="row align-items-end">
+
+                    <!-- Fecha Inicio -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">
+                            Fecha Inicio
+                        </label>
+
+                        <input
+                            type="date"
+                            name="fecha_inicio"
+                            class="form-control"
+                            value="{{ request('fecha_inicio') }}"
+                            required>
                     </div>
-                </header>
-            </div>
 
-            <!-- ⚠️ MENSAJE DE ERROR -->
-            @if(session('error'))
-                <div class="alert alert-danger">
-                    {{ session('error') }}
-                </div>
-            @endif
+                    <!-- Fecha Fin -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">
+                            Fecha Fin
+                        </label>
 
-            <!-- 🔍 FORMULARIO DE FILTRO -->
-            <!-- El coordinador solo puede filtrar por fechas (no por carrera) -->
-            <form method="GET" action="{{ route('bitacora.coordinador') }}" class="row g-3 mb-4">
+                        <input
+                            type="date"
+                            name="fecha_fin"
+                            class="form-control"
+                            value="{{ request('fecha_fin') }}"
+                            required>
+                    </div>
 
-                <!-- 📅 Fecha de inicio -->
-                <div class="col-md-4">
-                    <label>Fecha Inicio</label>
-                    <input type="date" name="fecha_inicio"
-                        value="{{ request('fecha_inicio') }}"
-                        class="form-control">
-                </div>
+                    <!-- Botón Buscar -->
+                    <div class="col-md-2">
 
-                <!-- 📅 Fecha final -->
-                <div class="col-md-4">
-                    <label>Fecha Fin</label>
-                    <input type="date" name="fecha_fin"
-                        value="{{ request('fecha_fin') }}"
-                        class="form-control">
-                </div>
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100">
 
-                <!-- 🔘 Botones -->
-                <div class="col-md-4 d-flex align-items-end gap-2">
-                    <!-- Ejecuta la consulta -->
-                    <button class="btn btn-primary w-50">Buscar</button>
+                            🔍 Buscar Registros
 
-                    <!-- Limpia filtros -->
-                    <a href="{{ route('bitacora.coordinador') }}"
-                       class="btn btn-secondary w-50">
-                        Limpiar
-                    </a>
+                        </button>
+
+                    </div>
+                     <div class="col-md-2">
+                            <!-- Limpiar -->
+                            <a href="{{ route('bitacora.index') }}"
+                                class="btn btn-dark w-100" >
+                                🧹 Limpiar
+                            </a>
+                     </div>
+
                 </div>
 
             </form>
 
-            <!-- 📊 TABLA DE RESULTADOS -->
-            <!-- Muestra únicamente registros de la carrera del coordinador -->
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle text-center">
+        </div>
+    </div>
 
-                    <!-- Encabezados -->
-                    <thead class="table-light">
+    <!-- 📋 TABLA DE RESULTADOS -->
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-dark text-center">
+
                         <tr>
+
                             <th>#</th>
-                            <th>Estudiante</th>
-                            <th>Trámite</th>
-                            <th>Estado</th>
-                            <th>Observación</th>
+
+                            <th>Fecha</th>
+
                             <th>Usuario</th>
+
+                            <th>Carrera</th>
+
+                            <th>Trámite</th>
+
+                            <th>Estado</th>
+
                         </tr>
+
                     </thead>
 
-                    <!-- Cuerpo -->
                     <tbody>
-                        @forelse($bitacoras as $index => $item)
-                            <tr>
 
-                                <!-- 🔢 Numeración dinámica -->
-                                <td>
-                                    {{ method_exists($bitacoras, 'firstItem')
-                                        ? $bitacoras->firstItem() + $index
-                                        : $index + 1 }}
-                                </td>
+                        @forelse($bitacoras as $index => $bitacora)
 
-                                <!-- 📌 Datos -->
-                                <td>{{ $item->Estudiante ?? '' }}</td>
-                                <td>{{ $item->Tramite ?? '' }}</td>
+                        <tr class="text-center">
 
-                                <!-- 🎨 Estado con colores -->
-                                <td>
-                                    <span class="badge
-                                        @if($item->Estado == 'Aprobado') bg-success
-                                        @elseif($item->Estado == 'Rechazado') bg-danger
-                                        @else bg-secondary
-                                        @endif">
-                                        {{ $item->Estado ?? '' }}
+                            <!-- Número consecutivo -->
+                            <td>
+                                {{ $loop->iteration + ($bitacoras->firstItem() - 1) }}
+                            </td>
+
+                            <!-- Fecha -->
+                            <td>
+                                {{ $bitacora->fecha ?? '—' }}
+                            </td>
+
+                            <!-- Usuario -->
+                            <td>
+                                {{ $bitacora->usuario ?? '—' }}
+                            </td>
+
+                            <!-- Carrera -->
+                            <td>
+                                {{ $bitacora->carrera ?? '—' }}
+                            </td>
+
+                            <!-- Trámite -->
+                            <td>
+                                {{ $bitacora->tramite ?? '—' }}
+                            </td>
+
+                            <!-- Estado -->
+                            <td>
+
+                                @if(($bitacora->estado ?? '') == 'FINALIZADO')
+
+                                    <span class="badge bg-success">
+                                        FINALIZADO
                                     </span>
-                                </td>
 
-                                <!-- 📝 Observación -->
-                                <td class="text-start">
-                                    {{ $item->observacion_dictamen ?? '' }}
-                                </td>
+                                @elseif(($bitacora->estado ?? '') == 'PENDIENTE')
 
-                                <!-- 👤 Usuario -->
-                                <td>{{ $item->id_usuario ?? '' }}</td>
+                                    <span class="badge bg-warning text-dark">
+                                        PENDIENTE
+                                    </span>
 
-                            </tr>
+                                @else
+
+                                    <span class="badge bg-secondary">
+                                        {{ $bitacora->estado ?? '—' }}
+                                    </span>
+
+                                @endif
+
+                            </td>
+
+                        </tr>
+
                         @empty
-                            <!-- ❌ Sin resultados -->
-                            <tr>
-                                <td colspan="6" class="text-muted text-center">
-                                    No hay registros disponibles
-                                </td>
-                            </tr>
+
+                        <tr>
+
+                            <td colspan="6" class="text-center text-muted">
+
+                                📭 No hay registros para mostrar
+
+                            </td>
+
+                        </tr>
+
                         @endforelse
+
                     </tbody>
+
                 </table>
+
             </div>
 
             <!-- 🔢 PAGINACIÓN -->
-            <!-- Navegación entre páginas -->
-            @if(method_exists($bitacoras, 'links'))
-            <div class="mt-3 d-flex justify-content-center">
-                {{ $bitacoras->links('pagination::bootstrap-5') }}
-            </div>
+            @if($bitacoras instanceof \Illuminate\Pagination\LengthAwarePaginator)
+
+                <div class="mt-3 d-flex justify-content-center">
+
+                    {{ $bitacoras->links('pagination::bootstrap-5') }}
+
+                </div>
+
             @endif
 
         </div>
+
     </div>
+
 </div>
+
 @endsection

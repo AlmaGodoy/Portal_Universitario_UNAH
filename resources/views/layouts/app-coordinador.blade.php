@@ -46,11 +46,6 @@
         $initials = 'C';
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUTA DE CANCELACIÓN PARA COORDINADORA
-    |--------------------------------------------------------------------------
-    */
     $cancelacionRouteName = null;
 
     if (Route::has('cancelacion.coordinadora.index')) {
@@ -63,6 +58,10 @@
         ? route($cancelacionRouteName)
         : 'javascript:void(0)';
 
+    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+
+    $backupUrl = $backupRouteName
+        ? route($backupRouteName)
     /*
     |--------------------------------------------------------------------------
     | RUTA DE RESPALDO / SOPORTE
@@ -77,6 +76,7 @@
     $dashboardActive     = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
     $cambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
     $cancelacionActive   = request()->routeIs('cancelacion.coordinadora.*') || request()->routeIs('resolucion.cancelacion.*');
+    $backupActive        = request()->routeIs('backup.*') || request()->is('respaldos*');
     $soporteActive       = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
     $tramitesMenuOpen    = $cambioCarreraActive || $cancelacionActive;
 
@@ -100,6 +100,43 @@
 
     <style>
         .coordinator-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 64px;
+            padding: 0 20px;
+            margin: 0 18px 0;
+            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
+            border-bottom: 4px solid #f1be1a;
+            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
+            border-radius: 0;
+        }
+
+        .coordinator-topbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                115deg,
+                rgba(255,255,255,.07) 0%,
+                rgba(255,255,255,.02) 40%,
+                rgba(255,255,255,0) 60%
+            );
+            pointer-events: none;
+        }
+
+        .coordinator-topbar::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 4px;
+            width: 4px;
+            background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -119,6 +156,12 @@
             display: flex;
             align-items: center;
             min-width: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .coordinator-topbar-right {
+            gap: 6px;
         }
 
         .coordinator-topbar-right {
@@ -136,6 +179,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            padding-left: 8px;
         }
 
         .coord-breadcrumb i {
@@ -153,6 +197,26 @@
 
         .coord-icon-btn {
             position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.88);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .22s ease;
+            font-size: .9rem;
+        }
+
+        .coord-icon-btn:hover {
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.30);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
             width: 58px;
             height: 52px;
             border: 1px solid rgba(255,255,255,.14);
@@ -175,6 +239,28 @@
 
         .coord-badge {
             position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 800;
+            border: 2px solid #1a4899;
+            box-shadow: 0 4px 10px rgba(229,57,53,.30);
+        }
+
+        .coord-badge.gold {
+            background: linear-gradient(135deg, #efbe1a 0%, #dca600 100%);
+            color: #16315d;
+            border-color: #1a4899;
+            box-shadow: 0 4px 10px rgba(239,190,26,.28);
             top: -6px;
             right: -4px;
             min-width: 24px;
@@ -199,6 +285,38 @@
 
         .coord-divider {
             width: 1px;
+            height: 32px;
+            background: linear-gradient(
+                180deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,.22) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .coord-user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            padding: 6px 12px 6px 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.12);
+            color: #fff;
+            cursor: pointer;
+            transition: all .22s ease;
+            min-width: unset;
+            max-width: unset;
+        }
+
+        .coord-user-chip:hover {
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.32);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
             height: 40px;
             background: rgba(255,255,255,.18);
         }
@@ -224,6 +342,13 @@
         }
 
         .coord-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
+            color: #163a78;
+            font-weight: 900;
+            font-size: .82rem;
             width: 42px;
             height: 42px;
             border-radius: 14px;
@@ -235,6 +360,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(239,190,26,.30);
         }
 
         .coord-user-info {
@@ -246,6 +372,10 @@
         }
 
         .coord-user-name {
+            font-size: .83rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
             font-size: 1.02rem;
             font-weight: 800;
             white-space: nowrap;
@@ -254,6 +384,17 @@
         }
 
         .coord-user-role {
+            font-size: .68rem;
+            color: rgba(255,255,255,.60);
+            font-weight: 700;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .coord-user-arrow {
+            font-size: .62rem;
+            color: rgba(255,255,255,.50);
+            margin-left: 2px;
             margin-top: 4px;
             color: rgba(255,255,255,.82);
             font-size: .92rem;
@@ -475,6 +616,15 @@
             word-break: break-word;
         }
 
+        .content-wrapper {
+            min-height: 100vh;
+            padding-top: 0 !important;
+        }
+
+        .dashboard-shell {
+            padding-top: 0 !important;
+        }
+
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -553,6 +703,7 @@
 
         @media (max-width: 1199.98px) {
             .coord-user-chip {
+                min-width: unset;
                 min-width: 300px;
                 max-width: 340px;
             }
@@ -608,12 +759,11 @@
 
             <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu"
-                        data-widget="treeview"
-                        role="menu"
-                        data-accordion="false">
+                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
+                           <a href="{{ url('/empleado/dashboard') }}"
+                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                             <a href="{{ route('empleado.dashboard') }}"
                                class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
@@ -621,6 +771,37 @@
                             </a>
                         </li>
 
+                        {{-- Trámites --}}
+                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
+    <a href="javascript:void(0)"
+       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-folder-open"></i>
+        <p>
+            Trámites
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cambio-carrera.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cambio de carrera</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cancelacion.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cancelacion.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cancelación</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
+                        {{-- Seguridad: SOLO BOTÓN DIRECTO --}}
                         <li class="nav-item has-treeview {{ $tramitesMenuOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)"
                                class="nav-link {{ $tramitesMenuOpen ? 'active' : '' }}">
@@ -651,6 +832,8 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="{{ $backupUrl }}"
+                               class="nav-link {{ $backupActive ? 'active' : '' }}">
                             <a href="{{ $soporteUrl }}"
                                class="nav-link {{ $soporteActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
@@ -665,6 +848,14 @@
                                 <p>Seguridad</p>
                             </a>
                         </li>
+{{-- Reportes --}}
+<li class="nav-item">
+    <a href="{{ route('reporte.tramites.vista') }}"
+       class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-chart-bar"></i>
+        <p>Reportes</p>
+    </a>
+</li>
 
                         <li class="nav-item">
                             <a href="{{ route('reporte.tramites.vista') }}"
@@ -676,12 +867,19 @@
 
                         <li class="nav-item">
                             <a href="{{ route('auditoria') }}"
-                               class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
+                            class="nav-link {{ request()->routeIs('auditoria*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
+                        {{-- Bitácora --}}
+                        <li class="nav-item">
+                            <a href="{{ route('bitacora.index') }}" class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
                         @if (Route::has('bitacora.index'))
                             <li class="nav-item">
                                 <a href="{{ route('bitacora.index') }}"
@@ -716,10 +914,7 @@
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn"
-            class="sidebar-float-toggle d-none d-lg-flex"
-            type="button"
-            title="Colapsar/Expandir menú">
+    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
         <i class="fas fa-chevron-left"></i>
     </button>
 

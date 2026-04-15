@@ -1,8 +1,9 @@
 @php
+    use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Route;
 
-    $user = auth()->user();
+    $user = Auth::user();
 
     $displayName = 'Secretaría';
     $displayRole = 'Secretaría de Carrera';
@@ -27,11 +28,15 @@
         }
     }
 
-    $correoInstitucional =
-        $user->email
-        ?? $user->correo_institucional
-        ?? optional($user->persona)->correo_institucional
-        ?? 'secretaria@unah.hn';
+    $correoInstitucional = 'secretaria@unah.hn';
+
+    if ($user && !empty($user->email)) {
+        $correoInstitucional = $user->email;
+    } elseif ($user && !empty($user->correo_institucional)) {
+        $correoInstitucional = $user->correo_institucional;
+    } elseif ($user && optional($user->persona)->correo_institucional) {
+        $correoInstitucional = optional($user->persona)->correo_institucional;
+    }
 
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
@@ -46,10 +51,53 @@
         $initials = 'S';
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | RUTAS SEGURAS
+    |--------------------------------------------------------------------------
+    */
+    $cambioCarreraUrl = Route::has('cambio-carrera.secretaria')
+        ? route('cambio-carrera.secretaria')
+        : 'javascript:void(0)';
+
+    $cancelacionUrl = Route::has('cancelacion.secretaria.index')
+        ? route('cancelacion.secretaria.index')
+        : 'javascript:void(0)';
+
+    $fechasUrl = Route::has('cambio-carrera.secretaria.calendarios')
+        ? route('cambio-carrera.secretaria.calendarios')
+        : 'javascript:void(0)';
+
+    $respaldoRouteName = Route::has('backup.index')
+        ? 'backup.index'
+        : (Route::has('soporte.vista') ? 'soporte.vista' : null);
+
+    $respaldoUrl = $respaldoRouteName
+        ? route($respaldoRouteName)
+        : 'javascript:void(0)';
+
+    $auditoriaUrl = Route::has('auditoria')
+        ? route('auditoria')
+        : 'javascript:void(0)';
+
+    $bitacoraUrl = Route::has('bitacora.index')
+        ? route('bitacora.index')
+        : 'javascript:void(0)';
+
+    $configuracionUrl = Route::has('configuracion.index')
+        ? route('configuracion.index')
+        : 'javascript:void(0)';
+
+    /*
+    |--------------------------------------------------------------------------
+    | MENÚS ACTIVOS
+    |--------------------------------------------------------------------------
+    */
     $menuRevisionOpen = request()->routeIs(
         'cambio-carrera.secretaria',
-        'cambio-carrera.secretaria.revisar'
-    ) || request()->routeIs('cancelacion.secretaria.*');
+        'cambio-carrera.secretaria.revisar',
+        'cancelacion.secretaria.*'
+    );
 
     $menuCambioCarreraActive = request()->routeIs(
         'cambio-carrera.secretaria',
@@ -57,21 +105,19 @@
     );
 
     $menuCancelacionActive = request()->routeIs('cancelacion.secretaria.*');
+    $fechasActive = request()->routeIs('cambio-carrera.secretaria.calendarios');
+    $respaldoActive = request()->routeIs('backup.*')
+        || request()->is('respaldos*')
+        || request()->routeIs('soporte.vista')
+        || request()->is('soporte')
+        || request()->is('api/soporte*');
+    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+    $bitacoraActive = request()->routeIs('bitacora.*');
+    $configuracionActive = request()->routeIs('configuracion.index')
+        || request()->is('configuracion')
+        || request()->is('configuracion*');
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUTA DE RESPALDO / SOPORTE
-    |--------------------------------------------------------------------------
-    */
-    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
-
-    $soporteUrl = $soporteRouteName
-        ? route($soporteRouteName)
-        : 'javascript:void(0)';
-
-    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
-
-    $pageTitle = trim($__env->yieldContent('title', 'Secretaría de Carrera'));
+    $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Secretaría de Carrera')));
 @endphp
 
 <!DOCTYPE html>
@@ -80,7 +126,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('title', 'Secretaría de Carrera')</title>
+    <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -428,43 +474,6 @@
             gap: 8px;
         }
 
-        .sec-user-header {
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, #f5f8ff 0%, #eef3ff 100%);
-            border-bottom: 1px solid #e8eefb;
-        }
-
-        .sec-user-header-avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
-            color: #17346c;
-            font-size: 1rem;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .sec-user-header strong {
-            display: block;
-            color: #17346c;
-            font-size: .96rem;
-            font-weight: 800;
-            margin-bottom: 3px;
-        }
-
-        .sec-user-header span {
-            color: #62708b;
-            font-size: .84rem;
-            word-break: break-word;
-        }
-
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -555,7 +564,7 @@
         }
     </style>
 </head>
-<body class="hold-transition dashboard-body">
+<body class="hold-transition sidebar-mini layout-fixed dashboard-body">
 <div class="wrapper">
 
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
@@ -611,16 +620,14 @@
 
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ route('cambio-carrera.secretaria') }}"
-                                       class="nav-link {{ $menuCambioCarreraActive ? 'active' : '' }}">
+                                    <a href="{{ $cambioCarreraUrl }}" class="nav-link {{ $menuCambioCarreraActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cambio de carrera</p>
                                     </a>
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="{{ route('cancelacion.secretaria.index') }}"
-                                       class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
+                                    <a href="{{ $cancelacionUrl }}" class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cancelación</p>
                                     </a>
@@ -629,24 +636,35 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"
-                               class="nav-link {{ request()->routeIs('cambio-carrera.secretaria.calendarios') ? 'active' : '' }}">
+                            <a href="{{ $fechasUrl }}" class="nav-link {{ $fechasActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar-days"></i>
                                 <p>Fechas</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $soporteUrl }}"
-                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                            <a href="{{ $respaldoUrl }}" class="nav-link {{ $respaldoActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                            <a href="{{ $auditoriaUrl }}" class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
+                                <p>Auditoría</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $bitacoraUrl }}" class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
@@ -668,12 +686,7 @@
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
-        <i class="fas fa-chevron-left"></i>
-    </button>
-
     <div class="content-wrapper">
-
         <div class="secretaria-topbar">
             <div class="secretaria-topbar-left">
                 <div class="sec-breadcrumb">
@@ -685,7 +698,6 @@
             </div>
 
             <div class="secretaria-topbar-right">
-
                 <div class="sec-action-group">
                     <button class="sec-icon-btn" id="btnSecNotif" title="Notificaciones">
                         <i class="fas fa-bell"></i>
@@ -781,12 +793,8 @@
                     </button>
 
                     <div class="sec-dropdown align-right" id="dropSecUser">
-                        <div class="sec-user-header">
-                            <div class="sec-user-header-avatar">{{ $initials }}</div>
-                            <div>
-                                <strong>{{ $displayName }}</strong>
-                                <span>{{ $correoInstitucional }}</span>
-                            </div>
+                        <div class="sec-dropdown-header">
+                            <span>{{ $displayName }}</span>
                         </div>
 
                         <ul class="sec-dropdown-list">
@@ -795,7 +803,8 @@
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="sec-dropdown-text">
-                                    <span>Mi perfil</span>
+                                    <strong>Correo institucional</strong>
+                                    <span>{{ $correoInstitucional }}</span>
                                 </div>
                             </li>
                         </ul>
@@ -810,7 +819,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -864,22 +872,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-<script src="{{ asset('js/dashboard.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const btnNotif = document.getElementById('btnSecNotif');
-    const btnMsg   = document.getElementById('btnSecMsg');
-    const btnUser  = document.getElementById('btnSecUser');
+    const btnMsg = document.getElementById('btnSecMsg');
+    const btnUser = document.getElementById('btnSecUser');
 
     const dropNotif = document.getElementById('dropSecNotif');
-    const dropMsg   = document.getElementById('dropSecMsg');
-    const dropUser  = document.getElementById('dropSecUser');
+    const dropMsg = document.getElementById('dropSecMsg');
+    const dropUser = document.getElementById('dropSecUser');
 
     const allDrops = [dropNotif, dropMsg, dropUser];
 
     function closeAll(except = null) {
-        allDrops.forEach(drop => {
+        allDrops.forEach(function (drop) {
             if (!drop) return;
             if (drop !== except) {
                 drop.classList.remove('show');
@@ -896,6 +903,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const willOpen = !dropdown.classList.contains('show');
             closeAll();
+
             if (willOpen) {
                 dropdown.classList.add('show');
             }
@@ -910,7 +918,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const groups = document.querySelectorAll('.sec-action-group');
         let clickedInside = false;
 
-        groups.forEach(group => {
+        groups.forEach(function (group) {
             if (group.contains(e.target)) {
                 clickedInside = true;
             }
@@ -932,7 +940,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const WARNING_TIME_MS = 28 * 60 * 1000;
-    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
+    const LOGOUT_TIME_MS = 31 * 60 * 1000;
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const modalElement = $('#sessionTimeoutModal');
@@ -962,7 +970,7 @@ document.addEventListener('DOMContentLoaded', function () {
         secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
         updateCountdownText();
 
-        countdownInterval = setInterval(() => {
+        countdownInterval = setInterval(function () {
             secondsLeft--;
             updateCountdownText();
 
@@ -987,11 +995,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetSessionTimers() {
         clearAllTimers();
 
-        warningTimer = setTimeout(() => {
+        warningTimer = setTimeout(function () {
             showWarningModal();
         }, WARNING_TIME_MS);
 
-        logoutTimer = setTimeout(() => {
+        logoutTimer = setTimeout(function () {
             forceLogoutByInactivity();
         }, LOGOUT_TIME_MS);
     }
@@ -1050,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
-    activityEvents.forEach((eventName) => {
+    activityEvents.forEach(function (eventName) {
         window.addEventListener(eventName, function () {
             if (modalVisible) return;
             resetSessionTimers();
