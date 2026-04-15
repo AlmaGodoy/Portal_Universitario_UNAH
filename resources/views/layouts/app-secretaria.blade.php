@@ -5,7 +5,7 @@
     $user = auth()->user();
 
     $displayName = 'Secretaría';
-    $displayRole = 'Secretaría de Carrera';
+    $displayRole = 'Secretaría Académica';
 
     if ($user) {
         if (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
@@ -31,7 +31,7 @@
         $user->email
         ?? $user->correo_institucional
         ?? optional($user->persona)->correo_institucional
-        ?? 'secretaria@unah.hn';
+        ?? 'secretaria.academica@unah.hn';
 
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
@@ -46,10 +46,42 @@
         $initials = 'S';
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | RUTAS SEGURAS
+    |--------------------------------------------------------------------------
+    */
+    $cambioCarreraRouteName = Route::has('cambio-carrera.secretaria') ? 'cambio-carrera.secretaria' : null;
+    $cambioCarreraUrl = $cambioCarreraRouteName ? route($cambioCarreraRouteName) : 'javascript:void(0)';
+
+    $cancelacionRouteName = Route::has('cancelacion.secretaria.index') ? 'cancelacion.secretaria.index' : null;
+    $cancelacionUrl = $cancelacionRouteName ? route($cancelacionRouteName) : 'javascript:void(0)';
+
+    $fechasRouteName = Route::has('cambio-carrera.secretaria.calendarios') ? 'cambio-carrera.secretaria.calendarios' : null;
+    $fechasUrl = $fechasRouteName ? route($fechasRouteName) : 'javascript:void(0)';
+
+    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
+    $soporteUrl = $soporteRouteName ? route($soporteRouteName) : 'javascript:void(0)';
+
+    $auditoriaRouteName = Route::has('auditoria') ? 'auditoria' : null;
+    $auditoriaUrl = $auditoriaRouteName ? route($auditoriaRouteName) : 'javascript:void(0)';
+
+    $bitacoraRouteName = Route::has('bitacora.index') ? 'bitacora.index' : null;
+    $bitacoraUrl = $bitacoraRouteName ? route($bitacoraRouteName) : 'javascript:void(0)';
+
+    $configuracionRouteName = Route::has('configuracion.index') ? 'configuracion.index' : null;
+    $configuracionUrl = $configuracionRouteName ? route($configuracionRouteName) : 'javascript:void(0)';
+
+    /*
+    |--------------------------------------------------------------------------
+    | MENÚS ACTIVOS
+    |--------------------------------------------------------------------------
+    */
     $menuRevisionOpen = request()->routeIs(
         'cambio-carrera.secretaria',
-        'cambio-carrera.secretaria.revisar'
-    ) || request()->routeIs('cancelacion.secretaria.*');
+        'cambio-carrera.secretaria.revisar',
+        'cancelacion.secretaria.*'
+    );
 
     $menuCambioCarreraActive = request()->routeIs(
         'cambio-carrera.secretaria',
@@ -58,20 +90,13 @@
 
     $menuCancelacionActive = request()->routeIs('cancelacion.secretaria.*');
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUTA DE RESPALDO / SOPORTE
-    |--------------------------------------------------------------------------
-    */
-    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
-
-    $soporteUrl = $soporteRouteName
-        ? route($soporteRouteName)
-        : 'javascript:void(0)';
-
     $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+    $bitacoraActive = request()->routeIs('bitacora.*');
+    $fechasActive = request()->routeIs('cambio-carrera.secretaria.calendarios');
+    $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion') || request()->is('configuracion*');
 
-    $pageTitle = trim($__env->yieldContent('title', 'Secretaría de Carrera'));
+    $pageTitle = trim($__env->yieldContent('title', 'Secretaría Académica'));
 @endphp
 
 <!DOCTYPE html>
@@ -80,7 +105,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('title', 'Secretaría de Carrera')</title>
+    <title>PumaGestión – @yield('title', 'Secretaría Académica')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -555,7 +580,7 @@
         }
     </style>
 </head>
-<body class="hold-transition dashboard-body">
+<body class="hold-transition sidebar-mini layout-fixed dashboard-body">
 <div class="wrapper">
 
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
@@ -611,7 +636,7 @@
 
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ route('cambio-carrera.secretaria') }}"
+                                    <a href="{{ $cambioCarreraUrl }}"
                                        class="nav-link {{ $menuCambioCarreraActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cambio de carrera</p>
@@ -619,7 +644,7 @@
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="{{ route('cancelacion.secretaria.index') }}"
+                                    <a href="{{ $cancelacionUrl }}"
                                        class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cancelación</p>
@@ -629,8 +654,8 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"
-                               class="nav-link {{ request()->routeIs('cambio-carrera.secretaria.calendarios') ? 'active' : '' }}">
+                            <a href="{{ $fechasUrl }}"
+                               class="nav-link {{ $fechasActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar-days"></i>
                                 <p>Fechas</p>
                             </a>
@@ -644,68 +669,25 @@
                             </a>
                         </li>
 
-                        {{-- Revisión de documentos --}}
-<li class="nav-item has-treeview {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'menu-open' : '' }}">
-    <a href="javascript:void(0)"
-       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-file-circle-check"></i>
-        <p>
-            Revisión de documentos
-            <i class="right fas fa-angle-left"></i>
-        </p>
-    </a>
-
-    <ul class="nav nav-treeview">
-        <li class="nav-item">
-            <a href="{{ route('cambio-carrera.secretaria') }}"
-               class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cambio de carrera</p>
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="javascript:void(0)"
-               class="nav-link {{ request()->routeIs('cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cancelación</p>
-            </a>
-        </li>
-    </ul>
-</li>
-
-
-
-                        {{-- Fechas --}}
-<li class="nav-item">
-    <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"
-       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria.calendarios') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-calendar-days"></i>
-        <p>Fechas</p>
-    </a>
-</li>
-
-                        {{-- Auditoría --}}
                         <li class="nav-item">
-                            <a href="{{ route('auditoria') }}" class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
+                            <a href="{{ $auditoriaUrl }}"
+                               class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
-                        {{-- Bitácora --}}
                         <li class="nav-item">
-                            <a href="{{ route('bitacora.secretaria_general') }}"
-class="nav-link {{ request()->routeIs('bitacora.secretaria_general') ? 'active' : '' }}">
+                            <a href="{{ $bitacoraUrl }}"
+                               class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Bitácora</p>
                             </a>
                         </li>
 
-                        {{-- Configuración --}}
                         <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                            <a href="{{ $configuracionUrl }}"
+                               class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
@@ -923,17 +905,16 @@ class="nav-link {{ request()->routeIs('bitacora.secretaria_general') ? 'active' 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-<script src="{{ asset('js/dashboard.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const btnNotif = document.getElementById('btnSecNotif');
-    const btnMsg   = document.getElementById('btnSecMsg');
-    const btnUser  = document.getElementById('btnSecUser');
+    const btnMsg = document.getElementById('btnSecMsg');
+    const btnUser = document.getElementById('btnSecUser');
 
     const dropNotif = document.getElementById('dropSecNotif');
-    const dropMsg   = document.getElementById('dropSecMsg');
-    const dropUser  = document.getElementById('dropSecUser');
+    const dropMsg = document.getElementById('dropSecMsg');
+    const dropUser = document.getElementById('dropSecUser');
 
     const allDrops = [dropNotif, dropMsg, dropUser];
 
@@ -955,6 +936,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const willOpen = !dropdown.classList.contains('show');
             closeAll();
+
             if (willOpen) {
                 dropdown.classList.add('show');
             }
@@ -991,7 +973,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const WARNING_TIME_MS = 28 * 60 * 1000;
-    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
+    const LOGOUT_TIME_MS = 31 * 60 * 1000;
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const modalElement = $('#sessionTimeoutModal');
