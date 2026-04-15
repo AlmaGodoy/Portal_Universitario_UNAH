@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BitacoraController;
 
-Route::middleware(['auth', 'session.timeout'])->group(function () {
 /*
 |--------------------------------------------------------------------------
 | MÓDULO: BITÁCORA
@@ -24,9 +23,6 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
         ->middleware('roleid:5');
 
     Route::get('/bitacora/secretaria-general', [BitacoraController::class, 'secretariaGeneral'])
-        ->name('bitacora.general')
-        ->middleware('role:1');
-});
         ->name('bitacora.secretaria_general')
         ->middleware('roleid:1');
 });
