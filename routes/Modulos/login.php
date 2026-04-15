@@ -1,15 +1,43 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\PasswordResetController;
 
-Route::middleware('guest')->group(function () {
-    Route::get('/portal', function () {
-        return view('auth.choose_portal');
-    })->name('login');
+/*
+|--------------------------------------------------------------------------
+| PORTAL
+|--------------------------------------------------------------------------
+| Si el usuario ya inició sesión y vuelve a /portal,
+| se redirige a su dashboard en lugar de mostrar choose_portal.
+|--------------------------------------------------------------------------
+*/
+Route::get('/portal', function () {
+    if (Auth::check()) {
+        $loginTipo = session('login_tipo');
 
+        if ($loginTipo === 'estudiante') {
+            return redirect()->route('panel.estudiante');
+        }
+
+        if ($loginTipo === 'empleado') {
+            return redirect()->route('empleado.dashboard');
+        }
+
+        return redirect()->route('empleado.dashboard');
+    }
+
+    return view('auth.choose_portal');
+})->name('login');
+
+/*
+|--------------------------------------------------------------------------
+| RUTAS SOLO PARA INVITADOS
+|--------------------------------------------------------------------------
+*/
+Route::middleware('guest')->group(function () {
     Route::get('/login/{tipo}', [LoginController::class, 'showLoginFormTipo'])
         ->whereIn('tipo', ['estudiante', 'empleado'])
         ->name('login.tipo');

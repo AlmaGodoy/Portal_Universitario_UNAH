@@ -1,6 +1,7 @@
 @php
-    use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\Route;
 
     $user = Auth::user();
 
@@ -27,6 +28,12 @@
         }
     }
 
+    $correoInstitucional =
+        $user?->email
+        ?? $user?->correo_institucional
+        ?? optional($user?->persona)->correo_institucional
+        ?? 'secretaria.academica@unah.hn';
+
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
 
@@ -39,6 +46,75 @@
     if ($initials === '') {
         $initials = 'SA';
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONTROL DE VISIBILIDAD DEL BOTÓN SEGURIDAD
+    |--------------------------------------------------------------------------
+    */
+    $rolTextoSesion = strtolower(trim((string) session('rol_texto', '')));
+    $mostrarBotonSeguridad = !in_array($rolTextoSesion, [
+        'secretaria_general',
+        'secretaría_general',
+        'secretaria general',
+        'secretaría general',
+    ], true);
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTAS SEGURAS
+    |--------------------------------------------------------------------------
+    */
+    $dashboardUrl = Route::has('empleado.dashboard')
+        ? route('empleado.dashboard')
+        : (Route::has('dashboard') ? route('dashboard') : 'javascript:void(0)');
+
+    $seguridadUrl = Route::has('seguridad.index')
+        ? route('seguridad.index')
+        : 'javascript:void(0)';
+
+    $auditoriaUrl = Route::has('auditoria')
+        ? route('auditoria')
+        : 'javascript:void(0)';
+
+    $bitacoraUrl = Route::has('bitacora.index')
+        ? route('bitacora.index')
+        : 'javascript:void(0)';
+
+    $reportesUrl = Route::has('reporte.tramites.secretaria_general.vista')
+        ? route('reporte.tramites.secretaria_general.vista')
+        : 'javascript:void(0)';
+
+    $respaldoRouteName = Route::has('backup.index')
+        ? 'backup.index'
+        : (Route::has('soporte.vista') ? 'soporte.vista' : null);
+
+    $respaldoUrl = $respaldoRouteName
+        ? route($respaldoRouteName)
+        : 'javascript:void(0)';
+
+    $configuracionUrl = Route::has('configuracion.index')
+        ? route('configuracion.index')
+        : 'javascript:void(0)';
+
+    /*
+    |--------------------------------------------------------------------------
+    | MENÚS ACTIVOS
+    |--------------------------------------------------------------------------
+    */
+    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->routeIs('dashboard');
+    $seguridadActive = request()->routeIs('seguridad.index') || request()->is('seguridad*');
+    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+    $bitacoraActive = request()->routeIs('bitacora.*');
+    $reportesActive = request()->routeIs('reporte.tramites.secretaria_general.vista');
+    $respaldoActive = request()->routeIs('backup.*')
+        || request()->is('respaldos*')
+        || request()->routeIs('soporte.vista')
+        || request()->is('soporte')
+        || request()->is('api/soporte*');
+    $configuracionActive = request()->routeIs('configuracion.index')
+        || request()->is('configuracion')
+        || request()->is('configuracion*');
 @endphp
 
 <!DOCTYPE html>
@@ -54,7 +130,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
         .sidebar-user-role {
@@ -88,7 +163,6 @@
             min-height: 100vh;
         }
 
-        /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -166,7 +240,7 @@
         }
     </style>
 </head>
-<body class="hold-transition dashboard-body">
+<body class="hold-transition sidebar-mini layout-fixed dashboard-body">
 <div class="wrapper">
 
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
@@ -204,6 +278,7 @@
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name">{{ $displayName }}</div>
                     <div class="sidebar-user-role">{{ $displayRole }}</div>
+
                     <div class="academic-badge">
                         <i class="fas fa-building-columns"></i>
                         Supervisión Global
@@ -218,24 +293,37 @@
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ request()->routeIs('empleado.dashboard') ? 'active' : '' }}">
+                            <a href="{{ $dashboardUrl }}" class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
 
+                        @if ($mostrarBotonSeguridad)
+                            <li class="nav-item">
+                                <a href="{{ $seguridadUrl }}" class="nav-link {{ $seguridadActive ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-shield-halved"></i>
+                                    <p>Seguridad</p>
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-item">
-                            <a href="{{ route('seguridad.index') }}"
-                               class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad</p>
+                            <a href="{{ $auditoriaUrl }}" class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
+                                <p>Auditoría</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
-                               class="nav-link {{ request()->routeIs('reporte.tramites.secretaria_general.vista') ? 'active' : '' }}">
+                            <a href="{{ $bitacoraUrl }}" class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $reportesUrl }}" class="nav-link {{ $reportesActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-column"></i>
                                 <p>Reportes Generales</p>
                             </a>
@@ -256,8 +344,14 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                            <a href="{{ $respaldoUrl }}" class="nav-link {{ $respaldoActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-database"></i>
+                                <p>Respaldo</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
@@ -334,18 +428,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-<script src="{{ asset('js/dashboard.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | TIEMPOS
-    |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = 28 minutos
-    | LOGOUT_TIME_MS  = 31 minutos
-    |--------------------------------------------------------------------------
-    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
     const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 

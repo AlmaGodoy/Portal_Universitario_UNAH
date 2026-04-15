@@ -1,94 +1,145 @@
 @extends('layouts.app-secretaria-academica')
 
-
 @section('content')
 @vite(['resources/css/bitacora.css', 'resources/js/bitacora.js'])
 
-<div class="container py-4 security-page">
-    <div class="row g-4">
-        <div class="col-12">
-                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+<div class="container-fluid py-4">
 
-                        <header class="topbar">
-                            <div class="brand">
-                                <img alt="Logo PumaGestión" class="brand-logo">
+    <!-- 📌 TÍTULO -->
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">
+            Bitácora de Trámites - Secretaría Académica
+        </h2>
+    </div>
 
+    <!-- 🔎 FILTROS -->
+    <div class="row justify-content-center mb-4">
 
-                                <div class="brand-text">
-                                        <h1 class="brand-title">Bitácora del Sistema</h1>
-                                    <span class="brand-subtitle">FCEAC - UNAH</span>
-                                </div>
+        <div class="col-md-8 col-lg-7">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <!-- FORMULARIO -->
+                    <form method="GET"
+                          action="{{ route('bitacora.secretaria_academica') }}"
+                          class="filtro-form">
+
+                        <div class="row align-items-end">
+
+                            <!-- Fecha Inicio -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    Fecha Inicio
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="fecha_inicio"
+                                    class="form-control"
+                                    value="{{ request('fecha_inicio') }}">
                             </div>
-                        </header>
 
+                            <!-- Fecha Fin -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    Fecha Fin
+                                </label>
 
-                            @if(session('error'))
-                                <div style="color:red; margin-bottom: 10px;">
-                                    {{ session('error') }}
-                                </div>
-                            @endif
+                                <input
+                                    type="date"
+                                    name="fecha_fin"
+                                    class="form-control"
+                                    value="{{ request('fecha_fin') }}">
+                            </div>
 
-                            <!-- FORMULARIO DE CONSULTA -->
-                            <form id="formBitacora" method="GET" action="{{ route('bitacora.index') }}" class="mb-3">
-
-                                <div>
-                                    <label>Fecha de Inicio: </label>
-                                    <input type="date" name="fecha_inicial" value="{{ request('fecha_inicial') }}">
-                                </div>
-
-                                <div>
-                                    <label>Fecha final: </label>
-                                    <input type="date" name="fecha_final" value="{{ request('fecha_final') }}">
-                                </div>
-
-                                <button type="submit" class="btn btn-primary me-2">Buscar</button>
-
-                                <div >
-                                    <a href="{{ route('bitacora.index') }}"
-                                    class="btn btn-secondary">
-                                    Limpiar
+                            <!-- Botones -->
+                            <div class="col-md-2">
+                                    <!-- Filtrar -->
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary w-100">
+                                        🔍 Filtrar
+                                    </button>
+                            </div>
+                            <div class="col-md-2">
+                                    <!-- Limpiar -->
+                                    <a href="{{ route('bitacora.secretaria_academica') }}"
+                                       class="btn btn-dark w-100" >
+                                        🧹 Limpiar
                                     </a>
-
-                                </div>
-                            </form>
-
-                            <!-- TABLA DE RESULTADOS -->
-                            <table class="table table-bordered table-hover align-middle" style="width: 100%">
-                                <thead class="table-light">
-                                    <tr class="text-center text-muted">
-                                        <th>Id Usuario</th>
-                                        <th>Correo Institucional</th>
-                                        <th>Responsable</th>
-                                        <th>Operación Realizada</th>
-                                        <th>Detalle</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($bitacoras as $item)
-                                        <tr>
-                                            <td>{{ $item->id_usuario ?? '' }}</td>
-                                            <td>{{ $item->correo_institucional ?? '' }}</td>
-                                            <td>{{ $item->usuario_responsable ?? '' }}</td>
-                                            <td>{{ $item->operacion_realizada ?? '' }}</td>
-                                            <td>{{ $item->detalle ?? '' }}</td>
-                                            <td>{{ $item->fecha_y_hora ?? '' }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted">No hay resultados</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-
-                            <div style="margin-top: 15px;">
-                                {{ $bitacoras->links('pagination::bootstrap-5') }}
                             </div>
 
+                            <div class="col-md-4">
+
+
+
+
+                            </div>
+
+                        </div>
+
+                    </form>
 
                 </div>
-         </div>
-     </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 📊 TABLA -->
+    <div class="table-responsive">
+
+        <table class="table table-bordered table-striped w-100">
+
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Estudiante</th>
+                    <th>Trámite</th>
+                    <th>Acción</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @forelse($bitacoras as $item)
+
+                    <tr>
+                        <td>{{ $item->id }}</td>
+                        <td>{{ $item->id_estudiante }}</td>
+                        <td>{{ $item->tramite }}</td>
+                        <td>{{ $item->accion }}</td>
+                        <td>{{ $item->descripcion }}</td>
+
+                        <!-- 📅 Fecha formateada -->
+                        <td>
+                            {{ \Carbon\Carbon::parse($item->fecha)->format('d/m/Y') }}
+                        </td>
+
+                    </tr>
+
+                @empty
+
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            No hay registros
+                        </td>
+                    </tr>
+
+                @endforelse
+
+            </tbody>
+
+        </table>
+
+    </div>
+
 </div>
+
 @endsection

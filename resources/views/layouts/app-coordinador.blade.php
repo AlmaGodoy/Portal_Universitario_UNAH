@@ -1,5 +1,6 @@
 @php
     use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\Route;
 
     $user = auth()->user();
 
@@ -26,6 +27,12 @@
         }
     }
 
+    $correoInstitucional =
+        $user->email
+        ?? $user->correo_institucional
+        ?? optional($user->persona)->correo_institucional
+        ?? 'coordinacion@unah.hn';
+
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
 
@@ -39,11 +46,6 @@
         $initials = 'C';
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUTA DE CANCELACIÓN PARA COORDINADORA
-    |--------------------------------------------------------------------------
-    */
     $cancelacionRouteName = null;
 
     if (Route::has('cancelacion.coordinadora.index')) {
@@ -56,10 +58,29 @@
         ? route($cancelacionRouteName)
         : 'javascript:void(0)';
 
-    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
+    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+
+    $backupUrl = $backupRouteName
+        ? route($backupRouteName)
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DE RESPALDO / SOPORTE
+    |--------------------------------------------------------------------------
+    */
+    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
+
+    $soporteUrl = $soporteRouteName
+        ? route($soporteRouteName)
+        : 'javascript:void(0)';
+
+    $dashboardActive     = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
     $cambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
-    $cancelacionActive = request()->routeIs('cancelacion.coordinadora.*') || request()->routeIs('resolucion.cancelacion.*');
-    $tramitesMenuOpen = $cambioCarreraActive || $cancelacionActive;
+    $cancelacionActive   = request()->routeIs('cancelacion.coordinadora.*') || request()->routeIs('resolucion.cancelacion.*');
+    $backupActive        = request()->routeIs('backup.*') || request()->is('respaldos*');
+    $soporteActive       = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $tramitesMenuOpen    = $cambioCarreraActive || $cancelacionActive;
+
+    $pageTitle = trim($__env->yieldContent('title', 'Panel de Coordinación'));
 @endphp
 
 <!DOCTYPE html>
@@ -78,6 +99,532 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
+        .coordinator-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 64px;
+            padding: 0 20px;
+            margin: 0 18px 0;
+            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
+            border-bottom: 4px solid #f1be1a;
+            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
+            border-radius: 0;
+        }
+
+        .coordinator-topbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                115deg,
+                rgba(255,255,255,.07) 0%,
+                rgba(255,255,255,.02) 40%,
+                rgba(255,255,255,0) 60%
+            );
+            pointer-events: none;
+        }
+
+        .coordinator-topbar::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 4px;
+            width: 4px;
+            background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 10px 18px;
+            margin: 14px 14px 0;
+            border-radius: 0 0 20px 20px;
+            background: linear-gradient(135deg, #204998 0%, #2956ac 55%, #234a97 100%);
+            border-bottom: 4px solid #f1be1a;
+            box-shadow: 0 14px 28px rgba(12, 35, 82, .18);
+            position: relative;
+            z-index: 20;
+        }
+
+        .coordinator-topbar-left,
+        .coordinator-topbar-right {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .coordinator-topbar-right {
+            gap: 6px;
+        }
+
+        .coordinator-topbar-right {
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .coord-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,.86);
+            font-size: .98rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-left: 8px;
+        }
+
+        .coord-breadcrumb i {
+            font-size: .86rem;
+        }
+
+        .coord-breadcrumb .active {
+            color: #ffd34d;
+            font-weight: 800;
+        }
+
+        .coord-action-group {
+            position: relative;
+        }
+
+        .coord-icon-btn {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.88);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .22s ease;
+            font-size: .9rem;
+        }
+
+        .coord-icon-btn:hover {
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.30);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
+            width: 58px;
+            height: 52px;
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 16px;
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            transition: all .18s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .coord-icon-btn:hover {
+            background: rgba(255,255,255,.16);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+
+        .coord-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 800;
+            border: 2px solid #1a4899;
+            box-shadow: 0 4px 10px rgba(229,57,53,.30);
+        }
+
+        .coord-badge.gold {
+            background: linear-gradient(135deg, #efbe1a 0%, #dca600 100%);
+            color: #16315d;
+            border-color: #1a4899;
+            box-shadow: 0 4px 10px rgba(239,190,26,.28);
+            top: -6px;
+            right: -4px;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: #e23b35;
+            color: #fff;
+            font-size: .76rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(226,59,53,.35);
+        }
+
+        .coord-badge.gold {
+            background: #f1be1a;
+            color: #17346c;
+            box-shadow: 0 4px 10px rgba(241,190,26,.35);
+        }
+
+        .coord-divider {
+            width: 1px;
+            height: 32px;
+            background: linear-gradient(
+                180deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,.22) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .coord-user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            padding: 6px 12px 6px 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.12);
+            color: #fff;
+            cursor: pointer;
+            transition: all .22s ease;
+            min-width: unset;
+            max-width: unset;
+        }
+
+        .coord-user-chip:hover {
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.32);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
+            height: 40px;
+            background: rgba(255,255,255,.18);
+        }
+
+        .coord-user-chip {
+            min-width: 360px;
+            max-width: 460px;
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 18px;
+            background: rgba(255,255,255,.10);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            backdrop-filter: blur(8px);
+            transition: all .18s ease;
+        }
+
+        .coord-user-chip:hover {
+            background: rgba(255,255,255,.16);
+            color: #fff;
+        }
+
+        .coord-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
+            color: #163a78;
+            font-weight: 900;
+            font-size: .82rem;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
+            color: #17346c;
+            font-weight: 900;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(239,190,26,.30);
+        }
+
+        .coord-user-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1;
+            line-height: 1.1;
+        }
+
+        .coord-user-name {
+            font-size: .83rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
+            font-size: 1.02rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .coord-user-role {
+            font-size: .68rem;
+            color: rgba(255,255,255,.60);
+            font-weight: 700;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .coord-user-arrow {
+            font-size: .62rem;
+            color: rgba(255,255,255,.50);
+            margin-left: 2px;
+            margin-top: 4px;
+            color: rgba(255,255,255,.82);
+            font-size: .92rem;
+            font-weight: 700;
+        }
+
+        .coord-user-arrow {
+            color: rgba(255,255,255,.85);
+            font-size: .9rem;
+        }
+
+        .coord-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 0;
+            width: 340px;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(15, 32, 68, .22);
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: all .18s ease;
+            z-index: 999;
+        }
+
+        .coord-dropdown.align-right {
+            left: auto;
+            right: 0;
+        }
+
+        .coord-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .coord-dropdown-header {
+            padding: 14px 16px;
+            background: #f5f8ff;
+            border-bottom: 1px solid #e8eefb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .coord-dropdown-header span {
+            color: #17346c;
+            font-weight: 800;
+            font-size: .95rem;
+        }
+
+        .coord-dropdown-header a {
+            color: #2956ac;
+            font-size: .8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .coord-dropdown-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .coord-dropdown-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef2fb;
+            background: #fff;
+        }
+
+        .coord-dropdown-item.unread {
+            background: #f8fbff;
+        }
+
+        .coord-dropdown-item.sm {
+            align-items: center;
+        }
+
+        .coord-dropdown-icon,
+        .coord-dropdown-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: 800;
+        }
+
+        .coord-dropdown-icon.blue {
+            background: rgba(41,86,172,.12);
+            color: #2956ac;
+        }
+
+        .coord-dropdown-icon.gold {
+            background: rgba(241,190,26,.18);
+            color: #9b7300;
+        }
+
+        .coord-dropdown-icon.green {
+            background: rgba(31,163,98,.12);
+            color: #138a50;
+        }
+
+        .coord-dropdown-icon.sm {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+        }
+
+        .coord-dropdown-avatar {
+            background: linear-gradient(135deg, #2956ac 0%, #17346c 100%);
+            color: #fff;
+        }
+
+        .coord-dropdown-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .coord-dropdown-text strong {
+            color: #17346c;
+            font-size: .92rem;
+            font-weight: 800;
+        }
+
+        .coord-dropdown-text span {
+            color: #53627f;
+            font-size: .85rem;
+            line-height: 1.35;
+        }
+
+        .coord-dropdown-text small {
+            color: #7f8ca6;
+            font-size: .77rem;
+            font-weight: 700;
+        }
+
+        .coord-dropdown-footer {
+            padding: 12px 16px;
+            background: #fff;
+            border-top: 1px solid #eef2fb;
+        }
+
+        .coord-dropdown-footer a {
+            color: #2956ac;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .coord-dropdown-footer.danger {
+            background: #fff8f8;
+        }
+
+        .coord-dropdown-footer.danger form {
+            margin: 0;
+        }
+
+        .coord-dropdown-footer.danger button {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #c73737;
+            font-size: .9rem;
+            font-weight: 800;
+            text-align: left;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coord-user-header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #f5f8ff 0%, #eef3ff 100%);
+            border-bottom: 1px solid #e8eefb;
+        }
+
+        .coord-user-header-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
+            color: #17346c;
+            font-size: 1rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .coord-user-header strong {
+            display: block;
+            color: #17346c;
+            font-size: .96rem;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+
+        .coord-user-header span {
+            color: #62708b;
+            font-size: .84rem;
+            word-break: break-word;
+        }
+
+        .content-wrapper {
+            min-height: 100vh;
+            padding-top: 0 !important;
+        }
+
+        .dashboard-shell {
+            padding-top: 0 !important;
+        }
+
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -153,6 +700,20 @@
             padding: 10px 18px;
             font-weight: 700;
         }
+
+        @media (max-width: 1199.98px) {
+            .coord-user-chip {
+                min-width: unset;
+                min-width: 300px;
+                max-width: 340px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .coordinator-topbar {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="hold-transition dashboard-body">
@@ -198,13 +759,11 @@
 
             <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu"
-                        data-widget="treeview"
-                        role="menu"
-                        data-accordion="false">
+                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
-                        {{-- Dashboard --}}
                         <li class="nav-item">
+                           <a href="{{ url('/empleado/dashboard') }}"
+                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                             <a href="{{ route('empleado.dashboard') }}"
                                class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
@@ -213,6 +772,36 @@
                         </li>
 
                         {{-- Trámites --}}
+                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
+    <a href="javascript:void(0)"
+       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-folder-open"></i>
+        <p>
+            Trámites
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cambio-carrera.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cambio de carrera</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cancelacion.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cancelacion.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cancelación</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
+                        {{-- Seguridad: SOLO BOTÓN DIRECTO --}}
                         <li class="nav-item has-treeview {{ $tramitesMenuOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)"
                                class="nav-link {{ $tramitesMenuOpen ? 'active' : '' }}">
@@ -242,7 +831,16 @@
                             </ul>
                         </li>
 
-                        {{-- Seguridad --}}
+                        <li class="nav-item">
+                            <a href="{{ $backupUrl }}"
+                               class="nav-link {{ $backupActive ? 'active' : '' }}">
+                            <a href="{{ $soporteUrl }}"
+                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-database"></i>
+                                <p>Respaldo</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item">
                             <a href="{{ route('seguridad.index') }}"
                                class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
@@ -250,8 +848,15 @@
                                 <p>Seguridad</p>
                             </a>
                         </li>
+{{-- Reportes --}}
+<li class="nav-item">
+    <a href="{{ route('reporte.tramites.vista') }}"
+       class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-chart-bar"></i>
+        <p>Reportes</p>
+    </a>
+</li>
 
-                        {{-- Reportes --}}
                         <li class="nav-item">
                             <a href="{{ route('reporte.tramites.vista') }}"
                                class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
@@ -260,16 +865,21 @@
                             </a>
                         </li>
 
-                        {{-- Auditoría --}}
                         <li class="nav-item">
                             <a href="{{ route('auditoria') }}"
-                               class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
+                            class="nav-link {{ request()->routeIs('auditoria*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
                         {{-- Bitácora --}}
+                        <li class="nav-item">
+                            <a href="{{ route('bitacora.index') }}" class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
                         @if (Route::has('bitacora.index'))
                             <li class="nav-item">
                                 <a href="{{ route('bitacora.index') }}"
@@ -280,7 +890,6 @@
                             </li>
                         @endif
 
-                        {{-- Configuración --}}
                         <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"
                                class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
@@ -289,7 +898,6 @@
                             </a>
                         </li>
 
-                        {{-- Cerrar sesión --}}
                         <li class="nav-item nav-item-logout">
                             <form action="{{ route('logout') }}" method="POST" style="margin:0;">
                                 @csrf
@@ -306,14 +914,152 @@
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn"
-            class="sidebar-float-toggle d-none d-lg-flex"
-            type="button"
-            title="Colapsar/Expandir menú">
+    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
         <i class="fas fa-chevron-left"></i>
     </button>
 
     <div class="content-wrapper">
+
+        <div class="coordinator-topbar">
+            <div class="coordinator-topbar-left">
+                <div class="coord-breadcrumb">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="active">{{ $pageTitle }}</span>
+                </div>
+            </div>
+
+            <div class="coordinator-topbar-right">
+
+                <div class="coord-action-group">
+                    <button class="coord-icon-btn" id="btnCoordNotif" title="Notificaciones">
+                        <i class="fas fa-bell"></i>
+                        <span class="coord-badge">3</span>
+                    </button>
+
+                    <div class="coord-dropdown" id="dropCoordNotif">
+                        <div class="coord-dropdown-header">
+                            <span>Notificaciones</span>
+                            <a href="#">Marcar todas</a>
+                        </div>
+
+                        <ul class="coord-dropdown-list">
+                            <li class="coord-dropdown-item unread">
+                                <div class="coord-dropdown-icon blue">
+                                    <i class="fas fa-file-circle-check"></i>
+                                </div>
+                                <div class="coord-dropdown-text">
+                                    <strong>Nuevo trámite recibido</strong>
+                                    <span>Hay una solicitud pendiente de revisión en coordinación.</span>
+                                    <small>Hace 5 min</small>
+                                </div>
+                            </li>
+
+                            <li class="coord-dropdown-item unread">
+                                <div class="coord-dropdown-icon gold">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="coord-dropdown-text">
+                                    <strong>Seguimiento requerido</strong>
+                                    <span>Una solicitud continúa en estado de revisión.</span>
+                                    <small>Hace 1 hora</small>
+                                </div>
+                            </li>
+
+                            <li class="coord-dropdown-item">
+                                <div class="coord-dropdown-icon green">
+                                    <i class="fas fa-circle-check"></i>
+                                </div>
+                                <div class="coord-dropdown-text">
+                                    <strong>Dictamen emitido</strong>
+                                    <span>Se registró correctamente una resolución reciente.</span>
+                                    <small>Ayer</small>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="coord-dropdown-footer">
+                            <a href="#">Ver todas las notificaciones</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coord-action-group">
+                    <button class="coord-icon-btn" id="btnCoordMsg" title="Mensajes">
+                        <i class="fas fa-envelope"></i>
+                        <span class="coord-badge gold">1</span>
+                    </button>
+
+                    <div class="coord-dropdown" id="dropCoordMsg">
+                        <div class="coord-dropdown-header">
+                            <span>Mensajes</span>
+                            <a href="#">Ver todos</a>
+                        </div>
+
+                        <ul class="coord-dropdown-list">
+                            <li class="coord-dropdown-item unread">
+                                <div class="coord-dropdown-avatar">SA</div>
+                                <div class="coord-dropdown-text">
+                                    <strong>Secretaría Académica</strong>
+                                    <span>Se actualizó un trámite que requiere validación de coordinación.</span>
+                                    <small>Hace 30 min</small>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="coord-dropdown-footer">
+                            <a href="#">Ir a mensajes</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coord-divider"></div>
+
+                <div class="coord-action-group">
+                    <button class="coord-user-chip" id="btnCoordUser" title="Mi perfil">
+                        <div class="coord-user-avatar">{{ $initials }}</div>
+                        <div class="coord-user-info">
+                            <span class="coord-user-name">{{ $displayName }}</span>
+                            <span class="coord-user-role">{{ $displayRole }}</span>
+                        </div>
+                        <i class="fas fa-chevron-down coord-user-arrow"></i>
+                    </button>
+
+                    <div class="coord-dropdown align-right" id="dropCoordUser">
+                        <div class="coord-user-header">
+                            <div class="coord-user-header-avatar">{{ $initials }}</div>
+                            <div>
+                                <strong>{{ $displayName }}</strong>
+                                <span>{{ $correoInstitucional }}</span>
+                            </div>
+                        </div>
+
+                        <ul class="coord-dropdown-list">
+                            <li class="coord-dropdown-item sm">
+                                <div class="coord-dropdown-icon blue sm">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="coord-dropdown-text">
+                                    <span>Mi perfil</span>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="coord-dropdown-footer danger">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit">
+                                    <i class="fas fa-right-from-bracket"></i> Cerrar sesión
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
         <section class="content dashboard-shell">
             @yield('content')
         </section>
@@ -365,6 +1111,69 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
 <script src="{{ asset('js/dashboard.js') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btnNotif = document.getElementById('btnCoordNotif');
+    const btnMsg   = document.getElementById('btnCoordMsg');
+    const btnUser  = document.getElementById('btnCoordUser');
+
+    const dropNotif = document.getElementById('dropCoordNotif');
+    const dropMsg   = document.getElementById('dropCoordMsg');
+    const dropUser  = document.getElementById('dropCoordUser');
+
+    const allDrops = [dropNotif, dropMsg, dropUser];
+
+    function closeAll(except = null) {
+        allDrops.forEach(drop => {
+            if (!drop) return;
+            if (drop !== except) {
+                drop.classList.remove('show');
+            }
+        });
+    }
+
+    function toggleDropdown(button, dropdown) {
+        if (!button || !dropdown) return;
+
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const willOpen = !dropdown.classList.contains('show');
+            closeAll();
+            if (willOpen) {
+                dropdown.classList.add('show');
+            }
+        });
+    }
+
+    toggleDropdown(btnNotif, dropNotif);
+    toggleDropdown(btnMsg, dropMsg);
+    toggleDropdown(btnUser, dropUser);
+
+    document.addEventListener('click', function (e) {
+        const groups = document.querySelectorAll('.coord-action-group');
+        let clickedInside = false;
+
+        groups.forEach(group => {
+            if (group.contains(e.target)) {
+                clickedInside = true;
+            }
+        });
+
+        if (!clickedInside) {
+            closeAll();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAll();
+        }
+    });
+});
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
