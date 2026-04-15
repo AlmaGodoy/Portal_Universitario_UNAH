@@ -29,9 +29,9 @@
     }
 
     $correoInstitucional =
-        $user->email
-        ?? $user->correo_institucional
-        ?? optional($user->persona)->correo_institucional
+        $user?->email
+        ?? $user?->correo_institucional
+        ?? optional($user?->persona)->correo_institucional
         ?? 'secretaria.academica@unah.hn';
 
     $parts = preg_split('/\s+/', trim($displayName));
@@ -62,16 +62,6 @@
 
     /*
     |--------------------------------------------------------------------------
-    | RUTA DE RESPALDO
-    |--------------------------------------------------------------------------
-    */
-    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
-
-    $backupUrl = $backupRouteName
-        ? route($backupRouteName)
-        : 'javascript:void(0)';
-
-    $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
     | RUTAS SEGURAS
     |--------------------------------------------------------------------------
     */
@@ -95,8 +85,12 @@
         ? route('reporte.tramites.secretaria_general.vista')
         : 'javascript:void(0)';
 
-    $soporteUrl = Route::has('soporte.vista')
-        ? route('soporte.vista')
+    $respaldoRouteName = Route::has('backup.index')
+        ? 'backup.index'
+        : (Route::has('soporte.vista') ? 'soporte.vista' : null);
+
+    $respaldoUrl = $respaldoRouteName
+        ? route($respaldoRouteName)
         : 'javascript:void(0)';
 
     $configuracionUrl = Route::has('configuracion.index')
@@ -113,8 +107,14 @@
     $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
     $bitacoraActive = request()->routeIs('bitacora.*');
     $reportesActive = request()->routeIs('reporte.tramites.secretaria_general.vista');
-    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
-    $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion') || request()->is('configuracion*');
+    $respaldoActive = request()->routeIs('backup.*')
+        || request()->is('respaldos*')
+        || request()->routeIs('soporte.vista')
+        || request()->is('soporte')
+        || request()->is('api/soporte*');
+    $configuracionActive = request()->routeIs('configuracion.index')
+        || request()->is('configuracion')
+        || request()->is('configuracion*');
 @endphp
 
 <!DOCTYPE html>
@@ -130,7 +130,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
         .sidebar-user-role {
@@ -302,19 +301,12 @@
 
                         @if ($mostrarBotonSeguridad)
                             <li class="nav-item">
-                                <a href="{{ route('seguridad.index') }}"
-                                   class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
+                                <a href="{{ $seguridadUrl }}" class="nav-link {{ $seguridadActive ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-shield-halved"></i>
                                     <p>Seguridad</p>
                                 </a>
                             </li>
                         @endif
-                        <li class="nav-item">
-                            <a href="{{ $seguridadUrl }}" class="nav-link {{ $seguridadActive ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad</p>
-                            </a>
-                        </li>
 
                         <li class="nav-item">
                             <a href="{{ $auditoriaUrl }}" class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
@@ -352,17 +344,13 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $backupUrl }}"
-                               class="nav-link {{ $backupActive ? 'active' : '' }}">
-                            <a href="{{ $soporteUrl }}" class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                            <a href="{{ $respaldoUrl }}" class="nav-link {{ $respaldoActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
                             <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
@@ -440,7 +428,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-<script src="{{ asset('js/dashboard.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
