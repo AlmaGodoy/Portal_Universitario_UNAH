@@ -1,157 +1,162 @@
 @extends('layouts.app-secretaria-academica')
 
 @section('content')
-@vite(['resources/css/auditoria.css', 'resources/js/auditoria.js'])
 
-<div class="container py-4 security-page">
-    <div class="row g-4">
-        <div class="col-12">
-                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+<div class="container-fluid py-4">
 
-                     <header class="topbar">
-                         <div class="brand">
-                             <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
+    <!-- 📌 TÍTULO -->
+    <div class="text-center mb-4">
+
+        <h2 class="fw-bold">
+            Auditoría - Secretaria Administrativa
+        </h2>
+
+        <p class="text-muted">
+            Visualización de sus registros personales de auditoría
+        </p>
+
+    </div>
+
+    <!-- 🔎 FILTROS -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <form method="GET">
+
+                <div class="row align-items-end">
+
+                    <!-- Fecha Inicio -->
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+                            Fecha Inicio
+                        </label>
+
+                        <input
+                            type="date"
+                            name="fecha_inicio"
+                            class="form-control"
+                            value="{{ $fecha_inicio }}"
+                            required
+                        >
+
+                    </div>
+
+                    <!-- Fecha Fin -->
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+                            Fecha Fin
+                        </label>
+
+                        <input
+                            type="date"
+                            name="fecha_fin"
+                            class="form-control"
+                            value="{{ $fecha_fin }}"
+                            required
+                        >
+
+                    </div>
+
+                    <!-- Botón Filtrar -->
+                    <div class="col-md-2">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100"
+                        >
+                            🔎 Filtrar
+                        </button>
+
+                    </div>
+
+                    <!-- Botón Limpiar -->
+                    <div class="col-md-2">
+
+                        <a
+                            href="{{ route('auditoria.administrativa') }}"
+                            class="btn btn-secondary w-100"
+                        >
+                            🧹 Limpiar
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- 📊 TABLA -->
+    <div class="card shadow-sm">
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-striped table-hover align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>ID Usuario</th>
+                        <th>Código Empleado</th>
+                        <th>Acción</th>
+                        <th>Detalle</th>
+                        <th>Módulo</th>
+                        <th>Fecha y Hora</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @forelse($auditorias as $a)
+
+                        <tr>
+
+                            <td>{{ $a->id_usuario }}</td>
+
+                            <td>{{ $a->cod_empleado }}</td>
+
+                            <td>{{ $a->Accion_Realizada }}</td>
+
+                            <td>{{ $a->Detalle }}</td>
+
+                            <td>{{ $a->Modulo_Afectado }}</td>
+
+                            <td>{{ $a->fecha_y_hora }}</td>
+
+                        </tr>
+
+                    @empty
+
+                        <tr>
+
+                            <td colspan="6" class="text-center text-muted">
+
+                                ⚠️ No hay registros personales en el período seleccionado
+
+                            </td>
+
+                        </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
 
 
-                                 <div class="brand-text">
-                                     <h1 class="brand-title">Auditoria del Sistema</h1>
-                                         <span class="brand-subtitle">FCEAC - UNAH</span>
-                                 </div>
-                         </div>
-                     </header>
-
-
-                     @if(session('error'))
-                          <div style="color:red; margin-bottom: 10px;">
-                               {{ session('error') }}
-                          </div>
-                      @endif
-
-                     <!-- FORMULARIO DE CONSULTA -->
-                     <form id="formBitacora" method="GET" action="{{ route('auditoria') }}" class="mb-3">
-                             <div >
-                                 <label>Fecha Inicial</label>
-                                     <input
-                                         type="date"
-                                         name="fecha_inicial"
-                                         class="form-control"
-                                         value="{{ $fechaInicial }}">
-                             </div>
-
-                             <div >
-                                  <label>Fecha Final</label>
-                                     <input
-                                          type="date"
-                                          name="fecha_final"
-                                          class="form-control"
-                                          value="{{ $fechaFinal }}">
-                             </div>
-
-                             <div >
-
-                                 <button type="submit" class="btn btn-primary me-2">
-                                     <i class="fas fa-search"></i> Buscar
-                                 </button>
-                             </div>
-
-                             <div >
-                                 <a href="{{ route('auditoria') }}"
-                                     class="btn btn-secondary">
-                                         Limpiar
-                                 </a>
-
-                             </div>
-
-
-
-                     </form>
-
-                  <!-- TABLA DE RESULTADOS -->
-
-
-
-
-                                 <table class="table table-bordered table-hover align-middle" style="width: 100%">
-
-                                     <thead class="table-light">
-                                         <tr class="text-center text-muted">
-
-                                             <th>No.</th>
-                                             <th>Id Usuario</th>
-                                             <th>Código Empleado</th>
-                                             <th>Acción Realizada</th>
-                                             <th>Detalle</th>
-                                             <th>Módulo Afectado</th>
-                                             <th>Fecha</th>
-
-                                         </tr>
-                                     </thead>
-
-                                     <tbody>
-
-                                         @forelse($registros as $registro)
-
-                                             <tr>
-
-                                                 <td>
-                                                     {{ $loop->iteration }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->id_usuario ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->cod_empleado ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->Accion_Realizada ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->Detalle ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->Modulo_Afectado ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->fecha_y_hora ?? '' }}
-                                                 </td>
-
-                                             </tr>
-
-                                             @empty
-
-                                             <tr>
-                                                     <td colspan="5" class="text-center">
-                                                         No hay registros disponibles
-                                                     </td>
-                                             </tr>
-
-                                         @endforelse
-
-                                     </tbody>
-
-                                 </table>
-
-
-
-                         {{-- PAGINACIÓN --}}
-                         <div style="margin-top: 15px;">
-
-                               {{ $registros->links('pagination::bootstrap-5') }}
-
-                         </div>
-
-
-
-         </div>
-
-     </div>
- </div>
-
-
-@endsection
+ @endsection

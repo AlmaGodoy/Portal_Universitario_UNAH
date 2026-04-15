@@ -8,10 +8,8 @@ use App\Http\Controllers\RolSeguridadController;
 |--------------------------------------------------------------------------
 | Rutas WEB de Seguridad
 |--------------------------------------------------------------------------
-| Estas rutas cargan vistas Blade
 */
-
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->group(function () {
 
     Route::get('/seguridad', [RolSeguridadController::class, 'index'])
         ->name('seguridad.index');
@@ -33,10 +31,8 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 | Rutas API de Seguridad
 |--------------------------------------------------------------------------
-| Estas rutas procesan formularios y acciones
 */
-
-Route::prefix('api/seguridad')->middleware('auth')->group(function () {
+Route::prefix('api/seguridad')->middleware(['auth', 'session.timeout'])->group(function () {
 
     Route::post('/rol', [RolController::class, 'storeRol'])
         ->name('seguridad.rol.store');

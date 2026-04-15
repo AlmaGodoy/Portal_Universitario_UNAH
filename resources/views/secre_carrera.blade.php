@@ -12,6 +12,18 @@
         $aniosDisponibles = $aniosDisponibles ?? [date('Y')];
         $anioSeleccionado = $anio ?? request('anio') ?? ($aniosDisponibles[0] ?? date('Y'));
         $idCarreraSeleccionada = $idCarreraSeleccionada ?? request('id_carrera') ?? '';
+        $inicialesUsuario = '';
+
+        $partesNombre = preg_split('/\s+/', trim($userName));
+        foreach (array_slice($partesNombre, 0, 2) as $parte) {
+            if (!empty($parte)) {
+                $inicialesUsuario .= strtoupper(mb_substr($parte, 0, 1));
+            }
+        }
+
+        if ($inicialesUsuario === '') {
+            $inicialesUsuario = 'S';
+        }
     @endphp
 
     {{-- BANNER --}}
@@ -30,18 +42,30 @@
     <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
 </div>
         <div class="hero-content">
-            <div class="hero-top-title">Secretaría de Carrera UNAH</div>
-
-            <div class="hero-breadcrumb">
-                <i class="fas fa-house"></i>
-                <span>Inicio</span>
-                <i class="fas fa-angle-right sep"></i>
-                <span>Gestión de Carrera</span>
-            </div>
-
             <div class="hero-faculty-title">
                 FACULTAD DE CIENCIAS ECONÓMICAS,<br>
                 ADMINISTRATIVAS Y CONTABLES
+            </div>
+
+            <div class="hero-stats-strip">
+                <div class="hero-stat">
+                    <i class="fas fa-building-columns"></i>
+                    <span>Carrera asignada: <strong>Activa</strong></span>
+                </div>
+
+                <div class="hero-stat-divider"></div>
+
+                <div class="hero-stat">
+                    <i class="fas fa-calendar-days"></i>
+                    <span>Año de gestión: <strong>{{ $anioSeleccionado }}</strong></span>
+                </div>
+
+                <div class="hero-stat-divider"></div>
+
+                <div class="hero-stat">
+                    <i class="fas fa-chart-column"></i>
+                    <span>Seguimiento: <strong>Gráfico</strong></span>
+                </div>
             </div>
         </div>
     </div>
@@ -56,9 +80,7 @@
         </div>
 
         <div class="student-user-chip">
-            <div class="student-user-chip-avatar">
-                {{ strtoupper(substr($userName, 0, 1)) }}{{ strtoupper(substr(explode(' ', $userName)[1] ?? '', 0, 1)) }}
-            </div>
+            <div class="student-user-chip-avatar">{{ $inicialesUsuario }}</div>
             <div class="student-user-chip-name">{{ $userName }}</div>
         </div>
     </div>

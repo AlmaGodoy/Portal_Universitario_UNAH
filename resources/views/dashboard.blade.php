@@ -26,7 +26,6 @@
                     <i class="fas fa-chevron-right"></i>
                     <span class="topbar-breadcrumb-active">Panel del Alumno</span>
                 </div>
-                <h1 class="topbar-page-title">Panel estudiantil</h1>
             </div>
         </div>
 
