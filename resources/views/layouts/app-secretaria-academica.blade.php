@@ -43,16 +43,29 @@
 
     /*
     |--------------------------------------------------------------------------
-    | RUTA DE RESPALDO / SOPORTE
+    | CONTROL DE VISIBILIDAD DEL BOTÓN SEGURIDAD
     |--------------------------------------------------------------------------
     */
-    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
+    $rolTextoSesion = strtolower(trim((string) session('rol_texto', '')));
+    $mostrarBotonSeguridad = !in_array($rolTextoSesion, [
+        'secretaria_general',
+        'secretaría_general',
+        'secretaria general',
+        'secretaría general',
+    ], true);
 
-    $soporteUrl = $soporteRouteName
-        ? route($soporteRouteName)
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DE RESPALDO
+    |--------------------------------------------------------------------------
+    */
+    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+
+    $backupUrl = $backupRouteName
+        ? route($backupRouteName)
         : 'javascript:void(0)';
 
-    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
 @endphp
 
 <!DOCTYPE html>
@@ -102,7 +115,6 @@
             min-height: 100vh;
         }
 
-        /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -239,13 +251,15 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a href="{{ route('seguridad.index') }}"
-                               class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad</p>
-                            </a>
-                        </li>
+                        @if ($mostrarBotonSeguridad)
+                            <li class="nav-item">
+                                <a href="{{ route('seguridad.index') }}"
+                                   class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-shield-halved"></i>
+                                    <p>Seguridad</p>
+                                </a>
+                            </li>
+                        @endif
 
                         <li class="nav-item">
                             <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
@@ -270,8 +284,8 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $soporteUrl }}"
-                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                            <a href="{{ $backupUrl }}"
+                               class="nav-link {{ $backupActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
@@ -360,14 +374,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | TIEMPOS
-    |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = 28 minutos
-    | LOGOUT_TIME_MS  = 31 minutos
-    |--------------------------------------------------------------------------
-    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
     const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 

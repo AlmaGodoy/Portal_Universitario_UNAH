@@ -46,11 +46,6 @@
         $initials = 'C';
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUTA DE CANCELACIÓN PARA COORDINADORA
-    |--------------------------------------------------------------------------
-    */
     $cancelacionRouteName = null;
 
     if (Route::has('cancelacion.coordinadora.index')) {
@@ -63,21 +58,16 @@
         ? route($cancelacionRouteName)
         : 'javascript:void(0)';
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUTA DE RESPALDO / SOPORTE
-    |--------------------------------------------------------------------------
-    */
-    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
+    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
 
-    $soporteUrl = $soporteRouteName
-        ? route($soporteRouteName)
+    $backupUrl = $backupRouteName
+        ? route($backupRouteName)
         : 'javascript:void(0)';
 
     $dashboardActive     = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
     $cambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
     $cancelacionActive   = request()->routeIs('cancelacion.coordinadora.*') || request()->routeIs('resolucion.cancelacion.*');
-    $soporteActive       = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $backupActive        = request()->routeIs('backup.*') || request()->is('respaldos*');
     $tramitesMenuOpen    = $cambioCarreraActive || $cancelacionActive;
 
     $pageTitle = trim($__env->yieldContent('title', 'Panel de Coordinación'));
@@ -100,18 +90,43 @@
 
     <style>
         .coordinator-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 500;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 18px;
-            padding: 10px 18px;
-            margin: 14px 14px 0;
-            border-radius: 0 0 20px 20px;
-            background: linear-gradient(135deg, #204998 0%, #2956ac 55%, #234a97 100%);
+            gap: 12px;
+            min-height: 64px;
+            padding: 0 20px;
+            margin: 0 18px 0;
+            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
             border-bottom: 4px solid #f1be1a;
-            box-shadow: 0 14px 28px rgba(12, 35, 82, .18);
-            position: relative;
-            z-index: 20;
+            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
+            border-radius: 0;
+        }
+
+        .coordinator-topbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                115deg,
+                rgba(255,255,255,.07) 0%,
+                rgba(255,255,255,.02) 40%,
+                rgba(255,255,255,0) 60%
+            );
+            pointer-events: none;
+        }
+
+        .coordinator-topbar::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 4px;
+            width: 4px;
+            background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
         }
 
         .coordinator-topbar-left,
@@ -119,10 +134,12 @@
             display: flex;
             align-items: center;
             min-width: 0;
+            position: relative;
+            z-index: 2;
         }
 
         .coordinator-topbar-right {
-            gap: 12px;
+            gap: 6px;
             margin-left: auto;
         }
 
@@ -136,6 +153,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            padding-left: 8px;
         }
 
         .coord-breadcrumb i {
@@ -153,88 +171,104 @@
 
         .coord-icon-btn {
             position: relative;
-            width: 58px;
-            height: 52px;
-            border: 1px solid rgba(255,255,255,.14);
-            border-radius: 16px;
-            background: rgba(255,255,255,.08);
-            color: #fff;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.88);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.15rem;
-            transition: all .18s ease;
-            backdrop-filter: blur(8px);
+            cursor: pointer;
+            transition: all .22s ease;
+            font-size: .9rem;
         }
 
         .coord-icon-btn:hover {
-            background: rgba(255,255,255,.16);
-            transform: translateY(-1px);
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.30);
             color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
         }
 
         .coord-badge {
             position: absolute;
-            top: -6px;
-            right: -4px;
-            min-width: 24px;
-            height: 24px;
-            padding: 0 7px;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
             border-radius: 999px;
-            background: #e23b35;
-            color: #fff;
-            font-size: .76rem;
-            font-weight: 800;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(226,59,53,.35);
+            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 800;
+            border: 2px solid #1a4899;
+            box-shadow: 0 4px 10px rgba(229,57,53,.30);
         }
 
         .coord-badge.gold {
-            background: #f1be1a;
-            color: #17346c;
-            box-shadow: 0 4px 10px rgba(241,190,26,.35);
+            background: linear-gradient(135deg, #efbe1a 0%, #dca600 100%);
+            color: #16315d;
+            border-color: #1a4899;
+            box-shadow: 0 4px 10px rgba(239,190,26,.28);
         }
 
         .coord-divider {
             width: 1px;
-            height: 40px;
-            background: rgba(255,255,255,.18);
+            height: 32px;
+            background: linear-gradient(
+                180deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,.22) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            margin: 0 4px;
+            flex-shrink: 0;
         }
 
         .coord-user-chip {
-            min-width: 360px;
-            max-width: 460px;
-            border: 1px solid rgba(255,255,255,.16);
-            border-radius: 18px;
-            background: rgba(255,255,255,.10);
-            color: #fff;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 8px 14px;
-            backdrop-filter: blur(8px);
-            transition: all .18s ease;
+            gap: 10px;
+            min-height: 44px;
+            padding: 6px 12px 6px 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.12);
+            color: #fff;
+            cursor: pointer;
+            transition: all .22s ease;
+            min-width: unset;
+            max-width: unset;
         }
 
         .coord-user-chip:hover {
-            background: rgba(255,255,255,.16);
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.32);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
             color: #fff;
         }
 
         .coord-user-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
-            color: #17346c;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
+            color: #163a78;
             font-weight: 900;
-            font-size: 1rem;
+            font-size: .82rem;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(239,190,26,.30);
         }
 
         .coord-user-info {
@@ -246,23 +280,27 @@
         }
 
         .coord-user-name {
-            font-size: 1.02rem;
-            font-weight: 800;
+            font-size: .83rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .coord-user-role {
-            margin-top: 4px;
-            color: rgba(255,255,255,.82);
-            font-size: .92rem;
+            font-size: .68rem;
+            color: rgba(255,255,255,.60);
             font-weight: 700;
+            line-height: 1;
+            margin-top: 2px;
         }
 
         .coord-user-arrow {
-            color: rgba(255,255,255,.85);
-            font-size: .9rem;
+            font-size: .62rem;
+            color: rgba(255,255,255,.50);
+            margin-left: 2px;
         }
 
         .coord-dropdown {
@@ -475,6 +513,15 @@
             word-break: break-word;
         }
 
+        .content-wrapper {
+            min-height: 100vh;
+            padding-top: 0 !important;
+        }
+
+        .dashboard-shell {
+            padding-top: 0 !important;
+        }
+
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -553,7 +600,7 @@
 
         @media (max-width: 1199.98px) {
             .coord-user-chip {
-                min-width: 300px;
+                min-width: unset;
                 max-width: 340px;
             }
         }
@@ -651,8 +698,8 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $soporteUrl }}"
-                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                            <a href="{{ $backupUrl }}"
+                               class="nav-link {{ $backupActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
@@ -982,14 +1029,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | TIEMPOS
-    |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = 28 minutos
-    | LOGOUT_TIME_MS  = 31 minutos
-    |--------------------------------------------------------------------------
-    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
     const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 
