@@ -3,32 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EquivalenciaController;
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | VISTAS WEB
-    |--------------------------------------------------------------------------
-    */
     Route::get('/equivalencias', [EquivalenciaController::class, 'indexAlumno'])
         ->name('equivalencias.alumno');
 
     Route::get('/equivalencias/revision', [EquivalenciaController::class, 'indexRevisor'])
         ->name('equivalencias.revisor');
 
-    /*
-    |--------------------------------------------------------------------------
-    | API DEL MÓDULO DE EQUIVALENCIAS
-    |--------------------------------------------------------------------------
-    |--------------------------------------------------------------------------
-    */
     Route::prefix('api/equivalencias')->name('api.equivalencias.')->group(function () {
 
-        /*
-        |--------------------------------------------------------------------------
-        | ALUMNO
-        |--------------------------------------------------------------------------
-        */
         Route::get('/mis-solicitudes', [EquivalenciaController::class, 'misSolicitudes'])
             ->name('mis');
 
@@ -53,11 +37,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/solicitud/{idSolicitud}/documento', [EquivalenciaController::class, 'descargarDocumento'])
             ->name('solicitud.documento');
 
-        /*
-        |--------------------------------------------------------------------------
-        | REVISOR
-        |--------------------------------------------------------------------------
-        */
         Route::get('/pendientes', [EquivalenciaController::class, 'solicitudesPendientes'])
             ->name('pendientes');
 

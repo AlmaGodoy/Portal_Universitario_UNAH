@@ -31,4 +31,6 @@ Route::middleware(['auth'])->group(function () {
     ->name('auditoria.general')
     ->middleware('roleid:5');
 
+Route::middleware(['auth', 'session.timeout'])->group(function () {
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria');
 });
