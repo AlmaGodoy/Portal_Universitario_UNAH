@@ -16,6 +16,9 @@
 @import "/resources/css/soporte.css";
 @import "/resources/css/cancelacion_detalle.css";
 @import "/resources/css/mis_tramites.css";
+@import "/resources/css/cancelacion_secretaria_index.css";
+@import "/resources/css/cancelacion_secretaria_detalle.css";
+
 
 
 @theme {

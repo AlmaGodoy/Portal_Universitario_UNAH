@@ -1,6 +1,6 @@
 @php
-    use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Route;
 
     $user = Auth::user();
@@ -27,6 +27,12 @@
             $displayName = trim($user->email);
         }
     }
+
+    $correoInstitucional =
+        $user->email
+        ?? $user->correo_institucional
+        ?? optional($user->persona)->correo_institucional
+        ?? 'secretaria.academica@unah.hn';
 
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
@@ -66,6 +72,49 @@
         : 'javascript:void(0)';
 
     $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
+    | RUTAS SEGURAS
+    |--------------------------------------------------------------------------
+    */
+    $dashboardUrl = Route::has('empleado.dashboard')
+        ? route('empleado.dashboard')
+        : (Route::has('dashboard') ? route('dashboard') : 'javascript:void(0)');
+
+    $seguridadUrl = Route::has('seguridad.index')
+        ? route('seguridad.index')
+        : 'javascript:void(0)';
+
+    $auditoriaUrl = Route::has('auditoria')
+        ? route('auditoria')
+        : 'javascript:void(0)';
+
+    $bitacoraUrl = Route::has('bitacora.index')
+        ? route('bitacora.index')
+        : 'javascript:void(0)';
+
+    $reportesUrl = Route::has('reporte.tramites.secretaria_general.vista')
+        ? route('reporte.tramites.secretaria_general.vista')
+        : 'javascript:void(0)';
+
+    $soporteUrl = Route::has('soporte.vista')
+        ? route('soporte.vista')
+        : 'javascript:void(0)';
+
+    $configuracionUrl = Route::has('configuracion.index')
+        ? route('configuracion.index')
+        : 'javascript:void(0)';
+
+    /*
+    |--------------------------------------------------------------------------
+    | MENÚS ACTIVOS
+    |--------------------------------------------------------------------------
+    */
+    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->routeIs('dashboard');
+    $seguridadActive = request()->routeIs('seguridad.index') || request()->is('seguridad*');
+    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+    $bitacoraActive = request()->routeIs('bitacora.*');
+    $reportesActive = request()->routeIs('reporte.tramites.secretaria_general.vista');
+    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion') || request()->is('configuracion*');
 @endphp
 
 <!DOCTYPE html>
@@ -192,7 +241,7 @@
         }
     </style>
 </head>
-<body class="hold-transition dashboard-body">
+<body class="hold-transition sidebar-mini layout-fixed dashboard-body">
 <div class="wrapper">
 
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
@@ -230,6 +279,7 @@
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name">{{ $displayName }}</div>
                     <div class="sidebar-user-role">{{ $displayRole }}</div>
+
                     <div class="academic-badge">
                         <i class="fas fa-building-columns"></i>
                         Supervisión Global
@@ -244,8 +294,7 @@
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ request()->routeIs('empleado.dashboard') ? 'active' : '' }}">
+                            <a href="{{ $dashboardUrl }}" class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
@@ -260,10 +309,29 @@
                                 </a>
                             </li>
                         @endif
+                        <li class="nav-item">
+                            <a href="{{ $seguridadUrl }}" class="nav-link {{ $seguridadActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-shield-halved"></i>
+                                <p>Seguridad</p>
+                            </a>
+                        </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
-                               class="nav-link {{ request()->routeIs('reporte.tramites.secretaria_general.vista') ? 'active' : '' }}">
+                            <a href="{{ $auditoriaUrl }}" class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
+                                <p>Auditoría</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $bitacoraUrl }}" class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $reportesUrl }}" class="nav-link {{ $reportesActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-column"></i>
                                 <p>Reportes Generales</p>
                             </a>
@@ -286,6 +354,7 @@
                         <li class="nav-item">
                             <a href="{{ $backupUrl }}"
                                class="nav-link {{ $backupActive ? 'active' : '' }}">
+                            <a href="{{ $soporteUrl }}" class="nav-link {{ $soporteActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
@@ -294,6 +363,7 @@
                         <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"
                                class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                            <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>

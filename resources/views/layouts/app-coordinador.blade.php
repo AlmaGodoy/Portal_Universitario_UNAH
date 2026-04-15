@@ -62,12 +62,22 @@
 
     $backupUrl = $backupRouteName
         ? route($backupRouteName)
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DE RESPALDO / SOPORTE
+    |--------------------------------------------------------------------------
+    */
+    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
+
+    $soporteUrl = $soporteRouteName
+        ? route($soporteRouteName)
         : 'javascript:void(0)';
 
     $dashboardActive     = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
     $cambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
     $cancelacionActive   = request()->routeIs('cancelacion.coordinadora.*') || request()->routeIs('resolucion.cancelacion.*');
     $backupActive        = request()->routeIs('backup.*') || request()->is('respaldos*');
+    $soporteActive       = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
     $tramitesMenuOpen    = $cambioCarreraActive || $cancelacionActive;
 
     $pageTitle = trim($__env->yieldContent('title', 'Panel de Coordinación'));
@@ -127,6 +137,18 @@
             bottom: 4px;
             width: 4px;
             background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 10px 18px;
+            margin: 14px 14px 0;
+            border-radius: 0 0 20px 20px;
+            background: linear-gradient(135deg, #204998 0%, #2956ac 55%, #234a97 100%);
+            border-bottom: 4px solid #f1be1a;
+            box-shadow: 0 14px 28px rgba(12, 35, 82, .18);
+            position: relative;
+            z-index: 20;
         }
 
         .coordinator-topbar-left,
@@ -140,6 +162,10 @@
 
         .coordinator-topbar-right {
             gap: 6px;
+        }
+
+        .coordinator-topbar-right {
+            gap: 12px;
             margin-left: auto;
         }
 
@@ -191,6 +217,24 @@
             color: #fff;
             transform: translateY(-2px);
             box-shadow: 0 8px 18px rgba(0,0,0,.18);
+            width: 58px;
+            height: 52px;
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 16px;
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            transition: all .18s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .coord-icon-btn:hover {
+            background: rgba(255,255,255,.16);
+            transform: translateY(-1px);
+            color: #fff;
         }
 
         .coord-badge {
@@ -217,6 +261,26 @@
             color: #16315d;
             border-color: #1a4899;
             box-shadow: 0 4px 10px rgba(239,190,26,.28);
+            top: -6px;
+            right: -4px;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: #e23b35;
+            color: #fff;
+            font-size: .76rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(226,59,53,.35);
+        }
+
+        .coord-badge.gold {
+            background: #f1be1a;
+            color: #17346c;
+            box-shadow: 0 4px 10px rgba(241,190,26,.35);
         }
 
         .coord-divider {
@@ -253,6 +317,27 @@
             border-color: rgba(255,255,255,.32);
             transform: translateY(-2px);
             box-shadow: 0 8px 18px rgba(0,0,0,.18);
+            height: 40px;
+            background: rgba(255,255,255,.18);
+        }
+
+        .coord-user-chip {
+            min-width: 360px;
+            max-width: 460px;
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 18px;
+            background: rgba(255,255,255,.10);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            backdrop-filter: blur(8px);
+            transition: all .18s ease;
+        }
+
+        .coord-user-chip:hover {
+            background: rgba(255,255,255,.16);
             color: #fff;
         }
 
@@ -264,6 +349,13 @@
             color: #163a78;
             font-weight: 900;
             font-size: .82rem;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
+            color: #17346c;
+            font-weight: 900;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -284,6 +376,8 @@
             font-weight: 900;
             color: #ffffff;
             line-height: 1;
+            font-size: 1.02rem;
+            font-weight: 800;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -301,6 +395,15 @@
             font-size: .62rem;
             color: rgba(255,255,255,.50);
             margin-left: 2px;
+            margin-top: 4px;
+            color: rgba(255,255,255,.82);
+            font-size: .92rem;
+            font-weight: 700;
+        }
+
+        .coord-user-arrow {
+            color: rgba(255,255,255,.85);
+            font-size: .9rem;
         }
 
         .coord-dropdown {
@@ -601,6 +704,7 @@
         @media (max-width: 1199.98px) {
             .coord-user-chip {
                 min-width: unset;
+                min-width: 300px;
                 max-width: 340px;
             }
         }
@@ -655,12 +759,11 @@
 
             <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu"
-                        data-widget="treeview"
-                        role="menu"
-                        data-accordion="false">
+                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
+                           <a href="{{ url('/empleado/dashboard') }}"
+                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                             <a href="{{ route('empleado.dashboard') }}"
                                class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
@@ -668,6 +771,37 @@
                             </a>
                         </li>
 
+                        {{-- Trámites --}}
+                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
+    <a href="javascript:void(0)"
+       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-folder-open"></i>
+        <p>
+            Trámites
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cambio-carrera.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cambio de carrera</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('coordinador.cancelacion.index') }}"
+               class="nav-link {{ request()->routeIs('coordinador.cancelacion.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cancelación</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
+                        {{-- Seguridad: SOLO BOTÓN DIRECTO --}}
                         <li class="nav-item has-treeview {{ $tramitesMenuOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)"
                                class="nav-link {{ $tramitesMenuOpen ? 'active' : '' }}">
@@ -700,6 +834,8 @@
                         <li class="nav-item">
                             <a href="{{ $backupUrl }}"
                                class="nav-link {{ $backupActive ? 'active' : '' }}">
+                            <a href="{{ $soporteUrl }}"
+                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
@@ -712,6 +848,14 @@
                                 <p>Seguridad</p>
                             </a>
                         </li>
+{{-- Reportes --}}
+<li class="nav-item">
+    <a href="{{ route('reporte.tramites.vista') }}"
+       class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-chart-bar"></i>
+        <p>Reportes</p>
+    </a>
+</li>
 
                         <li class="nav-item">
                             <a href="{{ route('reporte.tramites.vista') }}"
@@ -723,12 +867,19 @@
 
                         <li class="nav-item">
                             <a href="{{ route('auditoria') }}"
-                               class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
+                            class="nav-link {{ request()->routeIs('auditoria*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
+                        {{-- Bitácora --}}
+                        <li class="nav-item">
+                            <a href="{{ route('bitacora.index') }}" class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
                         @if (Route::has('bitacora.index'))
                             <li class="nav-item">
                                 <a href="{{ route('bitacora.index') }}"
@@ -763,10 +914,7 @@
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn"
-            class="sidebar-float-toggle d-none d-lg-flex"
-            type="button"
-            title="Colapsar/Expandir menú">
+    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
         <i class="fas fa-chevron-left"></i>
     </button>
 
@@ -1029,6 +1177,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    /*
+    |--------------------------------------------------------------------------
+    | TIEMPOS
+    |--------------------------------------------------------------------------
+    | WARNING_TIME_MS = 28 minutos
+    | LOGOUT_TIME_MS  = 31 minutos
+    |--------------------------------------------------------------------------
+    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
     const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 
