@@ -644,6 +644,65 @@
                             </a>
                         </li>
 
+                        {{-- Revisión de documentos --}}
+<li class="nav-item has-treeview {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'menu-open' : '' }}">
+    <a href="javascript:void(0)"
+       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar', 'cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-file-circle-check"></i>
+        <p>
+            Revisión de documentos
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ route('cambio-carrera.secretaria') }}"
+               class="nav-link {{ request()->routeIs('cambio-carrera.secretaria', 'cambio-carrera.secretaria.revisar') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cambio de carrera</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="javascript:void(0)"
+               class="nav-link {{ request()->routeIs('cancelacion.secretaria', 'cancelacion.secretaria.revisar') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Cancelación</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
+
+
+                        {{-- Fechas --}}
+<li class="nav-item">
+    <a href="{{ route('cambio-carrera.secretaria.calendarios') }}"
+       class="nav-link {{ request()->routeIs('cambio-carrera.secretaria.calendarios') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-calendar-days"></i>
+        <p>Fechas</p>
+    </a>
+</li>
+
+                        {{-- Auditoría --}}
+                        <li class="nav-item">
+                            <a href="{{ route('auditoria') }}" class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
+                                <p>Auditoría</p>
+                            </a>
+                        </li>
+
+                        {{-- Bitácora --}}
+                        <li class="nav-item">
+                            <a href="{{ route('bitacora.secretaria_general') }}"
+class="nav-link {{ request()->routeIs('bitacora.secretaria_general') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
+
+                        {{-- Configuración --}}
                         <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"
                                class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">

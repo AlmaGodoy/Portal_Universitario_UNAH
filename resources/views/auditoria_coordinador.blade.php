@@ -3,155 +3,142 @@
 @section('content')
 @vite(['resources/css/auditoria.css', 'resources/js/auditoria.js'])
 
-<div class="container py-4 security-page">
-    <div class="row g-4">
-        <div class="col-12">
-                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+<div class="container-fluid py-4">
 
-                     <header class="topbar">
-                         <div class="brand">
-                             <img src="{{ asset('images/abejita.jpeg') }}" alt="Logo PumaGestión" class="brand-logo">
+        <!-- 📌 TÍTULO -->
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">
+            Auditoría del Sistema - Coordinador
+        </h2>
+    </div>
 
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+                        <!-- FORMULARIO DE CONSULTA -->
+                        <form method="GET" action="{{ route('auditoria.coordinador') }}">
+                             <div class="row align-items-end">
+                                    <div class="col-md-4">
 
-                                 <div class="brand-text">
-                                     <h1 class="brand-title">Auditoria del Sistema</h1>
-                                         <span class="brand-subtitle">FCEAC - UNAH</span>
-                                 </div>
-                         </div>
-                     </header>
+                                        <label class="form-label fw-bold">Fecha Inicial</label>
+                                            <input
+                                                type="date"
+                                                name="fecha_inicio"
+                                                class="form-control"
+                                                value="{{ request('fecha_inicio') }}">
+                                     </div>
+                                     <div class="col-md-4">
 
+                                        <label class="form-label fw-bold">Fecha Final</label>
+                                            <input
+                                                type="date"
+                                                name="fecha_fin"
+                                                class="form-control"
+                                                value="{{ request('fecha_fin') }}">
+                                    </div>
 
-                     @if(session('error'))
-                          <div style="color:red; margin-bottom: 10px;">
-                               {{ session('error') }}
-                          </div>
-                      @endif
+                                    <div class="col-md-2">
 
-                     <!-- FORMULARIO DE CONSULTA -->
-                     <form id="formBitacora" method="GET" action="{{ route('auditoria') }}" class="mb-3">
-                             <div >
-                                 <label>Fecha Inicial</label>
-                                     <input
-                                         type="date"
-                                         name="fecha_inicial"
-                                         class="form-control"
-                                         value="{{ $fechaInicial }}">
-                             </div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            🔍Buscar
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="{{ route('auditoria.coordinador') }}"
+                                            class="btn btn-dark w-100">
+                                                🧹Limpiar
+                                        </a>
 
-                             <div >
-                                  <label>Fecha Final</label>
-                                     <input
-                                          type="date"
-                                          name="fecha_final"
-                                          class="form-control"
-                                          value="{{ $fechaFinal }}">
-                             </div>
-
-                             <div >
-
-                                 <button type="submit" class="btn btn-primary me-2">
-                                     <i class="fas fa-search"></i> Buscar
-                                 </button>
-                             </div>
-
-                             <div >
-                                 <a href="{{ route('auditoria') }}"
-                                     class="btn btn-secondary">
-                                         Limpiar
-                                 </a>
+                                    </div>
 
                              </div>
 
-
-
-                     </form>
-
-                  <!-- TABLA DE RESULTADOS -->
-
-
-
-
-                                 <table class="table table-bordered table-hover align-middle" style="width: 100%">
-
-                                     <thead class="table-light">
-                                         <tr class="text-center text-muted">
-
-                                             <th>No.</th>
-                                             <th>Id Usuario</th>
-                                             <th>Código Empleado</th>
-                                             <th>Acción Realizada</th>
-                                             <th>Detalle</th>
-                                             <th>Módulo Afectado</th>
-                                             <th>Fecha</th>
-
-                                         </tr>
-                                     </thead>
-
-                                     <tbody>
-
-                                         @forelse($registros as $registro)
-
-                                             <tr>
-
-                                                 <td>
-                                                     {{ $loop->iteration }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->id_usuario ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->cod_empleado ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->Accion_Realizada ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->Detalle ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->Modulo_Afectado ?? '' }}
-                                                 </td>
-
-                                                 <td>
-                                                     {{ $registro->fecha_y_hora ?? '' }}
-                                                 </td>
-
-                                             </tr>
-
-                                             @empty
-
-                                             <tr>
-                                                     <td colspan="5" class="text-center">
-                                                         No hay registros disponibles
-                                                     </td>
-                                             </tr>
-
-                                         @endforelse
-
-                                     </tbody>
-
-                                 </table>
-
-
-
-                         {{-- PAGINACIÓN --}}
-                         <div style="margin-top: 15px;">
-
-                               {{ $registros->links('pagination::bootstrap-5') }}
-
-                         </div>
-
-
-
-         </div>
-
+                        </form>
+        </div>
      </div>
- </div>
+                        <!-- TABLA DE RESULTADOS -->
 
 
+
+                     <div class="table-responsive">
+                            <table class="table table-bordered table-striped w-100">
+
+                                <thead class="table-light">
+                                    <tr>
+
+                                        <th>No.</th>
+                                        <th>Id Usuario</th>
+                                        <th>Código Empleado</th>
+                                        <th>Acción Realizada</th>
+                                        <th>Detalle</th>
+                                        <th>Módulo Afectado</th>
+                                        <th>Fecha</th>
+
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @forelse($registros as $registro)
+
+                                        <tr>
+
+                                            <td>
+                                                {{ $loop->iteration }}
+                                            </td>
+
+                                            <td>
+                                                {{ $registro->id_usuario ?? '' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $registro->cod_empleado ?? '' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $registro->Accion_Realizada ?? '' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $registro->Detalle ?? '' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $registro->Modulo_Afectado ?? '' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $registro->fecha_y_hora ?? '' }}
+                                            </td>
+
+                                        </tr>
+
+                                        @empty
+
+                                        <tr>
+                                                <td colspan="7" class="text-center">
+                                                    No hay registros disponibles
+                                                </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+
+
+                            {{-- PAGINACIÓN --}}
+                            <div style="margin-top: 15px;">
+                                @if(method_exists($registros, 'links'))
+                                    <div class="mt-3 d-flex justify-content-center">
+                                        {{ $registros->links('pagination::bootstrap-5') }}
+                                    </div>
+                                @endif
+
+                            </div>
+
+                      </div>
+
+</div>
 @endsection
