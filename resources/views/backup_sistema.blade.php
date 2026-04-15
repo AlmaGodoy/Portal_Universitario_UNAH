@@ -1,5 +1,11 @@
-@extends('layouts.app-estudiantes')
+@php
+    $layout = $layout ?? 'layouts.app-estudiantes';
+    $dashboardRoute = $dashboardRoute ?? (Route::has('dashboard') ? route('dashboard') : url('/dashboard'));
+@endphp
 
+@extends($layout)
+
+@section('title', 'Gestión de Respaldos')
 @section('titulo', 'Gestión de Respaldos')
 
 @section('content')
@@ -9,9 +15,9 @@
 
     <div class="breadcrumb-bar mb-3">
         <i class="fas fa-home"></i>
-        <a href="{{ route('dashboard') }}">Inicio</a>
+        <a href="{{ $dashboardRoute }}">Inicio</a>
         <span class="sep"><i class="fas fa-chevron-right"></i></span>
-        <a href="{{ route('dashboard') }}">Panel Institucional</a>
+        <a href="{{ $dashboardRoute }}">Panel Institucional</a>
         <span class="sep"><i class="fas fa-chevron-right"></i></span>
         <span class="current">Respaldos</span>
     </div>
@@ -75,6 +81,16 @@
                     <button type="submit" class="btn-backup-main" id="backup-generate-btn">
                         <i class="fas fa-download"></i>
                         <span>Realizar Respaldo del Sistema</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-3">
+                <form action="{{ route('backup.probar') }}" method="POST" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-plug-circle-check"></i>
+                        Probar conexión
                     </button>
                 </form>
             </div>
@@ -170,7 +186,7 @@
                             <td>
                                 <div class="user-cell">
                                     <div class="user-avatar">
-                                        {{ strtoupper(substr(trim($log->usuario), 0, 2)) }}
+                                        {{ strtoupper(substr(trim((string) $log->usuario), 0, 2)) }}
                                     </div>
                                     <span>{{ $log->usuario }}</span>
                                 </div>

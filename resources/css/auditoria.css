@@ -7,7 +7,7 @@ h3 {
     margin-bottom: 20px;
     font-weight: bold;
 }
-
+/*
 form {
     display: flex;
     gap: 15px;
@@ -18,6 +18,15 @@ form {
 form div {
     display: flex;
     flex-direction: column;
+}
+*/
+
+.filtro-form label {
+    margin-bottom: 4px;
+}
+
+.filtro-form input {
+    width: 100%;
 }
 
 body {
@@ -134,7 +143,7 @@ table tr:hover {
 
 .brand-title {
     display: flex;
-    align-items:center;
+    align-items: baseline;
     gap: 0;
     font-size: 1.08rem;
     font-weight: 700;
@@ -187,7 +196,7 @@ table tr:hover {
 }
 
 .card {
-    max-width: 600px;
+    max-width: 100%;
     width: 100%;
     background: rgba(255, 255, 255, 0.96);
     padding: 1.5rem;
@@ -197,5 +206,12 @@ table tr:hover {
     box-sizing: border-box;
 }
 
+.btn {
+    writing-mode: horizontal-tb !important;
+    white-space: nowrap;
+}
 
+.d-md-flex {
+    flex-direction: row !important;
+}
 

@@ -3,26 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SoporteController;
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | VISTA DEL ESTUDIANTE
-    |--------------------------------------------------------------------------
-    */
     Route::get('/soporte', [SoporteController::class, 'vista'])
         ->name('soporte.vista');
 
-    /*
-    |--------------------------------------------------------------------------
-    | API DEL ESTUDIANTE
-    |--------------------------------------------------------------------------
-    | El estudiante:
-    | - crea solicitud
-    | - ve sus propias solicitudes
-    | - ve el detalle de su propia solicitud
-    |--------------------------------------------------------------------------
-    */
     Route::prefix('api/soporte')->group(function () {
 
         Route::get('/catalogos', [SoporteController::class, 'catalogos'])
@@ -39,18 +24,6 @@ Route::middleware('auth')->group(function () {
             ->name('api.soporte.ver');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | API DE SECRETARÍA DE CARRERA
-    |--------------------------------------------------------------------------
-    | Solo Secretaría de Carrera:
-    | - ve bandeja
-    | - ve detalle
-    | - toma caso
-    | - resuelve
-    |--------------------------------------------------------------------------
-    |--------------------------------------------------------------------------
-    */
     Route::prefix('api/soporte/secretaria')
         ->middleware('rol:secretario')
         ->group(function () {

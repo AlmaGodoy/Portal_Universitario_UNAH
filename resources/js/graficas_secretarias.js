@@ -233,62 +233,122 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function renderHtmlBars(containerId, noteId, payload) {
+    function mergeLabels(cancelPayload, cambioPayload) {
+        const cancelLabels = cancelPayload?.labels ?? [];
+        const cambioLabels = cambioPayload?.labels ?? [];
+
+        const ordered = [];
+
+        cancelLabels.forEach(label => {
+            if (!ordered.includes(label)) ordered.push(label);
+        });
+
+        cambioLabels.forEach(label => {
+            if (!ordered.includes(label)) ordered.push(label);
+        });
+
+        return ordered;
+    }
+
+    function getValueByLabel(payload, label) {
+        const labels = payload?.labels ?? [];
+        const data = (payload?.data ?? []).map(item => Number(item ?? 0));
+        const index = labels.findIndex(item => String(item) === String(label));
+
+        if (index === -1) return 0;
+
+        return Number(data[index] ?? 0);
+    }
+
+    function renderComparativeBars(containerId, noteId, cancelPayload, cambioPayload) {
         const container = document.getElementById(containerId);
         const note = document.getElementById(noteId);
 
         if (!container) return;
 
-        const labels = payload?.labels ?? [];
-        const data = (payload?.data ?? []).map(item => Number(item ?? 0));
+        const labels = mergeLabels(cancelPayload, cambioPayload);
+        const cancelData = labels.map(label => getValueByLabel(cancelPayload, label));
+        const cambioData = labels.map(label => getValueByLabel(cambioPayload, label));
 
-        if (!labels.length || !data.length) {
-            container.classList.remove('bar-chart-host');
+        const hasData = cancelData.some(value => value > 0) || cambioData.some(value => value > 0);
+
+        if (!labels.length || !hasData) {
+            container.classList.remove('bar-chart-host', 'grouped-chart-host');
             container.classList.add('bar-chart-placeholder');
             container.innerHTML = `<div>No hay datos disponibles para el período seleccionado.</div>`;
 
             if (note) {
-                note.textContent = 'Sin información para el período seleccionado.';
+                note.textContent = 'Sin información comparativa para el período seleccionado.';
             }
             return;
         }
 
-        const maxValue = Math.max(...data, 1);
+        const maxValue = Math.max(...cancelData, ...cambioData, 1);
 
         const gridLines = [100, 75, 50, 25, 0].map(percent => {
             const top = `${100 - percent}%`;
             return `<span class="bar-grid-line" style="top:${top}"></span>`;
         }).join('');
 
-        const bars = labels.map((label, index) => {
-            const value = Number(data[index] ?? 0);
-            const height = Math.max((value / maxValue) * 190, value > 0 ? 18 : 0);
+        const groups = labels.map((label, index) => {
+            const cancelValue = Number(cancelData[index] ?? 0);
+            const cambioValue = Number(cambioData[index] ?? 0);
+
+            const cancelHeight = Math.max((cancelValue / maxValue) * 190, cancelValue > 0 ? 18 : 0);
+            const cambioHeight = Math.max((cambioValue / maxValue) * 190, cambioValue > 0 ? 18 : 0);
 
             return `
-                <div class="bar-modern-item">
-                    <div class="bar-modern-value">${value}</div>
-                    <div class="bar-modern-track">
-                        <div class="bar-modern-fill" style="height:${height}px;"></div>
+                <div class="grouped-bar-item">
+                    <div class="grouped-bar-values">
+                        <span class="grouped-bar-value cancel">${cancelValue}</span>
+                        <span class="grouped-bar-value cambio">${cambioValue}</span>
                     </div>
-                    <div class="bar-modern-label">${escapeHtml(label)}</div>
+
+                    <div class="grouped-bar-pair">
+                        <div class="grouped-bar-track">
+                            <div class="grouped-bar-fill cancel" style="height:${cancelHeight}px;"></div>
+                        </div>
+
+                        <div class="grouped-bar-track">
+                            <div class="grouped-bar-fill cambio" style="height:${cambioHeight}px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="grouped-bar-label">${escapeHtml(label)}</div>
                 </div>
             `;
         }).join('');
 
         container.classList.remove('bar-chart-placeholder');
-        container.classList.add('bar-chart-host');
+        container.classList.add('grouped-chart-host');
 
         container.innerHTML = `
-            <div class="bar-modern-surface">
+            <div class="grouped-bar-legend">
+                <div class="grouped-bar-legend-item">
+                    <span class="grouped-bar-legend-color cancel"></span>
+                    <span>Cancelaciones</span>
+                </div>
+
+                <div class="grouped-bar-legend-item">
+                    <span class="grouped-bar-legend-color cambio"></span>
+                    <span>Cambios de Carrera</span>
+                </div>
+            </div>
+
+            <div class="grouped-bar-surface">
                 <div class="bar-modern-gridlines">${gridLines}</div>
-                <div class="bar-modern-columns">
-                    ${bars}
+
+                <div class="grouped-bar-columns">
+                    ${groups}
                 </div>
             </div>
         `;
 
+        const totalCancel = Number(cancelPayload?.total_anual ?? cancelData.reduce((sum, value) => sum + value, 0));
+        const totalCambio = Number(cambioPayload?.total_anual ?? cambioData.reduce((sum, value) => sum + value, 0));
+
         if (note) {
-            note.textContent = `Total acumulado: ${payload?.total_anual ?? 0}`;
+            note.textContent = `Total cancelaciones: ${totalCancel} · Total cambios de carrera: ${totalCambio}`;
         }
     }
 
@@ -310,8 +370,12 @@ document.addEventListener('DOMContentLoaded', () => {
             setText('totalCancelaciones', result.cancelaciones?.total_anual ?? 0);
             setText('totalCambios', result.cambio_carrera?.total_anual ?? 0);
 
-            renderHtmlBars('chartCancelaciones', 'noteCancelaciones', result.cancelaciones);
-            renderHtmlBars('chartCambios', 'noteCambios', result.cambio_carrera);
+            renderComparativeBars(
+                'chartComparativo',
+                'noteComparativo',
+                result.cancelaciones,
+                result.cambio_carrera
+            );
 
             renderSvgDonut({
                 hostId: 'donutCancelaciones',
@@ -349,17 +413,14 @@ document.addEventListener('DOMContentLoaded', () => {
             window.history.replaceState({}, '', nuevaUrl);
         } catch (error) {
             estadoCarga.textContent = 'Error al cargar estadísticas.';
-            setText('noteCancelaciones', error.message);
-            setText('noteCambios', error.message);
+            setText('noteComparativo', error.message);
 
-            ['chartCancelaciones', 'chartCambios'].forEach(id => {
-                const container = document.getElementById(id);
-                if (container) {
-                    container.classList.remove('bar-chart-host');
-                    container.classList.add('bar-chart-placeholder');
-                    container.innerHTML = `<div>${error.message}</div>`;
-                }
-            });
+            const container = document.getElementById('chartComparativo');
+            if (container) {
+                container.classList.remove('grouped-chart-host', 'bar-chart-host');
+                container.classList.add('bar-chart-placeholder');
+                container.innerHTML = `<div>${error.message}</div>`;
+            }
 
             const donutEmptyCancel = document.getElementById('donutEmptyCancelaciones');
             const donutEmptyCambio = document.getElementById('donutEmptyCambios');

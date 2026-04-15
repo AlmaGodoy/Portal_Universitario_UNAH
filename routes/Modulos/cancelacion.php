@@ -3,8 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DocumentoExcepcionalController;
 use App\Http\Controllers\CancelacionPaso2Controller;
+use App\Http\Controllers\ResolucionCancelacionController;
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->group(function () {
 
     Route::get('/cancelacion-excepcional', [DocumentoExcepcionalController::class, 'index'])
         ->name('cancelacion.index');
@@ -19,9 +20,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/cancelacion-excepcional/paso3/{id_tramite}', [CancelacionPaso2Controller::class, 'paso3'])
         ->whereNumber('id_tramite')
         ->name('cancelacion.paso3');
+
+    Route::get('/coordinador/cancelacion', [ResolucionCancelacionController::class, 'vista'])
+        ->name('coordinador.cancelacion.index');
 });
 
-Route::middleware('auth')->prefix('api/cancelacion-excepcional/paso2')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->prefix('api/cancelacion-excepcional/paso2')->group(function () {
 
     Route::post('{id_tramite}/documentos/base', [CancelacionPaso2Controller::class, 'subirDocumentoBase'])
         ->whereNumber('id_tramite')
@@ -43,9 +47,4 @@ Route::middleware('auth')->prefix('api/cancelacion-excepcional/paso2')->group(fu
     Route::post('{id_tramite}/validar', [CancelacionPaso2Controller::class, 'validarPaso2'])
         ->whereNumber('id_tramite')
         ->name('cancelacion.paso2.validar');
-
-        Route::middleware('auth')->group(function () {
-    Route::get('/coordinador/cancelacion', [ResolucionCancelacionController::class, 'vista'])
-        ->name('coordinador.cancelacion.index');
-});
 });
