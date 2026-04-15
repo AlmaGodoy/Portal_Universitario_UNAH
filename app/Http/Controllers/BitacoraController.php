@@ -3,85 +3,177 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Models\Bitacora; // Importamos el modelo de la bitacora
 
 class BitacoraController extends Controller
 {
-
     public function index(Request $request)
     {
-        $fecha_inicial = $request->fecha_inicial;
-        $fecha_final = $request->fecha_final;
+        $user = Auth::user();
 
-        $bitacoras = collect();
-
-        if ($fecha_inicial && $fecha_final) {
-            try {
-                $resultado = DB::select('CALL SEL_BITACORA_SISTEMA(?, ?)', [
-                    $fecha_inicial,
-                    $fecha_final
-                ]);
-
-                $coleccion = collect($resultado);
-
-                $porPagina = 10;
-                $paginaActual = LengthAwarePaginator::resolveCurrentPage();
-                $itemsPagina = $coleccion->slice(($paginaActual - 1) * $porPagina, $porPagina)->values();
-
-                $bitacoras = new LengthAwarePaginator(
-                    $itemsPagina,
-                    $coleccion->count(),
-                    $porPagina,
-                    $paginaActual,
-                    [
-                        'path' => $request->url(),
-                        'query' => $request->query(),
-                    ]
-                );
-            } catch (\Exception $e) {
-                return back()->with('error', $e->getMessage());
-            }
-        } else {
-            $bitacoras = new LengthAwarePaginator(
-                collect(),
-                0,
-                10,
-                1,
-                [
-                    'path' => $request->url(),
-                    'query' => $request->query(),
-                ]
-            );
+        if (!$user) {
+            abort(403, 'No autorizado.');
         }
 
-        return view('bitacora', compact('bitacoras'));
+        $rol = (int) ($user->id_rol ?? 0);
+
+        switch ($rol) {
+            case 4:
+                return redirect()->route('bitacora.coordinador');
+
+            case 5:
+                return redirect()->route('bitacora.secretaria_academica');
+
+            case 1:
+                return redirect()->route('bitacora.secretaria_general');
+
+            default:
+                abort(403, 'No autorizado para acceder a bitácora.');
+        }
     }
 
-    // 1. Consulta
-    public function ver($fecha_inicial, $fecha_final)
+    public function coordinador(Request $request)
     {
-        try {
-            $resultado = DB::select('CALL SEL_BITACORA_SISTEMA(?, ?)', [$fecha_inicial,$fecha_final]);
+        $user = Auth::user();
 
-            return response()->json($resultado, 201);
-        } catch (\Exception $e) {
-            return response()->json(['resultado' => 'ERROR', 'mensaje' => $e->getMessage()], 500);
+        if (!$user) {
+            abort(403, 'No autorizado.');
         }
+
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin    = $request->fecha_fin;
+
+        $id_usuario = $user->id_usuario ?? $user->id ?? null;
+        $id_carrera = $user->id_carrera ?? null;
+        $id_rol     = $user->id_rol ?? null;
+
+        if (!$fecha_inicio || !$fecha_fin) {
+            $bitacoras = $this->emptyPaginator($request);
+            return view('bitacora_coordinador', compact('bitacoras'));
+        }
+
+        $resultados = $this->obtenerBitacoras(
+            $fecha_inicio,
+            $fecha_fin,
+            $id_usuario,
+            $id_rol,
+            $id_carrera
+        );
+
+        $bitacoras = $this->paginateResults($resultados, $request, 10);
+
+        return view('bitacora_coordinador', compact('bitacoras'));
     }
 
-
-        // 2. INGRESAR
-    public function ingresar($id_usuario,$id_objeto,$p_accion,$fecha_accion,$p_descripcion)
+    public function secretariaAcademica(Request $request)
     {
-        try {
-            $resultado = DB::select('CALL INS_BITACORA(?,?,?,?,?)', [$id_usuario,$id_objeto,$p_accion,$fecha_accion,$p_descripcion]);
-            return response()->json($resultado[0], 200);
-        } catch (\Exception $e) {
-            return response()->json(['resultado' => 'ERROR', 'mensaje' => $e->getMessage()], 500);
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'No autorizado.');
         }
+
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin    = $request->fecha_fin;
+
+        $id_usuario = $user->id_usuario ?? $user->id ?? null;
+        $id_carrera = $user->id_carrera ?? null;
+        $id_rol     = $user->id_rol ?? null;
+
+        if (!$fecha_inicio || !$fecha_fin) {
+            $bitacoras = $this->emptyPaginator($request);
+            return view('bitacora_secretaria_academica', compact('bitacoras'));
+        }
+
+        $resultados = $this->obtenerBitacoras(
+            $fecha_inicio,
+            $fecha_fin,
+            $id_usuario,
+            $id_rol,
+            $id_carrera
+        );
+
+        $bitacoras = $this->paginateResults($resultados, $request, 10);
+
+        return view('bitacora_secretaria_academica', compact('bitacoras'));
     }
 
+    public function secretariaGeneral(Request $request)
+    {
+        $user = Auth::user();
 
+        if (!$user) {
+            abort(403, 'No autorizado.');
+        }
+
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin    = $request->fecha_fin;
+
+        $id_usuario = $user->id_usuario ?? $user->id ?? null;
+        $id_carrera = $user->id_carrera ?? null;
+        $id_rol     = $user->id_rol ?? null;
+
+        if (!$fecha_inicio || !$fecha_fin) {
+            $bitacoras = $this->emptyPaginator($request);
+            return view('bitacora_secretaria_general', compact('bitacoras'));
+        }
+
+        $resultados = $this->obtenerBitacoras(
+            $fecha_inicio,
+            $fecha_fin,
+            $id_usuario,
+            $id_rol,
+            $id_carrera
+        );
+
+        $bitacoras = $this->paginateResults($resultados, $request, 10);
+
+        return view('bitacora_secretaria_general', compact('bitacoras'));
+    }
+
+    private function obtenerBitacoras($fecha_inicio, $fecha_fin, $id_usuario, $id_rol, $id_carrera): array
+    {
+        return DB::select(
+            'CALL SEL_BITACORA_TRAMITE(?,?,?,?,?)',
+            [
+                $fecha_inicio,
+                $fecha_fin,
+                $id_usuario,
+                $id_rol,
+                $id_carrera,
+            ]
+        );
+    }
+
+    private function paginateResults(array $resultados, Request $request, int $perPage = 10): LengthAwarePaginator
+    {
+        $page = (int) $request->get('page', 1);
+
+        return new LengthAwarePaginator(
+            array_slice($resultados, ($page - 1) * $perPage, $perPage),
+            count($resultados),
+            $perPage,
+            $page,
+            [
+                'path'  => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+    }
+
+    private function emptyPaginator(Request $request, int $perPage = 10): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator(
+            [],
+            0,
+            $perPage,
+            (int) $request->get('page', 1),
+            [
+                'path'  => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+    }
 }
