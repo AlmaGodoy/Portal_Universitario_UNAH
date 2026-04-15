@@ -31,6 +31,7 @@
         $user->email
         ?? $user->correo_institucional
         ?? optional($user->persona)->correo_institucional
+        ?? 'secretaria@unah.hn';
         ?? 'secretaria.academica@unah.hn';
 
     $parts = preg_split('/\s+/', trim($displayName));
@@ -45,6 +46,8 @@
     if ($initials === '') {
         $initials = 'S';
     }
+
+    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
 
     /*
     |--------------------------------------------------------------------------
@@ -90,6 +93,15 @@
 
     $menuCancelacionActive = request()->routeIs('cancelacion.secretaria.*');
 
+    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+
+    $backupUrl = $backupRouteName
+        ? route($backupRouteName)
+        : 'javascript:void(0)';
+
+    $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
+
+    $pageTitle = trim($__env->yieldContent('title', 'Secretaría de Carrera'));
     $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
     $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
     $bitacoraActive = request()->routeIs('bitacora.*');
@@ -112,9 +124,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
         .secretaria-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 64px;
+            padding: 0 20px;
+            margin: 0 18px 0;
+            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
+            border-bottom: 4px solid #f1be1a;
+            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
+            border-radius: 0;
+        }
+
+        .secretaria-topbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                115deg,
+                rgba(255,255,255,.07) 0%,
+                rgba(255,255,255,.02) 40%,
+                rgba(255,255,255,0) 60%
+            );
+            pointer-events: none;
+        }
+
+        .secretaria-topbar::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 4px;
+            width: 4px;
+            background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -134,6 +184,12 @@
             display: flex;
             align-items: center;
             min-width: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .secretaria-topbar-right {
+            gap: 6px;
         }
 
         .secretaria-topbar-right {
@@ -151,6 +207,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            padding-left: 8px;
         }
 
         .sec-breadcrumb i {
@@ -168,6 +225,26 @@
 
         .sec-icon-btn {
             position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.88);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .22s ease;
+            font-size: .9rem;
+        }
+
+        .sec-icon-btn:hover {
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.30);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
             width: 58px;
             height: 52px;
             border: 1px solid rgba(255,255,255,.14);
@@ -190,6 +267,28 @@
 
         .sec-badge {
             position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 800;
+            border: 2px solid #1a4899;
+            box-shadow: 0 4px 10px rgba(229,57,53,.30);
+        }
+
+        .sec-badge.gold {
+            background: linear-gradient(135deg, #efbe1a 0%, #dca600 100%);
+            color: #16315d;
+            border-color: #1a4899;
+            box-shadow: 0 4px 10px rgba(239,190,26,.28);
             top: -6px;
             right: -4px;
             min-width: 24px;
@@ -214,6 +313,38 @@
 
         .sec-divider {
             width: 1px;
+            height: 32px;
+            background: linear-gradient(
+                180deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,.22) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .sec-user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            padding: 6px 12px 6px 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.12);
+            color: #fff;
+            cursor: pointer;
+            transition: all .22s ease;
+            min-width: unset;
+            max-width: unset;
+        }
+
+        .sec-user-chip:hover {
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.32);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
             height: 40px;
             background: rgba(255,255,255,.18);
         }
@@ -239,6 +370,13 @@
         }
 
         .sec-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
+            color: #163a78;
+            font-weight: 900;
+            font-size: .82rem;
             width: 42px;
             height: 42px;
             border-radius: 14px;
@@ -250,6 +388,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(239,190,26,.30);
         }
 
         .sec-user-info {
@@ -261,6 +400,10 @@
         }
 
         .sec-user-name {
+            font-size: .83rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
             font-size: 1.02rem;
             font-weight: 800;
             white-space: nowrap;
@@ -269,6 +412,17 @@
         }
 
         .sec-user-role {
+            font-size: .68rem;
+            color: rgba(255,255,255,.60);
+            font-weight: 700;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .sec-user-arrow {
+            font-size: .62rem;
+            color: rgba(255,255,255,.50);
+            margin-left: 2px;
             margin-top: 4px;
             color: rgba(255,255,255,.82);
             font-size: .92rem;
@@ -490,6 +644,15 @@
             word-break: break-word;
         }
 
+        .content-wrapper {
+            min-height: 100vh;
+            padding-top: 0 !important;
+        }
+
+        .dashboard-shell {
+            padding-top: 0 !important;
+        }
+
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -568,6 +731,7 @@
 
         @media (max-width: 1199.98px) {
             .sec-user-chip {
+                min-width: unset;
                 min-width: 300px;
                 max-width: 340px;
             }
@@ -625,6 +789,14 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
+                        <li class="nav-item">
+                            <a href="{{ route('empleado.dashboard') }}"
+                               class="nav-link {{ $dashboardActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-gauge-high"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item has-treeview {{ $menuRevisionOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)" class="nav-link {{ $menuRevisionOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-circle-check"></i>
@@ -658,6 +830,14 @@
                                class="nav-link {{ $fechasActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar-days"></i>
                                 <p>Fechas</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $backupUrl }}"
+                               class="nav-link {{ $backupActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-database"></i>
+                                <p>Respaldo</p>
                             </a>
                         </li>
 
@@ -909,6 +1089,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const btnNotif = document.getElementById('btnSecNotif');
+    const btnMsg   = document.getElementById('btnSecMsg');
+    const btnUser  = document.getElementById('btnSecUser');
+
+    const dropNotif = document.getElementById('dropSecNotif');
+    const dropMsg   = document.getElementById('dropSecMsg');
+    const dropUser  = document.getElementById('dropSecUser');
     const btnMsg = document.getElementById('btnSecMsg');
     const btnUser = document.getElementById('btnSecUser');
 

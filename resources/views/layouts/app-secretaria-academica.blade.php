@@ -49,6 +49,29 @@
 
     /*
     |--------------------------------------------------------------------------
+    | CONTROL DE VISIBILIDAD DEL BOTÓN SEGURIDAD
+    |--------------------------------------------------------------------------
+    */
+    $rolTextoSesion = strtolower(trim((string) session('rol_texto', '')));
+    $mostrarBotonSeguridad = !in_array($rolTextoSesion, [
+        'secretaria_general',
+        'secretaría_general',
+        'secretaria general',
+        'secretaría general',
+    ], true);
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DE RESPALDO
+    |--------------------------------------------------------------------------
+    */
+    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+
+    $backupUrl = $backupRouteName
+        ? route($backupRouteName)
+        : 'javascript:void(0)';
+
+    $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
     | RUTAS SEGURAS
     |--------------------------------------------------------------------------
     */
@@ -277,6 +300,15 @@
                             </a>
                         </li>
 
+                        @if ($mostrarBotonSeguridad)
+                            <li class="nav-item">
+                                <a href="{{ route('seguridad.index') }}"
+                                   class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-shield-halved"></i>
+                                    <p>Seguridad</p>
+                                </a>
+                            </li>
+                        @endif
                         <li class="nav-item">
                             <a href="{{ $seguridadUrl }}" class="nav-link {{ $seguridadActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-shield-halved"></i>
@@ -320,6 +352,8 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="{{ $backupUrl }}"
+                               class="nav-link {{ $backupActive ? 'active' : '' }}">
                             <a href="{{ $soporteUrl }}" class="nav-link {{ $soporteActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
@@ -327,6 +361,8 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="{{ route('configuracion.index') }}"
+                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
                             <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
