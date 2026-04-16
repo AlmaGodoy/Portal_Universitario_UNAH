@@ -12,17 +12,11 @@ use Illuminate\Support\Facades\Validator;
 
 class EquivalenciaController extends Controller
 {
-    /**
-     * Vista del alumno.
-     */
     public function indexAlumno()
     {
         return view('equivalencias_alumno');
     }
 
-    /**
-     * Vista del revisor.
-     */
     public function indexRevisor()
     {
         $rol = $this->obtenerRolActual();
@@ -36,13 +30,17 @@ class EquivalenciaController extends Controller
         ]);
     }
 
-    /**
-     * Lista las solicitudes del alumno autenticado.
-     */
     public function misSolicitudes()
     {
         try {
             $idPersona = $this->obtenerIdPersonaAutenticada();
+
+            Log::info('Equivalencias - misSolicitudes()', [
+                'auth_user' => Auth::user(),
+                'id_persona_detectada' => $idPersona,
+                'session_id_persona' => session('id_persona'),
+                'session_usuario_id_persona' => session('usuario.id_persona'),
+            ]);
 
             if (!$idPersona) {
                 return response()->json([
@@ -51,7 +49,37 @@ class EquivalenciaController extends Controller
                 ], 401);
             }
 
-            $resultado = SolicitudEquivalencia::misSolicitudesPorPersona($idPersona);
+            // TEMPORAL / DEFINITIVO: listar directo desde tabla para evitar problemas del CALL
+            $resultado = DB::table('tbl_solicitud_equivalencia')
+                ->select(
+                    'id_solicitud_equivalencia',
+                    'id_persona',
+                    'version_plan_viejo',
+                    'version_plan_nuevo',
+                    'ruta_documento',
+                    'tipo_documento',
+                    'estado_solicitud',
+                    'observacion_alumno',
+                    'observacion_revisor',
+                    'fecha_solicitud',
+                    'fecha_revision',
+                    'id_usuario_revisor'
+                )
+                ->where('id_persona', $idPersona)
+                ->where(function ($q) {
+                    $q->whereNull('estado')
+                      ->orWhere('estado', 1)
+                      ->orWhere('estado', '1')
+                      ->orWhere('estado', 'ACTIVO');
+                })
+                ->orderByDesc('id_solicitud_equivalencia')
+                ->get();
+
+            Log::info('Equivalencias - resultado misSolicitudes', [
+                'id_persona' => $idPersona,
+                'total' => $resultado->count(),
+                'resultado' => $resultado,
+            ]);
 
             return response()->json([
                 'ok' => true,
@@ -60,6 +88,7 @@ class EquivalenciaController extends Controller
         } catch (\Throwable $e) {
             Log::error('Error al listar solicitudes del alumno', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -70,9 +99,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Lista solicitudes pendientes para revisión.
-     */
     public function solicitudesPendientes()
     {
         try {
@@ -105,9 +131,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Crea la solicitud de equivalencia.
-     */
     public function crearSolicitud(Request $request)
     {
         $validator = Validator::make(
@@ -163,7 +186,9 @@ class EquivalenciaController extends Controller
                 $nombreArchivo
             );
 
-            $resultado = DB::select('CALL INS_SOLICITUD_EQUIVALENCIA(?, ?, ?, ?, ?, ?)', [
+            $pdo = DB::connection()->getPdo();
+            $stmt = $pdo->prepare('CALL INS_SOLICITUD_EQUIVALENCIA(?, ?, ?, ?, ?, ?)');
+            $stmt->execute([
                 $idPersona,
                 (int) $request->version_plan_viejo,
                 2026,
@@ -172,7 +197,21 @@ class EquivalenciaController extends Controller
                 $request->observacion_alumno,
             ]);
 
+            $resultado = $stmt->fetchAll(\PDO::FETCH_OBJ);
+
+            while ($stmt->nextRowset()) {
+                //
+            }
+
+            $stmt->closeCursor();
+
             $idSolicitud = $resultado[0]->id_solicitud_equivalencia ?? null;
+
+            Log::info('Equivalencias - solicitud creada', [
+                'id_persona' => $idPersona,
+                'id_solicitud_equivalencia' => $idSolicitud,
+                'ruta_documento' => $rutaGuardada,
+            ]);
 
             return response()->json([
                 'ok' => true,
@@ -187,6 +226,7 @@ class EquivalenciaController extends Controller
 
             Log::error('Error al crear solicitud de equivalencia', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -197,9 +237,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve las asignaturas del plan viejo.
-     */
     public function obtenerAsignaturasPlanViejo($versionPlanViejo)
     {
         try {
@@ -212,9 +249,7 @@ class EquivalenciaController extends Controller
                 ], 422);
             }
 
-            $resultado = DB::select('CALL SEL_ASIGNATURAS_PLAN_VIEJO(?)', [
-                $versionPlanViejo
-            ]);
+            $resultado = SolicitudEquivalencia::obtenerAsignaturasPlanViejo($versionPlanViejo);
 
             return response()->json([
                 'ok' => true,
@@ -234,9 +269,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Guarda las materias seleccionadas por el alumno.
-     */
     public function guardarDetalleSolicitud(Request $request)
     {
         $validator = Validator::make(
@@ -296,34 +328,7 @@ class EquivalenciaController extends Controller
                 ], 422);
             }
 
-            $pdo = DB::connection()->getPdo();
-
-            foreach ($asignaturas as $asignatura) {
-                $codigo = trim((string) ($asignatura['codigo_asignatura_viejo'] ?? ''));
-
-                if ($codigo === '') {
-                    continue;
-                }
-
-                $seleccionada = array_key_exists('seleccionada_alumno', $asignatura)
-                    ? (int) ((bool) $asignatura['seleccionada_alumno'])
-                    : 1;
-
-                $stmt = $pdo->prepare('CALL INS_SOLICITUD_EQUIVALENCIA_DETALLE(?, ?, ?, ?, ?)');
-                $stmt->execute([
-                    $idSolicitud,
-                    $versionPlanViejo,
-                    $codigo,
-                    null,
-                    $seleccionada,
-                ]);
-
-                while ($stmt->nextRowset()) {
-                    // Consumir todos los result sets del procedimiento.
-                }
-
-                $stmt->closeCursor();
-            }
+            SolicitudEquivalencia::guardarDetalleSolicitud($idSolicitud, $versionPlanViejo, $asignaturas);
 
             return response()->json([
                 'ok' => true,
@@ -343,9 +348,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve la cabecera de una solicitud.
-     */
     public function verCabeceraSolicitud($idSolicitud)
     {
         try {
@@ -388,9 +390,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve el detalle de una solicitud.
-     */
     public function verDetalleSolicitud($idSolicitud)
     {
         try {
@@ -435,9 +434,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve equivalencias preliminares.
-     */
     public function verEquivalenciasPreliminares($idSolicitud)
     {
         try {
@@ -481,9 +477,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Valida una materia puntual.
-     */
     public function validarDetalleSolicitud(Request $request)
     {
         $validator = Validator::make(
@@ -521,13 +514,13 @@ class EquivalenciaController extends Controller
                 ], 403);
             }
 
-            DB::select('CALL UPD_VALIDACION_SOLICITUD_EQUIVALENCIA_DETALLE(?, ?, ?, ?, ?)', [
+            SolicitudEquivalencia::validarDetalleSolicitud(
                 (int) $request->id_solicitud_equivalencia,
                 (int) $request->version_plan_viejo,
                 trim((string) $request->codigo_asignatura_viejo),
                 (int) ((bool) $request->boolean('validada_revisor')),
-                $request->observacion_revision,
-            ]);
+                $request->observacion_revision
+            );
 
             return response()->json([
                 'ok' => true,
@@ -547,9 +540,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Cambia el estado general de la solicitud.
-     */
     public function validarSolicitud(Request $request)
     {
         $validator = Validator::make(
@@ -600,12 +590,12 @@ class EquivalenciaController extends Controller
 
             $idUsuarioRevisor = $this->obtenerIdUsuarioAutenticado();
 
-            DB::select('CALL UPD_VALIDACION_SOLICITUD_EQUIVALENCIA(?, ?, ?, ?)', [
+            SolicitudEquivalencia::validarSolicitud(
                 (int) $request->id_solicitud_equivalencia,
                 $estado,
                 $request->observacion_revisor,
-                $idUsuarioRevisor,
-            ]);
+                $idUsuarioRevisor
+            );
 
             return response()->json([
                 'ok' => true,
@@ -625,9 +615,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Descarga el documento adjunto.
-     */
     public function descargarDocumento($idSolicitud)
     {
         try {
@@ -665,15 +652,38 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Obtiene id_persona del usuario autenticado.
-     */
     private function obtenerIdPersonaAutenticada(): ?int
     {
         $usuario = Auth::user();
 
         if ($usuario && !empty($usuario->id_persona)) {
             return (int) $usuario->id_persona;
+        }
+
+        if ($usuario && isset($usuario->persona) && !empty($usuario->persona->id_persona)) {
+            return (int) $usuario->persona->id_persona;
+        }
+
+        if ($usuario && !empty($usuario->id_usuario)) {
+            $registro = DB::table('tbl_usuario')
+                ->where('id_usuario', $usuario->id_usuario)
+                ->select('id_persona')
+                ->first();
+
+            if ($registro && !empty($registro->id_persona)) {
+                return (int) $registro->id_persona;
+            }
+        }
+
+        if ($usuario && !empty($usuario->id)) {
+            $registro = DB::table('tbl_usuario')
+                ->where('id_usuario', $usuario->id)
+                ->select('id_persona')
+                ->first();
+
+            if ($registro && !empty($registro->id_persona)) {
+                return (int) $registro->id_persona;
+            }
         }
 
         if (session()->has('id_persona')) {
@@ -687,9 +697,6 @@ class EquivalenciaController extends Controller
         return null;
     }
 
-    /**
-     * Obtiene id del usuario autenticado.
-     */
     private function obtenerIdUsuarioAutenticado(): ?int
     {
         $usuario = Auth::user();
@@ -713,9 +720,6 @@ class EquivalenciaController extends Controller
         return null;
     }
 
-    /**
-     * Obtiene el rol actual desde sesión o usuario.
-     */
     private function obtenerRolActual(): ?string
     {
         $usuario = Auth::user();
@@ -735,5 +739,3 @@ class EquivalenciaController extends Controller
         return null;
     }
 }
-
-
