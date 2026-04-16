@@ -14,7 +14,7 @@ class BackupController extends Controller
 {
     public function mostrarPanel()
     {
-        $historial = BackupLog::orderByDesc('created_at')->get();
+        $historial = BackupLog::orderByDesc('id')->get();
 
         $contextoVista = $this->resolverContextoVista();
 
@@ -49,37 +49,38 @@ class BackupController extends Controller
     public function crearBackup()
     {
         try {
-            $archivosAntes = $this->obtenerIndiceRespaldos();
-
             Artisan::call('backup:run', [
                 '--only-db' => true,
             ]);
 
             $salida = trim(Artisan::output());
-            $archivosDespues = $this->obtenerIndiceRespaldos();
-            $backupGenerado = $this->detectarBackupGenerado($archivosAntes, $archivosDespues);
 
-            if ($backupGenerado !== null) {
-                BackupLog::create([
-                    'nombre_archivo' => $backupGenerado['nombre_archivo'],
-                    'tamano'         => $this->formatearTamano($backupGenerado['tamano_bytes']),
-                    'usuario'        => $this->obtenerNombreUsuarioActual(),
+            $backupMasReciente = $this->obtenerBackupMasReciente();
+
+            if (!$backupMasReciente) {
+                Log::warning('El respaldo se ejecutó, pero no se encontró ningún archivo para registrar.', [
+                    'output' => $salida,
                 ]);
+
+                return redirect()
+                    ->route('backup.index')
+                    ->with('warning', 'El respaldo se generó, pero no se encontró el archivo para registrarlo en el historial.');
             }
 
+            BackupLog::create([
+                'nombre_archivo' => $backupMasReciente['nombre_archivo'],
+                'tamano'         => $this->formatearTamano($backupMasReciente['tamano_bytes']),
+                'usuario'        => $this->obtenerNombreUsuarioActual(),
+            ]);
+
             Log::info('Respaldo ejecutado correctamente', [
-                'output'           => $salida,
-                'backup_detectado' => $backupGenerado,
+                'output'              => $salida,
+                'backup_mas_reciente' => $backupMasReciente,
             ]);
 
             return redirect()
                 ->route('backup.index')
-                ->with(
-                    'success',
-                    $backupGenerado
-                        ? 'El respaldo se ha generado y registrado correctamente.'
-                        : 'El respaldo se generó correctamente, pero no se pudo registrar automáticamente en el historial.'
-                );
+                ->with('success', 'El respaldo se ha generado y registrado correctamente.');
         } catch (Throwable $e) {
             Log::error('Error al generar respaldo', [
                 'mensaje' => $e->getMessage(),
@@ -92,6 +93,64 @@ class BackupController extends Controller
                 ->route('backup.index')
                 ->with('error', 'Ocurrió un error al procesar el respaldo: ' . $e->getMessage());
         }
+    }
+
+    private function obtenerBackupMasReciente(): ?array
+    {
+        $indice = [];
+
+        $discos = config('backup.backup.destination.disks', ['backups']);
+        $nombreBackup = trim((string) config('backup.backup.name', 'Laravel'), '/');
+
+        foreach ($discos as $disco) {
+            try {
+                $storage = Storage::disk($disco);
+
+                $rutas = [
+                    $nombreBackup,
+                    '',
+                ];
+
+                foreach ($rutas as $rutaBase) {
+                    $archivos = $rutaBase !== ''
+                        ? $storage->allFiles($rutaBase)
+                        : $storage->allFiles();
+
+                    foreach ($archivos as $archivo) {
+                        if (!preg_match('/\.(zip|sql|gz)$/i', $archivo)) {
+                            continue;
+                        }
+
+                        $clave = $disco . '|' . $archivo;
+
+                        $indice[$clave] = [
+                            'disk'                => $disco,
+                            'path'                => $archivo,
+                            'nombre_archivo'      => basename($archivo),
+                            'tamano_bytes'        => (int) $storage->size($archivo),
+                            'ultima_modificacion' => (int) $storage->lastModified($archivo),
+                        ];
+                    }
+                }
+            } catch (Throwable $e) {
+                Log::warning('No se pudo inspeccionar el disco de respaldos', [
+                    'disk'    => $disco,
+                    'mensaje' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (empty($indice)) {
+            return null;
+        }
+
+        $respaldos = array_values($indice);
+
+        usort($respaldos, function ($a, $b) {
+            return ($b['ultima_modificacion'] ?? 0) <=> ($a['ultima_modificacion'] ?? 0);
+        });
+
+        return $respaldos[0] ?? null;
     }
 
     private function resolverContextoVista(): array
@@ -148,21 +207,6 @@ class BackupController extends Controller
             data_get($user, 'persona.tipo_usuario'),
         ];
 
-        try {
-            if (method_exists($user, 'roles')) {
-                $roles = $user->roles;
-                foreach ($roles as $rol) {
-                    $fragmentos[] = data_get($rol, 'name');
-                    $fragmentos[] = data_get($rol, 'nombre_rol');
-                    $fragmentos[] = data_get($rol, 'role');
-                }
-            }
-        } catch (Throwable $e) {
-            Log::warning('No se pudo leer la colección de roles del usuario', [
-                'mensaje' => $e->getMessage(),
-            ]);
-        }
-
         $texto = implode(' ', array_filter(array_map(function ($valor) {
             return is_scalar($valor) ? trim((string) $valor) : '';
         }, $fragmentos)));
@@ -185,77 +229,6 @@ class BackupController extends Controller
         }
 
         return true;
-    }
-
-    private function obtenerIndiceRespaldos(): array
-    {
-        $indice = [];
-
-        $discos = config('backup.backup.destination.disks', ['local']);
-        $nombreBackup = trim((string) config('backup.backup.name', ''), '/');
-
-        foreach ($discos as $disco) {
-            try {
-                $storage = Storage::disk($disco);
-
-                $archivos = $nombreBackup !== ''
-                    ? $storage->allFiles($nombreBackup)
-                    : $storage->allFiles();
-
-                foreach ($archivos as $archivo) {
-                    if (!preg_match('/\.(zip|sql|gz)$/i', $archivo)) {
-                        continue;
-                    }
-
-                    $clave = $disco . '|' . $archivo;
-
-                    $indice[$clave] = [
-                        'disk'                => $disco,
-                        'path'                => $archivo,
-                        'nombre_archivo'      => basename($archivo),
-                        'tamano_bytes'        => (int) $storage->size($archivo),
-                        'ultima_modificacion' => (int) $storage->lastModified($archivo),
-                    ];
-                }
-            } catch (Throwable $e) {
-                Log::warning('No se pudo inspeccionar el disco de respaldos', [
-                    'disk'    => $disco,
-                    'mensaje' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        uasort($indice, function ($a, $b) {
-            return $b['ultima_modificacion'] <=> $a['ultima_modificacion'];
-        });
-
-        return $indice;
-    }
-
-    private function detectarBackupGenerado(array $antes, array $despues): ?array
-    {
-        $candidatos = [];
-
-        foreach ($despues as $clave => $info) {
-            if (!isset($antes[$clave])) {
-                $candidatos[] = $info;
-                continue;
-            }
-
-            if (($info['ultima_modificacion'] ?? 0) > ($antes[$clave]['ultima_modificacion'] ?? 0)) {
-                $candidatos[] = $info;
-            }
-        }
-
-        if (empty($candidatos)) {
-            return null;
-        }
-
-        usort($candidatos, function ($a, $b) {
-            return $b['ultima_modificacion'] <=> $a['ultima_modificacion'];
-        });
-
-        return $candidatos[0];
     }
 
     private function obtenerNombreUsuarioActual(): string
