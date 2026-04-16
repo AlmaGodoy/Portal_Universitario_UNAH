@@ -315,7 +315,11 @@ public function detalleCoordinacion($id_tramite)
         ], 403);
     }
 
-    // AQUÍ se consulta el trámite pero usando la carrera del coordinador
+    // AQUÍ se consulta el trámite SOLO por carrera y por id
+    // IMPORTANTE:
+    // Quitamos la restricción:
+    // ->where('t.resolucion_de_tramite_academico', 'revision')
+    // porque después de aprobar/rechazar el trámite ya no estará en revisión
     $tramite = DB::table('tbl_tramite as t')
         ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
         ->leftJoin('tbl_estudiante as e', 't.id_persona', '=', 'e.id_persona')
@@ -335,18 +339,32 @@ public function detalleCoordinacion($id_tramite)
         )
         ->where('t.id_tramite', $id_tramite)
         ->where('t.id_carrera_destino', $idCarreraCoordinador)
-        ->where('t.resolucion_de_tramite_academico', 'revision')
         ->first();
 
-    // AQUÍ se valida que el trámite sí pertenezca a la carrera del coordinador
+    // AQUÍ solo validamos que el trámite exista y pertenezca a la carrera del coordinador
     if (!$tramite) {
         return response()->json([
             'resultado' => 'ERROR',
-            'mensaje' => 'No puedes revisar un trámite que no pertenece a tu carrera o que aún no está en revisión.'
+            'mensaje' => 'No puedes revisar un trámite que no pertenece a tu carrera.'
         ], 403);
     }
 
-    return response()->json($tramite);
+    // AQUÍ agregamos una bandera para que el frontend sepa
+    // si todavía puede mostrarse el formulario de dictamen
+    $tramite->puede_dictaminar = strtolower((string) $tramite->estado_tramite) === 'revision';
+
+    // OPCIONAL:
+    // También puedes mandar un mensaje informativo cuando ya fue resuelto
+    if (!$tramite->puede_dictaminar) {
+        $tramite->mensaje_estado = 'Este trámite ya fue dictaminado y solo se muestra en modo lectura.';
+    } else {
+        $tramite->mensaje_estado = null;
+    }
+
+    return response()->json([
+        'resultado' => 'OK',
+        'data' => $tramite
+    ], 200);
 }
 /*
     =========================================================
