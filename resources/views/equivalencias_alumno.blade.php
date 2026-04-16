@@ -3,7 +3,6 @@
 @section('titulo', 'Equivalencias')
 
 @section('content')
-
 <div class="eq-page">
 
     <div id="eqAlumnoAlert" class="eq-alert d-none"></div>
@@ -17,10 +16,10 @@
             </p>
         </div>
 
-        <div class="eq-dashboard-btn">
-            <i class="fas fa-file-lines"></i>
-            <span>Trámite guiado</span>
-        </div>
+        <a href="{{ url()->previous() }}" class="eq-back-btn">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver atrás</span>
+        </a>
     </section>
 
     <div class="eq-dashboard-grid">
@@ -35,7 +34,7 @@
                 </div>
 
                 <div class="eq-panel-body">
-                    <form id="formCrearSolicitud" class="eq-form" method="POST" enctype="multipart/form-data">
+                    <div id="formCrearSolicitud" class="eq-form">
                         @csrf
 
                         <div class="eq-form-grid">
@@ -43,7 +42,7 @@
                                 <label for="version_plan_viejo">Plan viejo</label>
                                 <select id="version_plan_viejo" name="version_plan_viejo" required>
                                     <option value="">Seleccione una opción</option>
-                                    <option value="19">Plan 2019</option>
+                                    <option value="2019">Plan 2019</option>
                                     <option value="2022">Plan 2022</option>
                                 </select>
                             </div>
@@ -54,7 +53,7 @@
                                     id="version_plan_nuevo"
                                     name="version_plan_nuevo"
                                     type="number"
-                                    value="2025"
+                                    value="2026"
                                     readonly
                                 >
                             </div>
@@ -85,12 +84,12 @@
                         </div>
 
                         <div class="eq-actions">
-                            <button type="submit" class="eq-btn eq-btn-primary">
+                            <button id="btnCrearSolicitud" type="button" class="eq-btn eq-btn-primary">
                                 <i class="fas fa-paper-plane"></i>
                                 Crear solicitud
                             </button>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </section>
         </div>
@@ -145,12 +144,11 @@
                         <th>Código</th>
                         <th>Asignatura</th>
                         <th>UV</th>
-                        <th>Nota final</th>
                     </tr>
                 </thead>
                 <tbody id="tablaAsignaturasPlanViejo">
                     <tr>
-                        <td colspan="5" class="eq-empty-row">Primero crea una solicitud.</td>
+                        <td colspan="4" class="eq-empty-row">Primero crea una solicitud.</td>
                     </tr>
                 </tbody>
             </table>
@@ -185,7 +183,6 @@
                     <tr>
                         <th>Código viejo</th>
                         <th>Asignatura vieja</th>
-                        <th>Nota</th>
                         <th>Código nuevo</th>
                         <th>Asignatura nueva</th>
                         <th>Situación</th>
@@ -193,7 +190,7 @@
                 </thead>
                 <tbody id="tablaPreliminares">
                     <tr>
-                        <td colspan="6" class="eq-empty-row">Aún no se han calculado equivalencias.</td>
+                        <td colspan="5" class="eq-empty-row">Aún no se han calculado equivalencias.</td>
                     </tr>
                 </tbody>
             </table>
@@ -201,5 +198,6 @@
     </section>
 
 </div>
-
 @endsection
+
+
