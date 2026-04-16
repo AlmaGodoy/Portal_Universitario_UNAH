@@ -1,10 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('search-input');
     const tbody = document.getElementById('backup-tbody');
-    const countElement = document.getElementById('backup-count');
-    const countTopElement = document.getElementById('backup-count-top');
+
+    const countElement = document.getElementById('backup-count'); // contador de tabla
+    const countTopElement = document.getElementById('backup-count-top'); // total real
+
     const backupForm = document.getElementById('backup-generate-form');
     const generateButton = document.getElementById('backup-generate-btn');
+
+    const testForm = document.getElementById('backup-test-form');
+    const testButton = document.getElementById('backup-test-btn');
 
     function obtenerFilasReales() {
         if (!tbody) return [];
@@ -19,14 +24,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function actualizarConteos() {
-        const totalVisible = obtenerFilasVisibles().length;
+        const totalReales = obtenerFilasReales().length;
+        const totalVisibles = obtenerFilasVisibles().length;
 
+        // Este contador sí cambia con la búsqueda
         if (countElement) {
-            countElement.textContent = totalVisible;
+            countElement.textContent = totalVisibles;
         }
 
+        // Este contador representa el total de respaldos registrados
         if (countTopElement) {
-            countTopElement.textContent = totalVisible;
+            countTopElement.textContent = totalReales;
         }
     }
 
@@ -58,10 +66,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const emptySearchRow = crearFilaVaciaBusqueda();
         if (!emptySearchRow) return;
 
-        const hayResultados = obtenerFilasVisibles().length > 0;
+        const hayResultadosVisibles = obtenerFilasVisibles().length > 0;
         const hayFilasReales = obtenerFilasReales().length > 0;
 
-        if (hayFilasReales && !hayResultados) {
+        if (hayFilasReales && !hayResultadosVisibles) {
             emptySearchRow.style.display = '';
         } else {
             emptySearchRow.style.display = 'none';
@@ -85,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function inicializarBusqueda() {
         if (!searchInput) return;
-
         searchInput.addEventListener('input', filtrarTabla);
     }
 
@@ -103,11 +110,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function inicializarBotonProbar() {
+        if (!testForm || !testButton) return;
+
+        testForm.addEventListener('submit', function () {
+            testButton.disabled = true;
+            testButton.classList.add('is-loading');
+
+            testButton.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Probando conexión...</span>
+            `;
+        });
+    }
+
     function inicializarTooltips() {
         const rows = obtenerFilasReales();
 
         rows.forEach((row) => {
             const fileName = row.querySelector('.file-main-text strong');
+
             if (fileName) {
                 fileName.setAttribute('title', fileName.textContent.trim());
             }
@@ -119,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
         mostrarEstadoVacioBusqueda();
         inicializarBusqueda();
         inicializarBotonGenerar();
+        inicializarBotonProbar();
         inicializarTooltips();
     }
 

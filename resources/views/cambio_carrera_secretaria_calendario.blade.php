@@ -16,9 +16,9 @@
                 <p>Gestión de fechas para Cambio de Carrera y Cancelación.</p>
             </div>
 
-            <a href="{{ route('cambio-carrera.secretaria') }}" class="cc-btn-volver">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
+           <a href="{{ url('/empleado/dashboard') }}" class="cc-btn-volver">
+    <i class="fas fa-arrow-left"></i> Volver
+</a>
         </div>
     </div>
 

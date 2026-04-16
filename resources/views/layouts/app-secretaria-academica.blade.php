@@ -127,16 +127,29 @@
 
     /*
     |--------------------------------------------------------------------------
-    | RUTA DE RESPALDO / SOPORTE
+    | CONTROL DE VISIBILIDAD DEL BOTÓN SEGURIDAD
     |--------------------------------------------------------------------------
     */
-    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
+    $rolTextoSesion = strtolower(trim((string) session('rol_texto', '')));
+    $mostrarBotonSeguridad = !in_array($rolTextoSesion, [
+        'secretaria_general',
+        'secretaría_general',
+        'secretaria general',
+        'secretaría general',
+    ], true);
 
-    $soporteUrl = $soporteRouteName
-        ? route($soporteRouteName)
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DE RESPALDO
+    |--------------------------------------------------------------------------
+    */
+    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+
+    $backupUrl = $backupRouteName
+        ? route($backupRouteName)
         : 'javascript:void(0)';
 
-    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
 @endphp
 
 <!DOCTYPE html>
@@ -186,7 +199,6 @@
             min-height: 100vh;
         }
 
-        /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -318,36 +330,20 @@
                         <li class="nav-item">
                             <a href="{{ route('empleado.dashboard') }}"
                                class="nav-link {{ request()->routeIs('empleado.dashboard') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Dashboard</p>
+                                <i class="nav-icon fas fa-house"></i>
+                                <p>Inicio</p>
                             </a>
                         </li>
 
-                        {{-- NUEVO BOTÓN DE SEGURIDAD --}}
-                        <li class="nav-item">
-                            <a href="{{ route('seguridad.index') }}"
-                               class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad</p>
-                            </a>
-                        </li>
-
-                        {{-- Auditoría --}}
-                        <li class="nav-item">
-                            <a href="{{ route('auditoria') }}" class="nav-link {{ request()->routeIs('auditoria') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
-                                <p>Auditoría</p>
-                            </a>
-                        </li>
-
-                        {{-- Bitácora --}}
-                        <li class="nav-item">
-                            <a href="{{ route('bitacora.secretaria_academica') }}"
-class="nav-link {{ request()->routeIs('bitacora.secretaria_academica') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-book"></i>
-                                <p>Bitácora</p>
-                            </a>
-                        </li>
+                        @if ($mostrarBotonSeguridad)
+                            <li class="nav-item">
+                                <a href="{{ route('seguridad.index') }}"
+                                   class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-shield-halved"></i>
+                                    <p>Seguridad</p>
+                                </a>
+                            </li>
+                        @endif
 
                         <li class="nav-item">
                             <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
@@ -358,100 +354,8 @@ class="nav-link {{ request()->routeIs('bitacora.secretaria_academica') ? 'active
                         </li>
 
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-chart-pie"></i>
-                                <p>Gráficas Globales</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-building-columns"></i>
-                                <p>Resumen por Carreras</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gear"></i>
-                                <p>Configuración</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item nav-item-logout">
-                            <form action="{{ route('logout') }}" method="POST" style="margin:0;">
-                                @csrf
-                                <button type="submit" class="nav-link logout-btn">
-                                    <i class="nav-icon fas fa-right-from-bracket"></i>
-                                    <p>Cerrar sesión</p>
-                                </button>
-                            </form>
-                        </li>
-
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </aside>
-
-    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
-        <i class="fas fa-chevron-left"></i>
-    </button>
-
-    <div class="content-wrapper">
-        <section class="content dashboard-shell">
-            @yield('content')
-        </section>
-            </div>
-
-            <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
-                <nav class="mt-2">
-                    <div class="nav-header-custom">Panel académico global</div>
-
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
-
-                        <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ request()->routeIs('empleado.dashboard') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ route('seguridad.index') }}"
-                               class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shield-halved"></i>
-                                <p>Seguridad</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
-                               class="nav-link {{ request()->routeIs('reporte.tramites.secretaria_general.vista') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-chart-column"></i>
-                                <p>Reportes Generales</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-chart-pie"></i>
-                                <p>Gráficas Globales</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon fas fa-building-columns"></i>
-                                <p>Resumen por Carreras</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ $soporteUrl }}"
-                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                            <a href="{{ $backupUrl }}"
+                               class="nav-link {{ $backupActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
@@ -463,16 +367,6 @@ class="nav-link {{ request()->routeIs('bitacora.secretaria_academica') ? 'active
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
-                        </li>
-
-                        <li class="nav-item nav-item-logout">
-                            <form action="{{ route('logout') }}" method="POST" style="margin:0;">
-                                @csrf
-                                <button type="submit" class="nav-link logout-btn">
-                                    <i class="nav-icon fas fa-right-from-bracket"></i>
-                                    <p>Cerrar sesión</p>
-                                </button>
-                            </form>
                         </li>
 
                     </ul>
@@ -540,14 +434,6 @@ class="nav-link {{ request()->routeIs('bitacora.secretaria_academica') ? 'active
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | TIEMPOS
-    |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = 28 minutos
-    | LOGOUT_TIME_MS  = 31 minutos
-    |--------------------------------------------------------------------------
-    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
     const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 

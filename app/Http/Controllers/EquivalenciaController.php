@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SolicitudEquivalencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -11,22 +12,16 @@ use Illuminate\Support\Facades\Validator;
 
 class EquivalenciaController extends Controller
 {
-    /**
-     * Vista del alumno.
-     */
     public function indexAlumno()
     {
         return view('equivalencias_alumno');
     }
 
-    /**
-     * Vista compartida para Secretaría y Coordinación.
-     */
     public function indexRevisor()
     {
         $rol = $this->obtenerRolActual();
 
-        if (!$this->puedeRevisarEquivalencias($rol)) {
+        if (!SolicitudEquivalencia::puedeRevisarEquivalencias($rol)) {
             abort(403, 'No tiene permisos para acceder a la revisión de equivalencias.');
         }
 
@@ -35,13 +30,17 @@ class EquivalenciaController extends Controller
         ]);
     }
 
-    /**
-     * Lista las solicitudes del alumno autenticado.
-     */
     public function misSolicitudes()
     {
         try {
             $idPersona = $this->obtenerIdPersonaAutenticada();
+
+            Log::info('Equivalencias - misSolicitudes()', [
+                'auth_user' => Auth::user(),
+                'id_persona_detectada' => $idPersona,
+                'session_id_persona' => session('id_persona'),
+                'session_usuario_id_persona' => session('usuario.id_persona'),
+            ]);
 
             if (!$idPersona) {
                 return response()->json([
@@ -50,8 +49,36 @@ class EquivalenciaController extends Controller
                 ], 401);
             }
 
-            $resultado = DB::select('CALL SEL_SOLICITUDES_EQUIVALENCIA_ALUMNO(?)', [
-                $idPersona
+            // TEMPORAL / DEFINITIVO: listar directo desde tabla para evitar problemas del CALL
+            $resultado = DB::table('tbl_solicitud_equivalencia')
+                ->select(
+                    'id_solicitud_equivalencia',
+                    'id_persona',
+                    'version_plan_viejo',
+                    'version_plan_nuevo',
+                    'ruta_documento',
+                    'tipo_documento',
+                    'estado_solicitud',
+                    'observacion_alumno',
+                    'observacion_revisor',
+                    'fecha_solicitud',
+                    'fecha_revision',
+                    'id_usuario_revisor'
+                )
+                ->where('id_persona', $idPersona)
+                ->where(function ($q) {
+                    $q->whereNull('estado')
+                      ->orWhere('estado', 1)
+                      ->orWhere('estado', '1')
+                      ->orWhere('estado', 'ACTIVO');
+                })
+                ->orderByDesc('id_solicitud_equivalencia')
+                ->get();
+
+            Log::info('Equivalencias - resultado misSolicitudes', [
+                'id_persona' => $idPersona,
+                'total' => $resultado->count(),
+                'resultado' => $resultado,
             ]);
 
             return response()->json([
@@ -61,6 +88,7 @@ class EquivalenciaController extends Controller
         } catch (\Throwable $e) {
             Log::error('Error al listar solicitudes del alumno', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -71,22 +99,19 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Lista solicitudes pendientes para Secretaría / Coordinación.
-     */
     public function solicitudesPendientes()
     {
         try {
             $rol = $this->obtenerRolActual();
 
-            if (!$this->puedeRevisarEquivalencias($rol)) {
+            if (!SolicitudEquivalencia::puedeRevisarEquivalencias($rol)) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'No tiene permisos para consultar solicitudes pendientes.',
                 ], 403);
             }
 
-            $resultado = DB::select('CALL SEL_SOLICITUDES_EQUIVALENCIA_PENDIENTES()');
+            $resultado = SolicitudEquivalencia::solicitudesPendientes();
 
             return response()->json([
                 'ok' => true,
@@ -106,23 +131,22 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Crea la solicitud de equivalencia.
-     */
     public function crearSolicitud(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'version_plan_viejo' => 'required|integer',
-                'version_plan_nuevo' => 'nullable|integer',
+                'version_plan_viejo' => 'required|integer|in:2019,2022',
+                'version_plan_nuevo' => 'nullable|integer|in:2026',
                 'documento'          => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
                 'observacion_alumno' => 'nullable|string|max:255',
             ],
             [
                 'version_plan_viejo.required' => 'Debe seleccionar un plan viejo.',
                 'version_plan_viejo.integer'  => 'El plan viejo no es válido.',
+                'version_plan_viejo.in'       => 'El plan viejo seleccionado no es válido.',
                 'version_plan_nuevo.integer'  => 'El plan nuevo no es válido.',
+                'version_plan_nuevo.in'       => 'El plan nuevo debe ser 2026.',
                 'documento.required'          => 'Debe adjuntar el historial académico.',
                 'documento.file'              => 'El archivo adjunto no es válido.',
                 'documento.mimes'             => 'El documento debe ser PDF, JPG, JPEG o PNG.',
@@ -138,6 +162,8 @@ class EquivalenciaController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
+
+        $rutaGuardada = null;
 
         try {
             $idPersona = $this->obtenerIdPersonaAutenticada();
@@ -160,16 +186,32 @@ class EquivalenciaController extends Controller
                 $nombreArchivo
             );
 
-            $resultado = DB::select('CALL INS_SOLICITUD_EQUIVALENCIA(?, ?, ?, ?, ?, ?)', [
+            $pdo = DB::connection()->getPdo();
+            $stmt = $pdo->prepare('CALL INS_SOLICITUD_EQUIVALENCIA(?, ?, ?, ?, ?, ?)');
+            $stmt->execute([
                 $idPersona,
                 (int) $request->version_plan_viejo,
-                $request->filled('version_plan_nuevo') ? (int) $request->version_plan_nuevo : null,
+                2026,
                 $rutaGuardada,
                 $tipoDocumento,
                 $request->observacion_alumno,
             ]);
 
+            $resultado = $stmt->fetchAll(\PDO::FETCH_OBJ);
+
+            while ($stmt->nextRowset()) {
+                //
+            }
+
+            $stmt->closeCursor();
+
             $idSolicitud = $resultado[0]->id_solicitud_equivalencia ?? null;
+
+            Log::info('Equivalencias - solicitud creada', [
+                'id_persona' => $idPersona,
+                'id_solicitud_equivalencia' => $idSolicitud,
+                'ruta_documento' => $rutaGuardada,
+            ]);
 
             return response()->json([
                 'ok' => true,
@@ -184,6 +226,7 @@ class EquivalenciaController extends Controller
 
             Log::error('Error al crear solicitud de equivalencia', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -194,15 +237,19 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve las asignaturas del plan viejo seleccionado.
-     */
     public function obtenerAsignaturasPlanViejo($versionPlanViejo)
     {
         try {
-            $resultado = DB::select('CALL SEL_ASIGNATURAS_PLAN_VIEJO(?)', [
-                (int) $versionPlanViejo
-            ]);
+            $versionPlanViejo = (int) $versionPlanViejo;
+
+            if (!in_array($versionPlanViejo, [2019, 2022])) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'La versión del plan viejo no es válida.',
+                ], 422);
+            }
+
+            $resultado = SolicitudEquivalencia::obtenerAsignaturasPlanViejo($versionPlanViejo);
 
             return response()->json([
                 'ok' => true,
@@ -222,22 +269,27 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Guarda una o varias materias seleccionadas por el alumno.
-     */
     public function guardarDetalleSolicitud(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'id_solicitud_equivalencia' => 'required|integer',
-                'version_plan_viejo'        => 'required|integer',
+                'id_solicitud_equivalencia'               => 'required|integer',
+                'version_plan_viejo'                      => 'required|integer|in:2019,2022',
+                'asignaturas'                             => 'required|array|min:1',
+                'asignaturas.*.codigo_asignatura_viejo'   => 'required|string|max:20',
+                'asignaturas.*.seleccionada_alumno'       => 'nullable|boolean',
             ],
             [
                 'id_solicitud_equivalencia.required' => 'El id de solicitud es obligatorio.',
                 'id_solicitud_equivalencia.integer'  => 'El id de solicitud no es válido.',
                 'version_plan_viejo.required'        => 'La versión del plan viejo es obligatoria.',
                 'version_plan_viejo.integer'         => 'La versión del plan viejo no es válida.',
+                'version_plan_viejo.in'              => 'La versión del plan viejo no es válida.',
+                'asignaturas.required'               => 'Debes seleccionar al menos una materia.',
+                'asignaturas.array'                  => 'El formato de materias no es válido.',
+                'asignaturas.min'                    => 'Debes seleccionar al menos una materia.',
+                'asignaturas.*.codigo_asignatura_viejo.required' => 'Cada materia debe tener código.',
             ]
         );
 
@@ -252,7 +304,22 @@ class EquivalenciaController extends Controller
         try {
             $idSolicitud = (int) $request->id_solicitud_equivalencia;
             $versionPlanViejo = (int) $request->version_plan_viejo;
-            $asignaturas = $this->normalizarAsignaturasDetalle($request);
+            $asignaturas = $request->input('asignaturas', []);
+            $idPersona = $this->obtenerIdPersonaAutenticada();
+
+            if (!$idPersona) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No se pudo identificar la persona autenticada.',
+                ], 401);
+            }
+
+            if (!SolicitudEquivalencia::esPropietario($idSolicitud, $idPersona)) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No tiene permisos para modificar esta solicitud.',
+                ], 403);
+            }
 
             if (empty($asignaturas)) {
                 return response()->json([
@@ -261,37 +328,16 @@ class EquivalenciaController extends Controller
                 ], 422);
             }
 
-            foreach ($asignaturas as $asignatura) {
-                $codigo = trim((string) ($asignatura['codigo_asignatura_viejo'] ?? ''));
-
-                if ($codigo === '') {
-                    continue;
-                }
-
-                $notaFinal = isset($asignatura['nota_final']) && $asignatura['nota_final'] !== ''
-                    ? (float) $asignatura['nota_final']
-                    : null;
-
-                $seleccionada = array_key_exists('seleccionada_alumno', $asignatura)
-                    ? (int) ((bool) $asignatura['seleccionada_alumno'])
-                    : 1;
-
-                DB::select('CALL INS_SOLICITUD_EQUIVALENCIA_DETALLE(?, ?, ?, ?, ?)', [
-                    $idSolicitud,
-                    $versionPlanViejo,
-                    $codigo,
-                    $notaFinal,
-                    $seleccionada,
-                ]);
-            }
+            SolicitudEquivalencia::guardarDetalleSolicitud($idSolicitud, $versionPlanViejo, $asignaturas);
 
             return response()->json([
                 'ok' => true,
-                'message' => 'Detalle guardado correctamente.',
+                'message' => 'Materias guardadas correctamente.',
             ]);
         } catch (\Throwable $e) {
             Log::error('Error al guardar detalle de la solicitud', [
                 'error' => $e->getMessage(),
+                'payload' => $request->all(),
             ]);
 
             return response()->json([
@@ -302,29 +348,33 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve la cabecera de una solicitud.
-     */
     public function verCabeceraSolicitud($idSolicitud)
     {
         try {
+            $idSolicitud = (int) $idSolicitud;
             $rol = $this->obtenerRolActual();
+            $idPersona = $this->obtenerIdPersonaAutenticada();
 
-            if (!$this->puedeRevisarEquivalencias($rol)) {
+            $cabecera = SolicitudEquivalencia::obtenerCabecera($idSolicitud);
+
+            if (!$cabecera) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Solicitud no encontrada.',
+                ], 404);
+            }
+
+            if (!SolicitudEquivalencia::puedeAcceder($cabecera, $rol, $idPersona)) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'No tiene permisos para consultar esta solicitud.',
                 ], 403);
             }
 
-            $resultado = DB::select('CALL SEL_SOLICITUD_EQUIVALENCIA_CABECERA(?)', [
-                (int) $idSolicitud
-            ]);
-
             return response()->json([
                 'ok' => true,
                 'rol' => $rol,
-                'data' => $resultado[0] ?? null,
+                'data' => $cabecera,
             ]);
         } catch (\Throwable $e) {
             Log::error('Error al consultar cabecera de solicitud', [
@@ -340,24 +390,30 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve el detalle completo de una solicitud.
-     */
     public function verDetalleSolicitud($idSolicitud)
     {
         try {
+            $idSolicitud = (int) $idSolicitud;
             $rol = $this->obtenerRolActual();
+            $idPersona = $this->obtenerIdPersonaAutenticada();
 
-            if (!$this->puedeRevisarEquivalencias($rol)) {
+            $cabecera = SolicitudEquivalencia::obtenerCabecera($idSolicitud);
+
+            if (!$cabecera) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Solicitud no encontrada.',
+                ], 404);
+            }
+
+            if (!SolicitudEquivalencia::puedeAcceder($cabecera, $rol, $idPersona)) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'No tiene permisos para consultar el detalle.',
                 ], 403);
             }
 
-            $resultado = DB::select('CALL SEL_DETALLE_SOLICITUD_EQUIVALENCIA(?)', [
-                (int) $idSolicitud
-            ]);
+            $resultado = SolicitudEquivalencia::obtenerDetalle($idSolicitud);
 
             return response()->json([
                 'ok' => true,
@@ -378,15 +434,30 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Devuelve equivalencias preliminares de una solicitud.
-     */
     public function verEquivalenciasPreliminares($idSolicitud)
     {
         try {
-            $resultado = DB::select('CALL SEL_EQUIVALENCIAS_PRELIMINARES_SOLICITUD(?)', [
-                (int) $idSolicitud
-            ]);
+            $idSolicitud = (int) $idSolicitud;
+            $rol = $this->obtenerRolActual();
+            $idPersona = $this->obtenerIdPersonaAutenticada();
+
+            $cabecera = SolicitudEquivalencia::obtenerCabecera($idSolicitud);
+
+            if (!$cabecera) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Solicitud no encontrada.',
+                ], 404);
+            }
+
+            if (!SolicitudEquivalencia::puedeAcceder($cabecera, $rol, $idPersona)) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No tiene permisos para consultar estas equivalencias.',
+                ], 403);
+            }
+
+            $resultado = SolicitudEquivalencia::obtenerEquivalenciasPreliminares($idSolicitud);
 
             return response()->json([
                 'ok' => true,
@@ -406,17 +477,13 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Valida una materia puntual.
-     * Secretaría y Coordinación pueden hacerlo.
-     */
     public function validarDetalleSolicitud(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
                 'id_solicitud_equivalencia' => 'required|integer',
-                'version_plan_viejo'        => 'required|integer',
+                'version_plan_viejo'        => 'required|integer|in:2019,2022',
                 'codigo_asignatura_viejo'   => 'required|string|max:20',
                 'validada_revisor'          => 'required|boolean',
                 'observacion_revision'      => 'nullable|string|max:255',
@@ -440,20 +507,20 @@ class EquivalenciaController extends Controller
         try {
             $rol = $this->obtenerRolActual();
 
-            if (!$this->puedeRevisarEquivalencias($rol)) {
+            if (!SolicitudEquivalencia::puedeRevisarEquivalencias($rol)) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'No tiene permisos para validar el detalle.',
                 ], 403);
             }
 
-            DB::select('CALL UPD_VALIDACION_SOLICITUD_EQUIVALENCIA_DETALLE(?, ?, ?, ?, ?)', [
+            SolicitudEquivalencia::validarDetalleSolicitud(
                 (int) $request->id_solicitud_equivalencia,
                 (int) $request->version_plan_viejo,
                 trim((string) $request->codigo_asignatura_viejo),
                 (int) ((bool) $request->boolean('validada_revisor')),
-                $request->observacion_revision,
-            ]);
+                $request->observacion_revision
+            );
 
             return response()->json([
                 'ok' => true,
@@ -473,18 +540,6 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Cambia el estado general de la solicitud.
-     *
-     * Secretaría:
-     * - PENDIENTE
-     * - EN_REVISION
-     *
-     * Coordinación:
-     * - APROBADA
-     * - RECHAZADA
-     * - también puede mover a EN_REVISION si quieres
-     */
     public function validarSolicitud(Request $request)
     {
         $validator = Validator::make(
@@ -512,21 +567,21 @@ class EquivalenciaController extends Controller
             $rol = $this->obtenerRolActual();
             $estado = strtoupper(trim((string) $request->estado_solicitud));
 
-            if (!$this->puedeRevisarEquivalencias($rol)) {
+            if (!SolicitudEquivalencia::puedeRevisarEquivalencias($rol)) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'No tiene permisos para validar esta solicitud.',
                 ], 403);
             }
 
-            if ($this->esSecretaria($rol) && !in_array($estado, ['PENDIENTE', 'EN_REVISION'])) {
+            if (SolicitudEquivalencia::esSecretaria($rol) && !in_array($estado, ['PENDIENTE', 'EN_REVISION'])) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'Secretaría solo puede dejar la solicitud en PENDIENTE o EN_REVISION.',
                 ], 403);
             }
 
-            if ($this->esCoordinacion($rol) && !in_array($estado, ['EN_REVISION', 'APROBADA', 'RECHAZADA'])) {
+            if (SolicitudEquivalencia::esCoordinacion($rol) && !in_array($estado, ['EN_REVISION', 'APROBADA', 'RECHAZADA'])) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'Coordinación solo puede dejar la solicitud en EN_REVISION, APROBADA o RECHAZADA.',
@@ -535,12 +590,12 @@ class EquivalenciaController extends Controller
 
             $idUsuarioRevisor = $this->obtenerIdUsuarioAutenticado();
 
-            DB::select('CALL UPD_VALIDACION_SOLICITUD_EQUIVALENCIA(?, ?, ?, ?)', [
+            SolicitudEquivalencia::validarSolicitud(
                 (int) $request->id_solicitud_equivalencia,
                 $estado,
                 $request->observacion_revisor,
-                $idUsuarioRevisor,
-            ]);
+                $idUsuarioRevisor
+            );
 
             return response()->json([
                 'ok' => true,
@@ -560,30 +615,26 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Descarga el documento de una solicitud.
-     * Ambas pueden descargarlo si participan en el flujo.
-     */
     public function descargarDocumento($idSolicitud)
     {
         try {
+            $idSolicitud = (int) $idSolicitud;
             $rol = $this->obtenerRolActual();
+            $idPersona = $this->obtenerIdPersonaAutenticada();
 
-            if (!$this->puedeRevisarEquivalencias($rol) && !$this->obtenerIdPersonaAutenticada()) {
-                abort(403, 'No tiene permisos para descargar el documento.');
+            $solicitud = SolicitudEquivalencia::obtenerDocumento($idSolicitud);
+
+            if (!$solicitud || empty($solicitud->ruta_documento)) {
+                abort(404, 'Documento no encontrado.');
             }
 
-            $resultado = DB::select('CALL SEL_DOCUMENTO_SOLICITUD_EQUIVALENCIA(?)', [
-                (int) $idSolicitud
-            ]);
+            if (!SolicitudEquivalencia::puedeRevisarEquivalencias($rol)) {
+                if (!$idPersona || (int) ($solicitud->id_persona ?? 0) !== $idPersona) {
+                    abort(403, 'No tiene permisos para descargar el documento.');
+                }
+            }
 
-            $solicitud = $resultado[0] ?? null;
-
-            if (
-                !$solicitud ||
-                empty($solicitud->ruta_documento) ||
-                !Storage::exists($solicitud->ruta_documento)
-            ) {
+            if (!Storage::exists($solicitud->ruta_documento)) {
                 abort(404, 'Documento no encontrado.');
             }
 
@@ -601,15 +652,38 @@ class EquivalenciaController extends Controller
         }
     }
 
-    /**
-     * Obtiene id_persona del usuario autenticado.
-     */
     private function obtenerIdPersonaAutenticada(): ?int
     {
         $usuario = Auth::user();
 
         if ($usuario && !empty($usuario->id_persona)) {
             return (int) $usuario->id_persona;
+        }
+
+        if ($usuario && isset($usuario->persona) && !empty($usuario->persona->id_persona)) {
+            return (int) $usuario->persona->id_persona;
+        }
+
+        if ($usuario && !empty($usuario->id_usuario)) {
+            $registro = DB::table('tbl_usuario')
+                ->where('id_usuario', $usuario->id_usuario)
+                ->select('id_persona')
+                ->first();
+
+            if ($registro && !empty($registro->id_persona)) {
+                return (int) $registro->id_persona;
+            }
+        }
+
+        if ($usuario && !empty($usuario->id)) {
+            $registro = DB::table('tbl_usuario')
+                ->where('id_usuario', $usuario->id)
+                ->select('id_persona')
+                ->first();
+
+            if ($registro && !empty($registro->id_persona)) {
+                return (int) $registro->id_persona;
+            }
         }
 
         if (session()->has('id_persona')) {
@@ -623,9 +697,6 @@ class EquivalenciaController extends Controller
         return null;
     }
 
-    /**
-     * Obtiene id del usuario autenticado.
-     */
     private function obtenerIdUsuarioAutenticado(): ?int
     {
         $usuario = Auth::user();
@@ -649,9 +720,6 @@ class EquivalenciaController extends Controller
         return null;
     }
 
-    /**
-     * Obtiene el rol actual desde sesión o usuario.
-     */
     private function obtenerRolActual(): ?string
     {
         $usuario = Auth::user();
@@ -669,66 +737,5 @@ class EquivalenciaController extends Controller
         }
 
         return null;
-    }
-
-    /**
-     * Define si el rol puede entrar al flujo de revisión.
-     */
-    private function puedeRevisarEquivalencias(?string $rol): bool
-    {
-        if (!$rol) {
-            return false;
-        }
-
-        return in_array($rol, [
-            'secretaria',
-            'secretaria_academica',
-            'secretaria_carrera',
-            'coordinador',
-            'coordinadora',
-        ]);
-    }
-
-    private function esSecretaria(?string $rol): bool
-    {
-        if (!$rol) {
-            return false;
-        }
-
-        return in_array($rol, [
-            'secretaria',
-            'secretaria_academica',
-            'secretaria_carrera',
-        ]);
-    }
-
-    private function esCoordinacion(?string $rol): bool
-    {
-        if (!$rol) {
-            return false;
-        }
-
-        return in_array($rol, [
-            'coordinador',
-            'coordinadora',
-        ]);
-    }
-
-    /**
-     * Normaliza el detalle cuando viene una sola materia o varias.
-     */
-    private function normalizarAsignaturasDetalle(Request $request): array
-    {
-        $asignaturas = $request->input('asignaturas');
-
-        if (is_array($asignaturas) && !empty($asignaturas)) {
-            return array_values($asignaturas);
-        }
-
-        return [[
-            'codigo_asignatura_viejo' => $request->input('codigo_asignatura_viejo'),
-            'nota_final' => $request->input('nota_final'),
-            'seleccionada_alumno' => $request->input('seleccionada_alumno', 1),
-        ]];
     }
 }

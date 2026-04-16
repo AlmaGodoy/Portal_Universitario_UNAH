@@ -140,32 +140,18 @@
             </div>
         </div>
 
-        <div class="chart-grid">
+        <div class="chart-grid chart-grid-single">
             <div class="chart-card">
                 <div class="chart-head">
-                    <h4>Totales de Cancelaciones</h4>
-                    <p>Resumen por período</p>
+                    <h4>Comparativo por Período</h4>
+                    <p>Cancelaciones vs Cambios de Carrera</p>
                 </div>
 
                 <div class="chart-body">
-                    <div id="chartCancelaciones" class="bar-chart-placeholder">
+                    <div id="chartComparativo" class="bar-chart-placeholder">
                         Cargando información...
                     </div>
-                    <div class="chart-note" id="noteCancelaciones">Esperando datos.</div>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="chart-head">
-                    <h4>Totales de Cambios de Carrera</h4>
-                    <p>Resumen por período</p>
-                </div>
-
-                <div class="chart-body">
-                    <div id="chartCambios" class="bar-chart-placeholder">
-                        Cargando información...
-                    </div>
-                    <div class="chart-note" id="noteCambios">Esperando datos.</div>
+                    <div class="chart-note" id="noteComparativo">Esperando datos.</div>
                 </div>
             </div>
         </div>
