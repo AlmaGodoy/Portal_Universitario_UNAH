@@ -46,12 +46,14 @@
         $initials = 'C';
     }
 
-    $cancelacionRouteName = null;
+        $cancelacionRouteName = null;
 
     if (Route::has('cancelacion.coordinadora.index')) {
         $cancelacionRouteName = 'cancelacion.coordinadora.index';
     } elseif (Route::has('resolucion.cancelacion.vista')) {
         $cancelacionRouteName = 'resolucion.cancelacion.vista';
+    } elseif (Route::has('coordinador.cancelacion.index')) {
+        $cancelacionRouteName = 'coordinador.cancelacion.index';
     }
 
     $cancelacionUrl = $cancelacionRouteName
@@ -62,23 +64,28 @@
 
     $backupUrl = $backupRouteName
         ? route($backupRouteName)
+        : 'javascript:void(0)';
+
     /*
     |--------------------------------------------------------------------------
-    | RUTA DE RESPALDO / SOPORTE
+    | RUTA DE SOPORTE
     |--------------------------------------------------------------------------
     */
-    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
-
-    $soporteUrl = $soporteRouteName
-        ? route($soporteRouteName)
-        : 'javascript:void(0)';
+    $soporteUrl = url('/soporte');
 
     $dashboardActive     = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
     $cambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
-    $cancelacionActive   = request()->routeIs('cancelacion.coordinadora.*') || request()->routeIs('resolucion.cancelacion.*');
+    $cancelacionActive   = request()->routeIs('cancelacion.coordinadora.*')
+                            || request()->routeIs('resolucion.cancelacion.*')
+                            || request()->routeIs('coordinador.cancelacion.*');
     $backupActive        = request()->routeIs('backup.*') || request()->is('respaldos*');
-    $soporteActive       = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
-    $tramitesMenuOpen    = $cambioCarreraActive || $cancelacionActive;
+    $soporteActive       = request()->is('soporte') || request()->is('api/soporte*');
+    $reportesActive      = request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*');
+    $auditoriaActive     = request()->routeIs('auditoria') || request()->routeIs('auditoria*');
+    $bitacoraActive      = request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*');
+    $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion*');
+
+    $tramitesMenuOpen = $cambioCarreraActive || $cancelacionActive;
 
     $pageTitle = trim($__env->yieldContent('title', 'Panel de Coordinación'));
 @endphp
@@ -791,46 +798,15 @@
             </a>
         </li>
 
-        <li class="nav-item">
-            <a href="{{ route('coordinador.cancelacion.index') }}"
-               class="nav-link {{ request()->routeIs('coordinador.cancelacion.*') ? 'active' : '' }}">
+      <li class="nav-item">
+            <a href="{{ route('cancelacion.coordinadora.index') }}"
+               class="nav-link {{ request()->routeIs('cancelacion.coordinadora.*') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Cancelación</p>
             </a>
         </li>
     </ul>
 </li>
-
-                        {{-- Seguridad: SOLO BOTÓN DIRECTO --}}
-                        <li class="nav-item has-treeview {{ $tramitesMenuOpen ? 'menu-open' : '' }}">
-                            <a href="javascript:void(0)"
-                               class="nav-link {{ $tramitesMenuOpen ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-folder-open"></i>
-                                <p>
-                                    Trámites
-                                    <i class="right fas fa-angle-left"></i>
-                                </p>
-                            </a>
-
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="{{ route('coordinador.cambio-carrera.index') }}"
-                                       class="nav-link {{ $cambioCarreraActive ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Cambio de carrera</p>
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a href="{{ $cancelacionUrl }}"
-                                       class="nav-link {{ $cancelacionActive ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Cancelación</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
                         <li class="nav-item">
                             <a href="{{ $backupUrl }}"
                                class="nav-link {{ $backupActive ? 'active' : '' }}">
@@ -857,13 +833,6 @@
     </a>
 </li>
 
-                        <li class="nav-item">
-                            <a href="{{ route('reporte.tramites.vista') }}"
-                               class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Reportes</p>
-                            </a>
-                        </li>
 
                         <li class="nav-item">
                             <a href="{{ route('auditoria') }}"
@@ -880,15 +849,7 @@
                                 <p>Bitácora</p>
                             </a>
                         </li>
-                        @if (Route::has('bitacora.index'))
-                            <li class="nav-item">
-                                <a href="{{ route('bitacora.index') }}"
-                                   class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-book"></i>
-                                    <p>Bitácora</p>
-                                </a>
-                            </li>
-                        @endif
+                       
 
                         <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"
