@@ -25,8 +25,8 @@
                 <div class="stu-support-card-header">
                     <h2>Registrar una solicitud de soporte</h2>
                     <p>
-                        Completa el formulario con la información del problema para que pueda ser atendido
-                        por el área correspondiente.
+                        Completa el formulario con la información principal del problema
+                        para que pueda ser atendido por el área correspondiente.
                     </p>
                 </div>
 
@@ -64,10 +64,11 @@
                                 <label for="supportModulo">Módulo relacionado</label>
                                 <select id="supportModulo">
                                     <option value="">Seleccione una opción</option>
-                                    <option>Panel institucional</option>
+                                    <option>Inicio</option>
                                     <option>Equivalencias</option>
                                     <option>Mis trámites</option>
                                     <option>Configuración</option>
+                                    <option>Soporte</option>
                                     <option>Otro</option>
                                 </select>
                             </div>
@@ -76,7 +77,7 @@
                                 <label for="supportDescripcion">Descripción del problema</label>
                                 <textarea id="supportDescripcion" placeholder="Describe claramente lo que sucedió, qué estabas haciendo y qué error observaste."></textarea>
                                 <div class="stu-support-help">
-                                    Procura indicar el módulo, el paso donde ocurrió el problema y si apareció algún mensaje de error.
+                                    Indica el módulo donde ocurrió el problema, el paso exacto y si apareció algún mensaje de error.
                                 </div>
                             </div>
                         </div>
@@ -147,49 +148,6 @@
         <aside class="stu-support-side">
             <div class="stu-support-card">
                 <div class="stu-support-card-header">
-                    <h2>Canales de atención</h2>
-                    <p>
-                        Medios disponibles para orientar al estudiante.
-                    </p>
-                </div>
-
-                <div class="stu-support-card-body">
-                    <div class="stu-support-channels">
-                        <div class="stu-support-channel">
-                            <div class="stu-support-channel-title">
-                                <i class="fas fa-envelope"></i>
-                                Correo institucional
-                            </div>
-                            <p>
-                                Utiliza este medio para incidencias que requieren seguimiento formal o validación posterior.
-                            </p>
-                        </div>
-
-                        <div class="stu-support-channel">
-                            <div class="stu-support-channel-title">
-                                <i class="fas fa-building"></i>
-                                Atención presencial
-                            </div>
-                            <p>
-                                Adecuado cuando el estudiante necesita orientación directa sobre el uso del portal o el estado de un trámite.
-                            </p>
-                        </div>
-
-                        <div class="stu-support-channel">
-                            <div class="stu-support-channel-title">
-                                <i class="fas fa-comments"></i>
-                                Orientación general
-                            </div>
-                            <p>
-                                Para consultas frecuentes, dudas funcionales del sistema y acompañamiento básico en el uso del portal.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stu-support-card">
-                <div class="stu-support-card-header">
                     <h2>Recomendaciones</h2>
                     <p>
                         Antes de enviar una solicitud.
@@ -205,37 +163,14 @@
                     </ul>
                 </div>
             </div>
-
-            <div class="stu-support-card">
-                <div class="stu-support-card-header">
-                    <h2>Estados de atención</h2>
-                    <p>
-                        Referencia visual para futuras solicitudes.
-                    </p>
-                </div>
-
-                <div class="stu-support-card-body">
-                    <div class="stu-support-status-box">
-                        <div class="stu-support-status-item">
-                            <strong>Pendiente</strong>
-                            <span>La solicitud fue registrada y está en espera de revisión.</span>
-                        </div>
-
-                        <div class="stu-support-status-item">
-                            <strong>En proceso</strong>
-                            <span>El caso ya está siendo revisado por el personal correspondiente.</span>
-                        </div>
-
-                        <div class="stu-support-status-item">
-                            <strong>Resuelto</strong>
-                            <span>La incidencia ya fue atendida o el usuario recibió una respuesta.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </aside>
     </div>
 </div>
 
 <script src="{{ asset('js/soporte_estudiante.js') }}"></script>
 @endsection
+
+
+
+
+
