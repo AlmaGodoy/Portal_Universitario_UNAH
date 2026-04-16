@@ -126,6 +126,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>PumaGestión – @yield('title', 'Secretaría de Carrera')</title>
     <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -872,6 +873,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+<script src="{{ asset('js/dashboard.js') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    /*
+    |--------------------------------------------------------------------------
+    | TIEMPOS
+    |--------------------------------------------------------------------------
+    | WARNING_TIME_MS = 28 minutos
+    | LOGOUT_TIME_MS  = 31 minutos
+    |--------------------------------------------------------------------------
+    */
+    const WARNING_TIME_MS = 28 * 60 * 1000;
+    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -970,6 +985,7 @@ document.addEventListener('DOMContentLoaded', function () {
         secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
         updateCountdownText();
 
+        countdownInterval = setInterval(() => {
         countdownInterval = setInterval(function () {
             secondsLeft--;
             updateCountdownText();
@@ -995,6 +1011,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetSessionTimers() {
         clearAllTimers();
 
+        warningTimer = setTimeout(() => {
+            showWarningModal();
+        }, WARNING_TIME_MS);
+
+        logoutTimer = setTimeout(() => {
         warningTimer = setTimeout(function () {
             showWarningModal();
         }, WARNING_TIME_MS);
@@ -1058,6 +1079,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
+    activityEvents.forEach((eventName) => {
     activityEvents.forEach(function (eventName) {
         window.addEventListener(eventName, function () {
             if (modalVisible) return;
