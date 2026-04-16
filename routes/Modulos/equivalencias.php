@@ -11,7 +11,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
     Route::get('/equivalencias/revision', [EquivalenciaController::class, 'indexRevisor'])
         ->name('equivalencias.revisor');
 
-    Route::prefix('api/equivalencias')->name('api.equivalencias.')->group(function () {
+    Route::prefix('equivalencias/api')->name('api.equivalencias.')->group(function () {
 
         Route::get('/mis-solicitudes', [EquivalenciaController::class, 'misSolicitudes'])
             ->name('mis');
@@ -47,3 +47,6 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
             ->name('validar');
     });
 });
+
+
+

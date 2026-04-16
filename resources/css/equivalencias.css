@@ -125,6 +125,7 @@
 
 .eq-top-banner-copy{
     min-width:0;
+    flex:1 1 auto;
 }
 
 .eq-top-banner-copy h1{
@@ -144,25 +145,29 @@
     max-width:880px;
 }
 
-.eq-dashboard-btn{
+.eq-back-btn{
     flex-shrink:0;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:8px;
-    min-height:44px;
-    padding:11px 16px;
-    background:#fff;
+    min-height:46px;
+    padding:11px 18px;
+    background:#ffffff;
     color:var(--eq-blue-900);
-    border:1px solid rgba(255,255,255,.65);
-    border-radius:12px;
-    font-size:.92rem;
-    font-weight:800;
+    border:1px solid rgba(255,255,255,.68);
+    border-radius:14px;
+    font-size:.94rem;
+    font-weight:900;
     box-shadow:0 8px 18px rgba(0,0,0,.08);
-    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
 }
 
-.eq-dashboard-btn:hover{
+.eq-back-btn i{
+    font-size:.95rem;
+}
+
+.eq-back-btn:hover{
     background:#f7faff;
     transform:translateY(-1px);
     box-shadow:0 10px 22px rgba(0,0,0,.12);
@@ -981,7 +986,7 @@
         font-size:1.8rem;
     }
 
-    .eq-dashboard-btn{
+    .eq-back-btn{
         width:100%;
     }
 
@@ -1076,3 +1081,6 @@
         min-width:680px;
     }
 }
+
+
+
