@@ -1,11 +1,12 @@
 @php
+    use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Route;
 
-    $user = auth()->user();
+    $user = Auth::user();
 
     $displayName = 'Secretaría';
-    $displayRole = 'Secretaría Académica';
+    $displayRole = 'Secretaría de Carrera';
 
     if ($user) {
         if (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
@@ -27,12 +28,15 @@
         }
     }
 
-    $correoInstitucional =
-        $user->email
-        ?? $user->correo_institucional
-        ?? optional($user->persona)->correo_institucional
-        ?? 'secretaria@unah.hn';
-        ?? 'secretaria.academica@unah.hn';
+    $correoInstitucional = 'secretaria@unah.hn';
+
+    if ($user && !empty($user->email)) {
+        $correoInstitucional = $user->email;
+    } elseif ($user && !empty($user->correo_institucional)) {
+        $correoInstitucional = $user->correo_institucional;
+    } elseif ($user && optional($user->persona)->correo_institucional) {
+        $correoInstitucional = optional($user->persona)->correo_institucional;
+    }
 
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
@@ -47,33 +51,42 @@
         $initials = 'S';
     }
 
-    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
-
     /*
     |--------------------------------------------------------------------------
     | RUTAS SEGURAS
     |--------------------------------------------------------------------------
     */
-    $cambioCarreraRouteName = Route::has('cambio-carrera.secretaria') ? 'cambio-carrera.secretaria' : null;
-    $cambioCarreraUrl = $cambioCarreraRouteName ? route($cambioCarreraRouteName) : 'javascript:void(0)';
+    $cambioCarreraUrl = Route::has('cambio-carrera.secretaria')
+        ? route('cambio-carrera.secretaria')
+        : 'javascript:void(0)';
 
-    $cancelacionRouteName = Route::has('cancelacion.secretaria.index') ? 'cancelacion.secretaria.index' : null;
-    $cancelacionUrl = $cancelacionRouteName ? route($cancelacionRouteName) : 'javascript:void(0)';
+    $cancelacionUrl = Route::has('cancelacion.secretaria.index')
+        ? route('cancelacion.secretaria.index')
+        : 'javascript:void(0)';
 
-    $fechasRouteName = Route::has('cambio-carrera.secretaria.calendarios') ? 'cambio-carrera.secretaria.calendarios' : null;
-    $fechasUrl = $fechasRouteName ? route($fechasRouteName) : 'javascript:void(0)';
+    $fechasUrl = Route::has('cambio-carrera.secretaria.calendarios')
+        ? route('cambio-carrera.secretaria.calendarios')
+        : 'javascript:void(0)';
 
-    $soporteRouteName = Route::has('soporte.vista') ? 'soporte.vista' : null;
-    $soporteUrl = $soporteRouteName ? route($soporteRouteName) : 'javascript:void(0)';
+    $respaldoRouteName = Route::has('backup.index')
+        ? 'backup.index'
+        : (Route::has('soporte.vista') ? 'soporte.vista' : null);
 
-    $auditoriaRouteName = Route::has('auditoria') ? 'auditoria' : null;
-    $auditoriaUrl = $auditoriaRouteName ? route($auditoriaRouteName) : 'javascript:void(0)';
+    $respaldoUrl = $respaldoRouteName
+        ? route($respaldoRouteName)
+        : 'javascript:void(0)';
 
-    $bitacoraRouteName = Route::has('bitacora.index') ? 'bitacora.index' : null;
-    $bitacoraUrl = $bitacoraRouteName ? route($bitacoraRouteName) : 'javascript:void(0)';
+    $auditoriaUrl = Route::has('auditoria')
+        ? route('auditoria')
+        : 'javascript:void(0)';
 
-    $configuracionRouteName = Route::has('configuracion.index') ? 'configuracion.index' : null;
-    $configuracionUrl = $configuracionRouteName ? route($configuracionRouteName) : 'javascript:void(0)';
+    $bitacoraUrl = Route::has('bitacora.index')
+        ? route('bitacora.index')
+        : 'javascript:void(0)';
+
+    $configuracionUrl = Route::has('configuracion.index')
+        ? route('configuracion.index')
+        : 'javascript:void(0)';
 
     /*
     |--------------------------------------------------------------------------
@@ -92,23 +105,19 @@
     );
 
     $menuCancelacionActive = request()->routeIs('cancelacion.secretaria.*');
-
-    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
-
-    $backupUrl = $backupRouteName
-        ? route($backupRouteName)
-        : 'javascript:void(0)';
-
-    $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
-
-    $pageTitle = trim($__env->yieldContent('title', 'Secretaría de Carrera'));
-    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $fechasActive = request()->routeIs('cambio-carrera.secretaria.calendarios');
+    $respaldoActive = request()->routeIs('backup.*')
+        || request()->is('respaldos*')
+        || request()->routeIs('soporte.vista')
+        || request()->is('soporte')
+        || request()->is('api/soporte*');
     $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
     $bitacoraActive = request()->routeIs('bitacora.*');
-    $fechasActive = request()->routeIs('cambio-carrera.secretaria.calendarios');
-    $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion') || request()->is('configuracion*');
+    $configuracionActive = request()->routeIs('configuracion.index')
+        || request()->is('configuracion')
+        || request()->is('configuracion*');
 
-    $pageTitle = trim($__env->yieldContent('title', 'Secretaría Académica'));
+    $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Secretaría de Carrera')));
 @endphp
 
 <!DOCTYPE html>
@@ -117,54 +126,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('title', 'Secretaría Académica')</title>
+    <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
         .secretaria-topbar {
-            position: sticky;
-            top: 0;
-            z-index: 500;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            min-height: 64px;
-            padding: 0 20px;
-            margin: 0 18px 0;
-            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
-            border-bottom: 4px solid #f1be1a;
-            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
-            border-radius: 0;
-        }
-
-        .secretaria-topbar::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                115deg,
-                rgba(255,255,255,.07) 0%,
-                rgba(255,255,255,.02) 40%,
-                rgba(255,255,255,0) 60%
-            );
-            pointer-events: none;
-        }
-
-        .secretaria-topbar::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 4px;
-            width: 4px;
-            background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -184,12 +155,6 @@
             display: flex;
             align-items: center;
             min-width: 0;
-            position: relative;
-            z-index: 2;
-        }
-
-        .secretaria-topbar-right {
-            gap: 6px;
         }
 
         .secretaria-topbar-right {
@@ -207,7 +172,6 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding-left: 8px;
         }
 
         .sec-breadcrumb i {
@@ -225,26 +189,6 @@
 
         .sec-icon-btn {
             position: relative;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,.16);
-            background: rgba(255,255,255,.10);
-            color: rgba(255,255,255,.88);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all .22s ease;
-            font-size: .9rem;
-        }
-
-        .sec-icon-btn:hover {
-            background: rgba(255,255,255,.20);
-            border-color: rgba(255,255,255,.30);
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,.18);
             width: 58px;
             height: 52px;
             border: 1px solid rgba(255,255,255,.14);
@@ -267,28 +211,6 @@
 
         .sec-badge {
             position: absolute;
-            top: -5px;
-            right: -5px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 4px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
-            color: #fff;
-            font-size: .6rem;
-            font-weight: 800;
-            border: 2px solid #1a4899;
-            box-shadow: 0 4px 10px rgba(229,57,53,.30);
-        }
-
-        .sec-badge.gold {
-            background: linear-gradient(135deg, #efbe1a 0%, #dca600 100%);
-            color: #16315d;
-            border-color: #1a4899;
-            box-shadow: 0 4px 10px rgba(239,190,26,.28);
             top: -6px;
             right: -4px;
             min-width: 24px;
@@ -313,38 +235,6 @@
 
         .sec-divider {
             width: 1px;
-            height: 32px;
-            background: linear-gradient(
-                180deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,.22) 50%,
-                rgba(255,255,255,0) 100%
-            );
-            margin: 0 4px;
-            flex-shrink: 0;
-        }
-
-        .sec-user-chip {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-height: 44px;
-            padding: 6px 12px 6px 6px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,.18);
-            background: rgba(255,255,255,.12);
-            color: #fff;
-            cursor: pointer;
-            transition: all .22s ease;
-            min-width: unset;
-            max-width: unset;
-        }
-
-        .sec-user-chip:hover {
-            background: rgba(255,255,255,.20);
-            border-color: rgba(255,255,255,.32);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,.18);
             height: 40px;
             background: rgba(255,255,255,.18);
         }
@@ -370,13 +260,6 @@
         }
 
         .sec-user-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
-            color: #163a78;
-            font-weight: 900;
-            font-size: .82rem;
             width: 42px;
             height: 42px;
             border-radius: 14px;
@@ -388,7 +271,6 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(239,190,26,.30);
         }
 
         .sec-user-info {
@@ -400,10 +282,6 @@
         }
 
         .sec-user-name {
-            font-size: .83rem;
-            font-weight: 900;
-            color: #ffffff;
-            line-height: 1;
             font-size: 1.02rem;
             font-weight: 800;
             white-space: nowrap;
@@ -412,17 +290,6 @@
         }
 
         .sec-user-role {
-            font-size: .68rem;
-            color: rgba(255,255,255,.60);
-            font-weight: 700;
-            line-height: 1;
-            margin-top: 2px;
-        }
-
-        .sec-user-arrow {
-            font-size: .62rem;
-            color: rgba(255,255,255,.50);
-            margin-left: 2px;
             margin-top: 4px;
             color: rgba(255,255,255,.82);
             font-size: .92rem;
@@ -607,52 +474,6 @@
             gap: 8px;
         }
 
-        .sec-user-header {
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, #f5f8ff 0%, #eef3ff 100%);
-            border-bottom: 1px solid #e8eefb;
-        }
-
-        .sec-user-header-avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
-            color: #17346c;
-            font-size: 1rem;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .sec-user-header strong {
-            display: block;
-            color: #17346c;
-            font-size: .96rem;
-            font-weight: 800;
-            margin-bottom: 3px;
-        }
-
-        .sec-user-header span {
-            color: #62708b;
-            font-size: .84rem;
-            word-break: break-word;
-        }
-
-        .content-wrapper {
-            min-height: 100vh;
-            padding-top: 0 !important;
-        }
-
-        .dashboard-shell {
-            padding-top: 0 !important;
-        }
-
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -731,7 +552,6 @@
 
         @media (max-width: 1199.98px) {
             .sec-user-chip {
-                min-width: unset;
                 min-width: 300px;
                 max-width: 340px;
             }
@@ -789,14 +609,6 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
-                        <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ $dashboardActive ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-
                         <li class="nav-item has-treeview {{ $menuRevisionOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)" class="nav-link {{ $menuRevisionOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-circle-check"></i>
@@ -808,16 +620,14 @@
 
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ $cambioCarreraUrl }}"
-                                       class="nav-link {{ $menuCambioCarreraActive ? 'active' : '' }}">
+                                    <a href="{{ $cambioCarreraUrl }}" class="nav-link {{ $menuCambioCarreraActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cambio de carrera</p>
                                     </a>
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="{{ $cancelacionUrl }}"
-                                       class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
+                                    <a href="{{ $cancelacionUrl }}" class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cancelación</p>
                                     </a>
@@ -826,48 +636,35 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $fechasUrl }}"
-                               class="nav-link {{ $fechasActive ? 'active' : '' }}">
+                            <a href="{{ $fechasUrl }}" class="nav-link {{ $fechasActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar-days"></i>
                                 <p>Fechas</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $backupUrl }}"
-                               class="nav-link {{ $backupActive ? 'active' : '' }}">
+                            <a href="{{ $respaldoUrl }}" class="nav-link {{ $respaldoActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $soporteUrl }}"
-                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-database"></i>
-                                <p>Respaldo</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ $auditoriaUrl }}"
-                               class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
+                            <a href="{{ $auditoriaUrl }}" class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $bitacoraUrl }}"
-                               class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
+                            <a href="{{ $bitacoraUrl }}" class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Bitácora</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $configuracionUrl }}"
-                               class="nav-link {{ $configuracionActive ? 'active' : '' }}">
+                            <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
@@ -889,12 +686,7 @@
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
-        <i class="fas fa-chevron-left"></i>
-    </button>
-
     <div class="content-wrapper">
-
         <div class="secretaria-topbar">
             <div class="secretaria-topbar-left">
                 <div class="sec-breadcrumb">
@@ -906,7 +698,6 @@
             </div>
 
             <div class="secretaria-topbar-right">
-
                 <div class="sec-action-group">
                     <button class="sec-icon-btn" id="btnSecNotif" title="Notificaciones">
                         <i class="fas fa-bell"></i>
@@ -1002,12 +793,8 @@
                     </button>
 
                     <div class="sec-dropdown align-right" id="dropSecUser">
-                        <div class="sec-user-header">
-                            <div class="sec-user-header-avatar">{{ $initials }}</div>
-                            <div>
-                                <strong>{{ $displayName }}</strong>
-                                <span>{{ $correoInstitucional }}</span>
-                            </div>
+                        <div class="sec-dropdown-header">
+                            <span>{{ $displayName }}</span>
                         </div>
 
                         <ul class="sec-dropdown-list">
@@ -1016,7 +803,8 @@
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="sec-dropdown-text">
-                                    <span>Mi perfil</span>
+                                    <strong>Correo institucional</strong>
+                                    <span>{{ $correoInstitucional }}</span>
                                 </div>
                             </li>
                         </ul>
@@ -1031,7 +819,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -1089,12 +876,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const btnNotif = document.getElementById('btnSecNotif');
-    const btnMsg   = document.getElementById('btnSecMsg');
-    const btnUser  = document.getElementById('btnSecUser');
-
-    const dropNotif = document.getElementById('dropSecNotif');
-    const dropMsg   = document.getElementById('dropSecMsg');
-    const dropUser  = document.getElementById('dropSecUser');
     const btnMsg = document.getElementById('btnSecMsg');
     const btnUser = document.getElementById('btnSecUser');
 
@@ -1105,7 +886,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const allDrops = [dropNotif, dropMsg, dropUser];
 
     function closeAll(except = null) {
-        allDrops.forEach(drop => {
+        allDrops.forEach(function (drop) {
             if (!drop) return;
             if (drop !== except) {
                 drop.classList.remove('show');
@@ -1137,7 +918,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const groups = document.querySelectorAll('.sec-action-group');
         let clickedInside = false;
 
-        groups.forEach(group => {
+        groups.forEach(function (group) {
             if (group.contains(e.target)) {
                 clickedInside = true;
             }
@@ -1189,7 +970,7 @@ document.addEventListener('DOMContentLoaded', function () {
         secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
         updateCountdownText();
 
-        countdownInterval = setInterval(() => {
+        countdownInterval = setInterval(function () {
             secondsLeft--;
             updateCountdownText();
 
@@ -1214,11 +995,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetSessionTimers() {
         clearAllTimers();
 
-        warningTimer = setTimeout(() => {
+        warningTimer = setTimeout(function () {
             showWarningModal();
         }, WARNING_TIME_MS);
 
-        logoutTimer = setTimeout(() => {
+        logoutTimer = setTimeout(function () {
             forceLogoutByInactivity();
         }, LOGOUT_TIME_MS);
     }
@@ -1277,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
-    activityEvents.forEach((eventName) => {
+    activityEvents.forEach(function (eventName) {
         window.addEventListener(eventName, function () {
             if (modalVisible) return;
             resetSessionTimers();
