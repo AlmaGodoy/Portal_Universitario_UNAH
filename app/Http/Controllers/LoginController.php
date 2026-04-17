@@ -253,19 +253,20 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
+            // ✅ CORREGIDO: usar $tipoUsuarioDb en lugar de $rolNombre
             if (
                 $tipoElegido === 'empleado' &&
-                !in_array($rolNombre, ['coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
+                !in_array($tipoUsuarioDb, ['docente', 'coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
             ) {
                 $this->registrarIntentoLogin(
                     $request->email,
                     $request->ip(),
                     $request->userAgent(),
                     'PORTAL_INCORRECTO',
-                    'Intento en portal empleado con rol ' . $rolNombre,
+                    'Intento en portal empleado con tipo ' . $tipoUsuarioDb,
                     (int) $r->id_usuario,
                     'login_fallido',
-                    'Portal incorrecto (empleado). Rol devuelto por SP: ' . $rolNombre
+                    'Portal incorrecto (empleado). Tipo devuelto por SP: ' . $tipoUsuarioDb
                 );
 
                 return back()->withErrors([
@@ -355,10 +356,11 @@ class LoginController extends Controller
                 return redirect()->route('dashboard');
             }
 
-            return match ($rolNombre) {
+            // ✅ CORREGIDO: usar $tipoUsuarioDb para el redirect
+            return match ($tipoUsuarioDb) {
                 'coordinador',
-                'administrador'      => redirect()->route('empleado.dashboard'),
-                'secretario'         => redirect()->route('empleado.dashboard'),
+                'administrador',
+                'secretario',
                 'secretaria_general' => redirect()->route('empleado.dashboard'),
                 default              => redirect()->route('dashboard'),
             };
