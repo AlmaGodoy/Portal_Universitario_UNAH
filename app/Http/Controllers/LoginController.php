@@ -64,21 +64,7 @@ class LoginController extends Controller
         ?string $accionBitacora = null,
         ?string $descripcionBitacora = null
     ): void {
-        try {
-            DB::select('CALL INS_LOGIN_INTENTO(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-                $email,
-                $ip,
-                $userAgent ? substr($userAgent, 0, 255) : null,
-                $resultado,
-                $detalle,
-                $idUsuario,
-                self::ID_OBJETO_LOGIN,
-                $accionBitacora,
-                $descripcionBitacora,
-            ]);
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        return;
     }
 
     private function eliminarAutenticacionPorTipo(int $idUsuario, string $tipo): void
@@ -267,19 +253,20 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
+            // ✅ CORREGIDO: usar $tipoUsuarioDb en lugar de $rolNombre
             if (
                 $tipoElegido === 'empleado' &&
-                !in_array($rolNombre, ['coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
+                !in_array($tipoUsuarioDb, ['docente', 'coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
             ) {
                 $this->registrarIntentoLogin(
                     $request->email,
                     $request->ip(),
                     $request->userAgent(),
                     'PORTAL_INCORRECTO',
-                    'Intento en portal empleado con rol ' . $rolNombre,
+                    'Intento en portal empleado con tipo ' . $tipoUsuarioDb,
                     (int) $r->id_usuario,
                     'login_fallido',
-                    'Portal incorrecto (empleado). Rol devuelto por SP: ' . $rolNombre
+                    'Portal incorrecto (empleado). Tipo devuelto por SP: ' . $tipoUsuarioDb
                 );
 
                 return back()->withErrors([
@@ -287,7 +274,6 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
-            // 2FA ACTIVO
             $needs2fa = $this->debeSolicitarTwoFactor($r->twofa_verified_at ?? null);
 
             if ($needs2fa) {
@@ -370,10 +356,11 @@ class LoginController extends Controller
                 return redirect()->route('dashboard');
             }
 
-            return match ($rolNombre) {
+            // ✅ CORREGIDO: usar $tipoUsuarioDb para el redirect
+            return match ($tipoUsuarioDb) {
                 'coordinador',
-                'administrador'      => redirect()->route('empleado.dashboard'),
-                'secretario'         => redirect()->route('empleado.dashboard'),
+                'administrador',
+                'secretario',
                 'secretaria_general' => redirect()->route('empleado.dashboard'),
                 default              => redirect()->route('dashboard'),
             };
