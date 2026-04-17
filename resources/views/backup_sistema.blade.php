@@ -36,6 +36,13 @@
         </div>
     @endif
 
+    @if(session('warning'))
+        <div class="backup-alert backup-alert-warning">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>{{ session('warning') }}</span>
+        </div>
+    @endif
+
     <div class="backup-hero-card">
         <div class="backup-hero-wrap">
             <div class="backup-hero-left">
@@ -120,7 +127,7 @@
                     <div>
                         <span class="backup-stat-label">Último respaldo visible</span>
                         <span class="backup-stat-value backup-stat-value-sm">
-                            {{ collect($historial)->first()->created_at ?? 'Sin registros' }}
+                            {{ collect($historial)->first()->nombre_archivo ?? 'Sin registros' }}
                         </span>
                     </div>
                 </div>
@@ -157,7 +164,7 @@
                         <th><i class="fas fa-file-archive"></i> Nombre del archivo</th>
                         <th><i class="fas fa-weight-hanging"></i> Tamaño</th>
                         <th><i class="fas fa-user"></i> Usuario</th>
-                        <th><i class="fas fa-calendar"></i> Fecha de creación</th>
+                        <th><i class="fas fa-calendar"></i> Registro</th>
                     </tr>
                 </thead>
                 <tbody id="backup-tbody">
@@ -186,16 +193,16 @@
                             <td>
                                 <div class="user-cell">
                                     <div class="user-avatar">
-                                        {{ strtoupper(substr(trim((string) $log->usuario), 0, 2)) }}
+                                        {{ strtoupper(substr(trim((string) ($log->usuario ?? 'US')), 0, 2)) }}
                                     </div>
-                                    <span>{{ $log->usuario }}</span>
+                                    <span>{{ $log->usuario ?? 'Usuario' }}</span>
                                 </div>
                             </td>
 
                             <td>
                                 <div class="date-cell">
                                     <i class="fas fa-clock"></i>
-                                    <span>{{ $log->created_at }}</span>
+                                    <span>#{{ $log->id ?? 'Sin registro' }}</span>
                                 </div>
                             </td>
                         </tr>
