@@ -64,7 +64,21 @@ class LoginController extends Controller
         ?string $accionBitacora = null,
         ?string $descripcionBitacora = null
     ): void {
-        return;
+        try {
+            DB::select('CALL INS_LOGIN_INTENTO(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                $email,
+                $ip,
+                $userAgent ? substr($userAgent, 0, 255) : null,
+                $resultado,
+                $detalle,
+                $idUsuario,
+                self::ID_OBJETO_LOGIN,
+                $accionBitacora,
+                $descripcionBitacora,
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     private function eliminarAutenticacionPorTipo(int $idUsuario, string $tipo): void
@@ -273,6 +287,7 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
+            // 2FA ACTIVO
             $needs2fa = $this->debeSolicitarTwoFactor($r->twofa_verified_at ?? null);
 
             if ($needs2fa) {
