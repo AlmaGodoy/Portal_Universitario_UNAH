@@ -1,4 +1,4 @@
-@extends('layouts.app-estudiante')
+@extends('layouts.app-secretaria')
 
 @section('titulo', 'Revisión de Equivalencias')
 
@@ -118,12 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = '{{ csrf_token() }}';
 
     const routes = {
-        pendientes: '{{ route('equivalencias.pendientes') }}',
-        cabecera: '{{ route('equivalencias.solicitud.cabecera', ['idSolicitud' => '__ID__']) }}',
-        detalle: '{{ route('equivalencias.solicitud.detalle', ['idSolicitud' => '__ID__']) }}',
-        documento: '{{ route('equivalencias.solicitud.documento', ['idSolicitud' => '__ID__']) }}',
-        validarDetalle: '{{ route('equivalencias.detalle.validar') }}',
-        validarSolicitud: '{{ route('equivalencias.validar') }}',
+        pendientes: '{{ route('api.equivalencias.pendientes') }}',
+        cabecera: '{{ route('api.equivalencias.solicitud.cabecera', ['idSolicitud' => '__ID__']) }}',
+        detalle: '{{ route('api.equivalencias.solicitud.detalle', ['idSolicitud' => '__ID__']) }}',
+        documento: '{{ route('api.equivalencias.solicitud.documento', ['idSolicitud' => '__ID__']) }}',
+        validarDetalle: '{{ route('api.equivalencias.detalle.validar') }}',
+        validarSolicitud: '{{ route('api.equivalencias.validar') }}',
     };
 
     let solicitudActual = null;

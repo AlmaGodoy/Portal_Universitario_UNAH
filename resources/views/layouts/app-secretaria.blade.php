@@ -28,12 +28,6 @@
         }
     }
 
-    $correoInstitucional =
-        $user->email
-        ?? $user->correo_institucional
-        ?? optional($user->persona)->correo_institucional
-        ?? 'secretaria@unah.hn';
-        ?? 'secretaria.academica@unah.hn';
     $correoInstitucional = 'secretaria@unah.hn';
 
     if ($user && !empty($user->email)) {
@@ -54,16 +48,18 @@
     }
 
     if ($initials === '') {
-        $initials = 'S';
+        $initials = 'SC';
     }
-
-    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
 
     /*
     |--------------------------------------------------------------------------
     | RUTAS SEGURAS
     |--------------------------------------------------------------------------
     */
+    $dashboardUrl = Route::has('empleado.dashboard')
+        ? route('empleado.dashboard')
+        : 'javascript:void(0)';
+
     $cambioCarreraUrl = Route::has('cambio-carrera.secretaria')
         ? route('cambio-carrera.secretaria')
         : 'javascript:void(0)';
@@ -72,16 +68,16 @@
         ? route('cancelacion.secretaria.index')
         : 'javascript:void(0)';
 
+    $equivalenciasUrl = Route::has('equivalencias.revisor')
+        ? route('equivalencias.revisor')
+        : 'javascript:void(0)';
+
     $fechasUrl = Route::has('cambio-carrera.secretaria.calendarios')
         ? route('cambio-carrera.secretaria.calendarios')
         : 'javascript:void(0)';
 
-    $respaldoRouteName = Route::has('backup.index')
-        ? 'backup.index'
-        : (Route::has('soporte.vista') ? 'soporte.vista' : null);
-
-    $respaldoUrl = $respaldoRouteName
-        ? route($respaldoRouteName)
+    $respaldoUrl = Route::has('backup.index')
+        ? route('backup.index')
         : 'javascript:void(0)';
 
     $auditoriaUrl = Route::has('auditoria')
@@ -92,20 +88,27 @@
         ? route('bitacora.index')
         : 'javascript:void(0)';
 
+    $soporteUrl = Route::has('soporte.vista')
+        ? route('soporte.vista')
+        : 'javascript:void(0)';
+
     $configuracionUrl = Route::has('configuracion.index')
         ? route('configuracion.index')
         : 'javascript:void(0)';
 
     /*
     |--------------------------------------------------------------------------
-    | MENÚS ACTIVOS
+    | ACTIVOS DEL MENÚ
     |--------------------------------------------------------------------------
     */
+    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
+
     $menuRevisionOpen = request()->routeIs(
         'cambio-carrera.secretaria',
         'cambio-carrera.secretaria.revisar',
-        'cancelacion.secretaria.*'
-    );
+        'cancelacion.secretaria.*',
+        'equivalencias.revisor'
+    ) || request()->is('equivalencias/revision*') || request()->is('equivalencias/api/*');
 
     $menuCambioCarreraActive = request()->routeIs(
         'cambio-carrera.secretaria',
@@ -114,24 +117,22 @@
 
     $menuCancelacionActive = request()->routeIs('cancelacion.secretaria.*');
 
-    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+    $menuEquivalenciasActive = request()->routeIs('equivalencias.revisor')
+        || request()->is('equivalencias/revision*')
+        || request()->is('equivalencias/api/*');
 
-    $backupUrl = $backupRouteName
-        ? route($backupRouteName)
-        : 'javascript:void(0)';
-
-    $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
-
-    $pageTitle = trim($__env->yieldContent('title', 'Secretaría de Carrera'));
-    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
     $fechasActive = request()->routeIs('cambio-carrera.secretaria.calendarios');
-    $respaldoActive = request()->routeIs('backup.*')
-        || request()->is('respaldos*')
-        || request()->routeIs('soporte.vista')
+
+    $respaldoActive = request()->routeIs('backup.*') || request()->is('respaldos*');
+
+    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+
+    $bitacoraActive = request()->routeIs('bitacora.*');
+
+    $soporteActive = request()->routeIs('soporte.vista')
         || request()->is('soporte')
         || request()->is('api/soporte*');
-    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
-    $bitacoraActive = request()->routeIs('bitacora.*');
+
     $configuracionActive = request()->routeIs('configuracion.index')
         || request()->is('configuracion')
         || request()->is('configuracion*');
@@ -145,7 +146,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('title', 'Secretaría de Carrera')</title>
     <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -156,6 +156,15 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
+        .content-wrapper {
+            min-height: 100vh;
+            padding-top: 0 !important;
+        }
+
+        .dashboard-shell {
+            padding-top: 0 !important;
+        }
+
         .secretaria-topbar {
             position: sticky;
             top: 0;
@@ -170,7 +179,6 @@
             background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
             border-bottom: 4px solid #f1be1a;
             box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
-            border-radius: 0;
         }
 
         .secretaria-topbar::before {
@@ -186,28 +194,6 @@
             pointer-events: none;
         }
 
-        .secretaria-topbar::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 4px;
-            width: 4px;
-            background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-            padding: 10px 18px;
-            margin: 14px 14px 0;
-            border-radius: 0 0 20px 20px;
-            background: linear-gradient(135deg, #204998 0%, #2956ac 55%, #234a97 100%);
-            border-bottom: 4px solid #f1be1a;
-            box-shadow: 0 14px 28px rgba(12, 35, 82, .18);
-            position: relative;
-            z-index: 20;
-        }
-
         .secretaria-topbar-left,
         .secretaria-topbar-right {
             display: flex;
@@ -215,10 +201,6 @@
             min-width: 0;
             position: relative;
             z-index: 2;
-        }
-
-        .secretaria-topbar-right {
-            gap: 6px;
         }
 
         .secretaria-topbar-right {
@@ -237,10 +219,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             padding-left: 8px;
-        }
-
-        .sec-breadcrumb i {
-            font-size: .86rem;
         }
 
         .sec-breadcrumb .active {
@@ -274,24 +252,6 @@
             color: #fff;
             transform: translateY(-2px);
             box-shadow: 0 8px 18px rgba(0,0,0,.18);
-            width: 58px;
-            height: 52px;
-            border: 1px solid rgba(255,255,255,.14);
-            border-radius: 16px;
-            background: rgba(255,255,255,.08);
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.15rem;
-            transition: all .18s ease;
-            backdrop-filter: blur(8px);
-        }
-
-        .sec-icon-btn:hover {
-            background: rgba(255,255,255,.16);
-            transform: translateY(-1px);
-            color: #fff;
         }
 
         .sec-badge {
@@ -314,27 +274,6 @@
         }
 
         .sec-badge.gold {
-            background: linear-gradient(135deg, #efbe1a 0%, #dca600 100%);
-            color: #16315d;
-            border-color: #1a4899;
-            box-shadow: 0 4px 10px rgba(239,190,26,.28);
-            top: -6px;
-            right: -4px;
-            min-width: 24px;
-            height: 24px;
-            padding: 0 7px;
-            border-radius: 999px;
-            background: #e23b35;
-            color: #fff;
-            font-size: .76rem;
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(226,59,53,.35);
-        }
-
-        .sec-badge.gold {
             background: #f1be1a;
             color: #17346c;
             box-shadow: 0 4px 10px rgba(241,190,26,.35);
@@ -354,33 +293,8 @@
         }
 
         .sec-user-chip {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-height: 44px;
-            padding: 6px 12px 6px 6px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,.18);
-            background: rgba(255,255,255,.12);
-            color: #fff;
-            cursor: pointer;
-            transition: all .22s ease;
-            min-width: unset;
-            max-width: unset;
-        }
-
-        .sec-user-chip:hover {
-            background: rgba(255,255,255,.20);
-            border-color: rgba(255,255,255,.32);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,.18);
-            height: 40px;
-            background: rgba(255,255,255,.18);
-        }
-
-        .sec-user-chip {
-            min-width: 360px;
-            max-width: 460px;
+            min-width: 300px;
+            max-width: 360px;
             border: 1px solid rgba(255,255,255,.16);
             border-radius: 18px;
             background: rgba(255,255,255,.10);
@@ -399,13 +313,6 @@
         }
 
         .sec-user-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
-            color: #163a78;
-            font-weight: 900;
-            font-size: .82rem;
             width: 42px;
             height: 42px;
             border-radius: 14px;
@@ -429,33 +336,19 @@
         }
 
         .sec-user-name {
-            font-size: .83rem;
-            font-weight: 900;
-            color: #ffffff;
-            line-height: 1;
             font-size: 1.02rem;
             font-weight: 800;
+            color: #ffffff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .sec-user-role {
-            font-size: .68rem;
-            color: rgba(255,255,255,.60);
+            font-size: .74rem;
+            color: rgba(255,255,255,.70);
             font-weight: 700;
-            line-height: 1;
             margin-top: 2px;
-        }
-
-        .sec-user-arrow {
-            font-size: .62rem;
-            color: rgba(255,255,255,.50);
-            margin-left: 2px;
-            margin-top: 4px;
-            color: rgba(255,255,255,.82);
-            font-size: .92rem;
-            font-weight: 700;
         }
 
         .sec-user-arrow {
@@ -636,52 +529,6 @@
             gap: 8px;
         }
 
-        .sec-user-header {
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, #f5f8ff 0%, #eef3ff 100%);
-            border-bottom: 1px solid #e8eefb;
-        }
-
-        .sec-user-header-avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
-            color: #17346c;
-            font-size: 1rem;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .sec-user-header strong {
-            display: block;
-            color: #17346c;
-            font-size: .96rem;
-            font-weight: 800;
-            margin-bottom: 3px;
-        }
-
-        .sec-user-header span {
-            color: #62708b;
-            font-size: .84rem;
-            word-break: break-word;
-        }
-
-        .content-wrapper {
-            min-height: 100vh;
-            padding-top: 0 !important;
-        }
-
-        .dashboard-shell {
-            padding-top: 0 !important;
-        }
-
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -758,17 +605,14 @@
             font-weight: 700;
         }
 
-        @media (max-width: 1199.98px) {
-            .sec-user-chip {
-                min-width: unset;
-                min-width: 300px;
-                max-width: 340px;
-            }
-        }
-
         @media (max-width: 991.98px) {
             .secretaria-topbar {
                 display: none;
+            }
+
+            .sec-user-chip {
+                min-width: unset;
+                max-width: unset;
             }
         }
     </style>
@@ -819,8 +663,7 @@
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ $dashboardActive ? 'active' : '' }}">
+                            <a href="{{ $dashboardUrl }}" class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gauge-high"></i>
                                 <p>Dashboard</p>
                             </a>
@@ -849,6 +692,13 @@
                                         <p>Cancelación</p>
                                     </a>
                                 </li>
+
+                                <li class="nav-item">
+                                    <a href="{{ $equivalenciasUrl }}" class="nav-link {{ $menuEquivalenciasActive ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Equivalencias</p>
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 
@@ -860,16 +710,6 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $backupUrl }}"
-                               class="nav-link {{ $backupActive ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-database"></i>
-                                <p>Respaldo</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ $soporteUrl }}"
-                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
                             <a href="{{ $respaldoUrl }}" class="nav-link {{ $respaldoActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
@@ -887,6 +727,13 @@
                             <a href="{{ $bitacoraUrl }}" class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Bitácora</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $soporteUrl }}" class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-headset"></i>
+                                <p>Soporte</p>
                             </a>
                         </li>
 
@@ -1103,26 +950,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | TIEMPOS
-    |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = 28 minutos
-    | LOGOUT_TIME_MS  = 31 minutos
-    |--------------------------------------------------------------------------
-    */
-    const WARNING_TIME_MS = 28 * 60 * 1000;
-    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
     const btnNotif = document.getElementById('btnSecNotif');
-    const btnMsg   = document.getElementById('btnSecMsg');
-    const btnUser  = document.getElementById('btnSecUser');
-
-    const dropNotif = document.getElementById('dropSecNotif');
-    const dropMsg   = document.getElementById('dropSecMsg');
-    const dropUser  = document.getElementById('dropSecUser');
     const btnMsg = document.getElementById('btnSecMsg');
     const btnUser = document.getElementById('btnSecUser');
 
@@ -1217,7 +1045,6 @@ document.addEventListener('DOMContentLoaded', function () {
         secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
         updateCountdownText();
 
-        countdownInterval = setInterval(() => {
         countdownInterval = setInterval(function () {
             secondsLeft--;
             updateCountdownText();
@@ -1243,11 +1070,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetSessionTimers() {
         clearAllTimers();
 
-        warningTimer = setTimeout(() => {
-            showWarningModal();
-        }, WARNING_TIME_MS);
-
-        logoutTimer = setTimeout(() => {
         warningTimer = setTimeout(function () {
             showWarningModal();
         }, WARNING_TIME_MS);
@@ -1311,7 +1133,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
-    activityEvents.forEach((eventName) => {
     activityEvents.forEach(function (eventName) {
         window.addEventListener(eventName, function () {
             if (modalVisible) return;
