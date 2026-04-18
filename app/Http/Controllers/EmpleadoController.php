@@ -23,30 +23,33 @@ class EmpleadoController extends Controller
         }
 
         $user = Auth::user();
-        $rol = strtolower((string) (session('rol_texto') ?? 'sin_rol'));
+
+        // ✅ rol_texto ahora contiene tipo_usuario (secretario, coordinador, etc.)
+        $rol = strtolower(trim((string) (session('rol_texto') ?? 'sin_rol')));
 
         $anio = $request->get('anio');
         $aniosDisponibles = $this->graficas->obtenerAniosDisponibles();
 
         $data = [
-            'titulo' => 'Gestión de Carrera - FCEAC',
-            'userName' => $user->persona->nombre_persona ?? ($user->name ?? 'Usuario'),
-            'userRole' => $rol,
-            'anio' => $anio,
+            'titulo'           => 'Gestión de Carrera - FCEAC',
+            'userName'         => $user->persona->nombre_persona ?? ($user->name ?? 'Usuario'),
+            'userRole'         => $rol,
+            'anio'             => $anio,
             'aniosDisponibles' => $aniosDisponibles,
         ];
 
         return match ($rol) {
-            'secretario', 'secretaria' => $this->vistaSecretariaCarrera($data),
-            'secretaria_general'       => $this->vistaSecretariaAcademica($data),
-            'coordinador'              => $this->vistaCoordinador($data),
-            default                    => view('dashboard', $data),
+            'secretario'         => $this->vistaSecretariaCarrera($data),
+            'secretaria_general' => $this->vistaSecretariaAcademica($data),
+            'coordinador',
+            'administrador'      => $this->vistaCoordinador($data),
+            default              => view('dashboard', $data),
         };
     }
 
     /*
     |--------------------------------------------------------------------------
-    | VISTA COORDINADOR
+    | VISTA COORDINADOR / ADMINISTRADOR
     |--------------------------------------------------------------------------
     */
     protected function vistaCoordinador(array $data)
@@ -64,7 +67,7 @@ class EmpleadoController extends Controller
         }
 
         return view('coordinador_carrera', array_merge($data, [
-            'carreras' => $carreras,
+            'carreras'              => $carreras,
             'idCarreraSeleccionada' => $idCarreraActual,
         ]));
     }
@@ -89,7 +92,7 @@ class EmpleadoController extends Controller
         }
 
         return view('secre_carrera', array_merge($data, [
-            'carreras' => $carreras,
+            'carreras'              => $carreras,
             'idCarreraSeleccionada' => $idCarreraActual,
         ]));
     }
@@ -106,7 +109,7 @@ class EmpleadoController extends Controller
         $idDepartamentoSeleccionado = request('id_departamento');
 
         return view('secre_academica', array_merge($data, [
-            'departamentos' => $departamentos,
+            'departamentos'              => $departamentos,
             'idDepartamentoSeleccionado' => $idDepartamentoSeleccionado,
         ]));
     }
