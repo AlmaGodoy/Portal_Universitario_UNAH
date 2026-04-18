@@ -111,43 +111,29 @@ class UsuarioController extends Controller
                 'cod_empleado' => null,
             ]);
         } else {
-    $request->validate([
-        'id_rol' => 'required|integer|in:1,4,5',
-        'cod_empleado' => 'required|string|max:50',
-    ]);
+            $request->validate([
+                'id_rol' => 'required|integer|in:1,4,5',
+                'cod_empleado' => 'required|string|max:50',
+            ]);
 
-    if ((int) $request->id_rol === 1) {
-        $tipoEmpleado = 'secretaria_general';
+            if ((int) $request->id_rol === 1) {
+                $tipoEmpleado = 'secretaria_general';
+                $request->merge(['id_departamento' => null]);
+            } elseif ((int) $request->id_rol === 4) {
+                $tipoEmpleado = 'coordinador';
+                $request->validate(['id_departamento' => 'required|integer']);
+            } elseif ((int) $request->id_rol === 5) {
+                $tipoEmpleado = 'secretario';
+                $request->validate(['id_departamento' => 'required|integer']);
+            } else {
+                return back()->withErrors(['id_rol' => 'Rol de empleado inválido.'])->withInput();
+            }
 
-        $request->merge([
-            'id_departamento' => null,
-        ]);
-
-    } elseif ((int) $request->id_rol === 4) {
-        $tipoEmpleado = 'coordinador';
-
-        $request->validate([
-            'id_departamento' => 'required|integer',
-        ]);
-
-    } elseif ((int) $request->id_rol === 5) {
-        $tipoEmpleado = 'secretario';
-
-        $request->validate([
-            'id_departamento' => 'required|integer',
-        ]);
-
-    } else {
-        return back()->withErrors([
-            'id_rol' => 'Rol de empleado inválido.'
-        ])->withInput();
-    }
-
-    $request->merge([
-        'numero_cuenta' => null,
-        'id_carrera' => null,
-    ]);
-}
+            $request->merge([
+                'numero_cuenta' => null,
+                'id_carrera' => null,
+            ]);
+        }
 
         $nombreCompleto = trim(implode(' ', array_filter([
             trim((string) $request->primer_nombre),
@@ -207,7 +193,6 @@ class UsuarioController extends Controller
 
             $rowAuth = $resAuth[0] ?? null;
             $resultadoAuth = $rowAuth->resultado ?? 'ERROR';
-            $mensajeAuth = $rowAuth->mensaje ?? 'No se pudo registrar el token de verificación.';
 
             if ($resultadoAuth !== 'OK') {
                 return redirect()->route('portal')
@@ -230,7 +215,7 @@ class UsuarioController extends Controller
 
         } catch (\Throwable $e) {
             return back()->withErrors([
-                'registro' => $e->getMessage()
+                'registro' => $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' Línea: ' . $e->getLine()
             ])->withInput();
         }
     }
