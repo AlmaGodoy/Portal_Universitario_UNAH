@@ -1,55 +1,30 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ResolucionCancelacionController;
+use App\Http\Controllers\CancelacionCoordinadoraController;
 
-/*
-|--------------------------------------------------------------------------
-| MÓDULO: RESOLUCIÓN DE CANCELACIÓN EXCEPCIONAL
-|--------------------------------------------------------------------------
-| Este archivo es autocargado por web.php desde routes/Modulos.
-| No requiere modificar web.php.
-|--------------------------------------------------------------------------
-*/
+Route::middleware(['auth', 'session.timeout', 'roleid:3,4'])
+    ->prefix('empleado/coordinadora/cancelacion')
+    ->name('cancelacion.coordinadora.')
+    ->controller(CancelacionCoordinadoraController::class)
+    ->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| VISTA WEB DEL MÓDULO
-|--------------------------------------------------------------------------
-| Se mantiene bajo /empleado/... para seguir la convención del módulo
-| que usa el coordinador al entrar desde el portal.
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'session.timeout'])->group(function () {
-    Route::get('/empleado/resolucion-cancelacion-vista', [ResolucionCancelacionController::class, 'vista'])
-        ->name('resolucion.cancelacion.vista');
-});
+        Route::get('/', 'index')
+            ->name('index');
 
-/*
-|--------------------------------------------------------------------------
-| API - RESOLUCIÓN DE CANCELACIÓN
-|--------------------------------------------------------------------------
-| Todas las operaciones funcionales del módulo se consumen por API.
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'session.timeout'])->prefix('api/resolucion-cancelacion')->group(function () {
+        Route::get('/documento/{id_documento}', 'verDocumento')
+            ->whereNumber('id_documento')
+            ->name('documento');
 
-    // Listado de solicitudes
-    Route::get('listado', [ResolucionCancelacionController::class, 'listar'])
-        ->name('api.resolucion.cancelacion.listado');
+        Route::post('/{id_tramite}/aprobar', 'aprobar')
+            ->whereNumber('id_tramite')
+            ->name('aprobar');
 
-    // Detalle de una solicitud
-    Route::get('detalle/{id_tramite}', [ResolucionCancelacionController::class, 'detalle'])
-        ->whereNumber('id_tramite')
-        ->name('api.resolucion.cancelacion.detalle');
+        Route::post('/{id_tramite}/rechazar', 'rechazar')
+            ->whereNumber('id_tramite')
+            ->name('rechazar');
 
-    // Guardar resolución
-    Route::post('resolver/{id_tramite}', [ResolucionCancelacionController::class, 'resolver'])
-        ->whereNumber('id_tramite')
-        ->name('api.resolucion.cancelacion.resolver');
-
-    // Ver documento adjunto
-    Route::get('documento/{id_documento}', [ResolucionCancelacionController::class, 'documento'])
-        ->whereNumber('id_documento')
-        ->name('api.resolucion.cancelacion.documento');
-});
+        Route::get('/{id_tramite}', 'detalle')
+            ->whereNumber('id_tramite')
+            ->name('detalle');
+    });

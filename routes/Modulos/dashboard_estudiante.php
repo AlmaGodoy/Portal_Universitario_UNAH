@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
-Route::middleware(['auth', 'session.timeout'])->get('/dashboard', function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:2'])->get('/dashboard', function () {
 
     $user = Auth::user();
     $displayName = 'Alumno';

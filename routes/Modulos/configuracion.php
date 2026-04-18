@@ -5,7 +5,7 @@ use App\Http\Controllers\ConfiguracionController;
 
 /*
 |--------------------------------------------------------------------------
-| MODULO: CONFIGURACION (API)
+| MODULO: CONFIGURACION 
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'session.timeout'])->prefix('api/configuracion')->group(function () {
