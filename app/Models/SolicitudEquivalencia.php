@@ -242,13 +242,17 @@ class SolicitudEquivalencia extends Model
             return false;
         }
 
+        $rol = strtolower(trim($rol));
+
         return in_array($rol, [
+            'secretario',
             'secretaria',
             'secretaria_academica',
             'secretaria_carrera',
+            'secretaria_general',
             'coordinador',
             'coordinadora',
-        ]);
+        ], true);
     }
 
     public static function esSecretaria(?string $rol): bool
@@ -257,11 +261,15 @@ class SolicitudEquivalencia extends Model
             return false;
         }
 
+        $rol = strtolower(trim($rol));
+
         return in_array($rol, [
+            'secretario',
             'secretaria',
             'secretaria_academica',
             'secretaria_carrera',
-        ]);
+            'secretaria_general',
+        ], true);
     }
 
     public static function esCoordinacion(?string $rol): bool
@@ -270,9 +278,11 @@ class SolicitudEquivalencia extends Model
             return false;
         }
 
+        $rol = strtolower(trim($rol));
+
         return in_array($rol, [
             'coordinador',
             'coordinadora',
-        ]);
+        ], true);
     }
 }

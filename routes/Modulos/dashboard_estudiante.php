@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
+// ✅ Sin roleid:2 — el LoginController ya garantiza que solo estudiantes llegan aquí
 Route::middleware(['auth', 'session.timeout'])->get('/dashboard', function () {
 
     $user = Auth::user();

@@ -93,7 +93,7 @@
                         </div>
 
                         <div class="stu-support-message" id="supportMessage">
-                            Tu solicitud de soporte fue preparada correctamente. Solo falta conectarla al backend para guardarla en la base de datos.
+                            Tu solicitud será enviada a Secretaría para su revisión.
                         </div>
                     </form>
                 </div>
@@ -167,10 +167,5 @@
     </div>
 </div>
 
-<script src="{{ asset('js/soporte_estudiante.js') }}"></script>
+<script src="{{ asset('js/soporte.js') }}"></script>
 @endsection
-
-
-
-
-

@@ -64,21 +64,7 @@ class LoginController extends Controller
         ?string $accionBitacora = null,
         ?string $descripcionBitacora = null
     ): void {
-        try {
-            DB::select('CALL INS_LOGIN_INTENTO(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-                $email,
-                $ip,
-                $userAgent ? substr($userAgent, 0, 255) : null,
-                $resultado,
-                $detalle,
-                $idUsuario,
-                self::ID_OBJETO_LOGIN,
-                $accionBitacora,
-                $descripcionBitacora,
-            ]);
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        return;
     }
 
     private function eliminarAutenticacionPorTipo(int $idUsuario, string $tipo): void
@@ -248,7 +234,6 @@ class LoginController extends Controller
 
             $tipoElegido   = strtolower(trim((string) session('login_tipo')));
             $tipoUsuarioDb = strtolower(trim((string) ($r->tipo_usuario ?? '')));
-            $rolNombre     = strtolower(trim((string) ($r->rol ?? '')));
 
             if ($tipoElegido === 'estudiante' && $tipoUsuarioDb !== 'estudiante') {
                 $this->registrarIntentoLogin(
@@ -269,17 +254,17 @@ class LoginController extends Controller
 
             if (
                 $tipoElegido === 'empleado' &&
-                !in_array($rolNombre, ['coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
+                !in_array($tipoUsuarioDb, ['docente', 'coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
             ) {
                 $this->registrarIntentoLogin(
                     $request->email,
                     $request->ip(),
                     $request->userAgent(),
                     'PORTAL_INCORRECTO',
-                    'Intento en portal empleado con rol ' . $rolNombre,
+                    'Intento en portal empleado con tipo ' . $tipoUsuarioDb,
                     (int) $r->id_usuario,
                     'login_fallido',
-                    'Portal incorrecto (empleado). Rol devuelto por SP: ' . $rolNombre
+                    'Portal incorrecto (empleado). Tipo devuelto por SP: ' . $tipoUsuarioDb
                 );
 
                 return back()->withErrors([
@@ -287,7 +272,6 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
-            // 2FA ACTIVO
             $needs2fa = $this->debeSolicitarTwoFactor($r->twofa_verified_at ?? null);
 
             if ($needs2fa) {
@@ -349,10 +333,12 @@ class LoginController extends Controller
             Auth::login($authUser);
             $request->session()->regenerate();
 
+            // ✅ rol_texto usa tipo_usuario para que EmpleadoController lo lea correctamente
             session([
                 'persona_id'   => $r->id_persona ?? null,
-                'rol_texto'    => $r->rol ?? null,
+                'rol_texto'    => $r->tipo_usuario ?? null,
                 'tipo_usuario' => $r->tipo_usuario ?? null,
+                'login_tipo'   => $tipoElegido,
             ]);
 
             $this->registrarIntentoLogin(
@@ -366,17 +352,11 @@ class LoginController extends Controller
                 'Inicio de sesión exitoso.'
             );
 
-            if ($tipoUsuarioDb === 'estudiante') {
-                return redirect()->route('dashboard');
+            if ($tipoElegido === 'empleado') {
+                return redirect()->route('empleado.dashboard');
             }
 
-            return match ($rolNombre) {
-                'coordinador',
-                'administrador'      => redirect()->route('empleado.dashboard'),
-                'secretario'         => redirect()->route('empleado.dashboard'),
-                'secretaria_general' => redirect()->route('empleado.dashboard'),
-                default              => redirect()->route('dashboard'),
-            };
+            return redirect()->route('dashboard');
 
         } catch (\Throwable $e) {
             report($e);
