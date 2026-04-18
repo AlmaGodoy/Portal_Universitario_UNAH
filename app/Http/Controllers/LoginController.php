@@ -234,7 +234,6 @@ class LoginController extends Controller
 
             $tipoElegido   = strtolower(trim((string) session('login_tipo')));
             $tipoUsuarioDb = strtolower(trim((string) ($r->tipo_usuario ?? '')));
-            $rolNombre     = strtolower(trim((string) ($r->rol ?? '')));
 
             if ($tipoElegido === 'estudiante' && $tipoUsuarioDb !== 'estudiante') {
                 $this->registrarIntentoLogin(
@@ -253,7 +252,6 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
-            // ✅ CORREGIDO: usar $tipoUsuarioDb en lugar de $rolNombre
             if (
                 $tipoElegido === 'empleado' &&
                 !in_array($tipoUsuarioDb, ['docente', 'coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
@@ -335,10 +333,12 @@ class LoginController extends Controller
             Auth::login($authUser);
             $request->session()->regenerate();
 
+            // ✅ rol_texto usa tipo_usuario para que EmpleadoController lo lea correctamente
             session([
                 'persona_id'   => $r->id_persona ?? null,
-                'rol_texto'    => $r->rol ?? null,
+                'rol_texto'    => $r->tipo_usuario ?? null,
                 'tipo_usuario' => $r->tipo_usuario ?? null,
+                'login_tipo'   => $tipoElegido,
             ]);
 
             $this->registrarIntentoLogin(
@@ -352,18 +352,11 @@ class LoginController extends Controller
                 'Inicio de sesión exitoso.'
             );
 
-            if ($tipoUsuarioDb === 'estudiante') {
-                return redirect()->route('dashboard');
+            if ($tipoElegido === 'empleado') {
+                return redirect()->route('empleado.dashboard');
             }
 
-            // ✅ CORREGIDO: usar $tipoUsuarioDb para el redirect
-            return match ($tipoUsuarioDb) {
-                'coordinador',
-                'administrador',
-                'secretario',
-                'secretaria_general' => redirect()->route('empleado.dashboard'),
-                default              => redirect()->route('dashboard'),
-            };
+            return redirect()->route('dashboard');
 
         } catch (\Throwable $e) {
             report($e);
