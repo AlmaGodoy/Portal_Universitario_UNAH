@@ -9,7 +9,7 @@ use App\Http\Controllers\RolSeguridadController;
 | Rutas WEB de Seguridad
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'session.timeout'])->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:3,4'])->group(function () {
 
     Route::get('/seguridad', [RolSeguridadController::class, 'index'])
         ->name('seguridad.index');
@@ -32,7 +32,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
 | Rutas API de Seguridad
 |--------------------------------------------------------------------------
 */
-Route::prefix('api/seguridad')->middleware(['auth', 'session.timeout'])->group(function () {
+Route::prefix('api/seguridad')->middleware(['auth', 'session.timeout', 'roleid:3,4'])->group(function () {
 
     Route::post('/rol', [RolController::class, 'storeRol'])
         ->name('seguridad.rol.store');

@@ -11,7 +11,7 @@ use App\Http\Controllers\UsuarioController;
 */
 
 Route::middleware('guest')->group(function () {
-  Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
+    Route::get('/register/{tipo}', [UsuarioController::class, 'formRegistroTipo'])
         ->whereIn('tipo', ['estudiante', 'empleado'])
         ->name('register.tipo');
 
@@ -32,7 +32,7 @@ Route::prefix('api/usuarios')->group(function () {
             ->name('register.store');
     });
 
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'session.timeout', 'roleid:3,4'])->group(function () {
         Route::post('/{id_persona}/activar', [UsuarioController::class, 'activar'])
             ->name('usuarios.activar');
 

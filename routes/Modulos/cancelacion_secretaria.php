@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CancelacionSecretariaController;
 
-Route::middleware(['auth', 'session.timeout'])
+Route::middleware(['auth', 'session.timeout', 'roleid:5'])
     ->prefix('empleado/secretaria/cancelacion')
     ->name('cancelacion.secretaria.')
     ->controller(CancelacionSecretariaController::class)
