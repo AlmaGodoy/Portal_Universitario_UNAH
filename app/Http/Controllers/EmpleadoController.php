@@ -19,12 +19,11 @@ class EmpleadoController extends Controller
     public function index(Request $request)
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('portal'); // ✅ corregido: era route('login') que no existe
         }
 
         $user = Auth::user();
 
-        // ✅ rol_texto ahora contiene tipo_usuario (secretario, coordinador, etc.)
         $rol = strtolower(trim((string) (session('rol_texto') ?? 'sin_rol')));
 
         $anio = $request->get('anio');
