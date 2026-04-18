@@ -890,7 +890,11 @@
         font-size: 0.9rem;
     }
 }
-
+.backup-alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
 /* =========================
    MÓVILES PEQUEÑOS
 ========================= */

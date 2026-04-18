@@ -16,5 +16,8 @@ Route::post('/persona/agregar', [PersonaController::class, 'agregar']);
 Route::middleware(['auth', 'session.timeout'])->group(function () {
     Route::get('/persona/obtener/{id}', [PersonaController::class, 'obtener']);
     Route::put('/persona/actualizar/{id}', [PersonaController::class, 'actualizar']);
-    Route::delete('/persona/eliminar/{id}', [PersonaController::class, 'eliminar']);
+
+    Route::middleware('roleid:1,3,4,5')->group(function () {
+        Route::delete('/persona/eliminar/{id}', [PersonaController::class, 'eliminar']);
+    });
 });

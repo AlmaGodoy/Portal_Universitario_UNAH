@@ -9,10 +9,15 @@ class BackupLog extends Model
 {
     use HasFactory;
 
-    // Guardar datos sin bloqueos
+    protected $table = 'backup_logs';
+
+    public $timestamps = false;
+
+    protected $primaryKey = 'id';
+
     protected $fillable = [
         'nombre_archivo',
         'tamano',
-        'usuario'
+        'usuario',
     ];
 }

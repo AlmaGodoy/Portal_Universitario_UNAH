@@ -26,11 +26,11 @@ Route::get('/portal', function () {
             return redirect()->route('empleado.dashboard');
         }
 
-        return redirect()->route('empleado.dashboard');
+        return redirect()->route('portal');
     }
 
     return view('auth.choose_portal');
-})->name('login');
+})->name('portal');
 
 /*
 |--------------------------------------------------------------------------
@@ -76,7 +76,7 @@ Route::prefix('api')->group(function () {
         Route::get('/password/reset/{token}', [PasswordResetController::class, 'showResetForm'])
             ->name('custom.password.reset.form');
 
-        Route::post('/password/update', [PasswordResetController::class, 'resetPassword'])
+        Route::post('/password/update', [PasswordResetController::class, 'updatePassword'])
             ->name('custom.password.update');
     });
 
