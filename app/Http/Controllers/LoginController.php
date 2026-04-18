@@ -253,7 +253,6 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
-            // ✅ CORREGIDO: usar $tipoUsuarioDb en lugar de $rolNombre
             if (
                 $tipoElegido === 'empleado' &&
                 !in_array($tipoUsuarioDb, ['docente', 'coordinador', 'secretario', 'administrador', 'secretaria_general'], true)
@@ -356,13 +355,12 @@ class LoginController extends Controller
                 return redirect()->route('dashboard');
             }
 
-            // ✅ CORREGIDO: usar $tipoUsuarioDb para el redirect
             return match ($tipoUsuarioDb) {
                 'coordinador',
                 'administrador',
                 'secretario',
                 'secretaria_general' => redirect()->route('empleado.dashboard'),
-                default              => redirect()->route('dashboard'),
+                default              => redirect()->route('empleado.dashboard'),
             };
 
         } catch (\Throwable $e) {
