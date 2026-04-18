@@ -8,7 +8,7 @@ use App\Http\Controllers\GraficasController;
 | FRONTEND - VISTAS WEB
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'session.timeout'])->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,3,4,5'])->group(function () {
 
     Route::get('/empleado/graficas/secretaria-carrera', [GraficasController::class, 'vistaSecretariaCarrera'])
         ->name('graficas.secretaria_carrera');
@@ -22,7 +22,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
 | API - DATOS JSON PARA GRÁFICAS
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'session.timeout'])->prefix('api/graficas')->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,3,4,5'])->prefix('api/graficas')->group(function () {
 
     Route::get('/secretaria-carrera', [GraficasController::class, 'datosSecretariaCarrera'])
         ->name('api.graficas.secretaria_carrera');

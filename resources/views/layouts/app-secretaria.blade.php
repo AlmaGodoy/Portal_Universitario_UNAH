@@ -48,7 +48,7 @@
     }
 
     if ($initials === '') {
-        $initials = 'S';
+        $initials = 'SC';
     }
 
     /*
@@ -56,6 +56,10 @@
     | RUTAS SEGURAS
     |--------------------------------------------------------------------------
     */
+    $dashboardUrl = Route::has('empleado.dashboard')
+        ? route('empleado.dashboard')
+        : 'javascript:void(0)';
+
     $cambioCarreraUrl = Route::has('cambio-carrera.secretaria')
         ? route('cambio-carrera.secretaria')
         : 'javascript:void(0)';
@@ -64,16 +68,16 @@
         ? route('cancelacion.secretaria.index')
         : 'javascript:void(0)';
 
+    $equivalenciasUrl = Route::has('equivalencias.revisor')
+        ? route('equivalencias.revisor')
+        : 'javascript:void(0)';
+
     $fechasUrl = Route::has('cambio-carrera.secretaria.calendarios')
         ? route('cambio-carrera.secretaria.calendarios')
         : 'javascript:void(0)';
 
-    $respaldoRouteName = Route::has('backup.index')
-        ? 'backup.index'
-        : (Route::has('soporte.vista') ? 'soporte.vista' : null);
-
-    $respaldoUrl = $respaldoRouteName
-        ? route($respaldoRouteName)
+    $respaldoUrl = Route::has('backup.index')
+        ? route('backup.index')
         : 'javascript:void(0)';
 
     $auditoriaUrl = Route::has('auditoria')
@@ -84,20 +88,27 @@
         ? route('bitacora.index')
         : 'javascript:void(0)';
 
+    $soporteUrl = Route::has('soporte.vista')
+        ? route('soporte.vista')
+        : 'javascript:void(0)';
+
     $configuracionUrl = Route::has('configuracion.index')
         ? route('configuracion.index')
         : 'javascript:void(0)';
 
     /*
     |--------------------------------------------------------------------------
-    | MENÚS ACTIVOS
+    | ACTIVOS DEL MENÚ
     |--------------------------------------------------------------------------
     */
+    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
+
     $menuRevisionOpen = request()->routeIs(
         'cambio-carrera.secretaria',
         'cambio-carrera.secretaria.revisar',
-        'cancelacion.secretaria.*'
-    );
+        'cancelacion.secretaria.*',
+        'equivalencias.revisor'
+    ) || request()->is('equivalencias/revision*') || request()->is('equivalencias/api/*');
 
     $menuCambioCarreraActive = request()->routeIs(
         'cambio-carrera.secretaria',
@@ -105,14 +116,23 @@
     );
 
     $menuCancelacionActive = request()->routeIs('cancelacion.secretaria.*');
+
+    $menuEquivalenciasActive = request()->routeIs('equivalencias.revisor')
+        || request()->is('equivalencias/revision*')
+        || request()->is('equivalencias/api/*');
+
     $fechasActive = request()->routeIs('cambio-carrera.secretaria.calendarios');
-    $respaldoActive = request()->routeIs('backup.*')
-        || request()->is('respaldos*')
-        || request()->routeIs('soporte.vista')
+
+    $respaldoActive = request()->routeIs('backup.*') || request()->is('respaldos*');
+
+    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+
+    $bitacoraActive = request()->routeIs('bitacora.*');
+
+    $soporteActive = request()->routeIs('soporte.vista')
         || request()->is('soporte')
         || request()->is('api/soporte*');
-    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
-    $bitacoraActive = request()->routeIs('bitacora.*');
+
     $configuracionActive = request()->routeIs('configuracion.index')
         || request()->is('configuracion')
         || request()->is('configuracion*');
@@ -126,7 +146,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('title', 'Secretaría de Carrera')</title>
     <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -134,21 +153,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
+        .content-wrapper {
+            min-height: 100vh;
+            padding-top: 0 !important;
+        }
+
+        .dashboard-shell {
+            padding-top: 0 !important;
+        }
+
         .secretaria-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 500;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 18px;
-            padding: 10px 18px;
-            margin: 14px 14px 0;
-            border-radius: 0 0 20px 20px;
-            background: linear-gradient(135deg, #204998 0%, #2956ac 55%, #234a97 100%);
+            gap: 12px;
+            min-height: 64px;
+            padding: 0 20px;
+            margin: 0 18px 0;
+            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
             border-bottom: 4px solid #f1be1a;
-            box-shadow: 0 14px 28px rgba(12, 35, 82, .18);
-            position: relative;
-            z-index: 20;
+            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
+        }
+
+        .secretaria-topbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                115deg,
+                rgba(255,255,255,.07) 0%,
+                rgba(255,255,255,.02) 40%,
+                rgba(255,255,255,0) 60%
+            );
+            pointer-events: none;
         }
 
         .secretaria-topbar-left,
@@ -156,6 +199,8 @@
             display: flex;
             align-items: center;
             min-width: 0;
+            position: relative;
+            z-index: 2;
         }
 
         .secretaria-topbar-right {
@@ -173,10 +218,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        .sec-breadcrumb i {
-            font-size: .86rem;
+            padding-left: 8px;
         }
 
         .sec-breadcrumb .active {
@@ -190,42 +232,45 @@
 
         .sec-icon-btn {
             position: relative;
-            width: 58px;
-            height: 52px;
-            border: 1px solid rgba(255,255,255,.14);
-            border-radius: 16px;
-            background: rgba(255,255,255,.08);
-            color: #fff;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.88);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.15rem;
-            transition: all .18s ease;
-            backdrop-filter: blur(8px);
+            cursor: pointer;
+            transition: all .22s ease;
+            font-size: .9rem;
         }
 
         .sec-icon-btn:hover {
-            background: rgba(255,255,255,.16);
-            transform: translateY(-1px);
+            background: rgba(255,255,255,.20);
+            border-color: rgba(255,255,255,.30);
             color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,.18);
         }
 
         .sec-badge {
             position: absolute;
-            top: -6px;
-            right: -4px;
-            min-width: 24px;
-            height: 24px;
-            padding: 0 7px;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
             border-radius: 999px;
-            background: #e23b35;
-            color: #fff;
-            font-size: .76rem;
-            font-weight: 800;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(226,59,53,.35);
+            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 800;
+            border: 2px solid #1a4899;
+            box-shadow: 0 4px 10px rgba(229,57,53,.30);
         }
 
         .sec-badge.gold {
@@ -236,13 +281,20 @@
 
         .sec-divider {
             width: 1px;
-            height: 40px;
-            background: rgba(255,255,255,.18);
+            height: 32px;
+            background: linear-gradient(
+                180deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,.22) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            margin: 0 4px;
+            flex-shrink: 0;
         }
 
         .sec-user-chip {
-            min-width: 360px;
-            max-width: 460px;
+            min-width: 300px;
+            max-width: 360px;
             border: 1px solid rgba(255,255,255,.16);
             border-radius: 18px;
             background: rgba(255,255,255,.10);
@@ -272,6 +324,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(239,190,26,.30);
         }
 
         .sec-user-info {
@@ -285,16 +338,17 @@
         .sec-user-name {
             font-size: 1.02rem;
             font-weight: 800;
+            color: #ffffff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .sec-user-role {
-            margin-top: 4px;
-            color: rgba(255,255,255,.82);
-            font-size: .92rem;
+            font-size: .74rem;
+            color: rgba(255,255,255,.70);
             font-weight: 700;
+            margin-top: 2px;
         }
 
         .sec-user-arrow {
@@ -551,16 +605,14 @@
             font-weight: 700;
         }
 
-        @media (max-width: 1199.98px) {
-            .sec-user-chip {
-                min-width: 300px;
-                max-width: 340px;
-            }
-        }
-
         @media (max-width: 991.98px) {
             .secretaria-topbar {
                 display: none;
+            }
+
+            .sec-user-chip {
+                min-width: unset;
+                max-width: unset;
             }
         }
     </style>
@@ -610,6 +662,13 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
+                        <li class="nav-item">
+                            <a href="{{ $dashboardUrl }}" class="nav-link {{ $dashboardActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-gauge-high"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item has-treeview {{ $menuRevisionOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)" class="nav-link {{ $menuRevisionOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-circle-check"></i>
@@ -631,6 +690,13 @@
                                     <a href="{{ $cancelacionUrl }}" class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cancelación</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="{{ $equivalenciasUrl }}" class="nav-link {{ $menuEquivalenciasActive ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Equivalencias</p>
                                     </a>
                                 </li>
                             </ul>
@@ -661,6 +727,13 @@
                             <a href="{{ $bitacoraUrl }}" class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Bitácora</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $soporteUrl }}" class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-headset"></i>
+                                <p>Soporte</p>
                             </a>
                         </li>
 
@@ -877,19 +950,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | TIEMPOS
-    |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = 28 minutos
-    | LOGOUT_TIME_MS  = 31 minutos
-    |--------------------------------------------------------------------------
-    */
-    const WARNING_TIME_MS = 28 * 60 * 1000;
-    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
     const btnNotif = document.getElementById('btnSecNotif');
     const btnMsg = document.getElementById('btnSecMsg');
     const btnUser = document.getElementById('btnSecUser');
@@ -985,7 +1045,6 @@ document.addEventListener('DOMContentLoaded', function () {
         secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
         updateCountdownText();
 
-        countdownInterval = setInterval(() => {
         countdownInterval = setInterval(function () {
             secondsLeft--;
             updateCountdownText();
@@ -1011,11 +1070,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetSessionTimers() {
         clearAllTimers();
 
-        warningTimer = setTimeout(() => {
-            showWarningModal();
-        }, WARNING_TIME_MS);
-
-        logoutTimer = setTimeout(() => {
         warningTimer = setTimeout(function () {
             showWarningModal();
         }, WARNING_TIME_MS);
@@ -1079,7 +1133,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
-    activityEvents.forEach((eventName) => {
     activityEvents.forEach(function (eventName) {
         window.addEventListener(eventName, function () {
             if (modalVisible) return;
