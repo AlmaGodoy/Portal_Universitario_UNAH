@@ -4,145 +4,123 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SoporteTicket extends Model
 {
     protected $table = 'tbl_soporte';
+    protected $primaryKey = 'id_soporte';
     public $timestamps = false;
     protected $guarded = [];
 
-    /**
-     * Tickets base de soporte.
-     */
-    public function obtenerTicketsPorEmpleado(?int $idPersonaEmpleado = null): Collection
+    public function crearTicket(array $data): array
     {
-        return collect([
+        $result = DB::select(
+            'CALL INS_SOPORTE(?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
-                'id_soporte' => 1,
-                'codigo' => 'ST-2026-001',
-                'asunto' => 'No puedo iniciar sesión',
-                'usuario' => 'María Fernanda López',
-                'correo' => 'maria.lopez@unah.edu.hn',
-                'carrera' => 'Informática Administrativa',
-                'tipo' => 'Acceso al sistema',
-                'tipo_key' => 'acceso',
-                'prioridad' => 'Alta',
-                'prioridad_key' => 'alta',
-                'estado' => 'Pendiente',
-                'estado_key' => 'pendiente',
-                'canal' => 'Correo institucional',
-                'fecha' => '2026-04-10 08:20',
-                'descripcion' => 'La usuaria no puede ingresar al portal institucional y el sistema indica credenciales inválidas.',
-                'solucion_sugerida' => 'Validar correo institucional, revisar si la cuenta está bloqueada y confirmar si necesita restablecimiento de contraseña.',
-                'modulo' => 'Panel institucional',
-                'id_persona_solicitante' => null,
-            ],
-            [
-                'id_soporte' => 2,
-                'codigo' => 'ST-2026-002',
-                'asunto' => 'No me deja subir documentos',
-                'usuario' => 'Carlos Eduardo Pineda',
-                'correo' => 'carlos.pineda@unah.edu.hn',
-                'carrera' => 'Informática Administrativa',
-                'tipo' => 'Problema con documentos',
-                'tipo_key' => 'documentos',
-                'prioridad' => 'Media',
-                'prioridad_key' => 'media',
-                'estado' => 'En proceso',
-                'estado_key' => 'en_proceso',
-                'canal' => 'Presencial',
-                'fecha' => '2026-04-10 09:45',
-                'descripcion' => 'El estudiante intenta subir su historial académico, pero el archivo PDF no se refleja en el sistema.',
-                'solucion_sugerida' => 'Verificar tamaño y formato del archivo, revisar permisos de carga y confirmar ruta de almacenamiento.',
-                'modulo' => 'Mis trámites',
-                'id_persona_solicitante' => null,
-            ],
-            [
-                'id_soporte' => 3,
-                'codigo' => 'ST-2026-003',
-                'asunto' => 'Error al enviar trámite',
-                'usuario' => 'Ana Sofía Castellanos',
-                'correo' => 'ana.castellanos@unah.edu.hn',
-                'carrera' => 'Informática Administrativa',
-                'tipo' => 'Problema con trámite',
-                'tipo_key' => 'tramite',
-                'prioridad' => 'Alta',
-                'prioridad_key' => 'alta',
-                'estado' => 'Pendiente',
-                'estado_key' => 'pendiente',
-                'canal' => 'WhatsApp institucional',
-                'fecha' => '2026-04-10 10:30',
-                'descripcion' => 'Al intentar enviar una solicitud de cambio de carrera, el sistema muestra un error inesperado.',
-                'solucion_sugerida' => 'Validar datos obligatorios, revisar respuesta del backend y confirmar si el calendario académico está vigente.',
-                'modulo' => 'Mis trámites',
-                'id_persona_solicitante' => null,
-            ],
-            [
-                'id_soporte' => 4,
-                'codigo' => 'ST-2026-004',
-                'asunto' => 'No puedo actualizar perfil',
-                'usuario' => 'José Manuel Rivera',
-                'correo' => 'jose.rivera@unah.edu.hn',
-                'carrera' => 'Informática Administrativa',
-                'tipo' => 'Consulta general',
-                'tipo_key' => 'consulta',
-                'prioridad' => 'Baja',
-                'prioridad_key' => 'baja',
-                'estado' => 'Resuelto',
-                'estado_key' => 'resuelto',
-                'canal' => 'Correo institucional',
-                'fecha' => '2026-04-09 15:10',
-                'descripcion' => 'El usuario reportó que no podía actualizar su número de teléfono en el perfil.',
-                'solucion_sugerida' => 'Confirmar permisos de edición y verificar validaciones del formulario.',
-                'modulo' => 'Configuración',
-                'id_persona_solicitante' => null,
-            ],
-            [
-                'id_soporte' => 5,
-                'codigo' => 'ST-2026-005',
-                'asunto' => 'No aparece mi resolución',
-                'usuario' => 'Paola Andrea Mejía',
-                'correo' => 'paola.mejia@unah.edu.hn',
-                'carrera' => 'Informática Administrativa',
-                'tipo' => 'Problema con documentos',
-                'tipo_key' => 'documentos',
-                'prioridad' => 'Media',
-                'prioridad_key' => 'media',
-                'estado' => 'En proceso',
-                'estado_key' => 'en_proceso',
-                'canal' => 'Presencial',
-                'fecha' => '2026-04-09 13:25',
-                'descripcion' => 'La estudiante indica que el documento de resolución no aparece disponible para descargar.',
-                'solucion_sugerida' => 'Revisar generación del archivo PDF, nombre de archivo, almacenamiento y enlace de descarga.',
-                'modulo' => 'Mis trámites',
-                'id_persona_solicitante' => null,
-            ],
-            [
-                'id_soporte' => 6,
-                'codigo' => 'ST-2026-006',
-                'asunto' => 'Consulta sobre uso del portal',
-                'usuario' => 'Kevin Alejandro Torres',
-                'correo' => 'kevin.torres@unah.edu.hn',
-                'carrera' => 'Informática Administrativa',
-                'tipo' => 'Consulta general',
-                'tipo_key' => 'consulta',
-                'prioridad' => 'Baja',
-                'prioridad_key' => 'baja',
-                'estado' => 'Pendiente',
-                'estado_key' => 'pendiente',
-                'canal' => 'Llamada telefónica',
-                'fecha' => '2026-04-08 11:00',
-                'descripcion' => 'El usuario desea orientación sobre el proceso correcto para iniciar un trámite en el portal.',
-                'solucion_sugerida' => 'Brindar guía paso a paso, validar requisitos y compartir ruta del módulo correcto.',
-                'modulo' => 'Otro',
-                'id_persona_solicitante' => null,
-            ],
-        ])->values();
+                $data['id_persona_solicitante'] ?? null,
+                $data['id_carrera'] ?? null,
+                $data['asunto'] ?? null,
+                $data['tipo'] ?? null,
+                $data['prioridad'] ?? null,
+                $data['modulo'] ?? null,
+                $data['descripcion'] ?? null,
+                $data['canal'] ?? null,
+                $data['carrera'] ?? null,
+            ]
+        );
+
+        return isset($result[0]) ? (array) $result[0] : [];
     }
 
-    /**
-     * Resumen general.
-     */
+    public function obtenerTicketsPorEstudiante(?int $idPersona): Collection
+    {
+        if (!$idPersona) {
+            return collect();
+        }
+
+        $rows = DB::select('CALL SEL_SOPORTE(?, ?, ?)', [
+            'ESTUDIANTE',
+            $idPersona,
+            null,
+        ]);
+
+        return collect($rows)->map(function ($row) {
+            return $this->normalizarFila((array) $row);
+        })->values();
+    }
+
+    public function obtenerTicketsParaSecretaria(?int $idCarrera): Collection
+    {
+        $rows = DB::select('CALL SEL_SOPORTE(?, ?, ?)', [
+            'SECRETARIA',
+            null,
+            $idCarrera,
+        ]);
+
+        return collect($rows)->map(function ($row) {
+            return $this->normalizarFila((array) $row);
+        })->values();
+    }
+
+    public function obtenerTicketPorId(int $idSoporte): ?array
+    {
+        $row = DB::table('tbl_soporte as s')
+            ->join('tbl_persona as p', 'p.id_persona', '=', 's.id_persona_solicitante')
+            ->select([
+                's.id_soporte',
+                's.codigo',
+                'p.nombre_persona as usuario',
+                'p.correo_institucional as correo',
+                DB::raw("IFNULL(s.carrera, 'Sin carrera relacionada') as carrera"),
+                's.id_carrera',
+                's.tipo',
+                's.prioridad',
+                DB::raw('LOWER(s.prioridad) as prioridad_key'),
+                DB::raw('s.estado_soporte as estado'),
+                DB::raw("
+                    CASE
+                        WHEN LOWER(s.estado_soporte) = 'pendiente' THEN 'pendiente'
+                        WHEN LOWER(s.estado_soporte) = 'en proceso' THEN 'en_proceso'
+                        WHEN LOWER(s.estado_soporte) = 'resuelto' THEN 'resuelto'
+                        ELSE 'pendiente'
+                    END as estado_key
+                "),
+                DB::raw("IFNULL(s.canal, 'Portal estudiantil') as canal"),
+                DB::raw("DATE_FORMAT(s.fecha_creacion, '%Y-%m-%d %H:%i') as fecha"),
+                's.descripcion',
+                DB::raw("IFNULL(s.observacion_secretaria, 'Pendiente de revisión por secretaría.') as solucion_sugerida"),
+                's.modulo',
+                's.asunto',
+                's.id_persona_solicitante',
+                's.id_usuario_asignado',
+            ])
+            ->where('s.id_soporte', $idSoporte)
+            ->where('s.estado', 1)
+            ->first();
+
+        return $row ? $this->normalizarFila((array) $row) : null;
+    }
+
+    public function actualizarEstado(
+        int $idSoporte,
+        string $estadoSoporte,
+        ?int $idUsuarioAsignado = null,
+        ?string $observacionSecretaria = null
+    ): array {
+        $result = DB::select(
+            'CALL UPD_SOPORTE_ESTADO(?, ?, ?, ?)',
+            [
+                $idSoporte,
+                $estadoSoporte,
+                $idUsuarioAsignado,
+                $observacionSecretaria,
+            ]
+        );
+
+        return isset($result[0]) ? (array) $result[0] : [];
+    }
+
     public function obtenerResumen(Collection $tickets): array
     {
         return [
@@ -151,5 +129,64 @@ class SoporteTicket extends Model
             'en_proceso' => $tickets->where('estado_key', 'en_proceso')->count(),
             'resueltos' => $tickets->where('estado_key', 'resuelto')->count(),
         ];
+    }
+
+    private function normalizarFila(array $ticket): array
+    {
+        $ticket['id_soporte'] = isset($ticket['id_soporte']) ? (int) $ticket['id_soporte'] : null;
+        $ticket['id_persona_solicitante'] = isset($ticket['id_persona_solicitante']) ? (int) $ticket['id_persona_solicitante'] : null;
+        $ticket['id_usuario_asignado'] = isset($ticket['id_usuario_asignado']) ? (int) $ticket['id_usuario_asignado'] : null;
+        $ticket['id_carrera'] = isset($ticket['id_carrera']) ? (int) $ticket['id_carrera'] : null;
+
+        $ticket['codigo'] = $ticket['codigo'] ?? '';
+        $ticket['usuario'] = $ticket['usuario'] ?? 'Alumno';
+        $ticket['correo'] = $ticket['correo'] ?? '';
+        $ticket['carrera'] = $ticket['carrera'] ?? 'Sin carrera relacionada';
+        $ticket['tipo'] = $ticket['tipo'] ?? 'Consulta general';
+        $ticket['tipo_key'] = $ticket['tipo_key'] ?? $this->mapTipoKey((string) $ticket['tipo']);
+        $ticket['prioridad'] = $ticket['prioridad'] ?? 'Media';
+        $ticket['prioridad_key'] = $ticket['prioridad_key'] ?? $this->mapPrioridadKey((string) $ticket['prioridad']);
+        $ticket['estado'] = $ticket['estado'] ?? 'Pendiente';
+        $ticket['estado_key'] = $ticket['estado_key'] ?? $this->mapEstadoKey((string) $ticket['estado']);
+        $ticket['canal'] = $ticket['canal'] ?? 'Portal estudiantil';
+        $ticket['fecha'] = $ticket['fecha'] ?? now()->format('Y-m-d H:i');
+        $ticket['descripcion'] = $ticket['descripcion'] ?? '';
+        $ticket['solucion_sugerida'] = $ticket['solucion_sugerida'] ?? 'Pendiente de revisión por secretaría.';
+        $ticket['modulo'] = $ticket['modulo'] ?? 'Otro';
+        $ticket['asunto'] = $ticket['asunto'] ?? $ticket['tipo'];
+
+        return $ticket;
+    }
+
+    private function mapTipoKey(string $tipo): string
+    {
+        return match (mb_strtolower(trim($tipo))) {
+            'acceso al sistema' => 'acceso',
+            'problema con trámite' => 'tramite',
+            'problema con documentos' => 'documentos',
+            'error visual en la plataforma' => 'visual',
+            'consulta general' => 'consulta',
+            default => 'general',
+        };
+    }
+
+    private function mapPrioridadKey(string $prioridad): string
+    {
+        return match (mb_strtolower(trim($prioridad))) {
+            'alta' => 'alta',
+            'media' => 'media',
+            'baja' => 'baja',
+            default => 'media',
+        };
+    }
+
+    private function mapEstadoKey(string $estado): string
+    {
+        return match (mb_strtolower(trim($estado))) {
+            'pendiente' => 'pendiente',
+            'en proceso' => 'en_proceso',
+            'resuelto' => 'resuelto',
+            default => 'pendiente',
+        };
     }
 }
