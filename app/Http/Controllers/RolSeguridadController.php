@@ -322,10 +322,30 @@ class RolSeguridadController extends Controller
 
         $permisos = DB::select('CALL SEL_PERMISOS_SEGURIDAD()');
 
+        $roles = collect($rolesRaw)->map(function ($rol) {
+            return (object) [
+                'id_rol_carrera' => $rol->id_rol_carrera ?? $rol->id_rol ?? null,
+                'id_rol'         => $rol->id_rol ?? $rol->id_rol_carrera ?? null,
+                'nombre_rol'     => $rol->nombre_rol ?? '',
+                'descripcion'    => $rol->descripcion ?? '',
+                'estado_activo'  => $rol->estado_activo ?? 0,
+            ];
+        });
+
+        $objetos = collect($objetosRaw)->map(function ($objeto) {
+            return (object) [
+                'id_objeto_carrera' => $objeto->id_objeto_carrera ?? $objeto->id_objeto ?? null,
+                'id_objeto'         => $objeto->id_objeto ?? $objeto->id_objeto_carrera ?? null,
+                'nombre_objeto'     => $objeto->nombre_objeto ?? '',
+                'tipo_objeto'       => $objeto->tipo_objeto ?? '',
+                'estado_activo'     => $objeto->estado_activo ?? 0,
+            ];
+        });
+
         return view('rol_seguridad_accesos', [
             'accesos' => collect($accesos),
-            'roles' => collect($rolesRaw),
-            'objetos' => collect($objetosRaw),
+            'roles' => $roles,
+            'objetos' => $objetos,
             'permisos' => collect($permisos),
             'esCoordinador' => true,
             'esSecretariaGeneral' => false,
@@ -341,41 +361,35 @@ class RolSeguridadController extends Controller
         $request->validate([
             'id_rol_carrera' => 'required|integer',
             'id_objeto_carrera' => 'required|integer',
-            'permisos' => 'required|array|min:1',
-            'permisos.*' => 'integer',
+            'id_permiso' => 'required|integer',
         ], [
             'id_rol_carrera.required' => 'Debes seleccionar un rol.',
             'id_objeto_carrera.required' => 'Debes seleccionar un objeto.',
-            'permisos.required' => 'Debes seleccionar al menos un permiso.',
+            'id_permiso.required' => 'Debes seleccionar un permiso.',
         ]);
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
-        $mensajeFinal = 'Asignación creada correctamente.';
 
-        foreach ($request->permisos as $idPermiso) {
-            $res = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
-                'CREAR',
-                null,
-                $idCarreraActual,
-                (int) $request->id_rol_carrera,
-                (int) $idPermiso,
-                (int) $request->id_objeto_carrera,
-                Auth::id()
-            ]);
+        $res = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
+            'CREAR',
+            null,
+            $idCarreraActual,
+            (int) $request->id_rol_carrera,
+            (int) $request->id_permiso,
+            (int) $request->id_objeto_carrera,
+            Auth::id()
+        ]);
 
-            $row = $res[0] ?? null;
-            $resultado = $row->resultado ?? 'ERROR';
-            $mensaje = $row->mensaje ?? 'No se pudo crear el acceso por carrera.';
+        $row = $res[0] ?? null;
+        $resultado = $row->resultado ?? 'ERROR';
+        $mensaje = $row->mensaje ?? 'No se pudo crear el acceso por carrera.';
 
-            if ($resultado !== 'OK') {
-                return back()->withErrors(['acceso' => $mensaje])->withInput();
-            }
-
-            $mensajeFinal = $mensaje;
+        if ($resultado !== 'OK') {
+            return back()->withErrors(['acceso' => $mensaje])->withInput();
         }
 
         return redirect()->route('seguridad.accesos')
-            ->with('status', $mensajeFinal);
+            ->with('status', $mensaje);
     }
 
     public function deleteAcceso($id)
