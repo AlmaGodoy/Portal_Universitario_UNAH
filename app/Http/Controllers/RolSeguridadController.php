@@ -81,8 +81,8 @@ class RolSeguridadController extends Controller
 
         $roles = collect($rolesRes)->map(function ($rol) {
             return (object) [
-                'id_rol_carrera' => $rol->id_rol_carrera ?? null,
-                'id_rol'         => $rol->id_rol_carrera ?? null,
+                'id_rol_carrera' => $rol->id_rol_carrera ?? $rol->id_rol ?? null,
+                'id_rol'         => $rol->id_rol ?? $rol->id_rol_carrera ?? null,
                 'nombre_rol'     => $rol->nombre_rol ?? '',
                 'descripcion'    => $rol->descripcion ?? '',
                 'estado_activo'  => $rol->estado_activo ?? 0,
@@ -94,15 +94,13 @@ class RolSeguridadController extends Controller
         $filtroEstado = $request->get('estado_cuenta', '');
         $filtroRolTexto = trim((string) $request->get('id_rol', ''));
 
-        $usuariosRes = DB::select('CALL SEL_USUARIOS_SEGURIDAD_FILTRO(?, ?, ?, ?, ?, ?, ?, ?)', [
+        $usuariosRes = DB::select('CALL SEL_USUARIOS_SEGURIDAD_FILTRO(?, ?, ?, ?, ?, ?)', [
             'COORDINADOR',
             $idCarreraActual,
             $filtroBusqueda !== '' ? $filtroBusqueda : null,
             $filtroTipo !== '' ? $filtroTipo : null,
-            null,
             $filtroRolTexto !== '' ? $filtroRolTexto : null,
-            ($filtroEstado !== '' && in_array($filtroEstado, ['0', '1'], true)) ? (int) $filtroEstado : null,
-            null
+            ($filtroEstado !== '' && in_array($filtroEstado, ['0', '1'], true)) ? (int) $filtroEstado : null
         ]);
 
         $usuariosCollection = collect($usuariosRes);
