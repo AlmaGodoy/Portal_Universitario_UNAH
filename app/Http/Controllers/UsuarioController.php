@@ -111,43 +111,29 @@ class UsuarioController extends Controller
                 'cod_empleado' => null,
             ]);
         } else {
-    $request->validate([
-        'id_rol' => 'required|integer|in:1,4,5',
-        'cod_empleado' => 'required|string|max:50',
-    ]);
+            $request->validate([
+                'id_rol' => 'required|integer|in:1,4,5',
+                'cod_empleado' => 'required|string|max:50',
+            ]);
 
-    if ((int) $request->id_rol === 1) {
-        $tipoEmpleado = 'secretaria_general';
+            if ((int) $request->id_rol === 1) {
+                $tipoEmpleado = 'secretaria_general';
+                $request->merge(['id_departamento' => null]);
+            } elseif ((int) $request->id_rol === 4) {
+                $tipoEmpleado = 'coordinador';
+                $request->validate(['id_departamento' => 'required|integer']);
+            } elseif ((int) $request->id_rol === 5) {
+                $tipoEmpleado = 'secretario';
+                $request->validate(['id_departamento' => 'required|integer']);
+            } else {
+                return back()->withErrors(['id_rol' => 'Rol de empleado inválido.'])->withInput();
+            }
 
-        $request->merge([
-            'id_departamento' => null,
-        ]);
-
-    } elseif ((int) $request->id_rol === 4) {
-        $tipoEmpleado = 'coordinador';
-
-        $request->validate([
-            'id_departamento' => 'required|integer',
-        ]);
-
-    } elseif ((int) $request->id_rol === 5) {
-        $tipoEmpleado = 'secretario';
-
-        $request->validate([
-            'id_departamento' => 'required|integer',
-        ]);
-
-    } else {
-        return back()->withErrors([
-            'id_rol' => 'Rol de empleado inválido.'
-        ])->withInput();
-    }
-
-    $request->merge([
-        'numero_cuenta' => null,
-        'id_carrera' => null,
-    ]);
-}
+            $request->merge([
+                'numero_cuenta' => null,
+                'id_carrera' => null,
+            ]);
+        }
 
         $nombreCompleto = trim(implode(' ', array_filter([
             trim((string) $request->primer_nombre),
@@ -157,7 +143,10 @@ class UsuarioController extends Controller
         ])));
 
         try {
+            file_put_contents('/tmp/debug_registro.log', 'INICIO ' . date('H:i:s') . "\n", FILE_APPEND);
+
             $passwordHash = Hash::make($request->contrasena);
+            file_put_contents('/tmp/debug_registro.log', 'HASH OK' . "\n", FILE_APPEND);
 
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $nombreCompleto,
@@ -171,16 +160,19 @@ class UsuarioController extends Controller
                 $request->cod_empleado,
                 $tipoEmpleado,
             ]);
+            file_put_contents('/tmp/debug_registro.log', 'INS_USUARIO OK' . "\n", FILE_APPEND);
 
             $row = $res[0] ?? null;
             $resultado = $row->resultado ?? 'ERROR';
             $mensaje = $row->mensaje ?? 'Respuesta inválida del procedimiento';
+            file_put_contents('/tmp/debug_registro.log', 'RESULTADO: ' . $resultado . ' | MENSAJE: ' . $mensaje . "\n", FILE_APPEND);
 
             if ($resultado !== 'OK') {
                 return back()->withErrors(['registro' => $mensaje])->withInput();
             }
 
             $idUsuario = $row->id_usuario ?? null;
+            file_put_contents('/tmp/debug_registro.log', 'ID_USUARIO: ' . $idUsuario . "\n", FILE_APPEND);
 
             if (!$idUsuario) {
                 return redirect()->route('portal')
@@ -194,6 +186,7 @@ class UsuarioController extends Controller
                 $idUsuario,
                 'email_verification',
             ]);
+            file_put_contents('/tmp/debug_registro.log', 'DEL_AUTH OK' . "\n", FILE_APPEND);
 
             $resAuth = DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
                 $idUsuario,
@@ -204,10 +197,10 @@ class UsuarioController extends Controller
                 'email_verificacion_generada',
                 'Se generó token de verificación para el correo ' . $request->correo,
             ]);
+            file_put_contents('/tmp/debug_registro.log', 'INS_AUTH OK' . "\n", FILE_APPEND);
 
             $rowAuth = $resAuth[0] ?? null;
             $resultadoAuth = $rowAuth->resultado ?? 'ERROR';
-            $mensajeAuth = $rowAuth->mensaje ?? 'No se pudo registrar el token de verificación.';
 
             if ($resultadoAuth !== 'OK') {
                 return redirect()->route('portal')
@@ -215,10 +208,13 @@ class UsuarioController extends Controller
             }
 
             $link = route('email.verify', ['token' => $token]);
+            file_put_contents('/tmp/debug_registro.log', 'ENVIANDO CORREO a: ' . $request->correo . "\n", FILE_APPEND);
 
             try {
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
+                file_put_contents('/tmp/debug_registro.log', 'CORREO ENVIADO OK' . "\n", FILE_APPEND);
             } catch (\Throwable $e) {
+                file_put_contents('/tmp/debug_registro.log', 'ERROR CORREO: ' . $e->getMessage() . "\n", FILE_APPEND);
                 return redirect()->route('portal')
                     ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
             }
@@ -229,8 +225,9 @@ class UsuarioController extends Controller
                 ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
 
         } catch (\Throwable $e) {
+            file_put_contents('/tmp/debug_registro.log', 'ERROR CATCH: ' . $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' Línea: ' . $e->getLine() . "\n", FILE_APPEND);
             return back()->withErrors([
-                'registro' => $e->getMessage()
+                'registro' => $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' Línea: ' . $e->getLine()
             ])->withInput();
         }
     }
