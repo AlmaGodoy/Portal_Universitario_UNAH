@@ -1,6 +1,5 @@
 <?php
 
-namespace App\Models\Modulos;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BitacoraController;
 
