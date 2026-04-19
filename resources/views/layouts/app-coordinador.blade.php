@@ -833,7 +833,6 @@
     </a>
 </li>
 
-
                         <li class="nav-item">
                             <a href="{{ route('auditoria') }}"
                             class="nav-link {{ request()->routeIs('auditoria*') ? 'active' : '' }}">
@@ -849,7 +848,6 @@
                                 <p>Bitácora</p>
                             </a>
                         </li>
-                       
 
                         <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"
@@ -859,15 +857,6 @@
                             </a>
                         </li>
 
-                        <li class="nav-item nav-item-logout">
-                            <form action="{{ route('logout') }}" method="POST" style="margin:0;">
-                                @csrf
-                                <button type="submit" class="nav-link logout-btn">
-                                    <i class="nav-icon fas fa-right-from-bracket"></i>
-                                    <p>Cerrar sesión</p>
-                                </button>
-                            </form>
-                        </li>
 
                     </ul>
                 </nav>
@@ -881,146 +870,152 @@
 
     <div class="content-wrapper">
 
-        <div class="coordinator-topbar">
-            <div class="coordinator-topbar-left">
-                <div class="coord-breadcrumb">
-                    <i class="fas fa-house"></i>
-                    <span>Inicio</span>
-                    <i class="fas fa-chevron-right"></i>
-                    <span class="active">{{ $pageTitle }}</span>
-                </div>
+        <div class="student-topbar coordinator-topbar-sa">
+
+    <div class="student-topbar-left">
+        <div class="topbar-left-copy">
+            <div class="topbar-breadcrumb">
+                <i class="fas fa-house"></i>
+                <span>Inicio</span>
+                <i class="fas fa-chevron-right"></i>
+                <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
             </div>
+            <h1 class="topbar-page-title">Panel de coordinación académica</h1>
+        </div>
+    </div>
 
-            <div class="coordinator-topbar-right">
+    <div class="student-topbar-right">
 
-                <div class="coord-action-group">
-                    <button class="coord-icon-btn" id="btnCoordNotif" title="Notificaciones">
-                        <i class="fas fa-bell"></i>
-                        <span class="coord-badge">3</span>
-                    </button>
+        {{-- Notificaciones --}}
+        <div class="topbar-action-group">
+            <button class="topbar-icon-btn" id="btnCoordNotif" title="Notificaciones">
+                <i class="fas fa-bell"></i>
+                <span class="topbar-badge">3</span>
+            </button>
 
-                    <div class="coord-dropdown" id="dropCoordNotif">
-                        <div class="coord-dropdown-header">
-                            <span>Notificaciones</span>
-                            <a href="#">Marcar todas</a>
-                        </div>
-
-                        <ul class="coord-dropdown-list">
-                            <li class="coord-dropdown-item unread">
-                                <div class="coord-dropdown-icon blue">
-                                    <i class="fas fa-file-circle-check"></i>
-                                </div>
-                                <div class="coord-dropdown-text">
-                                    <strong>Nuevo trámite recibido</strong>
-                                    <span>Hay una solicitud pendiente de revisión en coordinación.</span>
-                                    <small>Hace 5 min</small>
-                                </div>
-                            </li>
-
-                            <li class="coord-dropdown-item unread">
-                                <div class="coord-dropdown-icon gold">
-                                    <i class="fas fa-clock"></i>
-                                </div>
-                                <div class="coord-dropdown-text">
-                                    <strong>Seguimiento requerido</strong>
-                                    <span>Una solicitud continúa en estado de revisión.</span>
-                                    <small>Hace 1 hora</small>
-                                </div>
-                            </li>
-
-                            <li class="coord-dropdown-item">
-                                <div class="coord-dropdown-icon green">
-                                    <i class="fas fa-circle-check"></i>
-                                </div>
-                                <div class="coord-dropdown-text">
-                                    <strong>Dictamen emitido</strong>
-                                    <span>Se registró correctamente una resolución reciente.</span>
-                                    <small>Ayer</small>
-                                </div>
-                            </li>
-                        </ul>
-
-                        <div class="coord-dropdown-footer">
-                            <a href="#">Ver todas las notificaciones</a>
-                        </div>
-                    </div>
+            <div class="topbar-dropdown" id="dropCoordNotif">
+                <div class="topbar-dropdown-header">
+                    <span>Notificaciones</span>
+                    <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
                 </div>
 
-                <div class="coord-action-group">
-                    <button class="coord-icon-btn" id="btnCoordMsg" title="Mensajes">
-                        <i class="fas fa-envelope"></i>
-                        <span class="coord-badge gold">1</span>
-                    </button>
-
-                    <div class="coord-dropdown" id="dropCoordMsg">
-                        <div class="coord-dropdown-header">
-                            <span>Mensajes</span>
-                            <a href="#">Ver todos</a>
+                <ul class="topbar-dropdown-list">
+                    <li class="topbar-dropdown-item unread">
+                        <div class="topbar-dropdown-icon blue">
+                            <i class="fas fa-file-circle-check"></i>
                         </div>
-
-                        <ul class="coord-dropdown-list">
-                            <li class="coord-dropdown-item unread">
-                                <div class="coord-dropdown-avatar">SA</div>
-                                <div class="coord-dropdown-text">
-                                    <strong>Secretaría Académica</strong>
-                                    <span>Se actualizó un trámite que requiere validación de coordinación.</span>
-                                    <small>Hace 30 min</small>
-                                </div>
-                            </li>
-                        </ul>
-
-                        <div class="coord-dropdown-footer">
-                            <a href="#">Ir a mensajes</a>
+                        <div class="topbar-dropdown-text">
+                            <strong>Nuevo trámite recibido</strong>
+                            <span>Hay una solicitud pendiente de revisión en coordinación.</span>
+                            <small>Hace 5 min</small>
                         </div>
-                    </div>
+                    </li>
+
+                    <li class="topbar-dropdown-item unread">
+                        <div class="topbar-dropdown-icon gold">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="topbar-dropdown-text">
+                            <strong>Seguimiento requerido</strong>
+                            <span>Una solicitud continúa en estado de revisión.</span>
+                            <small>Hace 1 hora</small>
+                        </div>
+                    </li>
+
+                    <li class="topbar-dropdown-item">
+                        <div class="topbar-dropdown-icon green">
+                            <i class="fas fa-circle-check"></i>
+                        </div>
+                        <div class="topbar-dropdown-text">
+                            <strong>Dictamen emitido</strong>
+                            <span>Se registró correctamente una resolución reciente.</span>
+                            <small>Ayer</small>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="topbar-dropdown-footer">
+                    <a href="#">Ver todas las notificaciones</a>
                 </div>
-
-                <div class="coord-divider"></div>
-
-                <div class="coord-action-group">
-                    <button class="coord-user-chip" id="btnCoordUser" title="Mi perfil">
-                        <div class="coord-user-avatar">{{ $initials }}</div>
-                        <div class="coord-user-info">
-                            <span class="coord-user-name">{{ $displayName }}</span>
-                            <span class="coord-user-role">{{ $displayRole }}</span>
-                        </div>
-                        <i class="fas fa-chevron-down coord-user-arrow"></i>
-                    </button>
-
-                    <div class="coord-dropdown align-right" id="dropCoordUser">
-                        <div class="coord-user-header">
-                            <div class="coord-user-header-avatar">{{ $initials }}</div>
-                            <div>
-                                <strong>{{ $displayName }}</strong>
-                                <span>{{ $correoInstitucional }}</span>
-                            </div>
-                        </div>
-
-                        <ul class="coord-dropdown-list">
-                            <li class="coord-dropdown-item sm">
-                                <div class="coord-dropdown-icon blue sm">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="coord-dropdown-text">
-                                    <span>Mi perfil</span>
-                                </div>
-                            </li>
-                        </ul>
-
-                        <div class="coord-dropdown-footer danger">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit">
-                                    <i class="fas fa-right-from-bracket"></i> Cerrar sesión
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
 
+        {{-- Mensajes --}}
+        <div class="topbar-action-group">
+            <button class="topbar-icon-btn" id="btnCoordMsg" title="Mensajes">
+                <i class="fas fa-envelope"></i>
+                <span class="topbar-badge gold">1</span>
+            </button>
+
+            <div class="topbar-dropdown" id="dropCoordMsg">
+                <div class="topbar-dropdown-header">
+                    <span>Mensajes</span>
+                    <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                </div>
+
+                <ul class="topbar-dropdown-list">
+                    <li class="topbar-dropdown-item unread">
+                        <div class="topbar-dropdown-avatar">SA</div>
+                        <div class="topbar-dropdown-text">
+                            <strong>Secretaría Académica</strong>
+                            <span>Se actualizó un trámite que requiere validación de coordinación.</span>
+                            <small>Hace 30 min</small>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="topbar-dropdown-footer">
+                    <a href="#">Ir a mensajes</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="topbar-divider"></div>
+
+        {{-- Usuario --}}
+        <div class="topbar-action-group">
+            <button class="student-user-chip" id="btnCoordUser" title="Mi perfil">
+                <div class="student-user-chip-avatar">{{ $initials }}</div>
+                <div class="student-user-chip-info">
+                    <span class="student-user-chip-name">{{ $displayName }}</span>
+                    <span class="student-user-chip-role">Coordinadora</span>
+                </div>
+                <i class="fas fa-chevron-down student-user-chip-arrow"></i>
+            </button>
+
+            <div class="topbar-dropdown align-right" id="dropCoordUser">
+                <div class="topbar-user-header">
+                    <div class="topbar-user-header-avatar">{{ $initials }}</div>
+                    <div>
+                        <strong>{{ $displayName }}</strong>
+                        <span>{{ $correoInstitucional }}</span>
+                    </div>
+                </div>
+
+                <ul class="topbar-dropdown-list">
+                    <li class="topbar-dropdown-item sm">
+                        <div class="topbar-dropdown-icon blue sm">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="topbar-dropdown-text">
+                            <span>Mi perfil</span>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="topbar-dropdown-footer danger">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit">
+                            <i class="fas fa-right-from-bracket"></i> Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
         <section class="content dashboard-shell">
             @yield('content')
         </section>
@@ -1295,3 +1290,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
+
