@@ -553,10 +553,21 @@ class CambioCarreraController extends Controller
     private function obtenerMensajeLimpio(Throwable $e, string $mensajeGenerico): string
     {
         if ($e instanceof QueryException) {
-            $mensajeBD = trim((string)($e->errorInfo[2] ?? ''));
+            $mensajeBD = trim((string) ($e->errorInfo[2] ?? ''));
 
             if ($mensajeBD !== '') {
+                // Quita prefijos numéricos tipo "1644 "
                 $mensajeBD = preg_replace('/^\d+\s*/', '', $mensajeBD);
+
+                // Quita "SQLSTATE[45000]: <<Unknown error>>:"
+                $mensajeBD = preg_replace('/^SQLSTATE\[[^\]]+\]:\s*<<[^>]+>>:\s*/i', '', $mensajeBD);
+
+                // Quita "(Connection: mysql ...)"
+                $mensajeBD = preg_replace('/\s*\(Connection:.*$/u', '', $mensajeBD);
+
+                // Quita "SQL: CALL ..."
+                $mensajeBD = preg_replace('/\s*SQL:\s.*$/iu', '', $mensajeBD);
+
                 return trim($mensajeBD);
             }
         }
@@ -564,13 +575,22 @@ class CambioCarreraController extends Controller
         $mensajeCompleto = trim($e->getMessage());
 
         if ($mensajeCompleto !== '') {
+            // Caso común de Laravel/MySQL
             if (preg_match('/:\s*\d+\s+(.*?)(?:\s+\(Connection:|\s+SQL:|$)/u', $mensajeCompleto, $coincidencias)) {
                 return trim($coincidencias[1]);
             }
+
+            // Limpiezas adicionales
+            $mensajeCompleto = preg_replace('/^SQLSTATE\[[^\]]+\]:\s*<<[^>]+>>:\s*/i', '', $mensajeCompleto);
+            $mensajeCompleto = preg_replace('/\s*\(Connection:.*$/u', '', $mensajeCompleto);
+            $mensajeCompleto = preg_replace('/\s*SQL:\s.*$/iu', '', $mensajeCompleto);
+
+            return trim($mensajeCompleto);
         }
 
         return $mensajeGenerico;
     }
+
 
     private function obtenerCodigoHttp(Throwable $e, int $codigoPorDefecto = 500): int
     {
@@ -691,12 +711,14 @@ class CambioCarreraController extends Controller
                 'Content-Disposition' => 'inline; filename="' . basename($rutaArchivo) . '"'
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
+            // CAMBIO: ya no mostrar todo el error técnico al usuario
             return response(
-                "Error en verDocumento(): " . $e->getMessage()
-                . " | Línea: " . $e->getLine()
-                . " | Archivo: " . $e->getFile(),
-                500
+                "Error al abrir el documento: " . $this->obtenerMensajeLimpio(
+                    $e,
+                    'No fue posible abrir el documento.'
+                ),
+                $this->obtenerCodigoHttp($e, 500)
             );
         }
     }
