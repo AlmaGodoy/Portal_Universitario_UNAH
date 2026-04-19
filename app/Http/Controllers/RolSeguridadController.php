@@ -81,8 +81,11 @@ class RolSeguridadController extends Controller
 
         $roles = collect($rolesRes)->map(function ($rol) {
             return (object) [
-                'id_rol' => $rol->id_rol_carrera,
-                'nombre_rol' => $rol->nombre_rol,
+                'id_rol_carrera' => $rol->id_rol_carrera ?? null,
+                'id_rol'         => $rol->id_rol_carrera ?? null,
+                'nombre_rol'     => $rol->nombre_rol ?? '',
+                'descripcion'    => $rol->descripcion ?? '',
+                'estado_activo'  => $rol->estado_activo ?? 0,
             ];
         });
 
@@ -339,32 +342,42 @@ class RolSeguridadController extends Controller
 
         $request->validate([
             'id_rol_carrera' => 'required|integer',
-            'id_permiso' => 'required|integer',
             'id_objeto_carrera' => 'required|integer',
+            'permisos' => 'required|array|min:1',
+            'permisos.*' => 'integer',
+        ], [
+            'id_rol_carrera.required' => 'Debes seleccionar un rol.',
+            'id_objeto_carrera.required' => 'Debes seleccionar un objeto.',
+            'permisos.required' => 'Debes seleccionar al menos un permiso.',
         ]);
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+        $mensajeFinal = 'Asignación creada correctamente.';
 
-        $res = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
-            'CREAR',
-            null,
-            $idCarreraActual,
-            (int) $request->id_rol_carrera,
-            (int) $request->id_permiso,
-            (int) $request->id_objeto_carrera,
-            Auth::id()
-        ]);
+        foreach ($request->permisos as $idPermiso) {
+            $res = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
+                'CREAR',
+                null,
+                $idCarreraActual,
+                (int) $request->id_rol_carrera,
+                (int) $idPermiso,
+                (int) $request->id_objeto_carrera,
+                Auth::id()
+            ]);
 
-        $row = $res[0] ?? null;
-        $resultado = $row->resultado ?? 'ERROR';
-        $mensaje = $row->mensaje ?? 'No se pudo crear el acceso por carrera.';
+            $row = $res[0] ?? null;
+            $resultado = $row->resultado ?? 'ERROR';
+            $mensaje = $row->mensaje ?? 'No se pudo crear el acceso por carrera.';
 
-        if ($resultado !== 'OK') {
-            return back()->withErrors(['acceso' => $mensaje])->withInput();
+            if ($resultado !== 'OK') {
+                return back()->withErrors(['acceso' => $mensaje])->withInput();
+            }
+
+            $mensajeFinal = $mensaje;
         }
 
         return redirect()->route('seguridad.accesos')
-            ->with('status', $mensaje);
+            ->with('status', $mensajeFinal);
     }
 
     public function deleteAcceso($id)
@@ -450,5 +463,3 @@ class RolSeguridadController extends Controller
         return (int) $row->id_carrera;
     }
 }
-
-
