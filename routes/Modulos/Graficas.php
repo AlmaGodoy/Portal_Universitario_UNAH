@@ -8,21 +8,11 @@ use App\Http\Controllers\GraficasController;
 | FRONTEND - VISTAS WEB
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,3,4,5'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------
-    | VISTA SECRETARIA DE CARRERA
-    |--------------------------------------------------------------
-    */
     Route::get('/empleado/graficas/secretaria-carrera', [GraficasController::class, 'vistaSecretariaCarrera'])
         ->name('graficas.secretaria_carrera');
 
-    /*
-    |--------------------------------------------------------------
-    | VISTA SECRETARIA ACADÉMICA
-    |--------------------------------------------------------------
-    */
     Route::get('/empleado/graficas/secretaria-academica', [GraficasController::class, 'vistaSecretariaAcademica'])
         ->name('graficas.secretaria_academica');
 });
@@ -32,21 +22,11 @@ Route::middleware(['auth'])->group(function () {
 | API - DATOS JSON PARA GRÁFICAS
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->prefix('api/graficas')->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,3,4,5'])->prefix('api/graficas')->group(function () {
 
-    /*
-    |--------------------------------------------------------------
-    | DATOS - SECRETARIA DE CARRERA
-    |--------------------------------------------------------------
-    */
     Route::get('/secretaria-carrera', [GraficasController::class, 'datosSecretariaCarrera'])
         ->name('api.graficas.secretaria_carrera');
 
-    /*
-    |--------------------------------------------------------------
-    | DATOS - SECRETARIA ACADÉMICA
-    |--------------------------------------------------------------
-    */
     Route::get('/secretaria-academica', [GraficasController::class, 'datosSecretariaAcademica'])
         ->name('api.graficas.secretaria_academica');
 });

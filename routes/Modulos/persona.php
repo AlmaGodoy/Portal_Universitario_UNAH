@@ -9,14 +9,15 @@ use App\Http\Controllers\PersonaController;
 |--------------------------------------------------------------------------
 */
 
-// Ruta para agregar una nueva persona
+// Pública solo si se usa durante el registro
 Route::post('/persona/agregar', [PersonaController::class, 'agregar']);
 
-// Ruta para obtener los datos de una persona por su ID
-Route::get('/persona/obtener/{id}', [PersonaController::class, 'obtener']);
+// Protegidas
+Route::middleware(['auth', 'session.timeout'])->group(function () {
+    Route::get('/persona/obtener/{id}', [PersonaController::class, 'obtener']);
+    Route::put('/persona/actualizar/{id}', [PersonaController::class, 'actualizar']);
 
-// Ruta para actualizar los datos de una persona
-Route::put('/persona/actualizar/{id}', [PersonaController::class, 'actualizar']);
-
-// Ruta para eliminar (borrado lógico o físico) una persona
-Route::delete('/persona/eliminar/{id}', [PersonaController::class, 'eliminar']);
+    Route::middleware('roleid:1,3,4,5')->group(function () {
+        Route::delete('/persona/eliminar/{id}', [PersonaController::class, 'eliminar']);
+    });
+});

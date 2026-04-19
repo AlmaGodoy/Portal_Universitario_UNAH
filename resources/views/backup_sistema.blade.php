@@ -1,5 +1,11 @@
-@extends('layouts.app-estudiantes')
+@php
+    $layout = $layout ?? 'layouts.app-estudiantes';
+    $dashboardRoute = $dashboardRoute ?? (Route::has('dashboard') ? route('dashboard') : url('/dashboard'));
+@endphp
 
+@extends($layout)
+
+@section('title', 'Gestión de Respaldos')
 @section('titulo', 'Gestión de Respaldos')
 
 @section('content')
@@ -9,9 +15,9 @@
 
     <div class="breadcrumb-bar mb-3">
         <i class="fas fa-home"></i>
-        <a href="{{ route('dashboard') }}">Inicio</a>
+        <a href="{{ $dashboardRoute }}">Inicio</a>
         <span class="sep"><i class="fas fa-chevron-right"></i></span>
-        <a href="{{ route('dashboard') }}">Panel Institucional</a>
+        <a href="{{ $dashboardRoute }}">Panel Institucional</a>
         <span class="sep"><i class="fas fa-chevron-right"></i></span>
         <span class="current">Respaldos</span>
     </div>
@@ -27,6 +33,13 @@
         <div class="backup-alert backup-alert-success">
             <i class="fas fa-circle-check"></i>
             <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="backup-alert backup-alert-warning">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>{{ session('warning') }}</span>
         </div>
     @endif
 
@@ -78,6 +91,16 @@
                     </button>
                 </form>
             </div>
+
+            <div class="mt-3">
+                <form action="{{ route('backup.probar') }}" method="POST" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-plug-circle-check"></i>
+                        Probar conexión
+                    </button>
+                </form>
+            </div>
         </div>
 
         <div class="backup-summary-card">
@@ -104,7 +127,7 @@
                     <div>
                         <span class="backup-stat-label">Último respaldo visible</span>
                         <span class="backup-stat-value backup-stat-value-sm">
-                            {{ collect($historial)->first()->created_at ?? 'Sin registros' }}
+                            {{ collect($historial)->first()->nombre_archivo ?? 'Sin registros' }}
                         </span>
                     </div>
                 </div>
@@ -141,7 +164,7 @@
                         <th><i class="fas fa-file-archive"></i> Nombre del archivo</th>
                         <th><i class="fas fa-weight-hanging"></i> Tamaño</th>
                         <th><i class="fas fa-user"></i> Usuario</th>
-                        <th><i class="fas fa-calendar"></i> Fecha de creación</th>
+                        <th><i class="fas fa-calendar"></i> Registro</th>
                     </tr>
                 </thead>
                 <tbody id="backup-tbody">
@@ -170,16 +193,16 @@
                             <td>
                                 <div class="user-cell">
                                     <div class="user-avatar">
-                                        {{ strtoupper(substr(trim($log->usuario), 0, 2)) }}
+                                        {{ strtoupper(substr(trim((string) ($log->usuario ?? 'US')), 0, 2)) }}
                                     </div>
-                                    <span>{{ $log->usuario }}</span>
+                                    <span>{{ $log->usuario ?? 'Usuario' }}</span>
                                 </div>
                             </td>
 
                             <td>
                                 <div class="date-cell">
                                     <i class="fas fa-clock"></i>
-                                    <span>{{ $log->created_at }}</span>
+                                    <span>#{{ $log->id ?? 'Sin registro' }}</span>
                                 </div>
                             </td>
                         </tr>

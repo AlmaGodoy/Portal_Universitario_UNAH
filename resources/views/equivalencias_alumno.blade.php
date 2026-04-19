@@ -3,479 +3,216 @@
 @section('titulo', 'Equivalencias')
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/equivalencias.css') }}">
+<div class="container-fluid py-3">
 
-<div class="eq-page">
-    <div class="eq-hero">
-        <div>
-            <span class="eq-kicker">Módulo Académico</span>
-            <h1>Solicitud de Equivalencias</h1>
-            <p>
-                Sube tu historial, selecciona tu plan viejo y marca las asignaturas aprobadas.
-                El sistema calculará equivalencias preliminares y después un revisor validará la solicitud.
-            </p>
-        </div>
-        <div class="eq-hero-badge">
-            <i class="fas fa-file-lines"></i>
-            <span>Trámite guiado</span>
-        </div>
-    </div>
-
-    <div id="eqAlumnoAlert" class="eq-alert d-none"></div>
-
-    <div class="eq-grid eq-grid-main">
-        <section class="eq-card">
-            <div class="eq-card-head">
-                <h3><i class="fas fa-upload"></i> Nueva solicitud</h3>
-                <p>Sube el historial y crea tu solicitud.</p>
-            </div>
-
-            <form id="formCrearSolicitud" class="eq-form" enctype="multipart/form-data">
-                @csrf
-
-                <div class="eq-form-grid">
-                    <div class="eq-field">
-                        <label for="version_plan_viejo">Plan viejo</label>
-                        <select id="version_plan_viejo" name="version_plan_viejo" required>
-                            <option value="">Seleccione una opción</option>
-                            <option value="19">Plan 2019</option>
-                            <option value="2022">Plan 2022</option>
-                        </select>
-                    </div>
-
-                    <div class="eq-field">
-                        <label for="version_plan_nuevo">Plan nuevo</label>
-                        <input id="version_plan_nuevo" name="version_plan_nuevo" type="number" value="2025" readonly>
-                    </div>
-
-                    <div class="eq-field eq-field-full">
-                        <label for="documento">Historial académico (PDF/JPG/PNG)</label>
-                        <input id="documento" name="documento" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
-                    </div>
-
-                    <div class="eq-field eq-field-full">
-                        <label for="observacion_alumno">Observación</label>
-                        <textarea id="observacion_alumno" name="observacion_alumno" rows="3" placeholder="Opcional"></textarea>
-                    </div>
-                </div>
-
-                <div class="eq-actions">
-                    <button type="submit" class="eq-btn eq-btn-primary">
-                        <i class="fas fa-paper-plane"></i>
-                        Crear solicitud
-                    </button>
-                </div>
-            </form>
-        </section>
-
-        <aside class="eq-card">
-            <div class="eq-card-head">
-                <h3><i class="fas fa-folder-open"></i> Mis solicitudes</h3>
-                <p>Estado general de tus solicitudes.</p>
-            </div>
-
-            <div id="misSolicitudesWrap" class="eq-list-wrap">
-                <div class="eq-empty">
-                    <i class="fas fa-inbox"></i>
-                    <span>Aún no hay solicitudes registradas.</span>
-                </div>
-            </div>
-        </aside>
-    </div>
-
-    <section id="bloqueMaterias" class="eq-card d-none">
-        <div class="eq-card-head">
-            <div>
-                <h3><i class="fas fa-list-check"></i> Materias aprobadas del plan viejo</h3>
-                <p>Marca solo las materias que aparecen aprobadas en tu historial.</p>
-            </div>
-
-            <div class="eq-pill-wrap">
-                <span class="eq-pill">
-                    Solicitud ID: <strong id="currentSolicitudLabel">-</strong>
-                </span>
-                <span class="eq-pill">
-                    Plan viejo: <strong id="currentPlanViejoLabel">-</strong>
-                </span>
-            </div>
-        </div>
-
-        <div class="eq-table-wrap">
-            <table class="eq-table">
-                <thead>
-                    <tr>
-                        <th>Seleccionar</th>
-                        <th>Código</th>
-                        <th>Asignatura</th>
-                        <th>UV</th>
-                        <th>Nota final</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaAsignaturasPlanViejo">
-                    <tr>
-                        <td colspan="5" class="eq-empty-row">Primero crea una solicitud.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="eq-actions">
-            <button id="btnGuardarDetalle" type="button" class="eq-btn eq-btn-primary">
-                <i class="fas fa-floppy-disk"></i>
-                Guardar materias
-            </button>
-
-            <button id="btnVerPreliminares" type="button" class="eq-btn eq-btn-secondary">
-                <i class="fas fa-wand-magic-sparkles"></i>
-                Ver equivalencias preliminares
-            </button>
-        </div>
-    </section>
-
-    <section id="bloquePreliminares" class="eq-card d-none">
-        <div class="eq-card-head">
-            <h3><i class="fas fa-diagram-project"></i> Equivalencias preliminares</h3>
-            <p>Estas equivalencias son preliminares hasta que el revisor valide la solicitud.</p>
-        </div>
-
-        <div class="eq-table-wrap">
-            <table class="eq-table">
-                <thead>
-                    <tr>
-                        <th>Código viejo</th>
-                        <th>Asignatura vieja</th>
-                        <th>Nota</th>
-                        <th>Código nuevo</th>
-                        <th>Asignatura nueva</th>
-                        <th>Situación</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaPreliminares">
-                    <tr>
-                        <td colspan="6" class="eq-empty-row">Aún no se han calculado equivalencias.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const csrfToken = '{{ csrf_token() }}';
-
-    const routes = {
-        crearSolicitud: '{{ route('api.equivalencias.crear') }}',
-        misSolicitudes: '{{ route('api.equivalencias.mis') }}',
-        guardarDetalle: '{{ route('api.equivalencias.detalle.guardar') }}',
-        planViejoAsignaturas: '{{ route('api.equivalencias.planViejo.asignaturas', ['versionPlanViejo' => '__VERSION__']) }}',
-        preliminares: '{{ route('api.equivalencias.solicitud.preliminares', ['idSolicitud' => '__ID__']) }}',
-        documento: '{{ route('api.equivalencias.solicitud.documento', ['idSolicitud' => '__ID__']) }}',
-    };
-
-    let currentSolicitudId = null;
-    let currentVersionPlanViejo = null;
-    let currentPlanViejoTexto = null;
-
-    const alertBox = document.getElementById('eqAlumnoAlert');
-    const formCrearSolicitud = document.getElementById('formCrearSolicitud');
-    const bloqueMaterias = document.getElementById('bloqueMaterias');
-    const bloquePreliminares = document.getElementById('bloquePreliminares');
-    const currentSolicitudLabel = document.getElementById('currentSolicitudLabel');
-    const currentPlanViejoLabel = document.getElementById('currentPlanViejoLabel');
-    const tablaAsignaturasPlanViejo = document.getElementById('tablaAsignaturasPlanViejo');
-    const tablaPreliminares = document.getElementById('tablaPreliminares');
-    const misSolicitudesWrap = document.getElementById('misSolicitudesWrap');
-
-    function escapeHtml(value) {
-        if (value === null || value === undefined) return '';
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-    }
-
-    function mostrarAlerta(message, type = 'success') {
-        alertBox.className = 'eq-alert';
-        alertBox.classList.add(type === 'success' ? 'eq-alert-success' : 'eq-alert-error');
-        alertBox.classList.remove('d-none');
-        alertBox.textContent = message;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function cargarMisSolicitudes() {
-        try {
-            const response = await fetch(routes.misSolicitudes, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
-            });
-
-            const data = await response.json();
-
-            if (!data.ok || !data.data || data.data.length === 0) {
-                misSolicitudesWrap.innerHTML = `
-                    <div class="eq-empty">
-                        <i class="fas fa-inbox"></i>
-                        <span>Aún no hay solicitudes registradas.</span>
-                    </div>
-                `;
-                return;
-            }
-
-            misSolicitudesWrap.innerHTML = data.data.map(item => `
-                <article class="eq-request-item">
-                    <div class="eq-request-top">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-body p-4" style="background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); color: #fff; border-radius: 18px;">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                         <div>
-                            <h4>Solicitud #${item.id_solicitud_equivalencia}</h4>
-                            <p>Plan viejo: ${escapeHtml(item.version_plan_viejo)} · Plan nuevo: ${escapeHtml(item.version_plan_nuevo)}</p>
+                            <h2 class="fw-bold mb-2">Solicitud de Equivalencias</h2>
+                            <p class="mb-0" style="max-width: 780px;">
+                                Sube tu historial académico, selecciona tu plan anterior y registra las asignaturas aprobadas.
+                                El sistema mostrará equivalencias preliminares para que luego sean revisadas y validadas oficialmente.
+                            </p>
                         </div>
-                        <span class="eq-status eq-status-${String(item.estado_solicitud).toLowerCase()}">
-                            ${escapeHtml(item.estado_solicitud)}
-                        </span>
+
+                        <div>
+                            <a href="{{ url()->previous() }}" class="btn btn-light rounded-pill px-4 fw-semibold">
+                                <i class="fas fa-arrow-left me-2"></i>Volver atrás
+                            </a>
+                        </div>
                     </div>
-                    <div class="eq-request-meta">
-                        <span><i class="fas fa-calendar-days"></i> ${escapeHtml(item.fecha_solicitud ?? '-')}</span>
-                        <span><i class="fas fa-list-check"></i> ${escapeHtml(item.total_materias_marcadas ?? 0)} materias</span>
-                    </div>
-                    <div class="eq-request-actions">
-                        <a class="eq-link-btn" target="_blank"
-                           href="${routes.documento.replace('__ID__', item.id_solicitud_equivalencia)}">
-                            <i class="fas fa-file-arrow-down"></i> Documento
-                        </a>
-                    </div>
-                </article>
-            `).join('');
-        } catch (error) {
-            misSolicitudesWrap.innerHTML = `
-                <div class="eq-empty">
-                    <i class="fas fa-circle-exclamation"></i>
-                    <span>Error al cargar solicitudes.</span>
                 </div>
-            `;
-        }
-    }
+            </div>
+        </div>
 
-    async function cargarAsignaturasPlanViejo(version) {
-        const url = routes.planViejoAsignaturas.replace('__VERSION__', version);
+        {{-- ALERTA GLOBAL --}}
+        <div class="col-12">
+            <div id="eqAlertWrapper"></div>
+        </div>
 
-        tablaAsignaturasPlanViejo.innerHTML = `
-            <tr>
-                <td colspan="5" class="eq-empty-row">Cargando materias...</td>
-            </tr>
-        `;
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-upload text-primary"></i>
+                        <h5 class="mb-0 fw-bold">Nueva solicitud</h5>
+                    </div>
+                    <small class="text-muted">Completa los datos y adjunta tu historial académico.</small>
+                </div>
 
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
-            });
+                <div class="card-body">
+                    <form id="formSolicitudEquivalencia" enctype="multipart/form-data" novalidate>
+                        @csrf
 
-            const data = await response.json();
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="version_plan_viejo" class="form-label fw-semibold">Plan viejo</label>
+                                <select id="version_plan_viejo" name="version_plan_viejo" class="form-select">
+                                    <option value="2019">Plan 2019</option>
+                                    <option value="2022" selected>Plan 2022</option>
+                                </select>
+                            </div>
 
-            if (!data.ok || !data.data) {
-                tablaAsignaturasPlanViejo.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="eq-empty-row">No fue posible cargar las materias.</td>
-                    </tr>
-                `;
-                return;
-            }
+                            <div class="col-md-6">
+                                <label for="version_plan_nuevo" class="form-label fw-semibold">Plan nuevo</label>
+                                <input
+                                    type="text"
+                                    id="version_plan_nuevo"
+                                    name="version_plan_nuevo"
+                                    class="form-control"
+                                    value="2026"
+                                    readonly
+                                >
+                            </div>
 
-            tablaAsignaturasPlanViejo.innerHTML = data.data.map(item => `
-                <tr>
-                    <td>
-                        <label class="eq-check">
-                            <input type="checkbox" class="js-asig-check" data-codigo="${escapeHtml(item.codigo_asignatura)}">
-                            <span></span>
-                        </label>
-                    </td>
-                    <td>${escapeHtml(item.codigo_asignatura)}</td>
-                    <td>${escapeHtml(item.nombre_asignatura)}</td>
-                    <td>${escapeHtml(item.uv ?? '-')}</td>
-                    <td>
-                        <input type="number"
-                               step="0.01"
-                               min="0"
-                               max="100"
-                               class="eq-note-input js-asig-nota"
-                               data-codigo="${escapeHtml(item.codigo_asignatura)}"
-                               placeholder="Opcional">
-                    </td>
-                </tr>
-            `).join('');
+                            <div class="col-12">
+                                <label for="documento" class="form-label fw-semibold">Historial académico (PDF/JPG/PNG)</label>
+                                <input
+                                    type="file"
+                                    id="documento"
+                                    name="documento"
+                                    class="form-control"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                >
+                                <small class="text-muted d-block mt-2">
+                                    Adjunta un archivo legible y actualizado de tu historial académico.
+                                </small>
+                            </div>
 
-            bloqueMaterias.classList.remove('d-none');
-        } catch (error) {
-            tablaAsignaturasPlanViejo.innerHTML = `
-                <tr>
-                    <td colspan="5" class="eq-empty-row">Error al cargar las materias.</td>
-                </tr>
-            `;
-        }
-    }
+                            <div class="col-12">
+                                <label for="observacion_alumno" class="form-label fw-semibold">Observación</label>
+                                <textarea
+                                    id="observacion_alumno"
+                                    name="observacion_alumno"
+                                    class="form-control"
+                                    rows="4"
+                                    placeholder="Opcional"
+                                ></textarea>
+                            </div>
 
-    function obtenerMateriasSeleccionadas() {
-        const checks = document.querySelectorAll('.js-asig-check');
-        const materias = [];
+                            <div class="col-12">
+                                <button type="submit" id="btnCrearSolicitud" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                    <i class="fas fa-paper-plane me-2"></i>Crear solicitud
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-        checks.forEach(check => {
-            if (!check.checked) return;
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-folder-open text-primary"></i>
+                        <h5 class="mb-0 fw-bold">Mis solicitudes</h5>
+                    </div>
+                    <small class="text-muted">Consulta el estado general de tus solicitudes registradas.</small>
+                </div>
 
-            const codigo = check.dataset.codigo;
-            const notaInput = document.querySelector(`.js-asig-nota[data-codigo="${CSS.escape(codigo)}"]`);
+                <div class="card-body">
+                    <div id="equivalenciasMisSolicitudes">
+                        <div class="text-center py-5 border rounded-4 text-muted">
+                            <i class="fas fa-folder-open mb-3 fa-lg"></i>
+                            <p class="mb-0">Cargando solicitudes...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            materias.push({
-                codigo_asignatura_viejo: codigo,
-                nota_final: notaInput ? notaInput.value : '',
-                seleccionada_alumno: 1,
-            });
-        });
+        {{-- BLOQUE DE ASIGNATURAS --}}
+        <div class="col-12">
+            <div id="bloqueAsignaturas" class="card border-0 shadow-sm d-none">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-book text-primary"></i>
+                        <h5 class="mb-0 fw-bold">Asignaturas del plan viejo</h5>
+                    </div>
+                    <small class="text-muted">Selecciona las materias aprobadas que deseas registrar en la solicitud.</small>
+                </div>
 
-        return materias;
-    }
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px;">Sel.</th>
+                                    <th>Código</th>
+                                    <th>Asignatura</th>
+                                    <th>UV</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAsignaturasPlanViejo">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        Aún no se han cargado asignaturas.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-    async function guardarDetalle() {
-        if (!currentSolicitudId || !currentVersionPlanViejo) {
-            mostrarAlerta('Primero crea una solicitud.', 'error');
-            return;
-        }
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <button type="button" id="btnGuardarMaterias" class="btn btn-success rounded-pill px-4 fw-semibold">
+                            <i class="fas fa-save me-2"></i>Guardar materias
+                        </button>
 
-        const materias = obtenerMateriasSeleccionadas();
+                        <button type="button" id="btnVerPreliminares" class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
+                            <i class="fas fa-eye me-2"></i>Ver equivalencias preliminares
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        if (materias.length === 0) {
-            mostrarAlerta('Debes marcar al menos una materia.', 'error');
-            return;
-        }
+        {{-- BLOQUE DE EQUIVALENCIAS PRELIMINARES --}}
+        <div class="col-12">
+            <div id="bloquePreliminares" class="card border-0 shadow-sm d-none">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-random text-primary"></i>
+                        <h5 class="mb-0 fw-bold">Equivalencias preliminares</h5>
+                    </div>
+                    <small class="text-muted">
+                        Estas equivalencias son preliminares y estarán sujetas a revisión oficial.
+                    </small>
+                </div>
 
-        try {
-            const response = await fetch(routes.guardarDetalle, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    id_solicitud_equivalencia: currentSolicitudId,
-                    version_plan_viejo: currentVersionPlanViejo,
-                    asignaturas: materias,
-                })
-            });
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Código viejo</th>
+                                    <th>Asignatura vieja</th>
+                                    <th>Código nuevo</th>
+                                    <th>Asignatura nueva</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEquivalenciasPreliminares">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Aún no hay equivalencias preliminares para mostrar.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-            const data = await response.json();
-
-            if (!response.ok || !data.ok) {
-                throw new Error(data.message || 'No fue posible guardar el detalle.');
-            }
-
-            mostrarAlerta('Materias guardadas correctamente.', 'success');
-            await cargarMisSolicitudes();
-        } catch (error) {
-            mostrarAlerta(error.message || 'Error al guardar materias.', 'error');
-        }
-    }
-
-    async function verPreliminares() {
-        if (!currentSolicitudId) {
-            mostrarAlerta('Primero crea una solicitud.', 'error');
-            return;
-        }
-
-        const url = routes.preliminares.replace('__ID__', currentSolicitudId);
-
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
-            });
-
-            const data = await response.json();
-
-            if (!data.ok || !data.data) {
-                throw new Error(data.message || 'No fue posible calcular equivalencias.');
-            }
-
-            if (data.data.length === 0) {
-                tablaPreliminares.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="eq-empty-row">No hay equivalencias para mostrar.</td>
-                    </tr>
-                `;
-            } else {
-                tablaPreliminares.innerHTML = data.data.map(item => `
-                    <tr>
-                        <td>${escapeHtml(item.codigo_viejo ?? '-')}</td>
-                        <td>${escapeHtml(item.asignatura_vieja ?? '-')}</td>
-                        <td>${escapeHtml(item.nota_final ?? '-')}</td>
-                        <td>${escapeHtml(item.codigo_nuevo ?? '-')}</td>
-                        <td>${escapeHtml(item.asignatura_nueva ?? '-')}</td>
-                        <td>
-                            <span class="eq-mini-status ${item.situacion_equivalencia === 'CON_EQUIVALENCIA' ? 'ok' : 'no'}">
-                                ${escapeHtml(item.situacion_equivalencia ?? '-')}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-
-            bloquePreliminares.classList.remove('d-none');
-        } catch (error) {
-            mostrarAlerta(error.message || 'Error al calcular equivalencias.', 'error');
-        }
-    }
-
-    formCrearSolicitud.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(formCrearSolicitud);
-        const selectPlanViejo = document.getElementById('version_plan_viejo');
-
-        try {
-            const response = await fetch(routes.crearSolicitud, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.ok) {
-                throw new Error(data.message || 'No fue posible crear la solicitud.');
-            }
-
-            currentSolicitudId = data.id_solicitud_equivalencia;
-            currentVersionPlanViejo = selectPlanViejo.value;
-            currentPlanViejoTexto = selectPlanViejo.options[selectPlanViejo.selectedIndex].text;
-
-            currentSolicitudLabel.textContent = currentSolicitudId;
-            currentPlanViejoLabel.textContent = currentPlanViejoTexto;
-
-            mostrarAlerta('Solicitud creada correctamente.', 'success');
-
-            await cargarAsignaturasPlanViejo(currentVersionPlanViejo);
-            await cargarMisSolicitudes();
-        } catch (error) {
-            mostrarAlerta(error.message || 'Error al crear la solicitud.', 'error');
-        }
-    });
-
-    document.getElementById('btnGuardarDetalle').addEventListener('click', guardarDetalle);
-    document.getElementById('btnVerPreliminares').addEventListener('click', verPreliminares);
-
-    cargarMisSolicitudes();
-});
-</script>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Recuerda que estas equivalencias pueden cambiar durante la revisión por Secretaría o Coordinación.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

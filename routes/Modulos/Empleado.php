@@ -8,7 +8,7 @@ use App\Http\Controllers\EmpleadoController;
 | FRONTEND - VISTAS WEB
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,3,4,5'])->group(function () {
 
     Route::get('/empleado/dashboard', [EmpleadoController::class, 'index'])
         ->name('empleado.dashboard');
@@ -20,7 +20,7 @@ Route::middleware(['auth'])->group(function () {
 | API - DATOS JSON
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->prefix('api/empleados')->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,3,4,5'])->prefix('api/empleados')->group(function () {
 
     Route::get('estadisticas', [EmpleadoController::class, 'getEstadisticas'])
         ->name('api.empleados.estadisticas');

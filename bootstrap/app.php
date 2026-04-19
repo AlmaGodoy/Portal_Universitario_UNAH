@@ -1,20 +1,25 @@
 <?php
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\RoleIdMiddleware;
+use App\Http\Middleware\RolMiddleware;
+use App\Http\Middleware\SessionTimeout;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'roleid' => RoleIdMiddleware::class,
-            // ❌ QUITA la línea de 'auth' => Authenticate::class
+            'rol' => RolMiddleware::class,
+            'session.timeout' => SessionTimeout::class,
         ]);
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);

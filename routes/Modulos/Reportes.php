@@ -10,8 +10,7 @@ use App\Http\Controllers\ReporteTramiteController;
 | MÓDULO: TRÁMITES (API)
 |--------------------------------------------------------------------------
 */
-
-Route::prefix('api/tramites')->group(function () {
+Route::prefix('api/tramites')->middleware(['auth', 'session.timeout', 'roleid:2'])->group(function () {
     Route::post('crear', [TramiteController::class, 'crear'])
         ->name('tramites.crear');
 
@@ -23,14 +22,8 @@ Route::prefix('api/tramites')->group(function () {
 |--------------------------------------------------------------------------
 | API - REPORTE DE TRÁMITES
 |--------------------------------------------------------------------------
-| Estas rutas sirven para:
-| - coordinador
-| - secretaría de carrera
-| - secretaría general
-|--------------------------------------------------------------------------
 */
-
-Route::prefix('api/reporte-tramites')->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,3,4,5'])->prefix('api/reporte-tramites')->group(function () {
     Route::get('reporte', [ReporteTramiteController::class, 'reporte'])
         ->name('reporte.tramites.reporte');
 
@@ -46,8 +39,7 @@ Route::prefix('api/reporte-tramites')->group(function () {
 | FRONTEND - REPORTE COORDINADOR
 |--------------------------------------------------------------------------
 */
-
-Route::get('/empleado/reporte-tramites-vista', [ReporteTramiteController::class, 'vistaReporte'])
+Route::middleware(['auth', 'session.timeout', 'roleid:3,4'])->get('/empleado/reporte-tramites-vista', [ReporteTramiteController::class, 'vistaReporte'])
     ->name('reporte.tramites.vista');
 
 /*
@@ -55,8 +47,7 @@ Route::get('/empleado/reporte-tramites-vista', [ReporteTramiteController::class,
 | FRONTEND - REPORTE SECRETARÍA DE CARRERA
 |--------------------------------------------------------------------------
 */
-
-Route::get('/empleado/reporte-tramites-secretaria', [ReporteTramiteController::class, 'vistaReporteSecretaria'])
+Route::middleware(['auth', 'session.timeout', 'roleid:5'])->get('/empleado/reporte-tramites-secretaria', [ReporteTramiteController::class, 'vistaReporteSecretaria'])
     ->name('reporte.tramites.secretaria.vista');
 
 /*
@@ -64,6 +55,5 @@ Route::get('/empleado/reporte-tramites-secretaria', [ReporteTramiteController::c
 | FRONTEND - REPORTE SECRETARÍA GENERAL
 |--------------------------------------------------------------------------
 */
-
-Route::get('/empleado/reporte-tramites-secretaria-general', [ReporteTramiteController::class, 'vistaReporteSecretariaGeneral'])
+Route::middleware(['auth', 'session.timeout', 'roleid:1'])->get('/empleado/reporte-tramites-secretaria-general', [ReporteTramiteController::class, 'vistaReporteSecretariaGeneral'])
     ->name('reporte.tramites.secretaria_general.vista');

@@ -5,11 +5,10 @@ use App\Http\Controllers\ConfiguracionController;
 
 /*
 |--------------------------------------------------------------------------
-| MODULO: CONFIGURACION (API)
+| MODULO: CONFIGURACION 
 |--------------------------------------------------------------------------
 */
-
-Route::prefix('api/configuracion')->group(function () {
+Route::middleware(['auth', 'session.timeout'])->prefix('api/configuracion')->group(function () {
     Route::get('perfil', [ConfiguracionController::class, 'perfil'])
         ->name('configuracion.perfil');
 
@@ -25,7 +24,6 @@ Route::prefix('api/configuracion')->group(function () {
 | FRONTEND - CONFIGURACION
 |--------------------------------------------------------------------------
 */
-
-Route::get('/configuracion', function () {
+Route::middleware(['auth', 'session.timeout'])->get('/configuracion', function () {
     return view('configuracion');
 })->name('configuracion.index');

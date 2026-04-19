@@ -5,13 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\SoporteTicket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SoporteController extends Controller
 {
     public function vista()
     {
+        $rol = $this->obtenerRolActual();
+
+        if ($rol === 'secretario') {
+            return view('soporte_secretaria');
+        }
+
         return view('soporte');
     }
 
@@ -37,6 +43,7 @@ class SoporteController extends Controller
                     ['label' => 'Equivalencias', 'value' => 'Equivalencias'],
                     ['label' => 'Mis trámites', 'value' => 'Mis trámites'],
                     ['label' => 'Configuración', 'value' => 'Configuración'],
+                    ['label' => 'Soporte', 'value' => 'Soporte'],
                     ['label' => 'Otro', 'value' => 'Otro'],
                 ],
                 'estados' => [
@@ -60,91 +67,98 @@ class SoporteController extends Controller
             'carrera' => ['nullable', 'string', 'max:150'],
         ]);
 
-        $tickets = $this->ticketsCombinados();
-        $nextId = ((int) ($tickets->max('id_soporte') ?? 0)) + 1;
+        $idPersona = $this->obtenerIdPersonaAutenticada();
 
-        $nuevoTicket = [
-            'id_soporte' => $nextId,
-            'codigo' => 'ST-' . now()->format('Y') . '-' . str_pad((string) $nextId, 3, '0', STR_PAD_LEFT),
-            'usuario' => $this->obtenerNombreUsuario(),
-            'correo' => $this->obtenerCorreoUsuario(),
-            'carrera' => $validated['carrera'] ?? 'Sin carrera relacionada',
-            'tipo' => $validated['tipo'],
-            'tipo_key' => $this->mapTipoKey($validated['tipo']),
-            'prioridad' => $validated['prioridad'],
-            'prioridad_key' => $this->mapPrioridadKey($validated['prioridad']),
-            'estado' => 'Pendiente',
-            'estado_key' => 'pendiente',
-            'canal' => $validated['canal'] ?? 'Portal estudiantil',
-            'fecha' => now()->format('Y-m-d H:i'),
-            'descripcion' => $validated['descripcion'],
-            'solucion_sugerida' => 'Solicitud registrada correctamente. Pendiente de revisión.',
-            'modulo' => $validated['modulo'],
+        if (!$idPersona) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No se pudo identificar la persona autenticada.',
+            ], 401);
+        }
+
+        $idCarrera = $this->obtenerIdCarreraEstudiante($idPersona);
+        $nombreCarrera = $validated['carrera'] ?? $this->obtenerNombreCarreraPersona($idPersona);
+
+        $model = new SoporteTicket();
+
+        $resultado = $model->crearTicket([
+            'id_persona_solicitante' => $idPersona,
+            'id_carrera' => $idCarrera,
             'asunto' => $validated['asunto'],
-            'id_persona_solicitante' => session('id_persona'),
-        ];
-
-        $creados = session('soporte_tickets_extra', []);
-        $creados[] = $nuevoTicket;
-
-        session([
-            'soporte_tickets_extra' => $creados,
+            'tipo' => $validated['tipo'],
+            'prioridad' => $validated['prioridad'],
+            'modulo' => $validated['modulo'],
+            'descripcion' => $validated['descripcion'],
+            'canal' => $validated['canal'] ?? 'Portal estudiantil',
+            'carrera' => $nombreCarrera,
         ]);
+
+        if (($resultado['resultado'] ?? null) !== 'OK') {
+            return response()->json([
+                'ok' => false,
+                'message' => $resultado['mensaje'] ?? 'No fue posible crear la solicitud de soporte.',
+            ], 500);
+        }
+
+        $ticket = null;
+        if (!empty($resultado['id_soporte'])) {
+            $ticket = $model->obtenerTicketPorId((int) $resultado['id_soporte']);
+        }
 
         return response()->json([
             'ok' => true,
-            'message' => 'Solicitud de soporte creada correctamente.',
-            'data' => $nuevoTicket,
+            'message' => $resultado['mensaje'] ?? 'Solicitud de soporte creada correctamente.',
+            'data' => $ticket,
         ], 201);
     }
 
     public function misSolicitudes(): JsonResponse
     {
-        $tickets = $this->ticketsCombinados();
-        $idPersona = session('id_persona');
-        $correo = $this->obtenerCorreoUsuario();
+        $idPersona = $this->obtenerIdPersonaAutenticada();
 
-        $filtrados = $tickets->filter(function ($ticket) use ($idPersona, $correo) {
-            $matchPersona = false;
-            $matchCorreo = false;
-
-            if ($idPersona !== null && isset($ticket['id_persona_solicitante'])) {
-                $matchPersona = (string) $ticket['id_persona_solicitante'] === (string) $idPersona;
-            }
-
-            if (!empty($correo) && !empty($ticket['correo'])) {
-                $matchCorreo = mb_strtolower($ticket['correo']) === mb_strtolower($correo);
-            }
-
-            return $matchPersona || $matchCorreo;
-        })->values();
-
-        /*
-        |----------------------------------------------------------------------
-        | Mientras estás en demo, si no encuentra tickets propios,
-        | devuelve todos para que puedas seguir probando.
-        |----------------------------------------------------------------------
-        */
-        if ($filtrados->isEmpty()) {
-            $filtrados = $tickets->values();
+        if (!$idPersona) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No se pudo identificar la persona autenticada.',
+            ], 401);
         }
+
+        $model = new SoporteTicket();
+        $tickets = $model->obtenerTicketsPorEstudiante($idPersona);
 
         return response()->json([
             'ok' => true,
-            'data' => $filtrados,
-            'total' => $filtrados->count(),
+            'data' => $tickets->values(),
+            'total' => $tickets->count(),
         ]);
     }
 
     public function verMiSolicitud(int $idSoporte): JsonResponse
     {
-        $ticket = $this->ticketsCombinados()->firstWhere('id_soporte', $idSoporte);
+        $idPersona = $this->obtenerIdPersonaAutenticada();
+
+        if (!$idPersona) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No se pudo identificar la persona autenticada.',
+            ], 401);
+        }
+
+        $model = new SoporteTicket();
+        $ticket = $model->obtenerTicketPorId($idSoporte);
 
         if (!$ticket) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Solicitud no encontrada.',
             ], 404);
+        }
+
+        if ((int) ($ticket['id_persona_solicitante'] ?? 0) !== (int) $idPersona) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No tiene permisos para consultar esta solicitud.',
+            ], 403);
         }
 
         return response()->json([
@@ -155,29 +169,39 @@ class SoporteController extends Controller
 
     public function bandejaSecretaria(): JsonResponse
     {
-        $tickets = $this->ticketsCombinados()->values();
+        $idPersona = $this->obtenerIdPersonaAutenticada();
+        $idCarrera = $this->obtenerIdCarreraSecretaria($idPersona);
+
+        $model = new SoporteTicket();
+        $tickets = $model->obtenerTicketsParaSecretaria($idCarrera);
 
         return response()->json([
             'ok' => true,
-            'data' => $tickets,
-            'resumen' => [
-                'total' => $tickets->count(),
-                'pendientes' => $tickets->where('estado_key', 'pendiente')->count(),
-                'en_proceso' => $tickets->where('estado_key', 'en_proceso')->count(),
-                'resueltos' => $tickets->where('estado_key', 'resuelto')->count(),
-            ],
+            'data' => $tickets->values(),
+            'resumen' => $model->obtenerResumen($tickets),
         ]);
     }
 
     public function verParaSecretaria(int $idSoporte): JsonResponse
     {
-        $ticket = $this->ticketsCombinados()->firstWhere('id_soporte', $idSoporte);
+        $idPersona = $this->obtenerIdPersonaAutenticada();
+        $idCarrera = $this->obtenerIdCarreraSecretaria($idPersona);
+
+        $model = new SoporteTicket();
+        $ticket = $model->obtenerTicketPorId($idSoporte);
 
         if (!$ticket) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Solicitud no encontrada.',
             ], 404);
+        }
+
+        if ($idCarrera !== null && (int) ($ticket['id_carrera'] ?? 0) !== (int) $idCarrera) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No tiene permisos para consultar esta solicitud.',
+            ], 403);
         }
 
         return response()->json([
@@ -188,31 +212,33 @@ class SoporteController extends Controller
 
     public function tomarCaso(int $idSoporte): JsonResponse
     {
-        return $this->actualizarEstado(
+        return $this->actualizarEstadoSoporte(
             $idSoporte,
             'En proceso',
-            'en_proceso',
             'Caso tomado correctamente.'
         );
     }
 
     public function resolver(int $idSoporte): JsonResponse
     {
-        return $this->actualizarEstado(
+        return $this->actualizarEstadoSoporte(
             $idSoporte,
             'Resuelto',
-            'resuelto',
             'Caso marcado como resuelto.'
         );
     }
 
-    private function actualizarEstado(
+    private function actualizarEstadoSoporte(
         int $idSoporte,
         string $estado,
-        string $estadoKey,
-        string $mensaje
+        string $mensajeOk
     ): JsonResponse {
-        $ticket = $this->ticketsCombinados()->firstWhere('id_soporte', $idSoporte);
+        $idPersona = $this->obtenerIdPersonaAutenticada();
+        $idCarrera = $this->obtenerIdCarreraSecretaria($idPersona);
+        $idUsuario = $this->obtenerIdUsuarioAutenticado();
+
+        $model = new SoporteTicket();
+        $ticket = $model->obtenerTicketPorId($idSoporte);
 
         if (!$ticket) {
             return response()->json([
@@ -221,138 +247,168 @@ class SoporteController extends Controller
             ], 404);
         }
 
-        $this->guardarOverride($idSoporte, [
-            'estado' => $estado,
-            'estado_key' => $estadoKey,
-        ]);
+        if ($idCarrera !== null && (int) ($ticket['id_carrera'] ?? 0) !== (int) $idCarrera) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No tiene permisos para actualizar esta solicitud.',
+            ], 403);
+        }
 
-        $actualizado = array_merge($ticket, [
-            'estado' => $estado,
-            'estado_key' => $estadoKey,
-        ]);
+        $resultado = $model->actualizarEstado(
+            $idSoporte,
+            $estado,
+            $idUsuario,
+            $mensajeOk
+        );
+
+        if (($resultado['resultado'] ?? null) !== 'OK') {
+            return response()->json([
+                'ok' => false,
+                'message' => $resultado['mensaje'] ?? 'No fue posible actualizar el estado.',
+            ], 500);
+        }
+
+        $ticketActualizado = $model->obtenerTicketPorId($idSoporte);
 
         return response()->json([
             'ok' => true,
-            'message' => $mensaje,
-            'data' => $actualizado,
+            'message' => $mensajeOk,
+            'data' => $ticketActualizado,
         ]);
     }
 
-    private function ticketsBase(): Collection
+    private function obtenerIdPersonaAutenticada(): ?int
     {
-        $idPersona = session('id_persona');
+        $usuario = Auth::user();
 
-        $model = new SoporteTicket();
+        if ($usuario && !empty($usuario->id_persona)) {
+            return (int) $usuario->id_persona;
+        }
 
-        return $model->obtenerTicketsPorEmpleado($idPersona)
-            ->values()
-            ->map(function ($ticket, $index) {
-                $ticket['id_soporte'] = $ticket['id_soporte'] ?? ($index + 1);
-                $ticket['asunto'] = $ticket['asunto'] ?? $ticket['tipo'];
-                $ticket['modulo'] = $ticket['modulo'] ?? 'Portal estudiantil';
-                $ticket['id_persona_solicitante'] = $ticket['id_persona_solicitante'] ?? null;
+        if ($usuario && isset($usuario->persona) && !empty($usuario->persona->id_persona)) {
+            return (int) $usuario->persona->id_persona;
+        }
 
-                return $ticket;
-            });
-    }
+        if ($usuario && !empty($usuario->id_usuario)) {
+            $registro = DB::table('tbl_usuario')
+                ->where('id_usuario', $usuario->id_usuario)
+                ->select('id_persona')
+                ->first();
 
-    private function ticketsCombinados(): Collection
-    {
-        $base = $this->ticketsBase();
-        $extra = collect(session('soporte_tickets_extra', []));
-
-        $todos = $base
-            ->concat($extra)
-            ->values()
-            ->map(function ($ticket, $index) {
-                $ticket['id_soporte'] = $ticket['id_soporte'] ?? ($index + 1);
-                $ticket['asunto'] = $ticket['asunto'] ?? $ticket['tipo'];
-                $ticket['modulo'] = $ticket['modulo'] ?? 'Portal estudiantil';
-
-                return $ticket;
-            });
-
-        $overrides = session('soporte_ticket_overrides', []);
-
-        return $todos->map(function ($ticket) use ($overrides) {
-            $id = $ticket['id_soporte'];
-
-            if (isset($overrides[$id]) && is_array($overrides[$id])) {
-                return array_merge($ticket, $overrides[$id]);
+            if ($registro && !empty($registro->id_persona)) {
+                return (int) $registro->id_persona;
             }
+        }
 
-            return $ticket;
-        })->values();
+        if ($usuario && !empty($usuario->id)) {
+            $registro = DB::table('tbl_usuario')
+                ->where('id_usuario', $usuario->id)
+                ->select('id_persona')
+                ->first();
+
+            if ($registro && !empty($registro->id_persona)) {
+                return (int) $registro->id_persona;
+            }
+        }
+
+        if (session()->has('id_persona')) {
+            return (int) session('id_persona');
+        }
+
+        if (session()->has('usuario.id_persona')) {
+            return (int) session('usuario.id_persona');
+        }
+
+        return null;
     }
 
-    private function guardarOverride(int $idSoporte, array $datos): void
+    private function obtenerIdUsuarioAutenticado(): ?int
     {
-        $overrides = session('soporte_ticket_overrides', []);
+        $usuario = Auth::user();
 
-        $overrides[$idSoporte] = array_merge($overrides[$idSoporte] ?? [], $datos);
+        if ($usuario && !empty($usuario->id_usuario)) {
+            return (int) $usuario->id_usuario;
+        }
 
-        session([
-            'soporte_ticket_overrides' => $overrides,
-        ]);
+        if ($usuario && !empty($usuario->id)) {
+            return (int) $usuario->id;
+        }
+
+        if (session()->has('id_usuario')) {
+            return (int) session('id_usuario');
+        }
+
+        if (session()->has('usuario.id_usuario')) {
+            return (int) session('usuario.id_usuario');
+        }
+
+        return null;
     }
 
-    private function obtenerNombreUsuario(): string
+    private function obtenerRolActual(): ?string
     {
-        $user = Auth::user();
+        $usuario = Auth::user();
 
-        if (!$user) {
-            return 'Alumno';
+        if (session()->has('rol_texto')) {
+            return strtolower(trim((string) session('rol_texto')));
         }
 
-        if (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
-            return trim($user->persona->nombre_persona);
+        if ($usuario && !empty($usuario->rol_texto)) {
+            return strtolower(trim((string) $usuario->rol_texto));
         }
 
-        if (!empty($user->nombre_persona)) {
-            return trim($user->nombre_persona);
+        if ($usuario && !empty($usuario->role)) {
+            return strtolower(trim((string) $usuario->role));
         }
 
-        if (!empty($user->name)) {
-            return trim($user->name);
-        }
-
-        if (!empty($user->email)) {
-            return trim($user->email);
-        }
-
-        return 'Alumno';
+        return null;
     }
 
-    private function obtenerCorreoUsuario(): string
+    private function obtenerIdCarreraEstudiante(?int $idPersona): ?int
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return '';
+        if (!$idPersona) {
+            return null;
         }
 
-        return !empty($user->email) ? trim($user->email) : '';
+        $registro = DB::table('tbl_estudiante')
+            ->where('id_persona', $idPersona)
+            ->select('id_carrera')
+            ->first();
+
+        return $registro && !empty($registro->id_carrera)
+            ? (int) $registro->id_carrera
+            : null;
     }
 
-    private function mapTipoKey(string $tipo): string
+    private function obtenerIdCarreraSecretaria(?int $idPersona): ?int
     {
-        return match (mb_strtolower(trim($tipo))) {
-            'acceso al sistema' => 'acceso',
-            'problema con trámite' => 'tramite',
-            'problema con documentos' => 'documentos',
-            'error visual en la plataforma' => 'visual',
-            'consulta general' => 'consulta',
-            default => 'general',
-        };
+        if (!$idPersona) {
+            return null;
+        }
+
+        $resultado = DB::select('CALL SEL_CARRERA_EMPLEADO_POR_PERSONA(?)', [$idPersona]);
+
+        if (!empty($resultado[0]) && isset($resultado[0]->resultado) && $resultado[0]->resultado === 'OK') {
+            return !empty($resultado[0]->id_carrera)
+                ? (int) $resultado[0]->id_carrera
+                : null;
+        }
+
+        return null;
     }
 
-    private function mapPrioridadKey(string $prioridad): string
+    private function obtenerNombreCarreraPersona(?int $idPersona): ?string
     {
-        return match (mb_strtolower(trim($prioridad))) {
-            'alta' => 'alta',
-            'media' => 'media',
-            'baja' => 'baja',
-            default => 'media',
-        };
+        if (!$idPersona) {
+            return null;
+        }
+
+        $registro = DB::table('tbl_estudiante as e')
+            ->leftJoin('tbl_carrera as c', 'c.id_carrera', '=', 'e.id_carrera')
+            ->where('e.id_persona', $idPersona)
+            ->select('c.nombre_carrera')
+            ->first();
+
+        return $registro->nombre_carrera ?? null;
     }
 }
