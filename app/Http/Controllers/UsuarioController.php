@@ -52,45 +52,45 @@ class UsuarioController extends Controller
         $request->merge(['correo' => $correo]);
 
         $request->validate([
-            'primer_nombre' => ['required', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
-            'segundo_nombre' => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/'],
-            'primer_apellido' => ['required', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
-            'segundo_apellido' => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/'],
-            'correo' => ['required', 'email', 'max:100'],
-            'contrasena' => [
+            'primer_nombre'     => ['required', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'segundo_nombre'    => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/'],
+            'primer_apellido'   => ['required', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+            'segundo_apellido'  => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/'],
+            'correo'            => ['required', 'email', 'max:100'],
+            'contrasena'        => [
                 'required',
                 'max:255',
                 'confirmed',
                 Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
             ],
-            'tipo_usuario' => 'required|in:estudiante,empleado',
-            'id_rol' => 'nullable|integer',
-            'numero_cuenta' => ['nullable', 'digits:11'],
-            'id_carrera' => 'nullable|integer',
-            'id_departamento' => 'nullable|integer',
-            'cod_empleado' => 'nullable|string|max:50',
+            'tipo_usuario'      => 'required|in:estudiante,empleado',
+            'id_rol'            => 'nullable|integer',
+            'numero_cuenta'     => ['nullable', 'digits:11'],
+            'id_carrera'        => 'nullable|integer',
+            'id_departamento'   => 'nullable|integer',
+            'cod_empleado'      => 'nullable|string|max:50',
         ], [
-            'primer_nombre.required' => 'El primer nombre es obligatorio.',
-            'primer_nombre.regex' => 'El primer nombre solo debe contener letras y espacios.',
-            'segundo_nombre.regex' => 'El segundo nombre solo debe contener letras y espacios.',
+            'primer_nombre.required'   => 'El primer nombre es obligatorio.',
+            'primer_nombre.regex'      => 'El primer nombre solo debe contener letras y espacios.',
+            'segundo_nombre.regex'     => 'El segundo nombre solo debe contener letras y espacios.',
             'primer_apellido.required' => 'El primer apellido es obligatorio.',
-            'primer_apellido.regex' => 'El primer apellido solo debe contener letras y espacios.',
-            'segundo_apellido.regex' => 'El segundo apellido solo debe contener letras y espacios.',
-            'numero_cuenta.digits' => 'El número de cuenta debe tener exactamente 11 números.',
-            'contrasena.confirmed' => 'Las contraseñas no coinciden.',
+            'primer_apellido.regex'    => 'El primer apellido solo debe contener letras y espacios.',
+            'segundo_apellido.regex'   => 'El segundo apellido solo debe contener letras y espacios.',
+            'numero_cuenta.digits'     => 'El número de cuenta debe tener exactamente 11 números.',
+            'contrasena.confirmed'     => 'Las contraseñas no coinciden.',
         ]);
 
         $tipo = strtolower(trim((string) $request->tipo_usuario));
 
         if ($tipo === 'estudiante' && !str_ends_with($correo, '@unah.hn')) {
             return back()->withErrors([
-                'correo' => 'Estudiante: el correo debe terminar en @unah.hn'
+                'correo' => 'Estudiante: el correo debe terminar en @unah.hn',
             ])->withInput();
         }
 
         if ($tipo === 'empleado' && !str_ends_with($correo, '@unah.edu.hn')) {
             return back()->withErrors([
-                'correo' => 'Empleado: el correo debe terminar en @unah.edu.hn'
+                'correo' => 'Empleado: el correo debe terminar en @unah.edu.hn',
             ])->withInput();
         }
 
@@ -99,20 +99,20 @@ class UsuarioController extends Controller
         if ($tipo === 'estudiante') {
             $request->validate([
                 'numero_cuenta' => ['required', 'digits:11'],
-                'id_carrera' => 'required|integer',
+                'id_carrera'    => 'required|integer',
             ], [
                 'numero_cuenta.required' => 'Número de cuenta requerido.',
-                'id_carrera.required' => 'Carrera requerida.',
+                'id_carrera.required'    => 'Carrera requerida.',
             ]);
 
             $request->merge([
-                'id_rol' => null,
+                'id_rol'          => null,
                 'id_departamento' => null,
-                'cod_empleado' => null,
+                'cod_empleado'    => null,
             ]);
         } else {
             $request->validate([
-                'id_rol' => 'required|integer|in:1,4,5',
+                'id_rol'       => 'required|integer|in:1,4,5',
                 'cod_empleado' => 'required|string|max:50',
             ]);
 
@@ -126,12 +126,14 @@ class UsuarioController extends Controller
                 $tipoEmpleado = 'secretario';
                 $request->validate(['id_departamento' => 'required|integer']);
             } else {
-                return back()->withErrors(['id_rol' => 'Rol de empleado inválido.'])->withInput();
+                return back()->withErrors([
+                    'id_rol' => 'Rol de empleado inválido.',
+                ])->withInput();
             }
 
             $request->merge([
                 'numero_cuenta' => null,
-                'id_carrera' => null,
+                'id_carrera'    => null,
             ]);
         }
 
@@ -143,10 +145,7 @@ class UsuarioController extends Controller
         ])));
 
         try {
-            file_put_contents('/tmp/debug_registro.log', 'INICIO ' . date('Y-m-d H:i:s') . PHP_EOL, FILE_APPEND);
-
             $passwordHash = Hash::make($request->contrasena);
-            file_put_contents('/tmp/debug_registro.log', 'HASH OK' . PHP_EOL, FILE_APPEND);
 
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $nombreCompleto,
@@ -161,33 +160,21 @@ class UsuarioController extends Controller
                 $tipoEmpleado,
             ]);
 
-            file_put_contents('/tmp/debug_registro.log', 'INS_USUARIO OK' . PHP_EOL, FILE_APPEND);
-
             $row = $res[0] ?? null;
             $resultado = $row->resultado ?? 'ERROR';
-            $mensaje = $row->mensaje ?? 'Respuesta inválida del procedimiento';
-
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'RESULTADO INS_USUARIO: ' . $resultado . ' | MENSAJE: ' . $mensaje . PHP_EOL,
-                FILE_APPEND
-            );
+            $mensaje = $row->mensaje ?? 'Respuesta inválida del procedimiento.';
 
             if (strtoupper($resultado) !== 'OK') {
-                return back()->withErrors(['registro' => $mensaje])->withInput();
+                return back()->withErrors([
+                    'registro' => $mensaje,
+                ])->withInput();
             }
 
             $idUsuario = $row->id_usuario ?? null;
 
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'ID_USUARIO: ' . ($idUsuario ?? 'NULL') . PHP_EOL,
-                FILE_APPEND
-            );
-
             if (!$idUsuario) {
                 return redirect()->route('portal')
-                    ->with('error', 'Usuario creado, pero no se pudo preparar activación por correo.');
+                    ->with('error', 'Usuario creado, pero no se pudo preparar la activación por correo.');
             }
 
             $token = Str::random(64);
@@ -197,8 +184,6 @@ class UsuarioController extends Controller
                 $idUsuario,
                 'email_verification',
             ]);
-
-            file_put_contents('/tmp/debug_registro.log', 'DEL_AUTH OK' . PHP_EOL, FILE_APPEND);
 
             $resAuth = DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
                 $idUsuario,
@@ -210,17 +195,8 @@ class UsuarioController extends Controller
                 'Se generó token de verificación para el correo ' . $request->correo,
             ]);
 
-            file_put_contents('/tmp/debug_registro.log', 'INS_AUTH OK' . PHP_EOL, FILE_APPEND);
-
             $rowAuth = $resAuth[0] ?? null;
             $resultadoAuth = $rowAuth->resultado ?? 'ERROR';
-            $mensajeAuth = $rowAuth->mensaje ?? 'No se pudo preparar la verificación por correo.';
-
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'RESULTADO INS_AUTH: ' . $resultadoAuth . ' | MENSAJE: ' . $mensajeAuth . PHP_EOL,
-                FILE_APPEND
-            );
 
             if (strtoupper($resultadoAuth) !== 'OK') {
                 return redirect()->route('portal')
@@ -229,39 +205,17 @@ class UsuarioController extends Controller
 
             $link = route('email.verify', ['token' => $token]);
 
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'LINK VERIFICACION: ' . $link . PHP_EOL,
-                FILE_APPEND
-            );
-
-            try {
-                Mail::to($request->correo)->send(new VerifyEmailMail($link));
-                file_put_contents('/tmp/debug_registro.log', 'CORREO ENVIADO OK' . PHP_EOL, FILE_APPEND);
-            } catch (\Throwable $e) {
-                file_put_contents(
-                    '/tmp/debug_registro.log',
-                    'ERROR CORREO: ' . $e->getMessage() . PHP_EOL,
-                    FILE_APPEND
-                );
-
-                return redirect()->route('portal')
-                    ->with('error', 'Usuario creado, pero no se pudo enviar el correo. Contacta al administrador.');
-            }
+            Mail::to($request->correo)->send(new VerifyEmailMail($link));
 
             session()->forget('register_tipo');
 
-            return redirect()->route('portal')
-                ->with('success', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
-        } catch (\Throwable $e) {
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'ERROR CATCH CREARWEB: ' . $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' | Línea: ' . $e->getLine() . PHP_EOL,
-                FILE_APPEND
+            return redirect()->route('portal')->with(
+                'status',
+                'Registro realizado con éxito. Revisa tu correo, te llegará un enlace para activar tu cuenta antes de iniciar sesión.'
             );
-
+        } catch (\Throwable $e) {
             return back()->withErrors([
-                'registro' => $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' Línea: ' . $e->getLine()
+                'registro' => 'Ocurrió un error al registrar el usuario. Inténtalo nuevamente.',
             ])->withInput();
         }
     }
@@ -276,36 +230,18 @@ class UsuarioController extends Controller
 
             $hash = hash('sha256', $token);
 
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'VERIFICAR CORREO | TOKEN HASH: ' . $hash . PHP_EOL,
-                FILE_APPEND
-            );
-
             $res = DB::select('CALL UPD_VERIFICACION_CORREO_USUARIO(?)', [$hash]);
 
             $row = $res[0] ?? null;
             $resultado = strtoupper($row->resultado ?? 'ERROR');
             $mensaje = $row->mensaje ?? 'No se pudo verificar la cuenta.';
 
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'RESULTADO VERIFICACION: ' . $resultado . ' | MENSAJE: ' . $mensaje . PHP_EOL,
-                FILE_APPEND
-            );
-
             if ($resultado !== 'OK') {
                 return redirect()->route('portal')->with('error', $mensaje);
             }
 
-            return redirect()->route('portal')->with('success', $mensaje);
+            return redirect()->route('portal')->with('status', $mensaje);
         } catch (\Throwable $e) {
-            file_put_contents(
-                '/tmp/debug_registro.log',
-                'ERROR CATCH VERIFICAR: ' . $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' | Línea: ' . $e->getLine() . PHP_EOL,
-                FILE_APPEND
-            );
-
             return redirect()->route('portal')
                 ->with('error', 'Error al verificar el correo.');
         }
