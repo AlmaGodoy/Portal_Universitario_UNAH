@@ -46,7 +46,7 @@
         $initials = 'C';
     }
 
-        $cancelacionRouteName = null;
+    $cancelacionRouteName = null;
 
     if (Route::has('cancelacion.coordinadora.index')) {
         $cancelacionRouteName = 'cancelacion.coordinadora.index';
@@ -103,7 +103,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    @vite(['resources/css/dashboard.css'])
 
     <style>
         .coordinator-topbar {
@@ -769,49 +769,46 @@
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                           <a href="{{ url('/empleado/dashboard') }}"
-                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
                             <a href="{{ route('empleado.dashboard') }}"
                                class="nav-link {{ $dashboardActive ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Dashboard</p>
+                                <i class="nav-icon fas fa-house"></i>
+                                <p>Inicio</p>
                             </a>
                         </li>
 
                         {{-- Trámites --}}
                         <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
-    <a href="javascript:void(0)"
-       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-folder-open"></i>
-        <p>
-            Trámites
-            <i class="right fas fa-angle-left"></i>
-        </p>
-    </a>
+                            <a href="javascript:void(0)"
+                               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-folder-open"></i>
+                                <p>
+                                    Trámites
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
 
-    <ul class="nav nav-treeview">
-        <li class="nav-item">
-            <a href="{{ route('coordinador.cambio-carrera.index') }}"
-               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cambio de carrera</p>
-            </a>
-        </li>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('coordinador.cambio-carrera.index') }}"
+                                       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Cambio de carrera</p>
+                                    </a>
+                                </li>
 
-      <li class="nav-item">
-            <a href="{{ route('cancelacion.coordinadora.index') }}"
-               class="nav-link {{ request()->routeIs('cancelacion.coordinadora.*') ? 'active' : '' }}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Cancelación</p>
-            </a>
-        </li>
-    </ul>
-</li>
+                                <li class="nav-item">
+                                    <a href="{{ route('cancelacion.coordinadora.index') }}"
+                                       class="nav-link {{ request()->routeIs('cancelacion.coordinadora.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Cancelación</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
                         <li class="nav-item">
                             <a href="{{ $backupUrl }}"
                                class="nav-link {{ $backupActive ? 'active' : '' }}">
-                            <a href="{{ $soporteUrl }}"
-                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
@@ -824,18 +821,19 @@
                                 <p>Seguridad</p>
                             </a>
                         </li>
-{{-- Reportes --}}
-<li class="nav-item">
-    <a href="{{ route('reporte.tramites.vista') }}"
-       class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-chart-bar"></i>
-        <p>Reportes</p>
-    </a>
-</li>
+
+                        {{-- Reportes --}}
+                        <li class="nav-item">
+                            <a href="{{ route('reporte.tramites.vista') }}"
+                               class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>Reportes</p>
+                            </a>
+                        </li>
 
                         <li class="nav-item">
                             <a href="{{ route('auditoria') }}"
-                            class="nav-link {{ request()->routeIs('auditoria*') ? 'active' : '' }}">
+                               class="nav-link {{ request()->routeIs('auditoria*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
@@ -857,7 +855,6 @@
                             </a>
                         </li>
 
-
                     </ul>
                 </nav>
             </div>
@@ -870,152 +867,152 @@
 
     <div class="content-wrapper">
 
-        <div class="student-topbar coordinator-topbar-sa">
+        @if (!trim($__env->yieldContent('hide_topbar')))
+            <div class="student-topbar coordinator-topbar-sa">
 
-    <div class="student-topbar-left">
-        <div class="topbar-left-copy">
-            <div class="topbar-breadcrumb">
-                <i class="fas fa-house"></i>
-                <span>Inicio</span>
-                <i class="fas fa-chevron-right"></i>
-                <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
-            </div>
-            <h1 class="topbar-page-title">Panel de coordinación académica</h1>
-        </div>
-    </div>
-
-    <div class="student-topbar-right">
-
-        {{-- Notificaciones --}}
-        <div class="topbar-action-group">
-            <button class="topbar-icon-btn" id="btnCoordNotif" title="Notificaciones">
-                <i class="fas fa-bell"></i>
-                <span class="topbar-badge">3</span>
-            </button>
-
-            <div class="topbar-dropdown" id="dropCoordNotif">
-                <div class="topbar-dropdown-header">
-                    <span>Notificaciones</span>
-                    <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
-                </div>
-
-                <ul class="topbar-dropdown-list">
-                    <li class="topbar-dropdown-item unread">
-                        <div class="topbar-dropdown-icon blue">
-                            <i class="fas fa-file-circle-check"></i>
+                <div class="student-topbar-left">
+                    <div class="topbar-left-copy">
+                        <div class="topbar-breadcrumb">
+                            <i class="fas fa-house"></i>
+                            <span>Inicio</span>
+                            <i class="fas fa-chevron-right"></i>
+                            <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
                         </div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Nuevo trámite recibido</strong>
-                            <span>Hay una solicitud pendiente de revisión en coordinación.</span>
-                            <small>Hace 5 min</small>
-                        </div>
-                    </li>
-
-                    <li class="topbar-dropdown-item unread">
-                        <div class="topbar-dropdown-icon gold">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Seguimiento requerido</strong>
-                            <span>Una solicitud continúa en estado de revisión.</span>
-                            <small>Hace 1 hora</small>
-                        </div>
-                    </li>
-
-                    <li class="topbar-dropdown-item">
-                        <div class="topbar-dropdown-icon green">
-                            <i class="fas fa-circle-check"></i>
-                        </div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Dictamen emitido</strong>
-                            <span>Se registró correctamente una resolución reciente.</span>
-                            <small>Ayer</small>
-                        </div>
-                    </li>
-                </ul>
-
-                <div class="topbar-dropdown-footer">
-                    <a href="#">Ver todas las notificaciones</a>
-                </div>
-            </div>
-        </div>
-
-        {{-- Mensajes --}}
-        <div class="topbar-action-group">
-            <button class="topbar-icon-btn" id="btnCoordMsg" title="Mensajes">
-                <i class="fas fa-envelope"></i>
-                <span class="topbar-badge gold">1</span>
-            </button>
-
-            <div class="topbar-dropdown" id="dropCoordMsg">
-                <div class="topbar-dropdown-header">
-                    <span>Mensajes</span>
-                    <a href="#" class="topbar-dropdown-mark">Ver todos</a>
-                </div>
-
-                <ul class="topbar-dropdown-list">
-                    <li class="topbar-dropdown-item unread">
-                        <div class="topbar-dropdown-avatar">SA</div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Secretaría Académica</strong>
-                            <span>Se actualizó un trámite que requiere validación de coordinación.</span>
-                            <small>Hace 30 min</small>
-                        </div>
-                    </li>
-                </ul>
-
-                <div class="topbar-dropdown-footer">
-                    <a href="#">Ir a mensajes</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="topbar-divider"></div>
-
-        {{-- Usuario --}}
-        <div class="topbar-action-group">
-            <button class="student-user-chip" id="btnCoordUser" title="Mi perfil">
-                <div class="student-user-chip-avatar">{{ $initials }}</div>
-                <div class="student-user-chip-info">
-                    <span class="student-user-chip-name">{{ $displayName }}</span>
-                    <span class="student-user-chip-role">Coordinadora</span>
-                </div>
-                <i class="fas fa-chevron-down student-user-chip-arrow"></i>
-            </button>
-
-            <div class="topbar-dropdown align-right" id="dropCoordUser">
-                <div class="topbar-user-header">
-                    <div class="topbar-user-header-avatar">{{ $initials }}</div>
-                    <div>
-                        <strong>{{ $displayName }}</strong>
-                        <span>{{ $correoInstitucional }}</span>
+                        <h1 class="topbar-page-title">Panel de coordinación académica</h1>
                     </div>
                 </div>
 
-                <ul class="topbar-dropdown-list">
-                    <li class="topbar-dropdown-item sm">
-                        <div class="topbar-dropdown-icon blue sm">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="topbar-dropdown-text">
-                            <span>Mi perfil</span>
-                        </div>
-                    </li>
-                </ul>
+                <div class="student-topbar-right">
 
-                <div class="topbar-dropdown-footer danger">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit">
-                            <i class="fas fa-right-from-bracket"></i> Cerrar sesión
+                    <div class="topbar-action-group">
+                        <button class="topbar-icon-btn" id="btnCoordNotif" title="Notificaciones">
+                            <i class="fas fa-bell"></i>
+                            <span class="topbar-badge">3</span>
                         </button>
-                    </form>
+
+                        <div class="topbar-dropdown" id="dropCoordNotif">
+                            <div class="topbar-dropdown-header">
+                                <span>Notificaciones</span>
+                                <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
+                            </div>
+
+                            <ul class="topbar-dropdown-list">
+                                <li class="topbar-dropdown-item unread">
+                                    <div class="topbar-dropdown-icon blue">
+                                        <i class="fas fa-file-circle-check"></i>
+                                    </div>
+                                    <div class="topbar-dropdown-text">
+                                        <strong>Nuevo trámite recibido</strong>
+                                        <span>Hay una solicitud pendiente de revisión en coordinación.</span>
+                                        <small>Hace 5 min</small>
+                                    </div>
+                                </li>
+
+                                <li class="topbar-dropdown-item unread">
+                                    <div class="topbar-dropdown-icon gold">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="topbar-dropdown-text">
+                                        <strong>Seguimiento requerido</strong>
+                                        <span>Una solicitud continúa en estado de revisión.</span>
+                                        <small>Hace 1 hora</small>
+                                    </div>
+                                </li>
+
+                                <li class="topbar-dropdown-item">
+                                    <div class="topbar-dropdown-icon green">
+                                        <i class="fas fa-circle-check"></i>
+                                    </div>
+                                    <div class="topbar-dropdown-text">
+                                        <strong>Dictamen emitido</strong>
+                                        <span>Se registró correctamente una resolución reciente.</span>
+                                        <small>Ayer</small>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="topbar-dropdown-footer">
+                                <a href="#">Ver todas las notificaciones</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topbar-action-group">
+                        <button class="topbar-icon-btn" id="btnCoordMsg" title="Mensajes">
+                            <i class="fas fa-envelope"></i>
+                            <span class="topbar-badge gold">1</span>
+                        </button>
+
+                        <div class="topbar-dropdown" id="dropCoordMsg">
+                            <div class="topbar-dropdown-header">
+                                <span>Mensajes</span>
+                                <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                            </div>
+
+                            <ul class="topbar-dropdown-list">
+                                <li class="topbar-dropdown-item unread">
+                                    <div class="topbar-dropdown-avatar">SA</div>
+                                    <div class="topbar-dropdown-text">
+                                        <strong>Secretaría Académica</strong>
+                                        <span>Se actualizó un trámite que requiere validación de coordinación.</span>
+                                        <small>Hace 30 min</small>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="topbar-dropdown-footer">
+                                <a href="#">Ir a mensajes</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topbar-divider"></div>
+
+                    <div class="topbar-action-group">
+                        <button class="student-user-chip" id="btnCoordUser" title="Mi perfil">
+                            <div class="student-user-chip-avatar">{{ $initials }}</div>
+                            <div class="student-user-chip-info">
+                                <span class="student-user-chip-name">{{ $displayName }}</span>
+                                <span class="student-user-chip-role">Coordinadora</span>
+                            </div>
+                            <i class="fas fa-chevron-down student-user-chip-arrow"></i>
+                        </button>
+
+                        <div class="topbar-dropdown align-right" id="dropCoordUser">
+                            <div class="topbar-user-header">
+                                <div class="topbar-user-header-avatar">{{ $initials }}</div>
+                                <div>
+                                    <strong>{{ $displayName }}</strong>
+                                    <span>{{ $correoInstitucional }}</span>
+                                </div>
+                            </div>
+
+                            <ul class="topbar-dropdown-list">
+                                <li class="topbar-dropdown-item sm">
+                                    <div class="topbar-dropdown-icon blue sm">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="topbar-dropdown-text">
+                                        <span>Mi perfil</span>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="topbar-dropdown-footer danger">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit">
+                                        <i class="fas fa-right-from-bracket"></i> Cerrar sesión
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-        </div>
+        @endif
 
-    </div>
-</div>
         <section class="content dashboard-shell">
             @yield('content')
         </section>
@@ -1027,13 +1024,13 @@
 </div>
 
 <div class="modal fade session-timeout-modal"
-     id="sessionTimeoutModal"
-     tabindex="-1"
-     role="dialog"
-     aria-labelledby="sessionTimeoutModalLabel"
-     aria-hidden="true"
-     data-backdrop="static"
-     data-keyboard="false">
+    id="sessionTimeoutModal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="sessionTimeoutModalLabel"
+    aria-hidden="true"
+    data-backdrop="static"
+    data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="session-timeout-header">
@@ -1066,7 +1063,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-<script src="{{ asset('js/dashboard.js') }}"></script>
+@vite(['resources/js/dashboard.js'])
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -1290,5 +1287,3 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
-
-

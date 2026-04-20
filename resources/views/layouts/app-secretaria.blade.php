@@ -664,8 +664,8 @@
 
                         <li class="nav-item">
                             <a href="{{ $dashboardUrl }}" class="nav-link {{ $dashboardActive ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Dashboard</p>
+                                <i class="nav-icon fas fa-house"></i>
+                                <p>Inicio</p>
                             </a>
                         </li>
 
