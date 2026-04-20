@@ -19,10 +19,18 @@ class RolController extends Controller
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
 
+        if (!$idCarreraActual) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'rol' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
+                ]);
+        }
+
         $buscar = trim((string) $request->get('buscar', ''));
         $estado = $request->get('estado_activo', '');
 
-        $roles = DB::select('CALL SP_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?, ?)', [
+        $rolesRaw = DB::select('CALL SP_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?, ?)', [
             'LISTAR',
             null,
             $idCarreraActual,
@@ -32,6 +40,16 @@ class RolController extends Controller
             $buscar !== '' ? $buscar : null,
             null
         ]);
+
+        $roles = collect($rolesRaw)->map(function ($rol) {
+            return (object) [
+                'id_rol_carrera' => $rol->id_rol_carrera ?? $rol->id_rol ?? null,
+                'id_rol'         => $rol->id_rol ?? $rol->id_rol_carrera ?? null,
+                'nombre_rol'     => $rol->nombre_rol ?? '',
+                'descripcion'    => $rol->descripcion ?? '',
+                'estado_activo'  => $rol->estado_activo ?? 0,
+            ];
+        });
 
         $permisos = DB::select('CALL SEL_PERMISOS_SEGURIDAD()');
 
@@ -56,7 +74,7 @@ class RolController extends Controller
         ]);
 
         return view('rol_seguridad_roles', [
-            'roles' => collect($roles),
+            'roles' => $roles,
             'permisos' => collect($permisos),
             'objetos' => collect($objetos),
             'rolPermisos' => collect($rolPermisos),
@@ -86,6 +104,14 @@ class RolController extends Controller
         ]);
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+
+        if (!$idCarreraActual) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'rol' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
+                ]);
+        }
 
         $res = DB::select('CALL SP_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?, ?)', [
             'CREAR',
@@ -127,6 +153,14 @@ class RolController extends Controller
         ]);
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+
+        if (!$idCarreraActual) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'rol' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
+                ]);
+        }
 
         $res = DB::select('CALL SP_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?, ?)', [
             'ACTUALIZAR',
@@ -173,6 +207,14 @@ class RolController extends Controller
         ]);
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+
+        if (!$idCarreraActual) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'permiso' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
+                ]);
+        }
 
         $errores = [];
         $creados = 0;
@@ -226,6 +268,14 @@ class RolController extends Controller
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
 
+        if (!$idCarreraActual) {
+            return redirect()
+                ->route('seguridad.index')
+                ->withErrors([
+                    'permiso' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
+                ]);
+        }
+
         $res = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
             'DESACTIVAR',
             (int) $id,
@@ -276,5 +326,3 @@ class RolController extends Controller
         return (int) $row->id_carrera;
     }
 }
-
-

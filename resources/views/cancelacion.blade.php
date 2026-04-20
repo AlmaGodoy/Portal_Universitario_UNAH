@@ -7,6 +7,15 @@
 
     <div class="puma-container">
 
+        @if (session('success'))
+            <div class="puma-alert puma-alert--success">
+                <span>✅</span>
+                <div>
+                    <p>{{ session('success') }}</p>
+                </div>
+            </div>
+        @endif
+
         @if ($errors->any())
             <div class="puma-alert puma-alert--error">
                 <span>⚠️</span>
@@ -181,23 +190,7 @@
                         </div>
 
                         <div class="puma-grid">
-                            <div class="puma-field">
-                                <label class="puma-label">Tipo de Solicitud <span class="req">*</span></label>
-                                <select name="tipo" id="tipo" class="puma-select" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="Parcial" {{ old('tipo') == 'Parcial' ? 'selected' : '' }}>
-                                        Cancelación Parcial
-                                    </option>
-                                    <option value="Total" {{ old('tipo') == 'Total' ? 'selected' : '' }}>
-                                        Cancelación Total del Período
-                                    </option>
-                                </select>
-                                @error('tipo')
-                                    <span class="puma-field-error">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="puma-field">
+                            <div class="puma-field puma-field--full">
                                 <label class="puma-label">Causa Justificada <span class="req">*</span></label>
                                 <select name="motivo_id" class="puma-select" required>
                                     <option value="">Seleccione el motivo...</option>
@@ -217,41 +210,6 @@
                             </div>
                         </div>
 
-                        <div class="puma-tipo-info" id="tipoInfoBox">
-                            <div class="puma-tipo-info__header">
-                                <i class="fas fa-circle-info"></i>
-                                <span>Aclaración sobre el tipo de solicitud</span>
-                            </div>
-
-                            <div class="puma-tipo-info__grid">
-                                <div class="puma-tipo-info__item" data-tipo-card="Parcial">
-                                    <div class="puma-tipo-info__icon">
-                                        <i class="fas fa-layer-group"></i>
-                                    </div>
-                                    <div class="puma-tipo-info__content">
-                                        <strong>Cancelación Parcial</strong>
-                                        <p>
-                                            Úsela cuando desea cancelar únicamente una o varias asignaturas
-                                            y continuar con las demás clases matriculadas.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="puma-tipo-info__item" data-tipo-card="Total">
-                                    <div class="puma-tipo-info__icon">
-                                        <i class="fas fa-ban"></i>
-                                    </div>
-                                    <div class="puma-tipo-info__content">
-                                        <strong>Cancelación Total</strong>
-                                        <p>
-                                            Úsela cuando desea cancelar toda la carga académica
-                                            inscrita en el período actual.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="puma-field puma-field--full">
                             <label class="puma-label">
                                 Exposición de Motivos <span class="req">*</span>
@@ -260,6 +218,7 @@
                             <textarea name="justificacion"
                                       class="puma-textarea"
                                       rows="5"
+                                      maxlength="2000"
                                       placeholder="Resuma brevemente los hechos que motivan su solicitud..."
                                       required>{{ old('justificacion') }}</textarea>
 
