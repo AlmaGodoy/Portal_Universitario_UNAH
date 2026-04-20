@@ -1,5 +1,5 @@
 @extends('layouts.app-coordinador')
-
+@section('hide_topbar', true)
 @section('titulo', 'Gestión de Usuarios')
 
 @section('content')

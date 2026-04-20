@@ -239,7 +239,6 @@
 
             <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
                 <nav class="mt-2">
-                    <div class="nav-header-custom">Panel académico global</div>
 
                     <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
 
@@ -268,6 +267,22 @@
                                 <p>Reportes Generales</p>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+    <a href="{{ route('auditoria') }}"
+       class="nav-link {{ request()->routeIs('auditoria') || request()->routeIs('auditoria*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-magnifying-glass-chart"></i>
+        <p>Auditoría</p>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('bitacora.index') }}"
+       class="nav-link {{ request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-book"></i>
+        <p>Bitácora</p>
+    </a>
+</li>
 
                         <li class="nav-item">
                             <a href="{{ $backupUrl }}"
