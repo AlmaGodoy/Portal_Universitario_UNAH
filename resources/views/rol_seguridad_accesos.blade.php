@@ -46,9 +46,14 @@
                                 <select name="id_rol_carrera" class="form-select" required>
                                     <option value="">- SELECCIONE ROL -</option>
                                     @foreach($roles as $rol)
-                                        <option value="{{ $rol->id_rol_carrera }}">
-                                            {{ strtoupper($rol->nombre_rol) }}
-                                        </option>
+                                        @php
+                                            $idRol = $rol->id_rol_carrera ?? $rol->id_rol ?? null;
+                                        @endphp
+                                        @if($idRol)
+                                            <option value="{{ $idRol }}">
+                                                {{ strtoupper($rol->nombre_rol ?? '') }}
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -70,9 +75,14 @@
                                 <select name="id_objeto_carrera" class="form-select" required>
                                     <option value="">- SELECCIONE OBJETO -</option>
                                     @foreach($objetos as $objeto)
-                                        <option value="{{ $objeto->id_objeto_carrera }}">
-                                            {{ strtoupper($objeto->nombre_objeto) }} ({{ strtoupper($objeto->tipo_objeto) }})
-                                        </option>
+                                        @php
+                                            $idObjeto = $objeto->id_objeto_carrera ?? $objeto->id_objeto ?? null;
+                                        @endphp
+                                        @if($idObjeto)
+                                            <option value="{{ $idObjeto }}">
+                                                {{ strtoupper($objeto->nombre_objeto ?? '') }} ({{ strtoupper($objeto->tipo_objeto ?? '') }})
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -117,11 +127,11 @@
                                 @forelse($accesos as $acceso)
                                     <tr>
                                         <td>{{ $acceso->id_rol_permiso_carrera }}</td>
-                                        <td>{{ $acceso->nombre_rol }}</td>
-                                        <td>{{ $acceso->nombre_permiso }}</td>
-                                        <td>{{ $acceso->nombre_objeto }}</td>
-                                        <td>{{ $acceso->tipo_objeto }}</td>
-                                        <td>{{ $acceso->fecha_asignacion }}</td>
+                                        <td>{{ $acceso->nombre_rol ?? 'Sin rol' }}</td>
+                                        <td>{{ $acceso->nombre_permiso ?? 'Sin permiso' }}</td>
+                                        <td>{{ $acceso->nombre_objeto ?? 'Sin objeto' }}</td>
+                                        <td>{{ $acceso->tipo_objeto ?? 'Sin tipo' }}</td>
+                                        <td>{{ $acceso->fecha_asignacion ?? 'Sin fecha' }}</td>
                                         <td>
                                             <form action="{{ route('seguridad.acceso.delete', $acceso->id_rol_permiso_carrera) }}"
                                                   method="POST"
@@ -153,5 +163,3 @@
     </div>
 </div>
 @endsection
-
-

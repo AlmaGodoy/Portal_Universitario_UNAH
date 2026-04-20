@@ -108,23 +108,32 @@
                             </thead>
                             <tbody>
                                 @forelse($roles as $rol)
+                                    @php
+                                        $idRolCarrera = $rol->id_rol_carrera ?? $rol->id_rol ?? null;
+                                    @endphp
                                     <tr>
-                                        <td>{{ $rol->id_rol_carrera }}</td>
-                                        <td>{{ strtoupper($rol->nombre_rol) }}</td>
-                                        <td>{{ $rol->descripcion }}</td>
+                                        <td>{{ $idRolCarrera ?? 'N/D' }}</td>
+                                        <td>{{ strtoupper($rol->nombre_rol ?? '') }}</td>
+                                        <td>{{ $rol->descripcion ?? '' }}</td>
                                         <td>
-                                            @if((int)$rol->estado_activo === 1)
+                                            @if((int)($rol->estado_activo ?? 0) === 1)
                                                 <span class="badge bg-success">Activo</span>
                                             @else
                                                 <span class="badge bg-danger">Inactivo</span>
                                             @endif
                                         </td>
                                         <td>
-                                            <button class="btn btn-primary btn-sm"
-                                                    data-toggle="modal"
-                                                    data-target="#modalEditarRol{{ $rol->id_rol_carrera }}">
-                                                Editar
-                                            </button>
+                                            @if($idRolCarrera)
+                                                <button class="btn btn-primary btn-sm"
+                                                        data-toggle="modal"
+                                                        data-target="#modalEditarRol{{ $idRolCarrera }}">
+                                                    Editar
+                                                </button>
+                                            @else
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    Sin ID
+                                                </button>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
@@ -157,9 +166,14 @@
                                 <select name="id_rol_carrera" class="form-select" required>
                                     <option value="">- SELECCIONE ROL -</option>
                                     @foreach($roles as $rol)
-                                        <option value="{{ $rol->id_rol_carrera }}">
-                                            {{ strtoupper($rol->nombre_rol) }}
-                                        </option>
+                                        @php
+                                            $idRolCarrera = $rol->id_rol_carrera ?? $rol->id_rol ?? null;
+                                        @endphp
+                                        @if($idRolCarrera)
+                                            <option value="{{ $idRolCarrera }}">
+                                                {{ strtoupper($rol->nombre_rol ?? '') }}
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -307,49 +321,53 @@
 
 {{-- MODALES EDITAR --}}
 @foreach($roles as $rol)
-<div class="modal fade" id="modalEditarRol{{ $rol->id_rol_carrera }}" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content shadow">
-            <form action="{{ route('seguridad.rol.update', $rol->id_rol_carrera) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas actualizar este rol?">
-                @csrf
-                @method('PUT')
+    @php
+        $idRolCarrera = $rol->id_rol_carrera ?? $rol->id_rol ?? null;
+    @endphp
 
-                <div class="modal-header security-header">
-                    <h5 class="modal-title text-white">Editar Rol</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+    @if($idRolCarrera)
+        <div class="modal fade" id="modalEditarRol{{ $idRolCarrera }}" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content shadow">
+                    <form action="{{ route('seguridad.rol.update', $idRolCarrera) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas actualizar este rol?">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="modal-header security-header">
+                            <h5 class="modal-title text-white">Editar Rol</h5>
+                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body bg-white">
+                            <div class="form-group">
+                                <label class="form-label fw-bold">Nombre del Rol:</label>
+                                <input type="text" name="nombre_rol" class="form-control" value="{{ $rol->nombre_rol ?? '' }}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label fw-bold">Descripción:</label>
+                                <textarea name="descripcion" class="form-control" rows="3" required>{{ $rol->descripcion ?? '' }}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label fw-bold">Estado:</label>
+                                <select name="estado_activo" class="form-select" required>
+                                    <option value="1" {{ (int)($rol->estado_activo ?? 0) === 1 ? 'selected' : '' }}>Activo</option>
+                                    <option value="0" {{ (int)($rol->estado_activo ?? 0) === 0 ? 'selected' : '' }}>Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-white">
+                            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Actualizar</button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="modal-body bg-white">
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Nombre del Rol:</label>
-                        <input type="text" name="nombre_rol" class="form-control" value="{{ $rol->nombre_rol }}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Descripción:</label>
-                        <textarea name="descripcion" class="form-control" rows="3" required>{{ $rol->descripcion }}</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Estado:</label>
-                        <select name="estado_activo" class="form-select" required>
-                            <option value="1" {{ (int)$rol->estado_activo === 1 ? 'selected' : '' }}>Activo</option>
-                            <option value="0" {{ (int)$rol->estado_activo === 0 ? 'selected' : '' }}>Inactivo</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Actualizar</button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
-</div>
+    @endif
 @endforeach
 @endsection
-
-
