@@ -160,7 +160,7 @@ class ReporteTramiteController extends Controller
                 'reporte_tramites.xlsx'
             );
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'No se pudo generar el Excel: ' . $e->getMessage());
         }
     }
@@ -182,16 +182,16 @@ class ReporteTramiteController extends Controller
     /**
      * Método interno reutilizable para coordinador y secretaría de carrera
      */
-    private function obtenerDatosReporte(Request $request)
+    private function obtenerDatosReporte(Request $request): array
     {
         $idPersonaEmpleado = $this->obtenerIdPersonaEmpleadoAutenticado();
 
-        $tipoTramite = strtolower(trim($request->input('tipo_tramite', '')));
-        $estadoResolucion = strtolower(trim($request->input('estado_resolucion', '')));
+        $tipoTramite = strtolower(trim((string) $request->input('tipo_tramite', '')));
+        $estadoResolucion = strtolower(trim((string) $request->input('estado_resolucion', '')));
         $mesReporte = $request->input('mes_reporte');
 
-        $tipoTramiteParam = !empty($tipoTramite) ? $tipoTramite : null;
-        $estadoResolucionParam = !empty($estadoResolucion) ? $estadoResolucion : null;
+        $tipoTramiteParam = $tipoTramite !== '' ? $tipoTramite : null;
+        $estadoResolucionParam = $estadoResolucion !== '' ? $estadoResolucion : null;
 
         $resultado = ReporteTramite::obtener(
             $idPersonaEmpleado,
@@ -208,7 +208,7 @@ class ReporteTramiteController extends Controller
         $tramitesReporte = [];
 
         foreach ($resultado as $tramite) {
-            $estado = strtolower(trim($tramite->estado_actual ?? ''));
+            $estado = strtolower(trim((string) ($tramite->estado_actual ?? '')));
             $fechaSolicitud = $tramite->fecha_solicitud ?? null;
 
             $cumpleMesFiltro = true;
@@ -227,10 +227,15 @@ class ReporteTramiteController extends Controller
             }
 
             $tramitesReporte[] = [
-                'estudiante'      => $tramite->estudiante ?? 'Sin nombre',
-                'tipo'            => $tramite->tipo ?? 'No definido',
-                'fecha_solicitud' => $tramite->fecha_solicitud ?? 'Sin fecha',
-                'estado'          => $tramite->estado_actual ?? 'pendiente'
+                'id_tramite'           => $tramite->id_tramite ?? '',
+                'estudiante'           => $tramite->estudiante ?? 'Sin nombre',
+                'carrera'              => $tramite->carrera ?? '',
+                'tipo'                 => $tramite->tipo ?? 'No definido',
+                'estado_actual'        => $tramite->estado_actual ?? 'pendiente',
+                'fecha_solicitud'      => $tramite->fecha_solicitud ?? 'Sin fecha',
+                'observaciones'        => $tramite->observaciones ?? '',
+                'observaciones_resolucion' => $tramite->observaciones_resolucion ?? '',
+                'fecha_resolucion'     => $tramite->fecha_resolucion ?? '',
             ];
 
             if ($estado === 'aprobada' || $estado === 'aprobado') {
@@ -245,6 +250,7 @@ class ReporteTramiteController extends Controller
                 $pendientesTotal++;
 
                 $tramitesPendientes[] = [
+                    'id_tramite'      => $tramite->id_tramite ?? '',
                     'estudiante'      => $tramite->estudiante ?? 'Sin nombre',
                     'tipo'            => $tramite->tipo ?? 'No definido',
                     'fecha_solicitud' => $tramite->fecha_solicitud ?? 'Sin fecha',
@@ -274,16 +280,16 @@ class ReporteTramiteController extends Controller
     /**
      * Método interno para Secretaría General
      */
-    private function obtenerDatosReporteSecretariaGeneral(Request $request)
+    private function obtenerDatosReporteSecretariaGeneral(Request $request): array
     {
         $idCarrera = $request->input('id_carrera');
-        $tipoTramite = strtolower(trim($request->input('tipo_tramite', '')));
-        $estadoResolucion = strtolower(trim($request->input('estado_resolucion', '')));
+        $tipoTramite = strtolower(trim((string) $request->input('tipo_tramite', '')));
+        $estadoResolucion = strtolower(trim((string) $request->input('estado_resolucion', '')));
         $mesReporte = $request->input('mes_reporte');
 
         $idCarreraParam = (!empty($idCarrera) && $idCarrera !== '0') ? (int) $idCarrera : null;
-        $tipoTramiteParam = !empty($tipoTramite) ? $tipoTramite : null;
-        $estadoResolucionParam = !empty($estadoResolucion) ? $estadoResolucion : null;
+        $tipoTramiteParam = $tipoTramite !== '' ? $tipoTramite : null;
+        $estadoResolucionParam = $estadoResolucion !== '' ? $estadoResolucion : null;
         $mesReporteParam = (!empty($mesReporte) && $mesReporte !== '0') ? (int) $mesReporte : null;
 
         $resultado = ReporteTramite::obtenerSecretariaGeneral(
@@ -305,14 +311,18 @@ class ReporteTramiteController extends Controller
         $tramitesReporte = [];
 
         foreach ($resultado as $tramite) {
-            $estado = strtolower(trim($tramite->estado_actual ?? ''));
+            $estado = strtolower(trim((string) ($tramite->estado_actual ?? '')));
 
             $tramitesReporte[] = [
-                'estudiante'      => $tramite->estudiante ?? 'Sin nombre',
-                'carrera'         => $tramite->carrera ?? 'Sin carrera',
-                'tipo'            => $tramite->tipo ?? 'No definido',
-                'fecha_solicitud' => $tramite->fecha_solicitud ?? 'Sin fecha',
-                'estado'          => $tramite->estado_actual ?? 'pendiente'
+                'id_tramite'           => $tramite->id_tramite ?? '',
+                'estudiante'           => $tramite->estudiante ?? 'Sin nombre',
+                'carrera'              => $tramite->carrera ?? 'Sin carrera',
+                'tipo'                 => $tramite->tipo ?? 'No definido',
+                'estado_actual'        => $tramite->estado_actual ?? 'pendiente',
+                'fecha_solicitud'      => $tramite->fecha_solicitud ?? 'Sin fecha',
+                'observaciones'        => $tramite->observaciones ?? '',
+                'observaciones_resolucion' => $tramite->observaciones_resolucion ?? '',
+                'fecha_resolucion'     => $tramite->fecha_resolucion ?? '',
             ];
 
             if ($estado === 'aprobada' || $estado === 'aprobado') {

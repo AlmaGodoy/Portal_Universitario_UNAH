@@ -467,8 +467,8 @@
                         <li class="nav-item">
                             <a href="{{ route('dashboard') }}"
                                class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Panel institucional</p>
+                                <i class="nav-icon fas fa-house"></i>
+                                <p>Inicio</p>
                             </a>
                         </li>
 
