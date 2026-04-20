@@ -2,23 +2,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputPersona = document.getElementById('id_persona');
     const estadoTramite = document.getElementById('estadoTramite');
 
-  function claseEstado(estado) {
-    const valor = (estado || '').toLowerCase().trim();
+    function claseEstado(estado) {
+        const valor = (estado || '').toLowerCase().trim();
 
-    if (valor.includes('aprob')) return 'aprobada';
-    if (valor.includes('rechaz')) return 'rechazada';
-    if (valor.includes('pend')) return 'pendiente';
-    if (valor.includes('revision') || valor.includes('revisión')) return 'revision';
+        if (valor.includes('aprob')) return 'aprobada';
+        if (valor.includes('rechaz')) return 'rechazada';
+        if (valor.includes('pend')) return 'pendiente';
+        if (valor.includes('revision') || valor.includes('revisión')) return 'revision';
 
-    return 'pendiente';
-}
+        return 'pendiente';
+    }
 
     function pasoActivo(estado) {
         const valor = (estado || '').toLowerCase().trim();
 
         if (valor.includes('aprob') || valor.includes('rechaz')) return 3;
-        if (valor.includes('revision') || valor.includes('revision')) return 2;
+        if (valor.includes('revision') || valor.includes('revisión')) return 2;
         return 1;
+    }
+
+   
+    function seleccionarTramiteMasReciente(tramites) {
+        if (!Array.isArray(tramites) || tramites.length === 0) {
+            return null;
+        }
+
+        const copia = [...tramites];
+
+        copia.sort((a, b) => {
+            const estadoA = (a.estado_tramite || '').toLowerCase().trim();
+            const estadoB = (b.estado_tramite || '').toLowerCase().trim();
+
+            const idA = parseInt(a.id_tramite || 0, 10);
+            const idB = parseInt(b.id_tramite || 0, 10);
+
+            const prioridadEstado = (estado) => {
+                if (estado.includes('revision') || estado.includes('revisión')) return 1;
+                if (estado.includes('pend')) return 2;
+                if (estado.includes('aprob')) return 3;
+                if (estado.includes('rechaz')) return 4;
+                return 5;
+            };
+
+            const prioridadA = prioridadEstado(estadoA);
+            const prioridadB = prioridadEstado(estadoB);
+
+            if (prioridadA !== prioridadB) {
+                return prioridadA - prioridadB;
+            }
+
+            return idB - idA;
+        });
+
+        return copia[0];
     }
 
     async function cargarEstadoTramite() {
@@ -26,6 +62,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const idPersona = parseInt(inputPersona.value, 10);
+
+            if (!idPersona || isNaN(idPersona)) {
+                estadoTramite.innerHTML = `
+                    <div class="estado-empty">
+                        <p>No se pudo identificar al estudiante autenticado.</p>
+                    </div>
+                `;
+                return;
+            }
 
             const res = await fetch(`/api/cambio-carrera/ver/${idPersona}`, {
                 headers: { 'Accept': 'application/json' }
@@ -42,7 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const tramite = data[0];
+            const tramite = seleccionarTramiteMasReciente(data);
+
+            if (!tramite) {
+                estadoTramite.innerHTML = `
+                    <div class="estado-empty">
+                        <p>No se encontró un trámite válido para mostrar.</p>
+                    </div>
+                `;
+                return;
+            }
+
             const estadoTexto = tramite.estado_tramite ?? 'pendiente';
             const estadoCss = claseEstado(estadoTexto);
             const paso = pasoActivo(estadoTexto);
@@ -54,12 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="timeline-dot">1</div>
                             <span>Solicitado</span>
                         </div>
+
                         <div class="timeline-line ${paso >= 2 ? 'active' : ''}"></div>
+
                         <div class="timeline-step ${paso >= 2 ? 'active' : ''}">
                             <div class="timeline-dot">2</div>
                             <span>En revisión</span>
                         </div>
+
                         <div class="timeline-line ${paso >= 3 ? 'active' : ''}"></div>
+
                         <div class="timeline-step ${paso >= 3 ? 'active' : ''}">
                             <div class="timeline-dot">3</div>
                             <span>Resuelto</span>
@@ -101,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             <div class="estado-item full">
                                 <strong>Dictamen / Observación</strong>
-                                <span>${tramite.dictamen ?? tramite.observacion ?? 'Aún no hay dictamen registrado.'}</span>
+                                <span>${tramite.dictamen ?? tramite.observacion ?? tramite.observacion_dictamen ?? 'Aún no hay dictamen registrado.'}</span>
                             </div>
                         </div>
                     </div>

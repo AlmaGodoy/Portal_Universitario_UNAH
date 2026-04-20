@@ -12,11 +12,13 @@ Route::prefix('api/cambio-carrera')->middleware(['auth', 'session.timeout'])->gr
     Route::middleware('roleid:2')->group(function () {
         Route::post('crear', [CambioCarreraController::class, 'crear']);
         Route::get('ver/{codigo}', [CambioCarreraController::class, 'ver']);
+        Route::get('estado-actual', [CambioCarreraController::class, 'estadoActual']);
+        Route::delete('eliminar/{id_tramite}', [CambioCarreraController::class, 'eliminar']);
     });
 
     Route::middleware('roleid:5,1')->group(function () {
         Route::put('estado/{id_tramite}', [CambioCarreraController::class, 'actualizarEstado']);
-        Route::delete('eliminar/{id_tramite}', [CambioCarreraController::class, 'eliminar']);
+        
     });
 
     Route::get('calendario-vigente', [CambioCarreraController::class, 'calendarioVigente']);
