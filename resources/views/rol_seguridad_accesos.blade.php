@@ -1,7 +1,7 @@
 @extends('layouts.app-coordinador')
 
 @section('titulo', 'Gestión de Accesos')
-
+@section('hide_topbar', true)
 @section('content')
 <div class="container py-4 security-page">
 
