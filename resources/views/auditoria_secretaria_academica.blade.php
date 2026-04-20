@@ -22,7 +22,7 @@
 
         <div class="card-body">
 
-            <form method="GET">
+            <form method="GET" >
 
                 <div class="row align-items-end">
 

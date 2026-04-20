@@ -45,7 +45,7 @@ class BitacoraController extends Controller
         $fecha_fin    = $request->fecha_fin;
 
         $id_usuario = $user->id_usuario ?? $user->id ?? null;
-        $id_carrera = $user->id_carrera ?? null;
+        $id_carrera =  null;
         $id_rol     = $user->id_rol ?? null;
 
         if (!$fecha_inicio || !$fecha_fin) {

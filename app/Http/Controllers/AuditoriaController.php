@@ -47,8 +47,8 @@ class AuditoriaController extends Controller
         $page = request()->get('page', 1);
 
         $registros = new LengthAwarePaginator(
-            array_slice($resultados, ($page - 1) * $perPage, $perPage),
-            count($resultados),
+            array_slice($auditorias, ($page - 1) * $perPage, $perPage),
+            count($auditorias),
             $perPage,
             $page,
             ['path' => request()->url()]
@@ -73,7 +73,7 @@ class AuditoriaController extends Controller
 
         if ($user->id_rol == 1) {
 
-            return redirect()->route('auditoria.administrativa');
+            return redirect()->route('auditoria.general');
 
         } elseif ($user->id_rol == 4) {
 
@@ -81,7 +81,7 @@ class AuditoriaController extends Controller
 
         } elseif ($user->id_rol == 5) {
 
-            return redirect()->route('auditoria.general');
+            return redirect()->route('auditoria.administrativa');
 
         }
 
@@ -207,7 +207,7 @@ class AuditoriaController extends Controller
         $fecha_inicio = $request->fecha_inicio;
         $fecha_fin = $request->fecha_fin;
 
-        $id_usuario = null;
+        $id_usuario = $user->id_usuario;
         $id_rol = $user->id_rol;
         $id_carrera = null;
 

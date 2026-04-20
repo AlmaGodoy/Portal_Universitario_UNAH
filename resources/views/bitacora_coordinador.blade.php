@@ -20,7 +20,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
 
-            <form method="GET" action="{{ route('bitacora.index') }}">
+            <form method="GET" action="{{ route('bitacora.coordinador') }}">
 
                 <div class="row align-items-end">
 
@@ -66,7 +66,7 @@
                     </div>
                      <div class="col-md-2">
                             <!-- Limpiar -->
-                            <a href="{{ route('bitacora.index') }}"
+                            <a href="{{ route('bitacora.coordinador') }}"
                                 class="btn btn-dark w-100" >
                                 🧹 Limpiar
                             </a>
@@ -126,12 +126,12 @@
 
                             <!-- Usuario -->
                             <td>
-                                {{ $bitacora->usuario ?? '—' }}
+                                {{ $bitacora->id_usuario ?? '—' }}
                             </td>
 
                             <!-- Carrera -->
                             <td>
-                                {{ $bitacora->carrera ?? '—' }}
+                                {{ $bitacora->id_carrera ?? '—' }}
                             </td>
 
                             <!-- Trámite -->
