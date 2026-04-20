@@ -507,13 +507,20 @@
     </div>
 
     {{-- TÍTULO DE SECCIÓN --}}
-    <div class="student-section-title" style="margin-top: 26px;">
-        <h3>Resumen gráfico de trámites</h3>
+    <div class="student-intro-strip" style="margin-top: 26px;">
+    <div class="student-intro-text">
+        <h2>Resumen gráfico de trámites</h2>
         <p>
             Visualiza el comportamiento global de cancelaciones excepcionales y cambios de carrera
             de toda la facultad.
         </p>
     </div>
+
+    <div class="student-user-chip intro-user-chip">
+        <div class="student-user-chip-avatar">{{ $iniciales }}</div>
+        <div class="student-user-chip-name intro-user-name">{{ $userName }}</div>
+    </div>
+</div>
 
     @include('graficas_dashboard', [
         'apiUrl' => route('api.graficas.secretaria_academica'),

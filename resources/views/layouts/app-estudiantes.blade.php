@@ -467,8 +467,8 @@
                         <li class="nav-item">
                             <a href="{{ route('dashboard') }}"
                                class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-gauge-high"></i>
-                                <p>Panel institucional</p>
+                                <i class="nav-icon fas fa-house"></i>
+                                <p>Inicio</p>
                             </a>
                         </li>
 
@@ -504,15 +504,6 @@
                             </a>
                         </li>
 
-                        <li class="nav-item nav-item-logout">
-                            <form action="{{ route('logout') }}" method="POST" style="margin:0;">
-                                @csrf
-                                <button type="submit" class="nav-link logout-btn">
-                                    <i class="nav-icon fas fa-right-from-bracket"></i>
-                                    <p>Cerrar sesión</p>
-                                </button>
-                            </form>
-                        </li>
 
                     </ul>
                 </nav>
@@ -883,3 +874,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
+

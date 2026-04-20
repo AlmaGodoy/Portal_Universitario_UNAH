@@ -1,5 +1,5 @@
 @extends('layouts.app-coordinador')
-
+@section('hide_topbar', true)
 @section('titulo', 'Gestión de Usuarios')
 
 @section('content')
@@ -42,7 +42,10 @@
                     <div class="col-12">
                         <label class="form-label fw-bold">Carrera asignada</label>
                         @php
-                            $nombreCarreraActual = collect($carreras)->firstWhere('id_carrera', $idCarreraActual)->nombre_carrera ?? 'Carrera no identificada';
+                            $carrerasCollection = collect($carreras);
+                            $rolesCollection = collect($roles);
+                            $carreraActualObj = $carrerasCollection->firstWhere('id_carrera', $idCarreraActual);
+                            $nombreCarreraActual = $carreraActualObj->nombre_carrera ?? 'Carrera no identificada';
                         @endphp
                         <div class="form-control input-highlight" style="height:auto; min-height:46px; white-space:normal; line-height:1.35;">
                             {{ strtoupper($nombreCarreraActual) }}
@@ -67,6 +70,9 @@
                             <option value="estudiante" {{ ($filtros['tipo_usuario'] ?? '') === 'estudiante' ? 'selected' : '' }}>Estudiante</option>
                             <option value="coordinador" {{ ($filtros['tipo_usuario'] ?? '') === 'coordinador' ? 'selected' : '' }}>Coordinador</option>
                             <option value="secretario" {{ ($filtros['tipo_usuario'] ?? '') === 'secretario' ? 'selected' : '' }}>Secretario / Secretaria</option>
+                            <option value="administrador" {{ ($filtros['tipo_usuario'] ?? '') === 'administrador' ? 'selected' : '' }}>Administrador</option>
+                            <option value="secretaria_general" {{ ($filtros['tipo_usuario'] ?? '') === 'secretaria_general' ? 'selected' : '' }}>Secretaría General</option>
+                            <option value="docente" {{ ($filtros['tipo_usuario'] ?? '') === 'docente' ? 'selected' : '' }}>Docente</option>
                         </select>
                     </div>
 
@@ -74,9 +80,17 @@
                         <label class="form-label fw-bold">Rol</label>
                         <select name="id_rol" class="form-select">
                             <option value="">Todos</option>
-                            <option value="coordinador" {{ ($filtros['id_rol'] ?? '') === 'coordinador' ? 'selected' : '' }}>Coordinador</option>
-                            <option value="secretaria" {{ ($filtros['id_rol'] ?? '') === 'secretaria' ? 'selected' : '' }}>Secretaría</option>
-                            <option value="estudiante" {{ ($filtros['id_rol'] ?? '') === 'estudiante' ? 'selected' : '' }}>Estudiante</option>
+                            @foreach($rolesCollection as $rol)
+                                @php
+                                    $idRol = $rol->id_rol ?? $rol->id_rol_carrera ?? null;
+                                @endphp
+                                @if($idRol)
+                                    <option value="{{ $idRol }}"
+                                        {{ (string)($filtros['id_rol'] ?? '') === (string)$idRol ? 'selected' : '' }}>
+                                        {{ strtoupper($rol->nombre_rol ?? 'ROL') }}
+                                    </option>
+                                @endif
+                            @endforeach
                         </select>
                     </div>
 
@@ -129,15 +143,19 @@
                     </thead>
                     <tbody>
                         @forelse($usuarios as $usuario)
+                            @php
+                                $carreraUsuario = $carrerasCollection->firstWhere('id_carrera', $usuario->id_carrera ?? null);
+                                $nombreCarreraUsuario = $carreraUsuario->nombre_carrera ?? 'Sin carrera';
+                            @endphp
                             <tr>
                                 <td>{{ $usuario->id_usuario }}</td>
-                                <td>{{ $usuario->nombre }}</td>
-                                <td>{{ $usuario->correo }}</td>
-                                <td>{{ $usuario->tipo_usuario }}</td>
-                                <td>{{ $usuario->nombre_rol }}</td>
-                                <td>{{ $usuario->nombre_carrera }}</td>
+                                <td>{{ $usuario->nombre_persona ?? 'Sin nombre' }}</td>
+                                <td>{{ $usuario->correo_institucional ?? 'Sin correo' }}</td>
+                                <td>{{ $usuario->tipo_usuario ?? 'Sin tipo' }}</td>
+                                <td>{{ $usuario->nombre_rol ?? 'Sin rol' }}</td>
+                                <td>{{ $nombreCarreraUsuario }}</td>
                                 <td>
-                                    @if((int)$usuario->estado_cuenta === 1)
+                                    @if((int)($usuario->estado_cuenta ?? 0) === 1)
                                         <span class="badge bg-success">Activo</span>
                                     @else
                                         <span class="badge bg-danger">Inactivo</span>
@@ -151,11 +169,11 @@
                                         @csrf
                                         @method('PUT')
 
-                                        <input type="hidden" name="estado_cuenta" value="{{ (int)$usuario->estado_cuenta === 1 ? 0 : 1 }}">
+                                        <input type="hidden" name="estado_cuenta" value="{{ (int)($usuario->estado_cuenta ?? 0) === 1 ? 0 : 1 }}">
 
                                         <button type="submit"
-                                                class="btn btn-sm {{ (int)$usuario->estado_cuenta === 1 ? 'btn-warning' : 'btn-success' }}">
-                                            {{ (int)$usuario->estado_cuenta === 1 ? 'Desactivar' : 'Activar' }}
+                                                class="btn btn-sm {{ (int)($usuario->estado_cuenta ?? 0) === 1 ? 'btn-warning' : 'btn-success' }}">
+                                            {{ (int)($usuario->estado_cuenta ?? 0) === 1 ? 'Desactivar' : 'Activar' }}
                                         </button>
                                     </form>
                                 </td>
@@ -180,5 +198,3 @@
     </div>
 </div>
 @endsection
-
-

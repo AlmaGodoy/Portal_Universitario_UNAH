@@ -22,7 +22,8 @@
          data-api-url="{{ $apiUrl }}"
          data-scope-label="{{ $scopeLabel }}"
          data-scope-note="{{ $scopeNote }}"
-         data-breakdown-label="{{ $breakdownLabel }}">
+         data-breakdown-label="{{ $breakdownLabel }}"
+         data-modo-filtro="{{ $modoFiltro }}">
 
         <div class="graf-toolbar">
             <div class="graf-toolbar-left">
@@ -140,7 +141,51 @@
             </div>
         </div>
 
-        <div class="chart-grid chart-grid-single">
+        <div class="chart-grid chart-grid-double">
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h4>Estados de Trámites</h4>
+                    <p>Pendiente, revisión, aprobado y rechazado</p>
+                </div>
+
+                <div class="chart-body">
+                    <div id="chartEstados" class="bar-chart-placeholder">
+                        Cargando información...
+                    </div>
+                    <div class="chart-note" id="noteEstados">Esperando datos.</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h4>Tendencia Mensual</h4>
+                    <p>Comportamiento del año seleccionado</p>
+                </div>
+
+                <div class="chart-body">
+                    <div id="chartTendencia" class="bar-chart-placeholder">
+                        Cargando información...
+                    </div>
+                    <div class="chart-note" id="noteTendencia">Esperando datos.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-grid chart-grid-double">
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h4>Cancelaciones vs Cambios</h4>
+                    <p>Comparativo general del filtro actual</p>
+                </div>
+
+                <div class="chart-body">
+                    <div id="chartTiposResumen" class="bar-chart-placeholder">
+                        Cargando información...
+                    </div>
+                    <div class="chart-note" id="noteTiposResumen">Esperando datos.</div>
+                </div>
+            </div>
+
             <div class="chart-card">
                 <div class="chart-head">
                     <h4>Comparativo por Período</h4>
@@ -155,6 +200,7 @@
                 </div>
             </div>
         </div>
-
     </div>
 </section>
+
+
