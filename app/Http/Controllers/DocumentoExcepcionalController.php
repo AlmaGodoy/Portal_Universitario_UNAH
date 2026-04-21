@@ -64,7 +64,7 @@ class DocumentoExcepcionalController extends Controller
                 return redirect()
                     ->back()
                     ->withErrors([
-                        'error' => 'No se pudo identificar al usuario autenticado.',
+                        'error' => 'No se pudo identificar al usuario autenticado.'
                     ])
                     ->withInput()
                     ->with('show_form', true);
@@ -84,11 +84,7 @@ class DocumentoExcepcionalController extends Controller
             ]);
 
             Log::info('Resultado INS_CANCE_EXCEP', [
-                'id_persona' => $idPersona,
-                'id_usuario' => $idUsuario,
-                'motivo_id'  => $motivoId,
-                'prioridad'  => $prioridad,
-                'resultado'  => $resultado,
+                'resultado' => $resultado,
             ]);
 
             $fila = $resultado[0] ?? null;
@@ -107,10 +103,21 @@ class DocumentoExcepcionalController extends Controller
             }
 
             if (!$idTramite) {
+                $tramiteReciente = DB::table('tbl_tramite')
+                    ->where('id_persona', $idPersona)
+                    ->orderByDesc('id_tramite')
+                    ->first();
+
+                if ($tramiteReciente && !empty($tramiteReciente->id_tramite)) {
+                    $idTramite = (int) $tramiteReciente->id_tramite;
+                }
+            }
+
+            if (!$idTramite) {
                 return redirect()
                     ->back()
                     ->withErrors([
-                        'error' => 'No fue posible obtener el número de trámite creado.',
+                        'error' => 'El procedimiento INS_CANCE_EXCEP sí ejecutó, pero no devolvió ni permitió localizar un id_tramite válido.'
                     ])
                     ->withInput()
                     ->with('show_form', true);
@@ -130,18 +137,15 @@ class DocumentoExcepcionalController extends Controller
                 ->with('success', 'Paso 1 completado correctamente.');
         } catch (\Throwable $e) {
             Log::error('Error al crear trámite de cancelación excepcional', [
-                'mensaje'    => $e->getMessage(),
-                'archivo'    => $e->getFile(),
-                'linea'      => $e->getLine(),
-                'trace'      => $e->getTraceAsString(),
-                'id_persona' => Auth::user()->id_persona ?? null,
-                'id_usuario' => Auth::user()->id_usuario ?? null,
+                'mensaje' => $e->getMessage(),
+                'archivo' => $e->getFile(),
+                'linea'   => $e->getLine(),
             ]);
 
             return redirect()
                 ->back()
                 ->withErrors([
-                    'error' => $this->limpiarMensajeCreacion($e),
+                    'error' => 'Error real: ' . $e->getMessage(),
                 ])
                 ->withInput()
                 ->with('show_form', true);
@@ -151,47 +155,20 @@ class DocumentoExcepcionalController extends Controller
     private function mapearMotivoACausa(int $motivoId): string
     {
         return match ($motivoId) {
-            1       => 'ENFERMEDAD_ACCIDENTE',
-            2       => 'CALAMIDAD_DOMESTICA',
-            3       => 'PROBLEMAS_LABORALES',
+            1 => 'ENFERMEDAD_ACCIDENTE',
+            2 => 'CALAMIDAD_DOMESTICA',
+            3 => 'PROBLEMAS_LABORALES',
             default => 'GENERAL',
         };
     }
 
-    /**
-     * Debe coincidir con el enum real de tbl_tramite.prioridad:
-     * baja | normal | alta
-     */
     private function mapearMotivoAPrioridad(int $motivoId): string
     {
         return match ($motivoId) {
-            1       => 'alta',   // enfermedad / accidente
-            2       => 'alta',   // calamidad
-            3       => 'normal', // laboral
+            1 => 'alta',
+            2 => 'alta',
+            3 => 'normal',
             default => 'baja',
         };
-    }
-
-    private function limpiarMensajeCreacion(\Throwable $e): string
-    {
-        $mensaje = $e->getMessage();
-
-        if (str_contains($mensaje, 'Data truncated for column')) {
-            return 'No fue posible registrar la solicitud porque uno de los valores no coincide con la estructura de la base de datos.';
-        }
-
-        if (str_contains($mensaje, 'No existe un calendario académico activo')) {
-            return 'No existe un calendario académico activo para registrar la solicitud.';
-        }
-
-        if (str_contains($mensaje, 'SQLSTATE')) {
-            return 'Ocurrió un problema al registrar la solicitud. Revise la configuración del procedimiento y la base de datos.';
-        }
-
-        if (str_contains($mensaje, 'ERROR:')) {
-            return trim(str_replace('ERROR:', '', $mensaje));
-        }
-
-        return 'Ocurrió un problema al registrar la solicitud. Intente nuevamente.';
     }
 }
