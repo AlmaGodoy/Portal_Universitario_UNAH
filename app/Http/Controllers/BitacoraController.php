@@ -35,7 +35,7 @@ class BitacoraController extends Controller
     }
 
     public function coordinador(Request $request)
-    {
+   {
         $user = Auth::user();
 
         if (!$user) {

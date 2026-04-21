@@ -73,7 +73,7 @@ class AuditoriaController extends Controller
 
         if ($user->id_rol == 1) {
 
-            return redirect()->route('auditoria.administrativa');
+            return redirect()->route('auditoria.general');
 
         } elseif ($user->id_rol == 4) {
 
@@ -81,7 +81,7 @@ class AuditoriaController extends Controller
 
         } elseif ($user->id_rol == 5) {
 
-            return redirect()->route('auditoria.general');
+            return redirect()->route('auditoria.administrativa');
 
         }
 

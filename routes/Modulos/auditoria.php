@@ -32,7 +32,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
     // Secretaría Administrativa
     Route::get('/auditoria/administrativa', [AuditoriaController::class, 'administrativa'])
         ->name('auditoria.administrativa')
-        ->middleware('roleid:1');
+        ->middleware('roleid:5');
 
     // Coordinador
     Route::get('/auditoria/coordinador', [AuditoriaController::class, 'coordinador'])
@@ -42,7 +42,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
     // Secretaría General
     Route::get('/auditoria/general', [AuditoriaController::class, 'general'])
         ->name('auditoria.general')
-        ->middleware('roleid:5');
+        ->middleware('roleid:1');
 
     /*
     |--------------------------------------------------------------------------
