@@ -125,7 +125,10 @@
                 </div>
 
                 <div class="puma-actions-center">
-                    <button type="button" class="puma-btn" onclick="startProcess()">
+                    <button
+                        type="button"
+                        class="puma-btn"
+                        onclick="document.getElementById('step-intro').style.display='none'; document.getElementById('step-form').style.display='block'; document.getElementById('step-form').scrollIntoView({behavior:'smooth', block:'start'});">
                         Entendido, iniciar solicitud
                     </button>
                 </div>
@@ -240,4 +243,28 @@
         </div>
 
     </div>
+
+    <script>
+        function toggleLegalPopover(event) {
+            event.stopPropagation();
+            const popover = document.getElementById('legalPopover');
+            if (popover) {
+                popover.classList.toggle('show');
+            }
+        }
+
+        document.addEventListener('click', function (event) {
+            const popover = document.getElementById('legalPopover');
+            const trigger = document.querySelector('.info-pop-btn');
+
+            if (!popover) return;
+
+            const clickDentro = popover.contains(event.target);
+            const clickBoton = trigger ? trigger.contains(event.target) : false;
+
+            if (!clickDentro && !clickBoton) {
+                popover.classList.remove('show');
+            }
+        });
+    </script>
 @endsection
