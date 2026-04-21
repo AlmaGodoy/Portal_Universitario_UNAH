@@ -24,10 +24,10 @@ class BitacoraController extends Controller
                 return redirect()->route('bitacora.coordinador');
 
             case 5:
-                return redirect()->route('bitacora.secretaria_academica');
+                return redirect()->route('bitacora.secretaria_general');
 
             case 1:
-                return redirect()->route('bitacora.secretaria_general');
+                return redirect()->route('bitacora.secretaria_academica');
 
             default:
                 abort(403, 'No autorizado para acceder a bitácora.');
