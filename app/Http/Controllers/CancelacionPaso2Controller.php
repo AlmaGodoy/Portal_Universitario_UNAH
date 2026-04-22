@@ -701,6 +701,10 @@ class CancelacionPaso2Controller extends Controller
             return 'No fue posible validar el documento cargado. Verifique la información ingresada o adjunte un documento válido.';
         }
 
+        if (str_contains($mensaje, 'Illegal mix of collations')) {
+            return 'Existe una incompatibilidad de cotejamientos en la base de datos al validar documentos.';
+        }
+
         if (str_contains($mensaje, 'ERROR:')) {
             return trim(str_replace('ERROR:', '', $mensaje));
         }

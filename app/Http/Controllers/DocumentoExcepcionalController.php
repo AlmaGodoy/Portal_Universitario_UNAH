@@ -91,7 +91,9 @@ class DocumentoExcepcionalController extends Controller
             $idTramite = null;
 
             if ($fila) {
-                if (isset($fila->id_tramite) && is_numeric($fila->id_tramite)) {
+                if (isset($fila->id_tramite_creado) && is_numeric($fila->id_tramite_creado)) {
+                    $idTramite = (int) $fila->id_tramite_creado;
+                } elseif (isset($fila->id_tramite) && is_numeric($fila->id_tramite)) {
                     $idTramite = (int) $fila->id_tramite;
                 } elseif (isset($fila->ID_TRAMITE) && is_numeric($fila->ID_TRAMITE)) {
                     $idTramite = (int) $fila->ID_TRAMITE;
@@ -163,10 +165,10 @@ class DocumentoExcepcionalController extends Controller
     private function mapearMotivoAPrioridad(int $motivoId): string
     {
         return match ($motivoId) {
-            1 => 'ENFERMEDAD',
-            2 => 'CALAMIDAD',
-            3 => 'LABORAL',
-            default => 'GENERAL',
+            1 => 'alta',
+            2 => 'alta',
+            3 => 'normal',
+            default => 'baja',
         };
     }
 }
