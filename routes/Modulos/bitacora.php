@@ -18,11 +18,15 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
         ->name('bitacora.coordinador')
         ->middleware('roleid:4');
 
+    Route::get('/bitacora/secretaria-carrera', [BitacoraController::class, 'secretariaCarrera'])
+        ->name('bitacora.secretaria_carrera')
+        ->middleware('roleid:5');
+
     Route::get('/bitacora/secretaria-academica', [BitacoraController::class, 'secretariaAcademica'])
         ->name('bitacora.secretaria_academica')
         ->middleware('roleid:1');
 
     Route::get('/bitacora/secretaria-general', [BitacoraController::class, 'secretariaGeneral'])
         ->name('bitacora.secretaria_general')
-        ->middleware('roleid:5');
+        ->middleware('roleid:3');
 });
