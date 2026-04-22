@@ -90,9 +90,9 @@
                         <label for="estado_solicitud_revisor">Estado</label>
                         <select id="estado_solicitud_revisor">
                             <option value="PENDIENTE">PENDIENTE</option>
-                            <option value="EN_REVISION">EN_REVISION</option>
-                            <option value="APROBADA">APROBADA</option>
-                            <option value="RECHAZADA">RECHAZADA</option>
+                            <option value="EN_REVISION">EN REVISION</option>
+                            <option value="APROBADA"></option>
+                            <option value="RECHAZADA"></option>
                         </select>
                     </div>
 
