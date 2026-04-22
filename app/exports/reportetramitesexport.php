@@ -3,64 +3,48 @@
 namespace App\Exports;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class ReporteTramitesExport implements FromCollection, WithHeadings
+class ReporteTramitesExport implements FromCollection, WithHeadings, ShouldAutoSize
 {
-    protected $tramitesReporte;
-    protected $incluirCarrera = false;
+    protected Collection $tramites;
 
-    public function __construct(array $tramitesReporte)
+    public function __construct($tramites)
     {
-        $this->tramitesReporte = $tramitesReporte;
-
-        if (!empty($tramitesReporte)) {
-            $primerRegistro = $tramitesReporte[array_key_first($tramitesReporte)];
-            $this->incluirCarrera = array_key_exists('carrera', $primerRegistro);
-        }
+        $this->tramites = collect($tramites);
     }
 
     public function collection()
     {
-        return new Collection(array_map(function ($tramite, $index) {
-            $fila = [
-                '#' => $index + 1,
-                'Estudiante' => $tramite['estudiante'] ?? 'Sin nombre',
+        return $this->tramites->map(function ($tramite) {
+            $item = is_array($tramite) ? $tramite : (array) $tramite;
+
+            return [
+                'ID Trámite'         => $item['id_tramite'] ?? '',
+                'Estudiante'         => $item['estudiante'] ?? '',
+                'Carrera'            => $item['carrera'] ?? '',
+                'Tipo de trámite'    => $item['tipo'] ?? '',
+                'Estado actual'      => $item['estado_actual'] ?? ($item['estado'] ?? ''),
+                'Fecha solicitud'    => $item['fecha_solicitud'] ?? '',
+                'Observaciones'      => $item['observaciones_resolucion'] ?? ($item['observaciones'] ?? ''),
+                'Fecha resolución'   => $item['fecha_resolucion'] ?? '',
             ];
-
-            if ($this->incluirCarrera) {
-                $fila['Carrera'] = $tramite['carrera'] ?? 'Sin carrera';
-            }
-
-            $fila['Tipo de trámite'] = Str::of($tramite['tipo'] ?? 'No definido')
-                ->replace('_', ' ')
-                ->title()
-                ->value();
-
-            $fila['Fecha de solicitud'] = $tramite['fecha_solicitud'] ?? 'Sin fecha';
-            $fila['Estado'] = strtoupper($tramite['estado'] ?? 'Pendiente');
-
-            return $fila;
-        }, $this->tramitesReporte, array_keys($this->tramitesReporte)));
+        });
     }
 
     public function headings(): array
     {
-        $headings = [
-            '#',
+        return [
+            'ID Trámite',
             'Estudiante',
+            'Carrera',
+            'Tipo de trámite',
+            'Estado actual',
+            'Fecha solicitud',
+            'Observaciones',
+            'Fecha resolución',
         ];
-
-        if ($this->incluirCarrera) {
-            $headings[] = 'Carrera';
-        }
-
-        $headings[] = 'Tipo de trámite';
-        $headings[] = 'Fecha de solicitud';
-        $headings[] = 'Estado';
-
-        return $headings;
     }
 }

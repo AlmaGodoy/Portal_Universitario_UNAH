@@ -1,622 +1,970 @@
+@php
+    $idTramite = $tramite->id_tramite ?? session('id_tramite');
+
+    $urlSubirIdentidad = route('cancelacion.paso2.subir-identidad', ['id_tramite' => $idTramite]);
+    $urlSubirBase      = route('cancelacion.paso2.subir-base',      ['id_tramite' => $idTramite]);
+    $urlSubirRiesgo    = route('cancelacion.paso2.subir-riesgo',    ['id_tramite' => $idTramite]);
+    $urlSubirFlex      = route('cancelacion.paso2.subir-flexible',  ['id_tramite' => $idTramite]);
+    $urlValidar        = route('cancelacion.paso2.validar',         ['id_tramite' => $idTramite]);
+
+    $docs = collect($documentos ?? []);
+
+    $nombreMotivo = match($motivoActual) {
+        'ENFERMEDAD_ACCIDENTE' => 'Enfermedad o Accidente',
+        'CALAMIDAD_DOMESTICA'  => 'Calamidad Doméstica',
+        'PROBLEMAS_LABORALES'  => 'Problemas Laborales / Cambio de Horario',
+        default                => 'No identificado',
+    };
+
+    $docPorTipo = fn($tipo) => $docs->firstWhere('tipo_documento', $tipo);
+
+    $dniFrente         = $docPorTipo('DNI_FRENTE');
+    $dniReverso        = $docPorTipo('DNI_REVERSO');
+    $historial         = $docPorTipo('HISTORIAL_ACADEMICO');
+    $forma003          = $docPorTipo('FORMA_003');
+    $constanciaMedica  = $docPorTipo('CONSTANCIA_MEDICA');
+    $constanciaLaboral = $docPorTipo('CONSTANCIA_LABORAL');
+
+    $tiposCalamidad = [
+        'RESPALDO_CALAMIDAD' => ['titulo' => 'Respaldo de calamidad',    'icono' => '📁'],
+        'ACTA_DEFUNCION'     => ['titulo' => 'Acta de defunción',         'icono' => '📜'],
+        'TESTIMONIO_PADRES'  => ['titulo' => 'Testimonio de padres',      'icono' => '👨‍👩‍👧'],
+        'OTRO_RESPALDO'      => ['titulo' => 'Otro documento de respaldo', 'icono' => '📎'],
+    ];
+
+    $iconoPorTipo = [
+        'DNI_FRENTE'          => '🪪',
+        'DNI_REVERSO'         => '🪪',
+        'HISTORIAL_ACADEMICO' => '📋',
+        'FORMA_003'           => '📄',
+        'CONSTANCIA_MEDICA'   => '🏥',
+        'CONSTANCIA_LABORAL'  => '💼',
+        'RESPALDO_CALAMIDAD'  => '📁',
+        'ACTA_DEFUNCION'      => '📜',
+        'TESTIMONIO_PADRES'   => '👨‍👩‍👧',
+        'OTRO_RESPALDO'       => '📎',
+    ];
+
+    $etiquetaPorTipo = [
+        'DNI_FRENTE'          => 'Identidad · Frente',
+        'DNI_REVERSO'         => 'Identidad · Reverso',
+        'HISTORIAL_ACADEMICO' => 'Historial académico',
+        'FORMA_003'           => 'Forma 003',
+        'CONSTANCIA_MEDICA'   => 'Constancia médica',
+        'CONSTANCIA_LABORAL'  => 'Constancia laboral',
+        'RESPALDO_CALAMIDAD'  => 'Respaldo de calamidad',
+        'ACTA_DEFUNCION'      => 'Acta de defunción',
+        'TESTIMONIO_PADRES'   => 'Testimonio de padres',
+        'OTRO_RESPALDO'       => 'Otro respaldo',
+    ];
+
+    $dniCompleto = $dniFrente && $dniReverso;
+@endphp
+
 @extends('layouts.app-estudiantes')
 
-@section('titulo', 'Cancelación Excepcional - Paso 2')
+@section('titulo', 'Cancelación Excepcional — Paso 2')
 
 @section('content')
-    @vite([
-        'resources/css/cancelacion_paso2.css',
-        'resources/js/cancelacion_paso2.js'
-    ])
 
-    @php
-        $motivoTexto = $motivoActual ?? '';
-        $esMedico = $motivoTexto === 'ENFERMEDAD_ACCIDENTE';
-        $esLaboral = $motivoTexto === 'PROBLEMAS_LABORALES';
-        $esCalamidad = $motivoTexto === 'CALAMIDAD_DOMESTICA';
+<div class="cx-page">
 
-        $mapaDocs = collect($documentos ?? [])->keyBy('tipo_documento');
+    <style>
+        .cx-page{
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 26px 54px;
+            font-family: 'Nunito', sans-serif;
+        }
 
-        $docDniFrente = $mapaDocs->get('DNI_FRENTE');
-        $docDniReverso = $mapaDocs->get('DNI_REVERSO');
-        $docHistorial = $mapaDocs->get('HISTORIAL_ACADEMICO');
-        $docForma003 = $mapaDocs->get('FORMA_003');
-        $docMedica = $mapaDocs->get('CONSTANCIA_MEDICA');
-        $docLaboral = $mapaDocs->get('CONSTANCIA_LABORAL');
+        .cx-alert{
+            display:none;
+            align-items:flex-start;
+            gap:12px;
+            border-radius:16px;
+            padding:15px 18px;
+            margin-bottom:22px;
+            font-size:14px;
+            line-height:1.55;
+            border:1px solid transparent;
+            box-shadow:0 14px 28px rgba(15,23,42,.10);
+        }
+        .cx-alert.show{ display:flex; }
+        .cx-alert--ok{
+            background:#ecfdf5;
+            border-color:#bbf7d0;
+            color:#166534;
+        }
+        .cx-alert--err{
+            background:#fef2f2;
+            border-color:#fecaca;
+            color:#991b1b;
+        }
+        .cx-alert__icon{
+            font-size:18px;
+            line-height:1;
+            margin-top:2px;
+            flex-shrink:0;
+        }
 
-        $docCalamidad = $mapaDocs->get('RESPALDO_CALAMIDAD')
-            ?? $mapaDocs->get('ACTA_DEFUNCION')
-            ?? $mapaDocs->get('TESTIMONIO_PADRES')
-            ?? $mapaDocs->get('OTRO_RESPALDO');
+        .cx-steps{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:0;
+            margin-bottom:34px;
+        }
+        .cx-step{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:8px;
+            min-width:118px;
+        }
+        .cx-step__circle{
+            width:46px;
+            height:46px;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:900;
+            font-size:14px;
+            border:2px solid #d6deea;
+            background:#fff;
+            color:#7b8798;
+            box-shadow:0 8px 20px rgba(15,23,42,.08);
+        }
+        .cx-step__label{
+            font-size:12px;
+            font-weight:800;
+            color:#7b8798;
+            text-align:center;
+        }
+        .cx-step--done .cx-step__circle{
+            border-color:#22c55e;
+            background:#ecfdf5;
+            color:#15803d;
+        }
+        .cx-step--done .cx-step__label{
+            color:#15803d;
+        }
+        .cx-step--active .cx-step__circle{
+            border-color:#1f4fa3;
+            background:linear-gradient(135deg,#2458a6 0%, #173b7a 100%);
+            color:#fff;
+        }
+        .cx-step--active .cx-step__label{
+            color:#1f4fa3;
+        }
+        .cx-connector{
+            width:86px;
+            height:4px;
+            border-radius:999px;
+            background:#dbe5f2;
+            margin:0 10px 24px;
+        }
+        .cx-connector--done{
+            background:#8fd3a8;
+        }
 
-        $docDniVista = $docDniFrente ?? $docDniReverso;
-        $dniCompleto = !empty($docDniFrente) && !empty($docDniReverso);
+        .cx-card{
+            background:#ffffff;
+            border:1px solid #dbe5f2;
+            border-radius:24px;
+            overflow:hidden;
+            box-shadow:0 18px 44px rgba(15,23,42,.10);
+        }
 
-        $urlBaseUpload   = route('cancelacion.paso2.base.upload', ['id_tramite' => $tramite->id_tramite]);
-        $urlRiesgoUpload = route('cancelacion.paso2.riesgo.upload', ['id_tramite' => $tramite->id_tramite]);
-        $urlFlexUpload   = route('cancelacion.paso2.flex.upload', ['id_tramite' => $tramite->id_tramite]);
-        $urlValidarPaso2 = route('cancelacion.paso2.validar', ['id_tramite' => $tramite->id_tramite]);
-        $urlEliminarBase = route('cancelacion.paso2.eliminar', [
-            'id_tramite' => $tramite->id_tramite,
-            'id_documento' => '__ID__'
-        ]);
-    @endphp
+        .cx-card__header{
+            display:flex;
+            align-items:center;
+            gap:16px;
+            padding:22px 26px;
+            border-bottom:1px solid #dbe5f2;
+            background:linear-gradient(180deg,#fafdff 0%,#f2f7ff 100%);
+        }
+        .cx-card__header-icon{
+            width:52px;
+            height:52px;
+            min-width:52px;
+            border-radius:16px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:linear-gradient(135deg,#eef4ff 0%,#fff5d8 100%);
+            color:#173b7a;
+            font-size:24px;
+            box-shadow:0 10px 22px rgba(23,74,150,.12);
+        }
+        .cx-card__title{
+            margin:0 0 4px;
+            color:#173b7a;
+            font-size:22px;
+            line-height:1.15;
+            font-weight:900;
+            letter-spacing:-.02em;
+        }
+        .cx-card__subtitle{
+            margin:0;
+            color:#667085;
+            font-size:13px;
+            font-weight:700;
+        }
+        .cx-card__body{
+            padding:24px 24px 24px;
+            background:#fff;
+        }
 
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+        .cx-notice{
+            display:flex;
+            align-items:flex-start;
+            gap:10px;
+            background:#fff9e8;
+            border:1px solid #f2c95a;
+            border-radius:16px;
+            padding:15px 16px;
+            color:#8a6500;
+            font-size:13px;
+            font-weight:800;
+            line-height:1.55;
+            margin-bottom:22px;
+        }
+        .cx-notice__icon{
+            font-size:16px;
+            line-height:1;
+            margin-top:2px;
+            flex-shrink:0;
+        }
 
-    <div class="cc2-container"
-         data-id-tramite="{{ $tramite->id_tramite }}"
-         data-url-base-upload="{{ $urlBaseUpload }}"
-         data-url-riesgo-upload="{{ $urlRiesgoUpload }}"
-         data-url-flex-upload="{{ $urlFlexUpload }}"
-         data-url-validar="{{ $urlValidarPaso2 }}"
-         data-url-eliminar-template="{{ $urlEliminarBase }}"
-         data-motivo="{{ $motivoActual ?? '' }}">
+        .cx-section{
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.09em;
+            text-transform:uppercase;
+            color:#173b7a;
+            margin:24px 0 14px;
+            padding-bottom:10px;
+            border-bottom:1px solid #dbe5f2;
+            position:relative;
+        }
+        .cx-section::after{
+            content:'';
+            position:absolute;
+            left:0;
+            bottom:-1px;
+            width:82px;
+            height:4px;
+            border-radius:999px;
+            background:linear-gradient(135deg,#f4c542 0%, #d6a419 100%);
+        }
 
-        <div id="cc2-global-alert"></div>
+        .cx-dni-block{
+            position:relative;
+            border:2px dashed #9fb8e6;
+            border-radius:20px;
+            background:linear-gradient(180deg,#fbfdff 0%,#f2f7ff 100%);
+            padding:40px 24px 36px;
+            text-align:center;
+            cursor:pointer;
+            transition:all .22s ease;
+            overflow:hidden;
+            min-height:180px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 10px 24px rgba(15,23,42,.04);
+            margin-bottom:4px;
+        }
+        .cx-dni-block:hover{
+            border-color:#2458a6;
+            background:linear-gradient(180deg,#f7fbff 0%,#eaf2ff 100%);
+            transform:translateY(-2px);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 16px 28px rgba(23,74,150,.10);
+        }
+        .cx-dni-block.uploaded{
+            border-style:solid;
+            border-color:#86d6a5;
+            background:linear-gradient(180deg,#f4fff7 0%,#e9fbef 100%);
+        }
+        .cx-dni-block input[type="file"]{
+            position:absolute;
+            inset:0;
+            opacity:0;
+            cursor:pointer;
+            width:100%;
+            height:100%;
+            z-index:2;
+        }
+        .cx-dni-block__icon{
+            font-size:42px;
+            margin-bottom:12px;
+            pointer-events:none;
+            filter:drop-shadow(0 6px 10px rgba(23,74,150,.12));
+        }
+        .cx-dni-block__title{
+            font-size:18px;
+            font-weight:900;
+            color:#173b7a;
+            margin-bottom:7px;
+            line-height:1.2;
+            pointer-events:none;
+        }
+        .cx-dni-block__sub{
+            font-size:12px;
+            font-weight:700;
+            color:#667085;
+            line-height:1.55;
+            max-width:680px;
+            pointer-events:none;
+        }
+        .cx-dni-block__tags{
+            margin-top:14px;
+            display:flex;
+            flex-wrap:wrap;
+            justify-content:center;
+            gap:8px;
+            pointer-events:none;
+        }
+        .cx-dni-block__tag{
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            background:#ecfdf5;
+            border:1px solid #9fd4b5;
+            border-radius:999px;
+            padding:6px 14px;
+            font-size:12px;
+            font-weight:800;
+            color:#15803d;
+        }
 
-        @if (session('success'))
-            <div class="cc2-alert cc2-alert--success">
-                <span class="cc2-alert__icon">✅</span>
-                <div class="cc2-alert__content">
-                    <p>{{ session('success') }}</p>
-                </div>
-            </div>
-        @endif
+        .cx-file-slot{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            background:linear-gradient(180deg,#fbfdff 0%,#f4f8ff 100%);
+            border:2px dashed #c3d3eb;
+            border-radius:18px;
+            padding:17px 18px;
+            cursor:pointer;
+            transition:all .22s ease;
+            position:relative;
+            overflow:hidden;
+            margin-bottom:12px;
+            min-height:86px;
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 8px 20px rgba(15,23,42,.03);
+        }
+        .cx-file-slot:hover{
+            border-color:#2458a6;
+            background:linear-gradient(180deg,#f7fbff 0%,#ebf3ff 100%);
+            transform:translateY(-2px);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 14px 24px rgba(23,74,150,.08);
+        }
+        .cx-file-slot.uploaded{
+            border-style:solid;
+            border-color:#9fd4b5;
+            background:linear-gradient(180deg,#f4fff7 0%,#e9fbef 100%);
+        }
+        .cx-file-slot input[type="file"]{
+            position:absolute;
+            inset:0;
+            opacity:0;
+            cursor:pointer;
+            width:100%;
+            height:100%;
+            z-index:2;
+        }
+        .cx-file-slot__icon{
+            font-size:28px;
+            flex-shrink:0;
+            pointer-events:none;
+            width:42px;
+            text-align:center;
+            filter:drop-shadow(0 4px 8px rgba(15,23,42,.10));
+        }
+        .cx-file-slot__info{
+            flex:1;
+            min-width:0;
+            pointer-events:none;
+        }
+        .cx-file-slot__title{
+            font-size:15px;
+            font-weight:900;
+            color:#173b7a;
+            margin-bottom:4px;
+            line-height:1.2;
+        }
+        .cx-file-slot__sub{
+            font-size:12px;
+            font-weight:700;
+            color:#667085;
+            line-height:1.45;
+        }
+        .cx-file-slot__name{
+            font-size:12px;
+            font-weight:800;
+            color:#15803d;
+            word-break:break-word;
+            display:none;
+        }
+        .cx-file-slot.uploaded .cx-file-slot__sub{
+            display:none;
+        }
+        .cx-file-slot.uploaded .cx-file-slot__name{
+            display:block;
+        }
+        .cx-file-slot__check{
+            width:30px;
+            height:30px;
+            border-radius:50%;
+            background:#15803d;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#fff;
+            font-size:13px;
+            font-weight:900;
+            flex-shrink:0;
+            opacity:0;
+            transition:opacity .22s ease;
+            pointer-events:none;
+            box-shadow:0 8px 14px rgba(21,128,61,.18);
+        }
+        .cx-file-slot.uploaded .cx-file-slot__check{
+            opacity:1;
+        }
 
-        @if ($errors->any())
-            <div class="cc2-alert cc2-alert--error">
-                <span class="cc2-alert__icon">⚠️</span>
-                <div class="cc2-alert__content">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        .cx-cal-grid{
+            display:grid;
+            grid-template-columns:repeat(2,1fr);
+            gap:12px;
+        }
 
-        <div class="cc2-steps">
-            <div class="cc2-step cc2-step--done">
-                <div class="cc2-step__circle">✓</div>
-                <div class="cc2-step__label">Datos y Motivo</div>
-            </div>
+        .cx-doc-list{
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            margin-bottom:4px;
+        }
+        .cx-doc-row{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            background:#f8fbff;
+            border:1px solid #dbe5f2;
+            border-radius:16px;
+            padding:14px 15px;
+            box-shadow:0 6px 16px rgba(15,23,42,.03);
+        }
+        .cx-doc-row__icon{
+            font-size:22px;
+            flex-shrink:0;
+        }
+        .cx-doc-row__info{
+            flex:1;
+            min-width:0;
+        }
+        .cx-doc-row__name{
+            font-size:14px;
+            font-weight:900;
+            color:#173b7a;
+            margin-bottom:4px;
+        }
+        .cx-doc-row__path{
+            font-size:12px;
+            color:#667085;
+            word-break:break-all;
+            font-weight:700;
+        }
+        .cx-doc-row__actions{
+            display:flex;
+            gap:8px;
+            flex-shrink:0;
+            flex-wrap:wrap;
+        }
 
-            <div class="cc2-step__connector cc2-step__connector--done"></div>
+        .cx-btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:6px;
+            border:1px solid #cbd5e1;
+            border-radius:14px;
+            padding:10px 16px;
+            font-size:13px;
+            font-weight:900;
+            cursor:pointer;
+            background:#fff;
+            color:#173b7a;
+            text-decoration:none;
+            transition:all .22s ease;
+            white-space:nowrap;
+            box-shadow:0 6px 14px rgba(15,23,42,.04);
+        }
+        .cx-btn:hover{
+            background:#f8fbff;
+            border-color:#93c5fd;
+            color:#123d7f;
+            text-decoration:none;
+            transform:translateY(-1px);
+        }
+        .cx-btn--sm{
+            padding:8px 12px;
+            font-size:12px;
+        }
+        .cx-btn--danger{
+            color:#b91c1c;
+            border-color:#fecaca;
+            background:#fff5f5;
+        }
+        .cx-btn--danger:hover{
+            background:#feecec;
+        }
 
-            <div class="cc2-step cc2-step--active">
-                <div class="cc2-step__circle">2</div>
-                <div class="cc2-step__label">Documentación</div>
-            </div>
+        .cx-btn--save{
+            border:none;
+            border-radius:14px;
+            padding:14px 26px;
+            font-size:14px;
+            font-weight:900;
+            cursor:pointer;
+            color:#fff;
+            background:linear-gradient(135deg,#2458a6 0%,#173b7a 100%);
+            box-shadow:0 14px 26px rgba(23,74,150,.24);
+            transition:all .24s ease;
+        }
+        .cx-btn--save:hover{
+            color:#fff;
+            transform:translateY(-2px);
+            box-shadow:0 18px 30px rgba(23,74,150,.30);
+        }
+        .cx-btn--save:disabled{
+            opacity:.7;
+            cursor:not-allowed;
+            transform:none;
+        }
 
-            <div class="cc2-step__connector"></div>
+        .cx-actions{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:16px;
+            margin-top:30px;
+            padding-top:18px;
+            border-top:1px solid #dbe5f2;
+            flex-wrap:wrap;
+        }
 
-            <div class="cc2-step">
-                <div class="cc2-step__circle">3</div>
-                <div class="cc2-step__label">Finalizar</div>
-            </div>
+        @media (max-width: 991.98px){
+            .cx-page{
+                padding:24px 16px 38px;
+            }
+        }
+
+        @media (max-width: 767.98px){
+            .cx-card__header{
+                padding:18px 16px;
+            }
+            .cx-card__body{
+                padding:18px 16px;
+            }
+            .cx-card__title{
+                font-size:19px;
+            }
+            .cx-cal-grid{
+                grid-template-columns:1fr;
+            }
+            .cx-actions{
+                flex-direction:column;
+                align-items:stretch;
+            }
+            .cx-btn,
+            .cx-btn--save{
+                width:100%;
+            }
+            .cx-connector{
+                width:38px;
+            }
+            .cx-step{
+                min-width:84px;
+            }
+            .cx-dni-block{
+                min-height:155px;
+                padding:30px 18px 26px;
+            }
+        }
+
+        @media (max-width: 480px){
+            .cx-connector{
+                display:none;
+            }
+            .cx-step{
+                min-width:74px;
+            }
+            .cx-step__circle{
+                width:38px;
+                height:38px;
+                font-size:12px;
+            }
+            .cx-step__label{
+                font-size:11px;
+            }
+        }
+    </style>
+
+    <div id="cx-alert" class="cx-alert">
+        <span class="cx-alert__icon" id="cx-alert-icon"></span>
+        <div id="cx-alert-msg"></div>
+    </div>
+
+    @if (session('success'))
+        <div class="cx-alert cx-alert--ok show">
+            <span class="cx-alert__icon">✅</span>
+            <div>{{ session('success') }}</div>
         </div>
-
-        <div class="cc2-card">
-            <div class="cc2-card__header">
-                <div class="cc2-card__icon">📎</div>
-                <div>
-                    <h1 class="cc2-card__title">Adjuntar Documentación</h1>
-                    <p class="cc2-card__subtitle">
-                        Trámite N.° {{ $tramite->id_tramite }}
-                    </p>
-                </div>
-            </div>
-
-            <div class="cc2-card__body">
-
-                <div class="cc2-info-box">
-                    <h3 class="cc2-info-box__title">Documentación requerida</h3>
-
-                    <ul class="cc2-doc-list">
-                        <li>Tarjeta de identidad en un solo PDF, incluyendo frente y reverso.</li>
-                        <li>Historial académico en PDF.</li>
-                        <li>Forma 003 en PDF o captura completa y legible.</li>
-                        <li>Documento de respaldo según la causa justificada seleccionada.</li>
-                    </ul>
-
-                    <p class="cc2-helper">
-                        Formatos permitidos según documento:
-                        <strong>PDF, JPG o PNG</strong>
-                        <span class="cc2-dot">•</span>
-                        Tamaño máximo general:
-                        <strong>10 MB</strong>
-                    </p>
-                </div>
-
-                <div class="cc2-section">
-                    <span>Resumen del paso 2</span>
-                </div>
-
-                <div class="cc2-summary-grid">
-                    <div class="cc2-summary-card">
-                        <span class="cc2-summary-card__label">Motivo seleccionado</span>
-                        <strong class="cc2-summary-card__value">
-                            @if($esMedico)
-                                Enfermedad o Accidente
-                            @elseif($esLaboral)
-                                Problemas Laborales / Cambio de Horario
-                            @elseif($esCalamidad)
-                                Calamidad Doméstica
-                            @else
-                                No identificado
-                            @endif
-                        </strong>
-                    </div>
-
-                    <div class="cc2-summary-card">
-                        <span class="cc2-summary-card__label">Documento de respaldo</span>
-                        <strong class="cc2-summary-card__value">
-                            @if($esMedico)
-                                Constancia médica
-                            @elseif($esLaboral)
-                                Constancia laboral
-                            @elseif($esCalamidad)
-                                Respaldo de calamidad
-                            @else
-                                Pendiente
-                            @endif
-                        </strong>
-                    </div>
-                </div>
-
-                <div class="cc2-section">
-                    <span>Documentos base obligatorios</span>
-                </div>
-
-                {{-- TARJETA DE IDENTIDAD --}}
-                <div class="cc2-doc-card" data-doc-card="DNI_UNIFICADO">
-                    <div class="cc2-doc-card__head">
-                        <div>
-                            <h3 class="cc2-doc-card__title">Tarjeta de identidad</h3>
-                            <p class="cc2-doc-card__text">
-                                Suba un único PDF que contenga el frente y el reverso de la tarjeta de identidad.
-                                Lo ideal es que el frente vaya en la primera página y el reverso en la segunda.
-                            </p>
-                        </div>
-                        <span class="cc2-badge cc2-badge--required">Obligatorio</span>
-                    </div>
-
-                    <form class="cc2-upload-form" data-upload-kind="identidad-unificada">
-                        @csrf
-
-                        <div style="border:1px solid #e5e7eb; border-radius:18px; padding:18px; background:#fff;">
-                            <div class="cc2-upload-area" data-upload-area>
-                                <div class="cc2-upload-area__icon">🪪</div>
-                                <p class="cc2-upload-area__title">Subir PDF de identidad</p>
-                                <p class="cc2-upload-area__subtitle">Un solo PDF con frente y reverso</p>
-                                <p class="cc2-file-name" data-file-name></p>
-                            </div>
-
-                            <input type="file"
-                                   name="archivo_identidad"
-                                   accept=".pdf"
-                                   hidden
-                                   data-file-input>
-
-                            <div style="margin-top:12px; font-size:.92rem; color:#64748b;">
-                                Solo se permite <strong>PDF</strong>. Tamaño máximo: <strong>10 MB</strong>.
-                            </div>
-
-                            <div class="cc2-form-msg" data-form-msg></div>
-                        </div>
-                    </form>
-
-                    <div class="cc2-doc-state" style="margin-top:18px;">
-                        @if($docDniVista)
-                            <div class="cc2-doc-state__ok">
-                                <span>✅ Cargado:</span>
-                                <strong>{{ $docDniVista->nombre_documento }}</strong>
-                            </div>
-
-                            <div class="cc2-doc-state__meta" style="margin-top:8px;">
-                                <span>
-                                    Estado actual:
-                                    <strong>{{ $dniCompleto ? 'Frente y reverso registrados' : 'Documento parcial cargado' }}</strong>
-                                </span>
-                            </div>
-
-                            <div class="cc2-doc-state__actions">
-                                <a href="{{ asset('storage/' . $docDniVista->ruta_archivo) }}"
-                                   target="_blank"
-                                   class="cc2-link-btn">
-                                    Ver PDF
-                                </a>
-
-                                <button type="button"
-                                        class="cc2-link-btn cc2-link-btn--danger"
-                                        data-delete-identidad
-                                        data-id-frente="{{ $docDniFrente->id_documento ?? '' }}"
-                                        data-id-reverso="{{ $docDniReverso->id_documento ?? '' }}">
-                                    Quitar
-                                </button>
-                            </div>
-                        @else
-                            <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- HISTORIAL + FORMA 003 --}}
-                <div class="cc2-doc-grid">
-                    <div class="cc2-doc-card" data-doc-card="HISTORIAL_ACADEMICO">
-                        <div class="cc2-doc-card__head">
-                            <div>
-                                <h3 class="cc2-doc-card__title">Historial académico</h3>
-                                <p class="cc2-doc-card__text">
-                                    Este documento debe subirse en PDF.
-                                </p>
-                            </div>
-                            <span class="cc2-badge cc2-badge--required">Obligatorio</span>
-                        </div>
-
-                        <form class="cc2-upload-form"
-                              data-upload-kind="base"
-                              data-tipo-documento="HISTORIAL_ACADEMICO">
-                            @csrf
-
-                            <div class="cc2-upload-area" data-upload-area>
-                                <div class="cc2-upload-area__icon">📘</div>
-                                <p class="cc2-upload-area__title">Subir historial académico</p>
-                                <p class="cc2-upload-area__subtitle">PDF únicamente</p>
-                                <p class="cc2-file-name" data-file-name></p>
-                            </div>
-
-                            <input type="file"
-                                   name="archivo"
-                                   accept=".pdf"
-                                   hidden
-                                   data-file-input>
-
-                            <div class="cc2-form-msg" data-form-msg></div>
-                        </form>
-
-                        <div class="cc2-doc-state">
-                            @if($docHistorial)
-                                <div class="cc2-doc-state__ok">
-                                    <span>✅ Cargado:</span>
-                                    <strong>{{ $docHistorial->nombre_documento }}</strong>
-                                </div>
-                                <div class="cc2-doc-state__actions">
-                                    <a href="{{ asset('storage/' . $docHistorial->ruta_archivo) }}" target="_blank" class="cc2-link-btn">Ver archivo</a>
-                                    <button type="button" class="cc2-link-btn cc2-link-btn--danger"
-                                            data-delete-doc
-                                            data-id-documento="{{ $docHistorial->id_documento }}">
-                                        Quitar
-                                    </button>
-                                </div>
-                            @else
-                                <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="cc2-doc-card" data-doc-card="FORMA_003">
-                        <div class="cc2-doc-card__head">
-                            <div>
-                                <h3 class="cc2-doc-card__title">Forma 003</h3>
-                                <p class="cc2-doc-card__text">
-                                    Puede subir PDF o una captura completa y legible del documento.
-                                </p>
-                            </div>
-                            <span class="cc2-badge cc2-badge--required">Obligatorio</span>
-                        </div>
-
-                        <form class="cc2-upload-form"
-                              data-upload-kind="base"
-                              data-tipo-documento="FORMA_003">
-                            @csrf
-
-                            <div class="cc2-upload-area" data-upload-area>
-                                <div class="cc2-upload-area__icon">🧾</div>
-                                <p class="cc2-upload-area__title">Subir Forma 003</p>
-                                <p class="cc2-upload-area__subtitle">PDF, JPG o PNG</p>
-                                <p class="cc2-file-name" data-file-name></p>
-                            </div>
-
-                            <input type="file"
-                                   name="archivo"
-                                   accept=".pdf,.jpg,.jpeg,.png"
-                                   hidden
-                                   data-file-input>
-
-                            <div class="cc2-form-msg" data-form-msg></div>
-                        </form>
-
-                        <div class="cc2-doc-state">
-                            @if($docForma003)
-                                <div class="cc2-doc-state__ok">
-                                    <span>✅ Cargado:</span>
-                                    <strong>{{ $docForma003->nombre_documento }}</strong>
-                                </div>
-                                <div class="cc2-doc-state__actions">
-                                    <a href="{{ asset('storage/' . $docForma003->ruta_archivo) }}" target="_blank" class="cc2-link-btn">Ver archivo</a>
-                                    <button type="button" class="cc2-link-btn cc2-link-btn--danger"
-                                            data-delete-doc
-                                            data-id-documento="{{ $docForma003->id_documento }}">
-                                        Quitar
-                                    </button>
-                                </div>
-                            @else
-                                <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cc2-section">
-                    <span>Documento de respaldo según la causa</span>
-                </div>
-
-                @if($esMedico)
-                    <div class="cc2-doc-card" data-doc-card="CONSTANCIA_MEDICA">
-                        <div class="cc2-doc-card__head">
-                            <div>
-                                <h3 class="cc2-doc-card__title">Constancia médica</h3>
-                                <p class="cc2-doc-card__text">
-                                    Suba una foto o escaneo legible. Si la constancia contiene folio, referencia o código visible, puede ingresarlo abajo.
-                                </p>
-                            </div>
-                            <span class="cc2-badge cc2-badge--required">Requerido</span>
-                        </div>
-
-                        <form class="cc2-upload-form"
-                              data-upload-kind="riesgo"
-                              data-tipo-documento="CONSTANCIA_MEDICA">
-                            @csrf
-
-                            <div class="cc2-field-grid">
-                                <div class="cc2-field cc2-field--full">
-                                    <div class="cc2-upload-area" data-upload-area>
-                                        <div class="cc2-upload-area__icon">🏥</div>
-                                        <p class="cc2-upload-area__title">Subir constancia médica</p>
-                                        <p class="cc2-upload-area__subtitle">PDF, JPG o PNG</p>
-                                        <p class="cc2-file-name" data-file-name></p>
-                                    </div>
-
-                                    <input type="file"
-                                           name="archivo"
-                                           accept=".pdf,.jpg,.jpeg,.png"
-                                           hidden
-                                           data-file-input>
-                                </div>
-
-                                <div class="cc2-field cc2-field--full">
-                                    <label class="cc2-switch">
-                                        <input type="checkbox" name="tiene_referencia" value="1" data-ref-toggle>
-                                        <span>El documento contiene folio, referencia o código visible</span>
-                                    </label>
-                                </div>
-
-                                <div class="cc2-field cc2-ref-field" data-ref-field hidden>
-                                    <label class="cc2-label">Folio, referencia o código</label>
-                                    <input type="text"
-                                           name="numero_folio"
-                                           class="cc2-input"
-                                           maxlength="100"
-                                           placeholder="Ejemplo: MED-2026-00125">
-                                </div>
-                            </div>
-
-                            <div class="cc2-form-msg" data-form-msg></div>
-                        </form>
-
-                        <div class="cc2-doc-state">
-                            @if($docMedica)
-                                <div class="cc2-doc-state__ok">
-                                    <span>✅ Cargado:</span>
-                                    <strong>{{ $docMedica->nombre_documento }}</strong>
-                                </div>
-                                <div class="cc2-doc-state__meta">
-                                    @if(!empty($docMedica->numero_folio))
-                                        <span>Referencia registrada: <strong>{{ $docMedica->numero_folio }}</strong></span>
-                                    @endif
-                                </div>
-                                <div class="cc2-doc-state__actions">
-                                    <a href="{{ asset('storage/' . $docMedica->ruta_archivo) }}" target="_blank" class="cc2-link-btn">Ver archivo</a>
-                                    <button type="button" class="cc2-link-btn cc2-link-btn--danger"
-                                            data-delete-doc
-                                            data-id-documento="{{ $docMedica->id_documento }}">
-                                        Quitar
-                                    </button>
-                                </div>
-                            @else
-                                <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
-                @if($esLaboral)
-                    <div class="cc2-doc-card" data-doc-card="CONSTANCIA_LABORAL">
-                        <div class="cc2-doc-card__head">
-                            <div>
-                                <h3 class="cc2-doc-card__title">Constancia laboral</h3>
-                                <p class="cc2-doc-card__text">
-                                    Suba una foto o escaneo legible. Si la constancia contiene folio, referencia o código visible, puede ingresarlo abajo.
-                                </p>
-                            </div>
-                            <span class="cc2-badge cc2-badge--required">Requerido</span>
-                        </div>
-
-                        <form class="cc2-upload-form"
-                              data-upload-kind="riesgo"
-                              data-tipo-documento="CONSTANCIA_LABORAL">
-                            @csrf
-
-                            <div class="cc2-field-grid">
-                                <div class="cc2-field cc2-field--full">
-                                    <div class="cc2-upload-area" data-upload-area>
-                                        <div class="cc2-upload-area__icon">💼</div>
-                                        <p class="cc2-upload-area__title">Subir constancia laboral</p>
-                                        <p class="cc2-upload-area__subtitle">PDF, JPG o PNG</p>
-                                        <p class="cc2-file-name" data-file-name></p>
-                                    </div>
-
-                                    <input type="file"
-                                           name="archivo"
-                                           accept=".pdf,.jpg,.jpeg,.png"
-                                           hidden
-                                           data-file-input>
-                                </div>
-
-                                <div class="cc2-field cc2-field--full">
-                                    <label class="cc2-switch">
-                                        <input type="checkbox" name="tiene_referencia" value="1" data-ref-toggle>
-                                        <span>El documento contiene folio, referencia o código visible</span>
-                                    </label>
-                                </div>
-
-                                <div class="cc2-field cc2-ref-field" data-ref-field hidden>
-                                    <label class="cc2-label">Folio, referencia o código</label>
-                                    <input type="text"
-                                           name="numero_folio"
-                                           class="cc2-input"
-                                           maxlength="100"
-                                           placeholder="Ejemplo: LAB-2026-00125">
-                                </div>
-                            </div>
-
-                            <div class="cc2-form-msg" data-form-msg></div>
-                        </form>
-
-                        <div class="cc2-doc-state">
-                            @if($docLaboral)
-                                <div class="cc2-doc-state__ok">
-                                    <span>✅ Cargado:</span>
-                                    <strong>{{ $docLaboral->nombre_documento }}</strong>
-                                </div>
-                                <div class="cc2-doc-state__meta">
-                                    @if(!empty($docLaboral->numero_folio))
-                                        <span>Referencia registrada: <strong>{{ $docLaboral->numero_folio }}</strong></span>
-                                    @endif
-                                </div>
-                                <div class="cc2-doc-state__actions">
-                                    <a href="{{ asset('storage/' . $docLaboral->ruta_archivo) }}" target="_blank" class="cc2-link-btn">Ver archivo</a>
-                                    <button type="button" class="cc2-link-btn cc2-link-btn--danger"
-                                            data-delete-doc
-                                            data-id-documento="{{ $docLaboral->id_documento }}">
-                                        Quitar
-                                    </button>
-                                </div>
-                            @else
-                                <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
-                @if($esCalamidad)
-                    <div class="cc2-doc-card" data-doc-card="RESPALDO_CALAMIDAD">
-                        <div class="cc2-doc-card__head">
-                            <div>
-                                <h3 class="cc2-doc-card__title">Documento de respaldo por calamidad doméstica</h3>
-                                <p class="cc2-doc-card__text">
-                                    Suba el documento de soporte que corresponda a su caso.
-                                </p>
-                            </div>
-                            <span class="cc2-badge cc2-badge--required">Requerido</span>
-                        </div>
-
-                        <form class="cc2-upload-form"
-                              data-upload-kind="flex">
-                            @csrf
-
-                            <div class="cc2-field-grid">
-                                <div class="cc2-field">
-                                    <label class="cc2-label">Tipo de respaldo</label>
-                                    <select name="tipo_documento" class="cc2-input cc2-select" required>
-                                        <option value="RESPALDO_CALAMIDAD">Documento general de calamidad</option>
-                                        <option value="ACTA_DEFUNCION">Acta de defunción</option>
-                                        <option value="TESTIMONIO_PADRES">Testimonio de padres</option>
-                                        <option value="OTRO_RESPALDO">Otro documento de respaldo</option>
-                                    </select>
-                                </div>
-
-                                <div class="cc2-field cc2-field--full">
-                                    <div class="cc2-upload-area" data-upload-area>
-                                        <div class="cc2-upload-area__icon">📂</div>
-                                        <p class="cc2-upload-area__title">Subir documento de respaldo</p>
-                                        <p class="cc2-upload-area__subtitle">PDF, JPG o PNG</p>
-                                        <p class="cc2-file-name" data-file-name></p>
-                                    </div>
-
-                                    <input type="file"
-                                           name="archivo"
-                                           accept=".pdf,.jpg,.jpeg,.png"
-                                           hidden
-                                           data-file-input>
-                                </div>
-                            </div>
-
-                            <div class="cc2-form-msg" data-form-msg></div>
-                        </form>
-
-                        <div class="cc2-doc-state">
-                            @if($docCalamidad)
-                                <div class="cc2-doc-state__ok">
-                                    <span>✅ Cargado:</span>
-                                    <strong>{{ $docCalamidad->nombre_documento }}</strong>
-                                </div>
-                                <div class="cc2-doc-state__actions">
-                                    <a href="{{ asset('storage/' . $docCalamidad->ruta_archivo) }}" target="_blank" class="cc2-link-btn">Ver archivo</a>
-                                    <button type="button" class="cc2-link-btn cc2-link-btn--danger"
-                                            data-delete-doc
-                                            data-id-documento="{{ $docCalamidad->id_documento }}">
-                                        Quitar
-                                    </button>
-                                </div>
-                            @else
-                                <div class="cc2-doc-state__pending">Pendiente de cargar</div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
-                <div class="cc2-section">
-                    <span>Guardar archivos seleccionados</span>
-                </div>
-
-                <div class="cc2-finish-box">
-                    <p class="cc2-finish-box__text">
-                        Después de seleccionar los archivos que desea subir, presione este único botón para guardarlos.
-                    </p>
-
-                    <div class="cc2-actions">
-                        <button type="button" id="btn-guardar-documentos" class="cc2-btn cc2-btn--primary-soft">
-                            Guardar documentos seleccionados
-                        </button>
-                    </div>
-
-                    <div id="cc2-upload-msg" class="cc2-form-msg cc2-form-msg--final"></div>
-                </div>
-
-                <div class="cc2-section">
-                    <span>Finalizar este paso</span>
-                </div>
-
-                <div class="cc2-finish-box">
-                    <p class="cc2-finish-box__text">
-                        Cuando termine de cargar los documentos obligatorios y el respaldo según su causa, valide el paso 2 para continuar.
-                    </p>
-
-                    <div class="cc2-actions">
-                        <a href="{{ route('cancelacion.index') }}" class="cc2-btn cc2-btn--secondary">
-                            ← Regresar al Paso 1
-                        </a>
-
-                        <button type="button" id="btn-validar-paso2" class="cc2-btn cc2-btn--primary">
-                            Validar Documentación y Continuar ✓
-                        </button>
-                    </div>
-
-                    <div id="cc2-validate-msg" class="cc2-form-msg cc2-form-msg--final"></div>
-                </div>
-
-            </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="cx-alert cx-alert--err show">
+            <span class="cx-alert__icon">⚠️</span>
+            <div>@foreach ($errors->all() as $e)<p style="margin:2px 0;">{{ $e }}</p>@endforeach</div>
+        </div>
+    @endif
+
+    <div class="cx-steps">
+        <div class="cx-step cx-step--done">
+            <div class="cx-step__circle">✓</div>
+            <div class="cx-step__label">Datos y Motivo</div>
+        </div>
+        <div class="cx-connector cx-connector--done"></div>
+        <div class="cx-step cx-step--active">
+            <div class="cx-step__circle">2</div>
+            <div class="cx-step__label">Documentación</div>
+        </div>
+        <div class="cx-connector"></div>
+        <div class="cx-step">
+            <div class="cx-step__circle">3</div>
+            <div class="cx-step__label">Finalizar</div>
         </div>
     </div>
+
+    <div class="cx-card">
+
+        <div class="cx-card__header">
+            <span class="cx-card__header-icon">📂</span>
+            <div>
+                <h4 class="cx-card__title">Adjuntar documentación</h4>
+                <p class="cx-card__subtitle">Trámite #{{ $idTramite }} &nbsp;·&nbsp; {{ $nombreMotivo }}</p>
+            </div>
+        </div>
+
+        <div class="cx-card__body">
+
+            <div class="cx-notice">
+                <span class="cx-notice__icon">💡</span>
+                <span>Seleccione todos los archivos y presione <strong>Guardar documentos</strong> al final para enviarlos de una sola vez.</span>
+            </div>
+
+            <div class="cx-section">Documento de identidad</div>
+
+            <label class="cx-dni-block {{ $dniCompleto ? 'uploaded' : '' }}" id="slot-dni">
+                <input type="file" id="dni_files" accept=".pdf,.jpg,.jpeg,.png" multiple>
+
+                <div class="cx-dni-block__icon">🪪</div>
+
+                @if ($dniCompleto)
+                    <div class="cx-dni-block__title">Identidad cargada</div>
+                    <div class="cx-dni-block__sub">Haga clic para reemplazar los archivos</div>
+                    <div class="cx-dni-block__tags">
+                        <span class="cx-dni-block__tag">✓ {{ $dniFrente->nombre_documento ?? 'Frente' }}</span>
+                        <span class="cx-dni-block__tag">✓ {{ $dniReverso->nombre_documento ?? 'Reverso' }}</span>
+                    </div>
+                @else
+                    <div class="cx-dni-block__title">Tarjeta de identidad</div>
+                    <div class="cx-dni-block__sub">Seleccione las dos fotos (frente y reverso) · PDF, JPG o PNG · máx. 10 MB c/u</div>
+                    <div class="cx-dni-block__tags" id="dni-tags" style="display:none;"></div>
+                @endif
+            </label>
+
+            <div class="cx-section">Documentos académicos</div>
+
+            <label class="cx-file-slot {{ $historial ? 'uploaded' : '' }}" id="slot-historial">
+                <input type="file" id="file-historial" accept=".pdf">
+                <span class="cx-file-slot__icon">📋</span>
+                <div class="cx-file-slot__info">
+                    <div class="cx-file-slot__title">Historial académico</div>
+                    <div class="cx-file-slot__sub">Solo PDF &nbsp;·&nbsp; máx. 10 MB</div>
+                    <div class="cx-file-slot__name">{{ $historial->nombre_documento ?? '' }}</div>
+                </div>
+                <div class="cx-file-slot__check">✓</div>
+            </label>
+
+            <label class="cx-file-slot {{ $forma003 ? 'uploaded' : '' }}" id="slot-forma003">
+                <input type="file" id="file-forma003" accept=".pdf,.jpg,.jpeg,.png">
+                <span class="cx-file-slot__icon">📄</span>
+                <div class="cx-file-slot__info">
+                    <div class="cx-file-slot__title">Forma 003</div>
+                    <div class="cx-file-slot__sub">PDF, JPG o PNG &nbsp;·&nbsp; máx. 10 MB</div>
+                    <div class="cx-file-slot__name">{{ $forma003->nombre_documento ?? '' }}</div>
+                </div>
+                <div class="cx-file-slot__check">✓</div>
+            </label>
+
+            <div class="cx-section">Respaldo de la causa justificada</div>
+
+            @if ($motivoActual === 'ENFERMEDAD_ACCIDENTE')
+                <label class="cx-file-slot {{ $constanciaMedica ? 'uploaded' : '' }}" id="slot-constancia-medica">
+                    <input type="file" id="file-constancia-medica" accept=".pdf,.jpg,.jpeg,.png">
+                    <span class="cx-file-slot__icon">🏥</span>
+                    <div class="cx-file-slot__info">
+                        <div class="cx-file-slot__title">Constancia médica</div>
+                        <div class="cx-file-slot__sub">PDF, JPG o PNG &nbsp;·&nbsp; máx. 10 MB</div>
+                        <div class="cx-file-slot__name">{{ $constanciaMedica->nombre_documento ?? '' }}</div>
+                    </div>
+                    <div class="cx-file-slot__check">✓</div>
+                </label>
+            @endif
+
+            @if ($motivoActual === 'PROBLEMAS_LABORALES')
+                <label class="cx-file-slot {{ $constanciaLaboral ? 'uploaded' : '' }}" id="slot-constancia-laboral">
+                    <input type="file" id="file-constancia-laboral" accept=".pdf,.jpg,.jpeg,.png">
+                    <span class="cx-file-slot__icon">💼</span>
+                    <div class="cx-file-slot__info">
+                        <div class="cx-file-slot__title">Constancia laboral</div>
+                        <div class="cx-file-slot__sub">PDF, JPG o PNG &nbsp;·&nbsp; máx. 10 MB</div>
+                        <div class="cx-file-slot__name">{{ $constanciaLaboral->nombre_documento ?? '' }}</div>
+                    </div>
+                    <div class="cx-file-slot__check">✓</div>
+                </label>
+            @endif
+
+            @if ($motivoActual === 'CALAMIDAD_DOMESTICA')
+                <div class="cx-cal-grid">
+                    @foreach ($tiposCalamidad as $tipo => $info)
+                        @php $docActual = $docPorTipo($tipo); @endphp
+                        <label class="cx-file-slot {{ $docActual ? 'uploaded' : '' }}" style="margin-bottom:0;">
+                            <input type="file" class="calamidad-file" accept=".pdf,.jpg,.jpeg,.png" data-tipo="{{ $tipo }}">
+                            <span class="cx-file-slot__icon">{{ $info['icono'] }}</span>
+                            <div class="cx-file-slot__info">
+                                <div class="cx-file-slot__title">{{ $info['titulo'] }}</div>
+                                <div class="cx-file-slot__sub">PDF, JPG o PNG</div>
+                                <div class="cx-file-slot__name">{{ $docActual->nombre_documento ?? '' }}</div>
+                            </div>
+                            <div class="cx-file-slot__check">✓</div>
+                        </label>
+                    @endforeach
+                </div>
+            @endif
+
+            @if ($docs->isNotEmpty())
+                <div class="cx-section">Documentos cargados</div>
+                <div class="cx-doc-list">
+                    @foreach ($docs as $doc)
+                        <div class="cx-doc-row">
+                            <span class="cx-doc-row__icon">{{ $iconoPorTipo[$doc->tipo_documento] ?? '📎' }}</span>
+                            <div class="cx-doc-row__info">
+                                <div class="cx-doc-row__name">{{ $etiquetaPorTipo[$doc->tipo_documento] ?? $doc->tipo_documento }}</div>
+                                <div class="cx-doc-row__path">{{ $doc->nombre_documento ?? $doc->ruta_archivo ?? 'Archivo cargado' }}</div>
+                            </div>
+                            <div class="cx-doc-row__actions">
+                                @if (!empty($doc->ruta_archivo))
+                                    <a href="{{ asset('storage/' . $doc->ruta_archivo) }}"
+                                       target="_blank"
+                                       class="cx-btn cx-btn--sm"
+                                       style="text-decoration:none;">Ver</a>
+                                @endif
+                                <button type="button"
+                                        class="cx-btn cx-btn--sm cx-btn--danger btn-delete-doc"
+                                        data-delete-url="{{ route('cancelacion.paso2.eliminar', ['id_tramite' => $idTramite, 'id_documento' => $doc->id_documento]) }}">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <div class="cx-actions">
+                <a href="{{ route('cancelacion.index') }}" class="cx-btn" style="text-decoration:none;">
+                    ← Volver
+                </a>
+                <button type="button" id="btnGuardar" class="cx-btn--save">
+                    Guardar documentos →
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+const csrfToken         = '{{ csrf_token() }}';
+const urlValidar        = @json($urlValidar);
+const urlSubirBase      = @json($urlSubirBase);
+const urlSubirIdentidad = @json($urlSubirIdentidad);
+const urlSubirRiesgo    = @json($urlSubirRiesgo);
+const urlSubirFlex      = @json($urlSubirFlex);
+
+function alerta(tipo, msg) {
+    const box = document.getElementById('cx-alert');
+    box.className = 'cx-alert cx-alert--' + (tipo === 'ok' ? 'ok' : 'err') + ' show';
+    document.getElementById('cx-alert-icon').textContent = tipo === 'ok' ? '✅' : '⚠️';
+    document.getElementById('cx-alert-msg').innerHTML = msg;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('dni_files')?.addEventListener('change', function () {
+    const files = Array.from(this.files);
+    if (!files.length) return;
+
+    const slot = document.getElementById('slot-dni');
+    const tags = document.getElementById('dni-tags');
+
+    slot.classList.add('uploaded');
+
+    if (tags) {
+        tags.style.display = 'flex';
+        tags.innerHTML = files.map(f => `<span class="cx-dni-block__tag">✓ ${f.name}</span>`).join('');
+    }
+});
+
+function bindSlot(inputId, slotId) {
+    const input = document.getElementById(inputId);
+    const slot  = document.getElementById(slotId);
+    if (!input || !slot) return;
+
+    input.addEventListener('change', function () {
+        const file = this.files?.[0];
+        if (!file) return;
+        slot.classList.add('uploaded');
+        const nameEl = slot.querySelector('.cx-file-slot__name');
+        if (nameEl) nameEl.textContent = file.name;
+    });
+}
+
+bindSlot('file-historial',          'slot-historial');
+bindSlot('file-forma003',           'slot-forma003');
+bindSlot('file-constancia-medica',  'slot-constancia-medica');
+bindSlot('file-constancia-laboral', 'slot-constancia-laboral');
+
+document.querySelectorAll('.calamidad-file').forEach(input => {
+    input.addEventListener('change', function () {
+        const file = this.files?.[0];
+        if (!file) return;
+        const slot   = this.closest('.cx-file-slot');
+        const nameEl = slot?.querySelector('.cx-file-slot__name');
+        if (slot) slot.classList.add('uploaded');
+        if (nameEl) nameEl.textContent = file.name;
+    });
+});
+
+async function doUpload(endpoint, tipo, archivo) {
+    const fd = new FormData();
+    fd.append('tipo_documento', tipo);
+    fd.append('archivo', archivo);
+
+    const r = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        body: fd
+    });
+
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.mensaje || 'Error al subir ' + tipo);
+    return d;
+}
+
+async function doUploadIdentidad(files) {
+    if (!files || !files.length) return;
+
+    const fd = new FormData();
+    if (files[0]) fd.append('dni_frente', files[0]);
+    if (files[1]) fd.append('dni_reverso', files[1]);
+
+    const r = await fetch(urlSubirIdentidad, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        body: fd
+    });
+
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.mensaje || 'No se pudo subir la identidad.');
+    return d;
+}
+
+document.querySelectorAll('.btn-delete-doc').forEach(btn => {
+    btn.addEventListener('click', async function () {
+        if (!confirm('¿Desea eliminar este documento?')) return;
+
+        try {
+            const r = await fetch(this.dataset.deleteUrl, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+            });
+
+            const d = await r.json();
+            if (!r.ok || !d.ok) throw new Error(d.mensaje || 'No se pudo eliminar.');
+
+            alerta('ok', d.mensaje || 'Documento eliminado.');
+            setTimeout(() => location.reload(), 700);
+        } catch (err) {
+            alerta('err', err.message);
+        }
+    });
+});
+
+document.getElementById('btnGuardar')?.addEventListener('click', async function () {
+    const btn  = this;
+    const orig = btn.textContent;
+    btn.textContent = 'Guardando…';
+    btn.disabled = true;
+
+    try {
+        const dniFiles = document.getElementById('dni_files')?.files;
+        if (dniFiles && dniFiles.length) {
+            await doUploadIdentidad(dniFiles);
+        }
+
+        const historial = document.getElementById('file-historial')?.files?.[0];
+        if (historial) await doUpload(urlSubirBase, 'HISTORIAL_ACADEMICO', historial);
+
+        const forma003 = document.getElementById('file-forma003')?.files?.[0];
+        if (forma003) await doUpload(urlSubirBase, 'FORMA_003', forma003);
+
+        const cMed = document.getElementById('file-constancia-medica')?.files?.[0];
+        if (cMed) await doUpload(urlSubirRiesgo, 'CONSTANCIA_MEDICA', cMed);
+
+        const cLab = document.getElementById('file-constancia-laboral')?.files?.[0];
+        if (cLab) await doUpload(urlSubirRiesgo, 'CONSTANCIA_LABORAL', cLab);
+
+        for (const input of document.querySelectorAll('.calamidad-file')) {
+            const archivo = input.files?.[0];
+            if (archivo) await doUpload(urlSubirFlex, input.dataset.tipo, archivo);
+        }
+
+        const r = await fetch(urlValidar, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+        });
+
+        const d = await r.json();
+        if (!r.ok || !d.ok) {
+            const faltantes = d.faltantes?.length ? ' — ' + d.faltantes.join(', ') : '';
+            throw new Error((d.mensaje || 'Faltan documentos.') + faltantes);
+        }
+
+        alerta('ok', d.mensaje || 'Documentos guardados correctamente.');
+        setTimeout(() => {
+            if (d.redirect) window.location.href = d.redirect;
+        }, 800);
+
+    } catch (err) {
+        alerta('err', err.message);
+        btn.textContent = orig;
+        btn.disabled = false;
+    }
+});
+</script>
 @endsection
