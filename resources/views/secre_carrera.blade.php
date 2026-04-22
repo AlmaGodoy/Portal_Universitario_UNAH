@@ -59,6 +59,10 @@
             <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
         </div>
 
+                <div class="hero-photo" style="background-image: url('{{ asset('images/FCEAC.jpeg') }}');"></div>
+                <div class="hero-photo">
+    <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
+</div>
         <div class="hero-content">
             <div class="hero-faculty-title">
                 FACULTAD DE CIENCIAS ECONÓMICAS,<br>

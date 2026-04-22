@@ -17,6 +17,11 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
 
     Route::prefix('equivalencias/api')->name('api.equivalencias.')->group(function () {
 
+        /*
+        |--------------------------------------------------------------------------
+        | SOLO ESTUDIANTE
+        |--------------------------------------------------------------------------
+        */
         Route::middleware('roleid:2')->group(function () {
             Route::get('/mis-solicitudes', [EquivalenciaController::class, 'misSolicitudes'])
                 ->name('mis');
@@ -29,29 +34,45 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
 
             Route::post('/solicitud/detalle', [EquivalenciaController::class, 'guardarDetalleSolicitud'])
                 ->name('detalle.guardar');
+        });
 
+        /*
+        |--------------------------------------------------------------------------
+        | LECTURA: ESTUDIANTE Y SECRETARÍA
+        |--------------------------------------------------------------------------
+        */
+        Route::middleware('roleid:2,5')->group(function () {
             Route::get('/solicitud/{idSolicitud}/cabecera', [EquivalenciaController::class, 'verCabeceraSolicitud'])
+                ->whereNumber('idSolicitud')
                 ->name('solicitud.cabecera');
 
             Route::get('/solicitud/{idSolicitud}/detalle', [EquivalenciaController::class, 'verDetalleSolicitud'])
+                ->whereNumber('idSolicitud')
                 ->name('solicitud.detalle');
 
             Route::get('/solicitud/{idSolicitud}/preliminares', [EquivalenciaController::class, 'verEquivalenciasPreliminares'])
+                ->whereNumber('idSolicitud')
                 ->name('solicitud.preliminares');
 
             Route::get('/solicitud/{idSolicitud}/documento', [EquivalenciaController::class, 'descargarDocumento'])
+                ->whereNumber('idSolicitud')
                 ->name('solicitud.documento');
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | SOLO SECRETARÍA: GUARDAR REVISIÓN Y DICTAMEN
+        |--------------------------------------------------------------------------
+        */
+        Route::middleware('roleid:5')->group(function () {
+            Route::get('/pendientes', [EquivalenciaController::class, 'solicitudesPendientes'])
+                ->name('pendientes');
 
             Route::post('/solicitud/detalle/validar', [EquivalenciaController::class, 'validarDetalleSolicitud'])
                 ->name('detalle.validar');
 
             Route::post('/solicitud/validar', [EquivalenciaController::class, 'validarSolicitud'])
                 ->name('validar');
-        });
-
-        Route::middleware('roleid:5')->group(function () {
-            Route::get('/pendientes', [EquivalenciaController::class, 'solicitudesPendientes'])
-                ->name('pendientes');
         });
     });
 });
