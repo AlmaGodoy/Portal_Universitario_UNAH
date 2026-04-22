@@ -48,3 +48,4 @@ class ReporteTramitesExport implements FromCollection, WithHeadings, ShouldAutoS
         ];
     }
 }
+
