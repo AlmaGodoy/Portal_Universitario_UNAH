@@ -44,13 +44,13 @@ class DocumentoExcepcionalController extends Controller
                 'justificacion'    => 'required|string|min:10|max:2000',
             ],
             [
-                'motivo_id.required'        => 'Debe seleccionar un motivo.',
-                'motivo_id.integer'         => 'El motivo seleccionado no es válido.',
-                'tipo_cancelacion.required' => 'Debe seleccionar el tipo de cancelación.',
-                'tipo_cancelacion.in'       => 'El tipo de cancelación seleccionado no es válido.',
-                'justificacion.required'    => 'Debe ingresar una justificación.',
-                'justificacion.min'         => 'La justificación debe tener al menos 10 caracteres.',
-                'justificacion.max'         => 'La justificación no puede superar 2000 caracteres.',
+                'motivo_id.required'         => 'Debe seleccionar un motivo.',
+                'motivo_id.integer'          => 'El motivo seleccionado no es válido.',
+                'tipo_cancelacion.required'  => 'Debe seleccionar el tipo de cancelación.',
+                'tipo_cancelacion.in'        => 'El tipo de cancelación seleccionado no es válido.',
+                'justificacion.required'     => 'Debe ingresar una justificación.',
+                'justificacion.min'          => 'La justificación debe tener al menos 10 caracteres.',
+                'justificacion.max'          => 'La justificación no puede superar 2000 caracteres.',
             ]
         );
 
@@ -75,12 +75,12 @@ class DocumentoExcepcionalController extends Controller
                     ->with('show_form', true);
             }
 
-            $idPersona       = (int) $user->id_persona;
-            $idUsuario       = (int) $user->id_usuario;
-            $motivoId        = (int) $request->input('motivo_id');
-            $tipoCancelacion = strtolower(trim((string) $request->input('tipo_cancelacion')));
-            $justificacion   = trim((string) $request->input('justificacion'));
-            $prioridad       = $this->mapearMotivoAPrioridad($motivoId);
+            $idPersona        = (int) $user->id_persona;
+            $idUsuario        = (int) $user->id_usuario;
+            $motivoId         = (int) $request->input('motivo_id');
+            $tipoCancelacion  = strtolower(trim((string) $request->input('tipo_cancelacion')));
+            $justificacion    = trim((string) $request->input('justificacion'));
+            $prioridad        = $this->mapearMotivoAPrioridad($motivoId);
 
             $resultado = DB::select('CALL INS_CANCE_EXCEP(?, ?, ?, ?)', [
                 $idPersona,
@@ -131,14 +131,14 @@ class DocumentoExcepcionalController extends Controller
             }
 
             session([
-                'cancelacion_excepcional.id_tramite'             => $idTramite,
-                'cancelacion_excepcional.motivo_id'              => $motivoId,
-                'cancelacion_excepcional.justificacion'          => $justificacion,
-                'cancelacion_excepcional.causa_justificada'      => $this->mapearMotivoACausa($motivoId),
-                'cancelacion_excepcional.tipo_cancelacion'       => $tipoCancelacion,
+                'cancelacion_excepcional.id_tramite'          => $idTramite,
+                'cancelacion_excepcional.motivo_id'           => $motivoId,
+                'cancelacion_excepcional.justificacion'       => $justificacion,
+                'cancelacion_excepcional.causa_justificada'   => $this->mapearMotivoACausa($motivoId),
+                'cancelacion_excepcional.tipo_cancelacion'    => $tipoCancelacion,
                 'cancelacion_excepcional.tipo_cancelacion_label' => $this->mapearTipoCancelacionALabel($tipoCancelacion),
-                'cancelacion_excepcional.paso2_validado'         => false,
-                'cancelacion_excepcional.id_tramite_validado'    => null,
+                'cancelacion_excepcional.paso2_validado'      => false,
+                'cancelacion_excepcional.id_tramite_validado' => null,
             ]);
 
             return redirect()
@@ -191,3 +191,4 @@ class DocumentoExcepcionalController extends Controller
         };
     }
 }
+
