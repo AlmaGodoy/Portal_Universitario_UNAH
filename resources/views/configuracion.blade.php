@@ -1,22 +1,40 @@
 @php
-    $loginTipo = session('login_tipo');
-    $rolTexto = strtolower((string) (session('rol_texto') ?? ''));
+    $loginTipo = strtolower(trim((string) (session('login_tipo') ?? '')));
+    $rolTexto = strtolower(trim((string) (session('rol_texto') ?? '')));
 
-    $layout = 'layouts.app-estudiantes';
-    $dashboardUrl = route('dashboard');
-    $portalTexto = 'portal estudiantil';
+    $layout = $layout ?? 'layouts.app-estudiantes';
+    $dashboardUrl = $dashboardUrl ?? route('dashboard');
+    $portalTexto = $portalTexto ?? 'portal estudiantil';
 
-    if ($loginTipo === 'empleado') {
-        if (str_contains($rolTexto, 'coordinador')) {
-            $layout = 'layouts.app-coordinador';
-            $dashboardUrl = route('coordinador.cambio-carrera.index');
-            $portalTexto = 'panel de coordinación';
-        } elseif (str_contains($rolTexto, 'secretar')) {
-            $layout = 'layouts.app-secretaria';
-            $dashboardUrl = route('cambio-carrera.secretaria');
-            $portalTexto = 'panel de secretaría';
-        }
-    }
+    $persona = auth()->user()->persona ?? null;
+
+    $nombreCompleto =
+        $persona->nombre_persona
+        ?? auth()->user()->name
+        ?? auth()->user()->nombre
+        ?? 'Usuario';
+
+    $correoInstitucional =
+        $persona->correo_institucional
+        ?? auth()->user()->email
+        ?? auth()->user()->correo_institucional
+        ?? 'Sin correo registrado';
+
+    $tipoUsuario =
+        $persona->tipo_usuario
+        ?? session('login_tipo')
+        ?? 'No definido';
+
+    $estadoCuenta =
+        auth()->user()->estado_cuenta
+        ?? 'No definido';
+
+    $rolActual =
+        session('rol_texto')
+        ?? 'Estudiante';
+
+    $inicial =
+        strtoupper(mb_substr(trim($nombreCompleto), 0, 1));
 @endphp
 
 @extends($layout)
@@ -28,19 +46,18 @@
 
     <div class="container-fluid config-page">
 
-        {{-- Encabezado --}}
         <div class="config-header card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <div class="config-header__top">
                     <div>
                         <h1 class="config-title">Configuración de la cuenta</h1>
                         <p class="config-subtitle mb-0">
-                            Administra tu información, seguridad y preferencias del portal estudiantil.
+                            Administra tu información, seguridad y preferencias del {{ $portalTexto }}.
                         </p>
                     </div>
 
                     <div class="config-actions-top">
-                        <a href="{{ route('dashboard') }}" class="btn btn-outline-primary btn-config-back">
+                        <a href="{{ $dashboardUrl }}" class="btn btn-outline-primary btn-config-back">
                             <i class="fas fa-arrow-left me-2"></i> Volver al dashboard
                         </a>
                     </div>
@@ -48,7 +65,6 @@
             </div>
         </div>
 
-        {{-- Alertas --}}
         @if(session('success'))
             <div class="alert alert-success alert-config shadow-sm">
                 <i class="fas fa-circle-check me-2"></i>
@@ -77,9 +93,7 @@
         @endif
 
         <div class="row g-4">
-            {{-- Columna izquierda --}}
             <div class="col-12 col-lg-5">
-                {{-- Perfil --}}
                 <div class="card config-card border-0 shadow-sm mb-4">
                     <div class="card-header config-card__header">
                         <h3 class="config-card__title mb-0">
@@ -89,15 +103,15 @@
                     <div class="card-body">
                         <div class="config-profile">
                             <div class="config-avatar">
-                                {{ strtoupper(substr(auth()->user()->persona->nombre_persona ?? 'U', 0, 1)) }}
+                                {{ $inicial }}
                             </div>
 
                             <div class="config-profile__info">
                                 <h4 class="config-name">
-                                    {{ auth()->user()->persona->nombre_persona ?? 'Usuario' }}
+                                    {{ $nombreCompleto }}
                                 </h4>
                                 <p class="config-email mb-0">
-                                    {{ auth()->user()->persona->correo_institucional ?? 'Sin correo registrado' }}
+                                    {{ $correoInstitucional }}
                                 </p>
                             </div>
                         </div>
@@ -106,28 +120,27 @@
                             <div class="config-info-item">
                                 <span class="config-label">Tipo de usuario</span>
                                 <span class="config-value">
-                                    {{ auth()->user()->persona->tipo_usuario ?? 'No definido' }}
+                                    {{ $tipoUsuario }}
                                 </span>
                             </div>
 
                             <div class="config-info-item">
                                 <span class="config-label">Estado de cuenta</span>
                                 <span class="config-value">
-                                    {{ auth()->user()->estado_cuenta ?? 'No definido' }}
+                                    {{ $estadoCuenta }}
                                 </span>
                             </div>
 
                             <div class="config-info-item">
                                 <span class="config-label">Rol actual</span>
                                 <span class="config-value">
-                                    {{ session('rol_texto') ?? 'Estudiante' }}
+                                    {{ $rolActual }}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Seguridad --}}
                 <div class="card config-card border-0 shadow-sm">
                     <div class="card-header config-card__header">
                         <h3 class="config-card__title mb-0">
@@ -172,9 +185,7 @@
                 </div>
             </div>
 
-            {{-- Columna derecha --}}
             <div class="col-12 col-lg-7">
-                {{-- Cambiar contraseña --}}
                 <div class="card config-card border-0 shadow-sm mb-4">
                     <div class="card-header config-card__header">
                         <h3 class="config-card__title mb-0">
@@ -232,6 +243,7 @@
                                         <ul class="password-rules-list">
                                             <li id="ruleLength" class="rule-item">Mínimo 8 caracteres</li>
                                             <li id="ruleUpper" class="rule-item">Al menos una letra mayúscula</li>
+                                            <li id="ruleLower" class="rule-item">Al menos una letra minúscula</li>
                                             <li id="ruleNumber" class="rule-item">Al menos un número</li>
                                             <li id="ruleSymbol" class="rule-item">Al menos un carácter especial</li>
                                         </ul>
@@ -282,7 +294,6 @@
                     </div>
                 </div>
 
-                {{-- Preferencias --}}
                 <div class="card config-card border-0 shadow-sm">
                     <div class="card-header config-card__header">
                         <h3 class="config-card__title mb-0">
