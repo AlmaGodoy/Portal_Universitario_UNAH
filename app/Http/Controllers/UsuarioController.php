@@ -143,10 +143,10 @@ class UsuarioController extends Controller
         ])));
 
         try {
-            file_put_contents('/tmp/debug_registro.log', 'INICIO ' . date('H:i:s') . "\n", FILE_APPEND);
+            file_put_contents('/tmp/debug_registro.log', 'INICIO ' . date('Y-m-d H:i:s') . PHP_EOL, FILE_APPEND);
 
             $passwordHash = Hash::make($request->contrasena);
-            file_put_contents('/tmp/debug_registro.log', 'HASH OK' . "\n", FILE_APPEND);
+            file_put_contents('/tmp/debug_registro.log', 'HASH OK' . PHP_EOL, FILE_APPEND);
 
             $res = DB::select('CALL INS_USUARIO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 $nombreCompleto,
@@ -160,23 +160,34 @@ class UsuarioController extends Controller
                 $request->cod_empleado,
                 $tipoEmpleado,
             ]);
-            file_put_contents('/tmp/debug_registro.log', 'INS_USUARIO OK' . "\n", FILE_APPEND);
+
+            file_put_contents('/tmp/debug_registro.log', 'INS_USUARIO OK' . PHP_EOL, FILE_APPEND);
 
             $row = $res[0] ?? null;
             $resultado = $row->resultado ?? 'ERROR';
             $mensaje = $row->mensaje ?? 'Respuesta inválida del procedimiento';
-            file_put_contents('/tmp/debug_registro.log', 'RESULTADO: ' . $resultado . ' | MENSAJE: ' . $mensaje . "\n", FILE_APPEND);
 
-            if ($resultado !== 'OK') {
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'RESULTADO INS_USUARIO: ' . $resultado . ' | MENSAJE: ' . $mensaje . PHP_EOL,
+                FILE_APPEND
+            );
+
+            if (strtoupper($resultado) !== 'OK') {
                 return back()->withErrors(['registro' => $mensaje])->withInput();
             }
 
             $idUsuario = $row->id_usuario ?? null;
-            file_put_contents('/tmp/debug_registro.log', 'ID_USUARIO: ' . $idUsuario . "\n", FILE_APPEND);
+
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'ID_USUARIO: ' . ($idUsuario ?? 'NULL') . PHP_EOL,
+                FILE_APPEND
+            );
 
             if (!$idUsuario) {
                 return redirect()->route('portal')
-                    ->with('status', 'Usuario creado, pero no se pudo preparar activación por correo.');
+                    ->with('error', 'Usuario creado, pero no se pudo preparar activación por correo.');
             }
 
             $token = Str::random(64);
@@ -186,7 +197,8 @@ class UsuarioController extends Controller
                 $idUsuario,
                 'email_verification',
             ]);
-            file_put_contents('/tmp/debug_registro.log', 'DEL_AUTH OK' . "\n", FILE_APPEND);
+
+            file_put_contents('/tmp/debug_registro.log', 'DEL_AUTH OK' . PHP_EOL, FILE_APPEND);
 
             $resAuth = DB::select('CALL INS_LOGIN_AUTHENTICATION(?, ?, ?, ?, ?, ?, ?)', [
                 $idUsuario,
@@ -197,35 +209,57 @@ class UsuarioController extends Controller
                 'email_verificacion_generada',
                 'Se generó token de verificación para el correo ' . $request->correo,
             ]);
-            file_put_contents('/tmp/debug_registro.log', 'INS_AUTH OK' . "\n", FILE_APPEND);
+
+            file_put_contents('/tmp/debug_registro.log', 'INS_AUTH OK' . PHP_EOL, FILE_APPEND);
 
             $rowAuth = $resAuth[0] ?? null;
             $resultadoAuth = $rowAuth->resultado ?? 'ERROR';
+            $mensajeAuth = $rowAuth->mensaje ?? 'No se pudo preparar la verificación por correo.';
 
-            if ($resultadoAuth !== 'OK') {
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'RESULTADO INS_AUTH: ' . $resultadoAuth . ' | MENSAJE: ' . $mensajeAuth . PHP_EOL,
+                FILE_APPEND
+            );
+
+            if (strtoupper($resultadoAuth) !== 'OK') {
                 return redirect()->route('portal')
-                    ->with('status', 'Usuario creado, pero no se pudo preparar la verificación por correo.');
+                    ->with('error', 'Usuario creado, pero no se pudo preparar la verificación por correo.');
             }
 
             $link = route('email.verify', ['token' => $token]);
-            file_put_contents('/tmp/debug_registro.log', 'ENVIANDO CORREO a: ' . $request->correo . "\n", FILE_APPEND);
+
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'LINK VERIFICACION: ' . $link . PHP_EOL,
+                FILE_APPEND
+            );
 
             try {
                 Mail::to($request->correo)->send(new VerifyEmailMail($link));
-                file_put_contents('/tmp/debug_registro.log', 'CORREO ENVIADO OK' . "\n", FILE_APPEND);
+                file_put_contents('/tmp/debug_registro.log', 'CORREO ENVIADO OK' . PHP_EOL, FILE_APPEND);
             } catch (\Throwable $e) {
-                file_put_contents('/tmp/debug_registro.log', 'ERROR CORREO: ' . $e->getMessage() . "\n", FILE_APPEND);
+                file_put_contents(
+                    '/tmp/debug_registro.log',
+                    'ERROR CORREO: ' . $e->getMessage() . PHP_EOL,
+                    FILE_APPEND
+                );
+
                 return redirect()->route('portal')
-                    ->with('status', 'Usuario creado, pero NO se pudo enviar el correo. Contacta al administrador.');
+                    ->with('error', 'Usuario creado, pero no se pudo enviar el correo. Contacta al administrador.');
             }
 
             session()->forget('register_tipo');
 
             return redirect()->route('portal')
-                ->with('status', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
-
+                ->with('success', 'Usuario creado. Revisa tu correo y activa tu cuenta para poder iniciar sesión.');
         } catch (\Throwable $e) {
-            file_put_contents('/tmp/debug_registro.log', 'ERROR CATCH: ' . $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' Línea: ' . $e->getLine() . "\n", FILE_APPEND);
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'ERROR CATCH CREARWEB: ' . $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' | Línea: ' . $e->getLine() . PHP_EOL,
+                FILE_APPEND
+            );
+
             return back()->withErrors([
                 'registro' => $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' Línea: ' . $e->getLine()
             ])->withInput();
@@ -235,19 +269,45 @@ class UsuarioController extends Controller
     public function verificarCorreo(string $token)
     {
         try {
+            if (trim($token) === '') {
+                return redirect()->route('portal')
+                    ->with('error', 'Token inválido.');
+            }
+
             $hash = hash('sha256', $token);
+
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'VERIFICAR CORREO | TOKEN HASH: ' . $hash . PHP_EOL,
+                FILE_APPEND
+            );
 
             $res = DB::select('CALL UPD_VERIFICACION_CORREO_USUARIO(?)', [$hash]);
 
             $row = $res[0] ?? null;
-            $resultado = $row->resultado ?? 'ERROR';
+            $resultado = strtoupper($row->resultado ?? 'ERROR');
             $mensaje = $row->mensaje ?? 'No se pudo verificar la cuenta.';
 
-            return redirect()->route('portal')->with('status', $mensaje);
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'RESULTADO VERIFICACION: ' . $resultado . ' | MENSAJE: ' . $mensaje . PHP_EOL,
+                FILE_APPEND
+            );
 
+            if ($resultado !== 'OK') {
+                return redirect()->route('portal')->with('error', $mensaje);
+            }
+
+            return redirect()->route('portal')->with('success', $mensaje);
         } catch (\Throwable $e) {
+            file_put_contents(
+                '/tmp/debug_registro.log',
+                'ERROR CATCH VERIFICAR: ' . $e->getMessage() . ' | Archivo: ' . $e->getFile() . ' | Línea: ' . $e->getLine() . PHP_EOL,
+                FILE_APPEND
+            );
+
             return redirect()->route('portal')
-                ->with('status', 'No se pudo verificar la cuenta. Intenta nuevamente.');
+                ->with('error', 'Error al verificar el correo.');
         }
     }
 }
