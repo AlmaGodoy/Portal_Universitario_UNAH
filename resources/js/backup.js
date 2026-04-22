@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('search-input');
     const tbody = document.getElementById('backup-tbody');
 
-    const countElement = document.getElementById('backup-count'); // contador de tabla
-    const countTopElement = document.getElementById('backup-count-top'); // total real
+    const countElement = document.getElementById('backup-count');
+    const countTopElement = document.getElementById('backup-count-top');
 
     const backupForm = document.getElementById('backup-generate-form');
     const generateButton = document.getElementById('backup-generate-btn');
@@ -27,12 +27,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const totalReales = obtenerFilasReales().length;
         const totalVisibles = obtenerFilasVisibles().length;
 
-        // Este contador sí cambia con la búsqueda
         if (countElement) {
             countElement.textContent = totalVisibles;
         }
 
-        // Este contador representa el total de respaldos registrados
         if (countTopElement) {
             countTopElement.textContent = totalReales;
         }
