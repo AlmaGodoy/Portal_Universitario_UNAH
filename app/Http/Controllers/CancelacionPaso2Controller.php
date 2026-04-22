@@ -14,35 +14,21 @@ use Illuminate\Support\Str;
 
 class CancelacionPaso2Controller extends Controller
 {
-    /**
-     * Documentos base obligatorios.
-     */
-    private const TIPOS_BASE = [
-        'DNI_FRENTE',
-        'DNI_REVERSO',
-        'HISTORIAL_ACADEMICO',
-        'FORMA_003',
-    ];
-
-    /**
-     * Documentos de identidad.
-     */
     private const TIPOS_IDENTIDAD = [
         'DNI_FRENTE',
         'DNI_REVERSO',
     ];
 
-    /**
-     * Documentos de alto riesgo.
-     */
+    private const TIPOS_BASE = [
+        'HISTORIAL_ACADEMICO',
+        'FORMA_003',
+    ];
+
     private const TIPOS_RIESGO = [
         'CONSTANCIA_MEDICA',
         'CONSTANCIA_LABORAL',
     ];
 
-    /**
-     * Documentos flexibles para calamidad doméstica.
-     */
     private const TIPOS_FLEX = [
         'RESPALDO_CALAMIDAD',
         'ACTA_DEFUNCION',
@@ -50,9 +36,6 @@ class CancelacionPaso2Controller extends Controller
         'OTRO_RESPALDO',
     ];
 
-    /**
-     * Muestra la vista del Paso 2.
-     */
     public function index(int $id_tramite)
     {
         $tramite = $this->obtenerTramiteDelUsuario($id_tramite);
@@ -77,9 +60,6 @@ class CancelacionPaso2Controller extends Controller
         ]);
     }
 
-    /**
-     * Muestra la vista del Paso 3 / Éxito.
-     */
     public function paso3(int $id_tramite)
     {
         $tramite = $this->obtenerTramiteDelUsuario($id_tramite);
@@ -89,7 +69,7 @@ class CancelacionPaso2Controller extends Controller
                 ->withErrors(['error' => 'No se encontró el trámite solicitado o no pertenece al usuario autenticado.']);
         }
 
-        $paso2Validado = session('cancelacion_excepcional.paso2_validado', false);
+        $paso2Validado   = session('cancelacion_excepcional.paso2_validado', false);
         $tramiteValidado = session('cancelacion_excepcional.id_tramite_validado');
 
         if (!$paso2Validado || (int) $tramiteValidado !== $id_tramite) {
@@ -103,9 +83,121 @@ class CancelacionPaso2Controller extends Controller
         ]);
     }
 
-    /**
-     * API: subir documento base.
-     */
+    public function subirIdentidad(Request $request, int $id_tramite)
+    {
+        if (!$this->obtenerTramiteDelUsuario($id_tramite)) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Trámite no encontrado o sin permisos.',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'dni_frente'  => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'dni_reverso' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+        ], [
+            'dni_frente.mimes'   => 'El frente de identidad debe ser PDF, JPG o PNG.',
+            'dni_frente.max'     => 'El frente de identidad no puede superar los 10 MB.',
+            'dni_reverso.mimes'  => 'El reverso de identidad debe ser PDF, JPG o PNG.',
+            'dni_reverso.max'    => 'El reverso de identidad no puede superar los 10 MB.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $archivoFrente  = $request->file('dni_frente');
+        $archivoReverso = $request->file('dni_reverso');
+
+        $archivos = collect([$archivoFrente, $archivoReverso])->filter()->values();
+
+        if ($archivos->isEmpty()) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Debe seleccionar un archivo PDF o dos imágenes para la identidad.',
+            ], 422);
+        }
+
+        if ($archivos->count() > 2) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Solo se permiten 2 imágenes o 1 PDF en el bloque de identidad.',
+            ], 422);
+        }
+
+        foreach ($archivos as $archivo) {
+            $this->validarArchivoIdentidad($archivo);
+        }
+
+        if ($archivos->count() === 1 && !$this->esPdf($archivos->first())) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Para la identidad debe subir 2 imágenes (frente y reverso) o 1 PDF.',
+            ], 422);
+        }
+
+        if ($archivos->count() === 2) {
+            $hayPdf = $archivos->contains(fn (UploadedFile $archivo) => $this->esPdf($archivo));
+
+            if ($hayPdf) {
+                return response()->json([
+                    'ok'      => false,
+                    'mensaje' => 'Si sube 2 archivos, ambos deben ser imágenes. Si sube PDF, debe ser solo 1 archivo.',
+                ], 422);
+            }
+        }
+
+        try {
+            $resultados = [];
+
+            if ($archivos->count() === 1) {
+                $archivoPdf = $archivos->first();
+
+                $resultados['dni_pdf'] = $this->guardarDocumento(
+                    idTramite: $id_tramite,
+                    tipoDocumento: 'DNI_FRENTE',
+                    archivo: $archivoPdf,
+                );
+            } else {
+                $resultados['dni_frente'] = $this->guardarDocumento(
+                    idTramite: $id_tramite,
+                    tipoDocumento: 'DNI_FRENTE',
+                    archivo: $archivoFrente,
+                );
+
+                $resultados['dni_reverso'] = $this->guardarDocumento(
+                    idTramite: $id_tramite,
+                    tipoDocumento: 'DNI_REVERSO',
+                    archivo: $archivoReverso,
+                );
+            }
+
+            $identidadCompleta = $this->tieneIdentidadCompleta($id_tramite);
+
+            return response()->json([
+                'ok'                 => true,
+                'mensaje'            => $identidadCompleta
+                    ? 'Documento de identidad cargado correctamente.'
+                    : 'Se cargó parcialmente la identidad. Aún falta uno de los lados.',
+                'identidad_completa' => $identidadCompleta,
+                'data'               => $resultados,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error subirIdentidad', [
+                'id_tramite' => $id_tramite,
+                'error'      => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => $this->limpiarMensaje($e),
+            ], 500);
+        }
+    }
+
     public function subirDocumentoBase(Request $request, int $id_tramite)
     {
         if (!$this->obtenerTramiteDelUsuario($id_tramite)) {
@@ -139,9 +231,9 @@ class CancelacionPaso2Controller extends Controller
             $this->validarArchivoBase($tipoDocumento, $archivo);
 
             $resultado = $this->guardarDocumento(
-                idTramite:     $id_tramite,
+                idTramite: $id_tramite,
                 tipoDocumento: $tipoDocumento,
-                archivo:       $archivo,
+                archivo: $archivo,
             );
 
             return response()->json([
@@ -149,7 +241,6 @@ class CancelacionPaso2Controller extends Controller
                 'mensaje' => 'Documento cargado correctamente.',
                 'data'    => $resultado,
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Error subirDocumentoBase', [
                 'id_tramite'     => $id_tramite,
@@ -165,9 +256,6 @@ class CancelacionPaso2Controller extends Controller
         }
     }
 
-    /**
-     * API: subir documento de alto riesgo.
-     */
     public function subirDocumentoAltoRiesgo(Request $request, int $id_tramite)
     {
         if (!$this->obtenerTramiteDelUsuario($id_tramite)) {
@@ -212,11 +300,11 @@ class CancelacionPaso2Controller extends Controller
 
         try {
             $resultado = $this->guardarDocumento(
-                idTramite:     $id_tramite,
+                idTramite: $id_tramite,
                 tipoDocumento: $tipoDocumento,
-                archivo:       $archivo,
-                numeroFolio:   ($tieneReferencia && $numeroFolio !== '') ? $numeroFolio : null,
-                antifraude:    ($tieneReferencia && $numeroFolio !== ''),
+                archivo: $archivo,
+                numeroFolio: ($tieneReferencia && $numeroFolio !== '') ? $numeroFolio : null,
+                antifraude: ($tieneReferencia && $numeroFolio !== ''),
             );
 
             return response()->json([
@@ -224,7 +312,6 @@ class CancelacionPaso2Controller extends Controller
                 'mensaje' => 'Documento cargado correctamente.',
                 'data'    => $resultado,
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Error subirDocumentoAltoRiesgo', [
                 'id_tramite'     => $id_tramite,
@@ -241,9 +328,6 @@ class CancelacionPaso2Controller extends Controller
         }
     }
 
-    /**
-     * API: subir documento flexible.
-     */
     public function subirDocumentoFlexible(Request $request, int $id_tramite)
     {
         if (!$this->obtenerTramiteDelUsuario($id_tramite)) {
@@ -276,9 +360,9 @@ class CancelacionPaso2Controller extends Controller
 
         try {
             $resultado = $this->guardarDocumento(
-                idTramite:     $id_tramite,
+                idTramite: $id_tramite,
                 tipoDocumento: $tipoDocumento,
-                archivo:       $archivo,
+                archivo: $archivo,
             );
 
             return response()->json([
@@ -286,7 +370,6 @@ class CancelacionPaso2Controller extends Controller
                 'mensaje' => 'Documento cargado correctamente.',
                 'data'    => $resultado,
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Error subirDocumentoFlexible', [
                 'id_tramite'     => $id_tramite,
@@ -302,9 +385,6 @@ class CancelacionPaso2Controller extends Controller
         }
     }
 
-    /**
-     * API: eliminar documento.
-     */
     public function eliminarDocumento(int $id_tramite, int $id_documento)
     {
         if (!$this->obtenerTramiteDelUsuario($id_tramite)) {
@@ -328,9 +408,11 @@ class CancelacionPaso2Controller extends Controller
         }
 
         try {
+            $idUsuario = Auth::user()->id_usuario ?? auth()->id();
+
             DB::statement('CALL SOFT_DEL_DOC_EXCEPCIONAL(?, ?, ?)', [
                 $id_documento,
-                Auth::user()->id ?? null,
+                $idUsuario,
                 'Eliminado por el usuario desde el formulario',
             ]);
 
@@ -342,7 +424,6 @@ class CancelacionPaso2Controller extends Controller
                 'ok'      => true,
                 'mensaje' => 'Documento eliminado correctamente.',
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Error eliminarDocumento', [
                 'id_tramite'   => $id_tramite,
@@ -357,9 +438,6 @@ class CancelacionPaso2Controller extends Controller
         }
     }
 
-    /**
-     * API: validar paso 2.
-     */
     public function validarPaso2(Request $request, int $id_tramite)
     {
         if (!$this->obtenerTramiteDelUsuario($id_tramite)) {
@@ -379,6 +457,10 @@ class CancelacionPaso2Controller extends Controller
         }
 
         $faltantes = [];
+
+        if (!$this->tieneIdentidadCompleta($id_tramite)) {
+            $faltantes[] = 'Documento de identidad';
+        }
 
         foreach (self::TIPOS_BASE as $tipoBase) {
             if (!$this->existeDocumentoActivo($id_tramite, $tipoBase)) {
@@ -434,7 +516,6 @@ class CancelacionPaso2Controller extends Controller
                 'mensaje'  => 'Paso 2 validado correctamente.',
                 'redirect' => route('cancelacion.paso3', ['id_tramite' => $id_tramite]),
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Error validarPaso2', [
                 'id_tramite' => $id_tramite,
@@ -447,11 +528,6 @@ class CancelacionPaso2Controller extends Controller
             ], 500);
         }
     }
-
-    /* ============================================================
-     * MÉTODOS PRIVADOS
-     * ============================================================
-     */
 
     private function obtenerTramiteDelUsuario(int $idTramite): ?object
     {
@@ -524,7 +600,6 @@ class CancelacionPaso2Controller extends Controller
                 'ruta_archivo'     => $rutaArchivo,
                 'numero_folio'     => $numeroFolio,
             ];
-
         } catch (\Throwable $e) {
             if (Storage::disk('public')->exists($rutaArchivo)) {
                 Storage::disk('public')->delete($rutaArchivo);
@@ -534,18 +609,68 @@ class CancelacionPaso2Controller extends Controller
         }
     }
 
+    private function obtenerDocumentosIdentidadActivos(int $idTramite)
+    {
+        return DB::table('tbl_documento')
+            ->where('id_tramite', $idTramite)
+            ->where('estado', 1)
+            ->whereIn('tipo_documento', self::TIPOS_IDENTIDAD)
+            ->orderByDesc('fecha_carga')
+            ->get();
+    }
+
+    private function tieneIdentidadCompleta(int $idTramite): bool
+    {
+        $docs = $this->obtenerDocumentosIdentidadActivos($idTramite);
+
+        if ($docs->isEmpty()) {
+            return false;
+        }
+
+        $tieneFrente = $docs->contains(fn ($doc) => $doc->tipo_documento === 'DNI_FRENTE');
+        $tieneReverso = $docs->contains(fn ($doc) => $doc->tipo_documento === 'DNI_REVERSO');
+
+        if ($tieneFrente && $tieneReverso) {
+            return true;
+        }
+
+        return $docs->contains(function ($doc) {
+            $nombre = (string) ($doc->nombre_documento ?: $doc->ruta_archivo ?: '');
+            return strtolower(pathinfo($nombre, PATHINFO_EXTENSION)) === 'pdf';
+        });
+    }
+
+    private function esPdf(UploadedFile $archivo): bool
+    {
+        return strtolower($archivo->getClientOriginalExtension()) === 'pdf';
+    }
+
+    private function validarArchivoIdentidad(UploadedFile $archivo): void
+    {
+        $extension = strtolower($archivo->getClientOriginalExtension());
+        $sizeKb    = (int) round($archivo->getSize() / 1024);
+
+        if (!in_array($extension, ['pdf', 'jpg', 'jpeg', 'png'], true)) {
+            throw new \RuntimeException('El archivo de identidad debe ser PDF, JPG o PNG.');
+        }
+
+        if ($sizeKb > 10240) {
+            throw new \RuntimeException('El archivo de identidad supera el tamaño máximo permitido de 10 MB.');
+        }
+    }
+
     private function validarArchivoBase(string $tipoDocumento, UploadedFile $archivo): void
     {
         $extension = strtolower($archivo->getClientOriginalExtension());
         $sizeKb    = (int) round($archivo->getSize() / 1024);
 
-        if (in_array($tipoDocumento, ['DNI_FRENTE', 'DNI_REVERSO', 'FORMA_003'], true)) {
+        if ($tipoDocumento === 'FORMA_003') {
             if (!in_array($extension, ['pdf', 'jpg', 'jpeg', 'png'], true)) {
-                throw new \RuntimeException('El archivo debe ser PDF, JPG o PNG.');
+                throw new \RuntimeException('La Forma 003 debe subirse en PDF, JPG o PNG.');
             }
 
             if ($sizeKb > 10240) {
-                throw new \RuntimeException('El archivo supera el tamaño máximo permitido de 10 MB.');
+                throw new \RuntimeException('La Forma 003 supera el tamaño máximo permitido de 10 MB.');
             }
 
             return;
@@ -608,8 +733,6 @@ class CancelacionPaso2Controller extends Controller
     private function nombreDocumento(string $tipo): string
     {
         return match ($tipo) {
-            'DNI_FRENTE'          => 'Tarjeta de identidad (frente)',
-            'DNI_REVERSO'         => 'Tarjeta de identidad (reverso)',
             'HISTORIAL_ACADEMICO' => 'Historial académico',
             'FORMA_003'           => 'Forma 003',
             'CONSTANCIA_MEDICA'   => 'Constancia médica',
@@ -640,6 +763,10 @@ class CancelacionPaso2Controller extends Controller
 
         if (str_contains($mensaje, 'ALERTA:')) {
             return 'No fue posible validar el documento cargado. Verifique la información ingresada o adjunte un documento válido.';
+        }
+
+        if (str_contains($mensaje, 'Illegal mix of collations')) {
+            return 'Existe una incompatibilidad de cotejamientos en la base de datos al validar documentos.';
         }
 
         if (str_contains($mensaje, 'ERROR:')) {

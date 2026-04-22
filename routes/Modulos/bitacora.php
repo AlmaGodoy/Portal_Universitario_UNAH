@@ -20,9 +20,9 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
 
     Route::get('/bitacora/secretaria-academica', [BitacoraController::class, 'secretariaAcademica'])
         ->name('bitacora.secretaria_academica')
-        ->middleware('roleid:5');
+        ->middleware('roleid:1');
 
     Route::get('/bitacora/secretaria-general', [BitacoraController::class, 'secretariaGeneral'])
         ->name('bitacora.secretaria_general')
-        ->middleware('roleid:1');
+        ->middleware('roleid:5');
 });
