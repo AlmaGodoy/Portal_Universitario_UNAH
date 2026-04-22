@@ -112,28 +112,61 @@ class CancelacionPaso2Controller extends Controller
         $archivoFrente  = $request->file('dni_frente');
         $archivoReverso = $request->file('dni_reverso');
 
-        if (!$archivoFrente && !$archivoReverso) {
+        $archivos = collect([$archivoFrente, $archivoReverso])->filter()->values();
+
+        if ($archivos->isEmpty()) {
             return response()->json([
                 'ok'      => false,
-                'mensaje' => 'Debe seleccionar al menos un archivo de identidad.',
+                'mensaje' => 'Debe seleccionar un archivo PDF o dos imágenes para la identidad.',
             ], 422);
+        }
+
+        if ($archivos->count() > 2) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Solo se permiten 2 imágenes o 1 PDF en el bloque de identidad.',
+            ], 422);
+        }
+
+        foreach ($archivos as $archivo) {
+            $this->validarArchivoIdentidad($archivo);
+        }
+
+        if ($archivos->count() === 1 && !$this->esPdf($archivos->first())) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Para la identidad debe subir 2 imágenes (frente y reverso) o 1 PDF.',
+            ], 422);
+        }
+
+        if ($archivos->count() === 2) {
+            $hayPdf = $archivos->contains(fn (UploadedFile $archivo) => $this->esPdf($archivo));
+
+            if ($hayPdf) {
+                return response()->json([
+                    'ok'      => false,
+                    'mensaje' => 'Si sube 2 archivos, ambos deben ser imágenes. Si sube PDF, debe ser solo 1 archivo.',
+                ], 422);
+            }
         }
 
         try {
             $resultados = [];
 
-            if ($archivoFrente) {
-                $this->validarArchivoIdentidad($archivoFrente);
+            if ($archivos->count() === 1) {
+                $archivoPdf = $archivos->first();
 
+                $resultados['dni_pdf'] = $this->guardarDocumento(
+                    idTramite: $id_tramite,
+                    tipoDocumento: 'DNI_FRENTE',
+                    archivo: $archivoPdf,
+                );
+            } else {
                 $resultados['dni_frente'] = $this->guardarDocumento(
                     idTramite: $id_tramite,
                     tipoDocumento: 'DNI_FRENTE',
                     archivo: $archivoFrente,
                 );
-            }
-
-            if ($archivoReverso) {
-                $this->validarArchivoIdentidad($archivoReverso);
 
                 $resultados['dni_reverso'] = $this->guardarDocumento(
                     idTramite: $id_tramite,
@@ -142,9 +175,7 @@ class CancelacionPaso2Controller extends Controller
                 );
             }
 
-            $identidadCompleta =
-                $this->existeDocumentoActivo($id_tramite, 'DNI_FRENTE') &&
-                $this->existeDocumentoActivo($id_tramite, 'DNI_REVERSO');
+            $identidadCompleta = $this->tieneIdentidadCompleta($id_tramite);
 
             return response()->json([
                 'ok'                 => true,
@@ -427,10 +458,7 @@ class CancelacionPaso2Controller extends Controller
 
         $faltantes = [];
 
-        $tieneFrente  = $this->existeDocumentoActivo($id_tramite, 'DNI_FRENTE');
-        $tieneReverso = $this->existeDocumentoActivo($id_tramite, 'DNI_REVERSO');
-
-        if (!$tieneFrente || !$tieneReverso) {
+        if (!$this->tieneIdentidadCompleta($id_tramite)) {
             $faltantes[] = 'Documento de identidad';
         }
 
@@ -579,6 +607,42 @@ class CancelacionPaso2Controller extends Controller
 
             throw $e;
         }
+    }
+
+    private function obtenerDocumentosIdentidadActivos(int $idTramite)
+    {
+        return DB::table('tbl_documento')
+            ->where('id_tramite', $idTramite)
+            ->where('estado', 1)
+            ->whereIn('tipo_documento', self::TIPOS_IDENTIDAD)
+            ->orderByDesc('fecha_carga')
+            ->get();
+    }
+
+    private function tieneIdentidadCompleta(int $idTramite): bool
+    {
+        $docs = $this->obtenerDocumentosIdentidadActivos($idTramite);
+
+        if ($docs->isEmpty()) {
+            return false;
+        }
+
+        $tieneFrente = $docs->contains(fn ($doc) => $doc->tipo_documento === 'DNI_FRENTE');
+        $tieneReverso = $docs->contains(fn ($doc) => $doc->tipo_documento === 'DNI_REVERSO');
+
+        if ($tieneFrente && $tieneReverso) {
+            return true;
+        }
+
+        return $docs->contains(function ($doc) {
+            $nombre = (string) ($doc->nombre_documento ?: $doc->ruta_archivo ?: '');
+            return strtolower(pathinfo($nombre, PATHINFO_EXTENSION)) === 'pdf';
+        });
+    }
+
+    private function esPdf(UploadedFile $archivo): bool
+    {
+        return strtolower($archivo->getClientOriginalExtension()) === 'pdf';
     }
 
     private function validarArchivoIdentidad(UploadedFile $archivo): void

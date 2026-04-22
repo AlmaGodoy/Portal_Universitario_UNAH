@@ -93,9 +93,9 @@
             </div>
 
             <div class="mt-3">
-                <form action="{{ route('backup.probar') }}" method="POST" style="margin:0;">
+                <form action="{{ route('backup.probar') }}" method="POST" style="margin:0;" id="backup-test-form">
                     @csrf
-                    <button type="submit" class="btn btn-outline-primary">
+                    <button type="submit" class="btn btn-outline-primary" id="backup-test-btn">
                         <i class="fas fa-plug-circle-check"></i>
                         Probar conexión
                     </button>

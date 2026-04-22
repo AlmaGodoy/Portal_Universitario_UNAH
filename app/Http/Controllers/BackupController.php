@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Throwable;
+use ZipArchive;
 
 class BackupController extends Controller
 {
@@ -49,33 +51,16 @@ class BackupController extends Controller
     public function crearBackup()
     {
         try {
-            Artisan::call('backup:run', [
-                '--only-db' => true,
-            ]);
-
-            $salida = trim(Artisan::output());
-
-            $backupMasReciente = $this->obtenerBackupMasReciente();
-
-            if (!$backupMasReciente) {
-                Log::warning('El respaldo se ejecutó, pero no se encontró ningún archivo para registrar.', [
-                    'output' => $salida,
-                ]);
-
-                return redirect()
-                    ->route('backup.index')
-                    ->with('warning', 'El respaldo se generó, pero no se encontró el archivo para registrarlo en el historial.');
-            }
+            $backupGenerado = $this->generarRespaldo();
 
             BackupLog::create([
-                'nombre_archivo' => $backupMasReciente['nombre_archivo'],
-                'tamano'         => $this->formatearTamano($backupMasReciente['tamano_bytes']),
+                'nombre_archivo' => $backupGenerado['nombre_archivo'],
+                'tamano'         => $this->formatearTamano($backupGenerado['tamano_bytes']),
                 'usuario'        => $this->obtenerNombreUsuarioActual(),
             ]);
 
-            Log::info('Respaldo ejecutado correctamente', [
-                'output'              => $salida,
-                'backup_mas_reciente' => $backupMasReciente,
+            Log::info('Respaldo generado correctamente', [
+                'backup' => $backupGenerado,
             ]);
 
             return redirect()
@@ -95,21 +80,287 @@ class BackupController extends Controller
         }
     }
 
+    private function generarRespaldo(): array
+    {
+        try {
+            if ($this->comandoArtisanExiste('backup:run')) {
+                $antes = $this->obtenerBackupMasReciente();
+
+                Artisan::call('backup:run', [
+                    '--only-db' => true,
+                ]);
+
+                $salida = trim(Artisan::output());
+                $despues = $this->obtenerBackupMasReciente();
+
+                if ($despues) {
+                    $esNuevo = !$antes
+                        || ($antes['path'] ?? null) !== ($despues['path'] ?? null)
+                        || ($antes['ultima_modificacion'] ?? 0) !== ($despues['ultima_modificacion'] ?? 0);
+
+                    if ($esNuevo) {
+                        $despues['metodo'] = 'artisan';
+                        $despues['salida'] = $salida;
+
+                        return $despues;
+                    }
+                }
+
+                Log::warning('backup:run se ejecutó, pero no devolvió un archivo nuevo. Se usará respaldo manual.', [
+                    'output' => $salida,
+                ]);
+            }
+        } catch (Throwable $e) {
+            Log::warning('No se pudo generar el respaldo con backup:run. Se usará respaldo manual.', [
+                'mensaje' => $e->getMessage(),
+            ]);
+        }
+
+        return $this->generarRespaldoManual();
+    }
+
+    private function comandoArtisanExiste(string $comando): bool
+    {
+        try {
+            $comandos = Artisan::all();
+
+            return is_array($comandos) && array_key_exists($comando, $comandos);
+        } catch (Throwable $e) {
+            Log::warning('No se pudo validar si existe el comando Artisan.', [
+                'comando' => $comando,
+                'mensaje' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function generarRespaldoManual(): array
+    {
+        if (!function_exists('exec')) {
+            throw new RuntimeException('La función exec() no está habilitada en PHP y es necesaria para generar el respaldo manual.');
+        }
+
+        $conexion = $this->obtenerConfiguracionConexionMysql();
+        $disk = $this->obtenerDiscoBackup();
+        $directorio = $this->obtenerDirectorioBackup();
+
+        Storage::disk($disk)->makeDirectory($directorio);
+
+        $nombreBase = $this->generarNombreBaseUnico($disk, $directorio);
+
+        $rutaSqlRelativa = trim($directorio . '/' . $nombreBase . '.sql', '/');
+        $rutaSqlAbsoluta = $this->resolverRutaAbsolutaDisco($disk, $rutaSqlRelativa);
+
+        $ejecutable = $this->resolverRutaMySqlDump();
+
+        $comando = $this->construirComandoMySqlDump(
+            $ejecutable,
+            $conexion,
+            $rutaSqlAbsoluta
+        );
+
+        $salida = [];
+        $codigo = 0;
+
+        exec($comando . ' 2>&1', $salida, $codigo);
+
+        clearstatcache(true, $rutaSqlAbsoluta);
+
+        if ($codigo !== 0 || !is_file($rutaSqlAbsoluta) || filesize($rutaSqlAbsoluta) <= 0) {
+            throw new RuntimeException(
+                'No fue posible generar el respaldo manual. ' .
+                implode(' ', array_filter($salida))
+            );
+        }
+
+        $rutaFinalRelativa = $rutaSqlRelativa;
+        $rutaFinalAbsoluta = $rutaSqlAbsoluta;
+
+        if (class_exists(ZipArchive::class)) {
+            $rutaZipRelativa = trim($directorio . '/' . $nombreBase . '.zip', '/');
+            $rutaZipAbsoluta = $this->resolverRutaAbsolutaDisco($disk, $rutaZipRelativa);
+
+            $zip = new ZipArchive();
+            $resultadoZip = $zip->open($rutaZipAbsoluta, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+            if ($resultadoZip === true) {
+                $zip->addFile($rutaSqlAbsoluta, basename($rutaSqlRelativa));
+                $zip->close();
+
+                @unlink($rutaSqlAbsoluta);
+
+                clearstatcache(true, $rutaZipAbsoluta);
+
+                $rutaFinalRelativa = $rutaZipRelativa;
+                $rutaFinalAbsoluta = $rutaZipAbsoluta;
+            } else {
+                Log::warning('No se pudo comprimir el respaldo en ZIP. Se conservará el archivo SQL.', [
+                    'ruta_sql' => $rutaSqlRelativa,
+                    'resultado_zip' => $resultadoZip,
+                ]);
+            }
+        }
+
+        if (!is_file($rutaFinalAbsoluta) || filesize($rutaFinalAbsoluta) <= 0) {
+            throw new RuntimeException('El archivo de respaldo fue generado, pero no pudo localizarse para registrarlo.');
+        }
+
+        return [
+            'disk'                => $disk,
+            'path'                => $rutaFinalRelativa,
+            'nombre_archivo'      => basename($rutaFinalRelativa),
+            'tamano_bytes'        => (int) filesize($rutaFinalAbsoluta),
+            'ultima_modificacion' => (int) filemtime($rutaFinalAbsoluta),
+            'metodo'              => 'manual',
+        ];
+    }
+
+    private function construirComandoMySqlDump(string $ejecutable, array $conexion, string $archivoSalida): string
+    {
+        $partes = [
+            escapeshellarg($ejecutable),
+            '--host=' . escapeshellarg((string) ($conexion['host'] ?? '127.0.0.1')),
+            '--port=' . escapeshellarg((string) ($conexion['port'] ?? '3306')),
+            '--user=' . escapeshellarg((string) ($conexion['username'] ?? 'root')),
+            '--single-transaction',
+            '--quick',
+            '--skip-lock-tables',
+            '--routines',
+            '--triggers',
+            '--default-character-set=utf8mb4',
+        ];
+
+        $password = (string) ($conexion['password'] ?? '');
+
+        if ($password !== '') {
+            $partes[] = '--password=' . escapeshellarg($password);
+        }
+
+        $partes[] = '--result-file=' . escapeshellarg($archivoSalida);
+        $partes[] = escapeshellarg((string) $conexion['database']);
+
+        return implode(' ', $partes);
+    }
+
+    private function obtenerConfiguracionConexionMysql(): array
+    {
+        $conexionPorDefecto = config('database.default');
+        $config = config('database.connections.' . $conexionPorDefecto);
+
+        if (!is_array($config) || empty($config)) {
+            throw new RuntimeException('No se encontró la configuración de conexión de la base de datos.');
+        }
+
+        $driver = strtolower((string) ($config['driver'] ?? ''));
+
+        if (!in_array($driver, ['mysql', 'mariadb'], true)) {
+            throw new RuntimeException('El respaldo manual actualmente solo está preparado para MySQL/MariaDB.');
+        }
+
+        if (empty($config['database'])) {
+            throw new RuntimeException('No se encontró el nombre de la base de datos en la configuración.');
+        }
+
+        return $config;
+    }
+
+    private function obtenerDiscoBackup(): string
+    {
+        $discosConfigurados = config('backup.backup.destination.disks', []);
+
+        if (is_array($discosConfigurados)) {
+            foreach ($discosConfigurados as $disk) {
+                if (config('filesystems.disks.' . $disk)) {
+                    return $disk;
+                }
+            }
+        }
+
+        return 'local';
+    }
+
+    private function obtenerDirectorioBackup(): string
+    {
+        $nombre = trim((string) config('backup.backup.name', 'Laravel'));
+
+        return $nombre !== '' ? trim($nombre, '/') : 'Laravel';
+    }
+
+    private function resolverRutaAbsolutaDisco(string $disk, string $rutaRelativa): string
+    {
+        $storage = Storage::disk($disk);
+
+        if (method_exists($storage, 'path')) {
+            return $storage->path($rutaRelativa);
+        }
+
+        return storage_path('app/' . ltrim($rutaRelativa, '/'));
+    }
+
+    private function resolverRutaMySqlDump(): string
+    {
+        $candidatos = array_filter([
+            env('MYSQLDUMP_PATH'),
+            config('database.mysqldump_path'),
+            PHP_OS_FAMILY === 'Windows' ? 'C:\\xampp\\mysql\\bin\\mysqldump.exe' : null,
+            PHP_OS_FAMILY === 'Windows' ? 'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe' : null,
+            PHP_OS_FAMILY === 'Windows' ? 'C:\\Program Files\\MariaDB 10.4\\bin\\mysqldump.exe' : null,
+            '/usr/bin/mysqldump',
+            '/usr/local/bin/mysqldump',
+            '/opt/homebrew/bin/mysqldump',
+            'mysqldump',
+        ]);
+
+        foreach ($candidatos as $candidato) {
+            if ($candidato === 'mysqldump') {
+                return $candidato;
+            }
+
+            if (is_string($candidato) && $candidato !== '' && file_exists($candidato)) {
+                return $candidato;
+            }
+        }
+
+        return 'mysqldump';
+    }
+
+    private function generarNombreBaseUnico(string $disk, string $directorio): string
+    {
+        $base = now()->format('Y-m-d-H-i-s');
+        $nombre = $base;
+        $contador = 1;
+
+        while (
+            Storage::disk($disk)->exists(trim($directorio . '/' . $nombre . '.zip', '/')) ||
+            Storage::disk($disk)->exists(trim($directorio . '/' . $nombre . '.sql', '/'))
+        ) {
+            $nombre = $base . '-' . $contador;
+            $contador++;
+        }
+
+        return $nombre;
+    }
+
     private function obtenerBackupMasReciente(): ?array
     {
         $indice = [];
 
-        $discos = config('backup.backup.destination.disks', ['backups']);
+        $discos = config('backup.backup.destination.disks', ['local']);
         $nombreBackup = trim((string) config('backup.backup.name', 'Laravel'), '/');
 
         foreach ($discos as $disco) {
             try {
+                if (!config('filesystems.disks.' . $disco)) {
+                    continue;
+                }
+
                 $storage = Storage::disk($disco);
 
-                $rutas = [
+                $rutas = array_unique(array_filter([
                     $nombreBackup,
                     '',
-                ];
+                ], fn ($item) => $item !== null));
 
                 foreach ($rutas as $rutaBase) {
                     $archivos = $rutaBase !== ''
