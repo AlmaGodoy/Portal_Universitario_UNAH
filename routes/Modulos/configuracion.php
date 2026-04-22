@@ -5,25 +5,39 @@ use App\Http\Controllers\ConfiguracionController;
 
 /*
 |--------------------------------------------------------------------------
-| MODULO: CONFIGURACION 
+| MÓDULO: CONFIGURACIÓN
+|--------------------------------------------------------------------------
+| Disponible para todos los usuarios autenticados.
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'session.timeout'])->prefix('api/configuracion')->group(function () {
-    Route::get('perfil', [ConfiguracionController::class, 'perfil'])
-        ->name('configuracion.perfil');
 
-    Route::put('actualizar-perfil', [ConfiguracionController::class, 'actualizarPerfil'])
-        ->name('configuracion.actualizar-perfil');
-
-    Route::put('cambiar-password', [ConfiguracionController::class, 'cambiarPassword'])
-        ->name('configuracion.cambiar-password');
+/*
+|--------------------------------------------------------------------------
+| FRONTEND - CONFIGURACIÓN
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'session.timeout'])->group(function () {
+    Route::get('/configuracion', function () {
+        return view('configuracion');
+    })->name('configuracion.index');
 });
 
 /*
 |--------------------------------------------------------------------------
-| FRONTEND - CONFIGURACION
+| API - CONFIGURACIÓN
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'session.timeout'])->get('/configuracion', function () {
-    return view('configuracion');
-})->name('configuracion.index');
+Route::middleware(['auth', 'session.timeout'])
+    ->prefix('api/configuracion')
+    ->name('configuracion.')
+    ->group(function () {
+
+        Route::get('/perfil', [ConfiguracionController::class, 'perfil'])
+            ->name('perfil');
+
+        Route::put('/actualizar-perfil', [ConfiguracionController::class, 'actualizarPerfil'])
+            ->name('actualizar-perfil');
+
+        Route::put('/cambiar-password', [ConfiguracionController::class, 'cambiarPassword'])
+            ->name('cambiar-password');
+    });
