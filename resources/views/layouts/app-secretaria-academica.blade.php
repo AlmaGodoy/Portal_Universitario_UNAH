@@ -41,6 +41,12 @@
         $initials = 'SA';
     }
 
+    $correoInstitucional =
+        $user->email
+        ?? $user->correo_institucional
+        ?? optional($user->persona)->correo_institucional
+        ?? 'secretaria.academica@unah.hn';
+
     /*
     |--------------------------------------------------------------------------
     | CONTROL DE VISIBILIDAD DEL BOTÓN SEGURIDAD
@@ -67,7 +73,6 @@
 
     $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
 @endphp
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -84,37 +89,961 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
-        .sidebar-user-role {
-            color: #d4af37 !important;
+        :root {
+            --student-sidebar-width: 350px;
+            --student-sidebar-collapsed-width: 4.6rem;
         }
 
-        .nav-header-custom {
-            color: rgba(255,255,255,.55);
-            font-size: .78rem;
+        /* ── ANCHO DINÁMICO ──────────────────────────────── */
+        @media (min-width: 992px) {
+            body:not(.sidebar-collapse) .main-sidebar {
+                width: var(--student-sidebar-width) !important;
+            }
+            body:not(.sidebar-collapse) .content-wrapper,
+            body:not(.sidebar-collapse) .main-footer,
+            body:not(.sidebar-collapse) .main-header {
+                margin-left: var(--student-sidebar-width) !important;
+            }
+            body.sidebar-collapse .main-sidebar {
+                width: var(--student-sidebar-collapsed-width) !important;
+            }
+            body.sidebar-collapse .content-wrapper,
+            body.sidebar-collapse .main-footer,
+            body.sidebar-collapse .main-header {
+                margin-left: var(--student-sidebar-collapsed-width) !important;
+            }
+        }
+
+        /* ── BLOQUE CONTROL (donde estaba el user-card) ──── */
+        .sidebar-control-block {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255,255,255,.10);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            min-height: 58px;
+        }
+
+        /* Botón colapsar */
+        .sidebar-toggle-inner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
+            color: #17346c;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(239,190,26,.35);
+            transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .sidebar-toggle-inner:hover {
+            background: linear-gradient(135deg, #ffd84a 0%, #e8b20e 100%);
+            transform: scale(1.08);
+            box-shadow: 0 6px 18px rgba(239,190,26,.50);
+        }
+
+        .sidebar-toggle-inner i {
+            transition: transform .3s ease;
+            pointer-events: none;
+        }
+
+        body.sidebar-collapse .sidebar-toggle-inner i {
+            transform: rotate(180deg);
+        }
+
+        /* Info de tamaño */
+        .sidebar-control-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            overflow: hidden;
+            transition: opacity .25s ease, max-width .25s ease;
+            max-width: 999px;
+        }
+
+        body.sidebar-collapse .sidebar-control-info {
+            opacity: 0;
+            max-width: 0;
+            pointer-events: none;
+        }
+
+        .sidebar-control-label {
+            font-size: .68rem;
             font-weight: 700;
+            color: rgba(255,255,255,.45);
+            letter-spacing: .5px;
             text-transform: uppercase;
-            letter-spacing: .08em;
-            padding: 12px 18px 8px;
+            white-space: nowrap;
         }
 
-        .academic-badge {
+        /* Botones +/Normal/- */
+        .sidebar-size-btns {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sidebar-size-btn {
+            border: none;
+            height: 26px;
+            border-radius: 7px;
+            background: rgba(255,255,255,.12);
+            color: rgba(255,255,255,.85);
+            font-size: .72rem;
+            font-weight: 800;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            margin-top: 8px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: rgba(212, 175, 55, 0.16);
-            color: #f3d46b;
-            font-size: .78rem;
-            font-weight: 700;
-            border: 1px solid rgba(212, 175, 55, 0.28);
+            justify-content: center;
+            padding: 0 8px;
+            transition: all .18s ease;
+            white-space: nowrap;
         }
 
-        .content-wrapper {
-            min-height: 100vh;
+        .sidebar-size-btn:hover {
+            background: rgba(255,255,255,.24);
+            color: #fff;
+            transform: translateY(-1px);
         }
 
+        .sidebar-size-btn i {
+            font-size: .65rem;
+        }
+
+        /* ── MENÚ MÁS GRANDE Y FIJO EN UNA SOLA COLUMNA ──── */
+        #dashboardSidebarScroll,
+        .dashboardSidebarScroll,
+        .dashboard-sidebar-scroll {
+            display: block !important;
+            width: 100% !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+
+        #dashboardSidebarScroll nav,
+        .dashboardSidebarScroll nav,
+        .dashboard-sidebar-scroll nav {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        .dashboard-menu {
+            display: flex !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            gap: 10px !important;
+            padding: 18px 0 22px !important;
+            margin: 0 !important;
+        }
+
+        .dashboard-menu > .nav-item {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 auto !important;
+            padding: 0 14px !important;
+            margin: 0 !important;
+            float: none !important;
+            clear: both !important;
+        }
+
+        .dashboard-menu > .nav-item > .nav-link {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 56px !important;
+            padding: 0 18px !important;
+            border-radius: 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            flex-wrap: nowrap !important;
+            gap: 0 !important;
+            font-size: 1.06rem !important;
+            font-weight: 700 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            float: none !important;
+        }
+
+        .dashboard-menu > .nav-item > .nav-link p {
+            display: block !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .dashboard-menu > .nav-item > .nav-link .nav-icon {
+            flex: 0 0 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+            margin-right: 14px !important;
+            text-align: center !important;
+            font-size: 1.18rem !important;
+        }
+
+        .dashboard-menu > .nav-item > .nav-link.active {
+            min-height: 62px !important;
+            font-size: 1.08rem !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,.16) !important;
+        }
+
+        .dashboard-menu > .nav-item > .nav-link:hover {
+            transform: translateX(2px) !important;
+        }
+
+        /* Evita que AdminLTE o el zoom acomoden opciones en dos columnas */
+        .nav-sidebar.dashboard-menu,
+        .nav-sidebar.dashboard-menu > .nav-item,
+        .nav-sidebar.dashboard-menu > .nav-item > .nav-link {
+            float: none !important;
+            clear: both !important;
+        }
+
+        body:not(.sidebar-collapse) .dashboard-menu > .nav-item > .nav-link p,
+        body:not(.sidebar-collapse) .dashboard-menu > .nav-item > .nav-link .nav-icon {
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Cuando se colapsa, solo queda el ícono centrado y no se desborda */
+        body.sidebar-collapse .dashboard-menu {
+            gap: 8px !important;
+            padding-top: 14px !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu > .nav-item {
+            padding: 0 8px !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu > .nav-item > .nav-link {
+            justify-content: center !important;
+            padding: 0 !important;
+            min-height: 50px !important;
+            border-radius: 14px !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu > .nav-item > .nav-link .nav-icon {
+            margin-right: 0 !important;
+            flex-basis: auto !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu > .nav-item > .nav-link p {
+            display: none !important;
+        }
+
+        /* ── RESIZE HANDLE ───────────────────────────────── */
+        @media (min-width: 992px) {
+            .sidebar-resize-handle {
+                position: fixed;
+                top: 0;
+                left: calc(var(--student-sidebar-width) - 8px);
+                width: 18px;
+                height: 100vh;
+                z-index: 2000;
+                cursor: col-resize;
+                background: rgba(255,255,255,.03);
+                transition: left .18s ease, background .18s ease;
+            }
+
+            .sidebar-resize-handle:hover {
+                background: rgba(42,119,200,.16);
+            }
+
+            .sidebar-resize-handle::before {
+                content: "";
+                position: absolute;
+                top: 0; bottom: 0; left: 8px;
+                width: 2px;
+                background: rgba(255,255,255,.35);
+            }
+
+            .sidebar-resize-handle::after {
+                content: "";
+                position: absolute;
+                top: 50%; left: 5px;
+                width: 8px; height: 52px;
+                transform: translateY(-50%);
+                border-radius: 999px;
+                background: rgba(255,255,255,.18);
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+            }
+
+            body.sidebar-collapse .sidebar-resize-handle {
+                display: none !important;
+            }
+
+            body.sidebar-resizing,
+            body.sidebar-resizing * {
+                user-select: none !important;
+                cursor: col-resize !important;
+            }
+
+            body.sidebar-resizing .sidebar-resize-handle {
+                background: rgba(42,119,200,.28);
+            }
+        }
+
+        /* ── MÓVIL ───────────────────────────────────────── */
+        @media (max-width: 991.98px) {
+            .dashboard-menu {
+                gap: 6px !important;
+                padding: 14px 0 18px !important;
+            }
+
+            .dashboard-menu > .nav-item {
+                padding: 0 8px !important;
+            }
+
+            .dashboard-menu > .nav-item > .nav-link {
+                min-height: 50px !important;
+                padding: 0 14px !important;
+                font-size: .98rem !important;
+                border-radius: 14px !important;
+            }
+
+            .dashboard-menu > .nav-item > .nav-link .nav-icon {
+                flex: 0 0 30px !important;
+                width: 30px !important;
+                min-width: 30px !important;
+                max-width: 30px !important;
+                margin-right: 12px !important;
+                font-size: 1.05rem !important;
+            }
+        }
+
+    /* =========================================================
+       TOPBAR SECRETARÍA ACADÉMICA
+       Ajuste final sutil para combinar con el banner
+    ========================================================= */
+
+    .student-topbar {
+        position: relative !important;
+        z-index: 40 !important;
+        min-height: 52px !important;
+        margin: 0 10px 10px !important;
+        padding: 6px 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        background: linear-gradient(90deg, #123674 0%, #1c4f9d 48%, #174487 100%) !important;
+        border-bottom: 2px solid #ffd21f !important;
+        border-radius: 0 0 10px 10px !important;
+        box-shadow: 0 3px 8px rgba(8, 35, 78, 0.10) !important;
+        overflow: visible !important;
+    }
+
+    .student-topbar::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        border-radius: 0 0 10px 10px !important;
+        background: linear-gradient(
+            120deg,
+            rgba(255,255,255,0.06),
+            transparent 38%,
+            rgba(255,255,255,0.03)
+        ) !important;
+        pointer-events: none !important;
+    }
+
+    .student-topbar-left,
+    .student-topbar-right {
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    .student-topbar-left {
+        display: flex !important;
+        align-items: center !important;
+        min-width: 0 !important;
+    }
+
+    .student-topbar-right {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 7px !important;
+        min-width: 0 !important;
+    }
+
+    .topbar-left-copy {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .topbar-breadcrumb {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        padding: 7px 12px !important;
+        border-radius: 9px !important;
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.13) !important;
+        color: rgba(255,255,255,0.88) !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+    }
+
+    .topbar-breadcrumb i {
+        font-size: 12px !important;
+        color: rgba(255,255,255,0.82) !important;
+    }
+
+    .topbar-breadcrumb-active {
+        color: #ffd21f !important;
+        font-weight: 900 !important;
+    }
+
+    .topbar-action-group {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .topbar-icon-btn {
+        position: relative !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        background: rgba(255,255,255,0.08) !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.18s ease !important;
+        box-shadow: none !important;
+    }
+
+    .topbar-icon-btn:hover {
+        background: rgba(255,255,255,0.14) !important;
+        border-color: rgba(255,210,31,0.40) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .topbar-icon-btn i {
+        font-size: 14px !important;
+        color: #ffffff !important;
+    }
+
+    .topbar-badge {
+        position: absolute !important;
+        top: -6px !important;
+        right: -6px !important;
+        min-width: 17px !important;
+        height: 17px !important;
+        padding: 0 5px !important;
+        border-radius: 999px !important;
+        background: #e63946 !important;
+        color: #ffffff !important;
+        font-size: 9.5px !important;
+        font-weight: 900 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 2px solid #1c4f9d !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.22) !important;
+    }
+
+    .topbar-badge.gold {
+        background: #ffd21f !important;
+        color: #123674 !important;
+    }
+
+    .topbar-divider {
+        width: 1px !important;
+        height: 27px !important;
+        margin: 0 3px !important;
+        background: rgba(255,255,255,0.17) !important;
+    }
+
+    .student-user-chip {
+        min-height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+        padding: 5px 11px 5px 6px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255,255,255,0.17) !important;
+        background: rgba(255,255,255,0.09) !important;
+        color: #ffffff !important;
+        cursor: pointer !important;
+        transition: all 0.18s ease !important;
+        box-shadow: none !important;
+    }
+
+    .student-user-chip:hover {
+        background: rgba(255,255,255,0.14) !important;
+        border-color: rgba(255,210,31,0.40) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .student-user-chip-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #ffd21f !important;
+        color: #123674 !important;
+        font-weight: 900 !important;
+        font-size: 13px !important;
+    }
+
+    .student-user-chip-info {
+        display: flex !important;
+        flex-direction: column !important;
+        line-height: 1.1 !important;
+    }
+
+    .student-user-chip-name {
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        max-width: 175px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .student-user-chip-role {
+        margin-top: 2px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: rgba(255,255,255,0.74) !important;
+    }
+
+    .student-user-chip-arrow {
+        font-size: 11px !important;
+        color: rgba(255,255,255,0.76) !important;
+    }
+
+    .topbar-dropdown {
+        border-radius: 14px !important;
+        border: 1px solid rgba(13, 47, 104, 0.14) !important;
+        box-shadow: 0 18px 42px rgba(8, 35, 78, 0.24) !important;
+        overflow: hidden !important;
+    }
+
+    .topbar-dropdown-header {
+        background: #f6f9ff !important;
+        border-bottom: 1px solid #e3ebf7 !important;
+    }
+
+    .topbar-dropdown-header span {
+        color: #123674 !important;
+        font-weight: 900 !important;
+    }
+
+    .topbar-dropdown-mark,
+    .topbar-dropdown-footer a {
+        color: #1c4f9d !important;
+        font-weight: 800 !important;
+    }
+
+
+
+
+        /* ── DROPDOWNS TOPBAR ─────────────────────────────── */
+        .topbar-dropdown {
+            position: absolute !important;
+            top: calc(100% + 10px) !important;
+            right: 0 !important;
+            width: 330px !important;
+            max-width: calc(100vw - 24px) !important;
+            background: #ffffff !important;
+            display: none !important;
+            z-index: 5000 !important;
+        }
+
+        .topbar-dropdown.show {
+            display: block !important;
+        }
+
+        .topbar-dropdown.align-right {
+            right: 0 !important;
+        }
+
+        .topbar-dropdown-list {
+            list-style: none !important;
+            margin: 0 !important;
+            padding: 8px !important;
+        }
+
+        .topbar-dropdown-header,
+        .topbar-dropdown-footer {
+            padding: 11px 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+        }
+
+        .topbar-dropdown-item {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            padding: 10px !important;
+            border-radius: 12px !important;
+            transition: background .18s ease !important;
+        }
+
+        .topbar-dropdown-item:hover,
+        .topbar-dropdown-item.unread {
+            background: #f4f7fc !important;
+        }
+
+        .topbar-dropdown-item.sm {
+            align-items: center !important;
+        }
+
+        .topbar-dropdown-icon,
+        .topbar-dropdown-avatar {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 0 0 34px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-icon.sm {
+            width: 30px !important;
+            height: 30px !important;
+            flex-basis: 30px !important;
+        }
+
+        .topbar-dropdown-icon.blue,
+        .topbar-dropdown-avatar {
+            background: rgba(28, 79, 157, .12) !important;
+            color: #1c4f9d !important;
+        }
+
+        .topbar-dropdown-icon.gold {
+            background: rgba(255, 210, 31, .18) !important;
+            color: #8a6500 !important;
+        }
+
+        .topbar-dropdown-icon.green {
+            background: rgba(39, 174, 96, .13) !important;
+            color: #198754 !important;
+        }
+
+        .topbar-dropdown-text {
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            color: #24324b !important;
+        }
+
+        .topbar-dropdown-text strong {
+            color: #123674 !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-text span {
+            color: #5d6b82 !important;
+            font-size: 12px !important;
+            line-height: 1.35 !important;
+        }
+
+        .topbar-dropdown-text small {
+            color: #8a96a8 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+        }
+
+        .topbar-user-header {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 13px !important;
+            background: linear-gradient(90deg, #123674 0%, #1c4f9d 100%) !important;
+            color: #ffffff !important;
+        }
+
+        .topbar-user-header-avatar {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 12px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-user-header strong,
+        .topbar-user-header span {
+            display: block !important;
+        }
+
+        .topbar-user-header strong {
+            font-size: 13px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-user-header span {
+            font-size: 11px !important;
+            color: rgba(255,255,255,.78) !important;
+        }
+
+        .topbar-dropdown-footer {
+            border-top: 1px solid #e3ebf7 !important;
+        }
+
+        .topbar-dropdown-footer.danger button {
+            width: 100% !important;
+            border: none !important;
+            background: transparent !important;
+            color: #c62828 !important;
+            font-weight: 800 !important;
+            text-align: left !important;
+            padding: 0 !important;
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar-dropdown {
+                right: -8px !important;
+                width: calc(100vw - 26px) !important;
+            }
+        }
+
+
+
+        /* ── MENÚ DE USUARIO MEJORADO ─────────────────────── */
+        .user-profile-dropdown {
+            width: 315px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            background: #ffffff !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .user-profile-dropdown::before {
+            content: "" !important;
+            position: absolute !important;
+            top: -7px !important;
+            right: 28px !important;
+            width: 14px !important;
+            height: 14px !important;
+            background: #1c4f9d !important;
+            transform: rotate(45deg) !important;
+            border-left: 1px solid rgba(255,255,255,0.18) !important;
+            border-top: 1px solid rgba(255,255,255,0.18) !important;
+        }
+
+        .user-dropdown-header {
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 15px !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.22), transparent 35%),
+                linear-gradient(135deg, #123674 0%, #1c4f9d 58%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            color: #ffffff !important;
+        }
+
+        .user-dropdown-header::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background: linear-gradient(120deg, rgba(255,255,255,0.10), transparent 45%) !important;
+            pointer-events: none !important;
+        }
+
+        .user-dropdown-avatar {
+            position: relative !important;
+            z-index: 2 !important;
+            width: 46px !important;
+            height: 46px !important;
+            border-radius: 15px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            flex: 0 0 46px !important;
+            box-shadow: 0 7px 16px rgba(0,0,0,0.20) !important;
+        }
+
+        .user-dropdown-info {
+            position: relative !important;
+            z-index: 2 !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+        }
+
+        .user-dropdown-info strong {
+            color: #ffffff !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            line-height: 1.2 !important;
+            max-width: 220px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .user-dropdown-info span {
+            color: rgba(255,255,255,0.78) !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            max-width: 220px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .user-dropdown-info small {
+            margin-top: 5px !important;
+            width: fit-content !important;
+            padding: 3px 9px !important;
+            border-radius: 999px !important;
+            background: rgba(255, 210, 31, 0.18) !important;
+            border: 1px solid rgba(255, 210, 31, 0.36) !important;
+            color: #ffd21f !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+        }
+
+        .user-dropdown-body {
+            padding: 9px !important;
+            background: #ffffff !important;
+        }
+
+        .user-dropdown-option {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 11px 10px !important;
+            border-radius: 13px !important;
+            text-decoration: none !important;
+            color: #24324b !important;
+            transition: all .18s ease !important;
+        }
+
+        .user-dropdown-option:hover {
+            background: #f3f7ff !important;
+            transform: translateX(2px) !important;
+        }
+
+        .user-dropdown-option-icon {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 11px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 0 0 34px !important;
+            background: rgba(28, 79, 157, .12) !important;
+            color: #1c4f9d !important;
+        }
+
+        .user-dropdown-option-icon.gold {
+            background: rgba(255, 210, 31, .20) !important;
+            color: #8a6500 !important;
+        }
+
+        .user-dropdown-option span:not(.user-dropdown-option-icon) {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+
+        .user-dropdown-option strong {
+            color: #123674 !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+        }
+
+        .user-dropdown-option small {
+            color: #6b7890 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+        }
+
+        .user-dropdown-option-arrow {
+            color: #9aa7bb !important;
+            font-size: 11px !important;
+        }
+
+        .user-dropdown-footer {
+            padding: 10px 12px 12px !important;
+            background: #f7f9fd !important;
+            border-top: 1px solid #e3ebf7 !important;
+        }
+
+        .user-dropdown-footer form {
+            margin: 0 !important;
+        }
+
+        .user-logout-btn {
+            width: 100% !important;
+            min-height: 38px !important;
+            border: 1px solid rgba(198, 40, 40, 0.16) !important;
+            border-radius: 12px !important;
+            background: rgba(198, 40, 40, 0.07) !important;
+            color: #c62828 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+        }
+
+        .user-logout-btn:hover {
+            background: #c62828 !important;
+            color: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 8px 18px rgba(198, 40, 40, 0.22) !important;
+        }
+
+        /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -192,9 +1121,11 @@
         }
     </style>
 </head>
+
 <body class="hold-transition dashboard-body">
 <div class="wrapper">
 
+    {{-- ── NAV MOBILE ──────────────────────────────────────── --}}
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
         <ul class="navbar-nav">
             <li class="nav-item">
@@ -206,41 +1137,61 @@
         <span class="mobile-title">PumaGestión</span>
     </nav>
 
-    <aside class="main-sidebar elevation-4">
-        <div class="sidebar-bg" style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
+    {{-- ── SIDEBAR ──────────────────────────────────────────── --}}
+    <aside id="studentSidebar" class="main-sidebar elevation-4">
+        <div class="sidebar-bg"
+             style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
         <div class="sidebar-overlay"></div>
 
-        <a href="javascript:void(0)" class="brand-link">
+        {{-- Logo --}}
+        <a href="{{ route('empleado.dashboard') }}" class="brand-link">
             <div class="brand-top-glow"></div>
-
             <div class="brand-logo-wrap">
                 <img src="{{ asset('images/Logo.png') }}" alt="Logo PumaGestión" class="brand-logo-img">
             </div>
-
             <div class="brand-name">
                 <span class="brand-name-white">Puma</span><span class="brand-name-gold">Gestión</span>
             </div>
-
             <div class="brand-subtitle">FCEAC · UNAH</div>
         </a>
 
         <div class="sidebar">
-            <div class="sidebar-user-card">
-                <div class="sidebar-user-avatar">{{ $initials }}</div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">{{ $displayName }}</div>
-                    <div class="sidebar-user-role">{{ $displayRole }}</div>
-                    <div class="academic-badge">
-                        <i class="fas fa-building-columns"></i>
-                        Supervisión Global
+
+            {{-- ══ BLOQUE CONTROL ══ --}}
+            <div class="sidebar-control-block d-none d-lg-flex">
+
+                <button type="button"
+                        id="sidebarToggleBtn"
+                        class="sidebar-toggle-inner"
+                        title="Colapsar / Expandir menú">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="sidebar-control-info">
+                    <span class="sidebar-control-label">Tamaño del menú</span>
+                    <div class="sidebar-size-btns">
+                        <button type="button" id="sidebarSizeDown"
+                                class="sidebar-size-btn" title="Reducir">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" id="sidebarSizeReset"
+                                class="sidebar-size-btn" title="Normal">
+                            Normal
+                        </button>
+                        <button type="button" id="sidebarSizeUp"
+                                class="sidebar-size-btn" title="Ampliar">
+                            <i class="fas fa-plus"></i>
+                        </button>
                     </div>
                 </div>
+
             </div>
 
-            <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
+            {{-- ── MENÚ ──────────────────────────────────────── --}}
+            <div id="dashboardSidebarScroll" class="dashboardSidebarScroll">
                 <nav class="mt-2">
-
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
+                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu"
+                        data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
                             <a href="{{ route('empleado.dashboard') }}"
@@ -269,20 +1220,20 @@
                         </li>
 
                         <li class="nav-item">
-    <a href="{{ route('auditoria') }}"
-       class="nav-link {{ request()->routeIs('auditoria') || request()->routeIs('auditoria*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-magnifying-glass-chart"></i>
-        <p>Auditoría</p>
-    </a>
-</li>
+                            <a href="{{ route('auditoria') }}"
+                               class="nav-link {{ request()->routeIs('auditoria') || request()->routeIs('auditoria*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-magnifying-glass-chart"></i>
+                                <p>Auditoría</p>
+                            </a>
+                        </li>
 
-<li class="nav-item">
-    <a href="{{ route('bitacora.index') }}"
-       class="nav-link {{ request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-book"></i>
-        <p>Bitácora</p>
-    </a>
-</li>
+                        <li class="nav-item">
+                            <a href="{{ route('bitacora.index') }}"
+                               class="nav-link {{ request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Bitácora</p>
+                            </a>
+                        </li>
 
                         <li class="nav-item">
                             <a href="{{ $backupUrl }}"
@@ -306,12 +1257,158 @@
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
-        <i class="fas fa-chevron-left"></i>
-    </button>
+    {{-- ── HANDLE RESIZE ────────────────────────────────────── --}}
+    <div id="sidebarResizeHandle"
+         class="sidebar-resize-handle d-none d-lg-block"
+         title="Arrastra para ajustar el ancho"></div>
 
+    {{-- ── CONTENIDO ────────────────────────────────────────── --}}
     <div class="content-wrapper">
         <section class="content dashboard-shell">
+    {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
+    <div class="student-topbar">
+
+        <div class="student-topbar-left">
+            <div class="topbar-left-copy">
+                <div class="topbar-breadcrumb">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="topbar-breadcrumb-active">@yield('titulo', 'Secretaría Académica')</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="student-topbar-right">
+
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                    <span class="topbar-badge">3</span>
+                </button>
+
+                <div class="topbar-dropdown" id="dropNotif">
+                    <div class="topbar-dropdown-header">
+                        <span>Notificaciones</span>
+                        <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
+                    </div>
+                    <ul class="topbar-dropdown-list">
+                        <li class="topbar-dropdown-item unread">
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Reporte actualizado</strong>
+                                <span>Se regeneraron las métricas globales de la facultad.</span>
+                                <small>Hace 5 min</small>
+                            </div>
+                        </li>
+                        <li class="topbar-dropdown-item unread">
+                            <div class="topbar-dropdown-icon gold">
+                                <i class="fas fa-triangle-exclamation"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Filtro disponible</strong>
+                                <span>Hay información lista para consulta por departamento.</span>
+                                <small>Hace 1 hora</small>
+                            </div>
+                        </li>
+                        <li class="topbar-dropdown-item">
+                            <div class="topbar-dropdown-icon green">
+                                <i class="fas fa-circle-check"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Panel listo</strong>
+                                <span>La vista de Secretaría Académica está disponible.</span>
+                                <small>Hoy</small>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="topbar-dropdown-footer">
+                        <a href="#">Ver todas las notificaciones</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
+                    <i class="fas fa-envelope"></i>
+                    <span class="topbar-badge gold">1</span>
+                </button>
+
+                <div class="topbar-dropdown" id="dropMsg">
+                    <div class="topbar-dropdown-header">
+                        <span>Mensajes</span>
+                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                    </div>
+                    <ul class="topbar-dropdown-list">
+                        <li class="topbar-dropdown-item unread">
+                            <div class="topbar-dropdown-avatar">DG</div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Dirección académica</strong>
+                                <span>Revisa el comportamiento global de los trámites del período actual.</span>
+                                <small>Hace 30 min</small>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="topbar-dropdown-footer">
+                        <a href="#">Ir a mensajes</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topbar-divider"></div>
+
+            <div class="topbar-action-group">
+                <button class="student-user-chip" id="btnUser" title="Mi perfil">
+                    <div class="student-user-chip-avatar">{{ $initials ?? 'SA' }}</div>
+                    <div class="student-user-chip-info">
+                        <span class="student-user-chip-name">{{ $displayName ?? 'Secretaría Académica' }}</span>
+                        <span class="student-user-chip-role">Secretaría Académica</span>
+                    </div>
+                    <i class="fas fa-chevron-down student-user-chip-arrow"></i>
+                </button>
+
+                <div class="topbar-dropdown align-right user-profile-dropdown" id="dropUser">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">{{ $initials ?? 'SA' }}</div>
+                        <div class="user-dropdown-info">
+                            <strong>{{ $displayName ?? 'Secretaría Académica' }}</strong>
+                            <span>{{ $correoInstitucional }}</span>
+                            <small>Secretaría Académica</small>
+                        </div>
+                    </div>
+
+                    <div class="user-dropdown-body">
+                        <a href="#" class="user-dropdown-option">
+                            <span class="user-dropdown-option-icon">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <span>
+                                <strong>Mi perfil</strong>
+                                <small>Ver información personal</small>
+                            </span>
+                            <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
+                        </a>
+
+                    </div>
+
+                    <div class="user-dropdown-footer">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="user-logout-btn">
+                                <i class="fas fa-right-from-bracket"></i>
+                                <span>Cerrar sesión</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
             @yield('content')
         </section>
     </div>
@@ -319,8 +1416,10 @@
     <footer class="main-footer">
         <strong>© 2026 PumaGestión – UNAH</strong>
     </footer>
+
 </div>
 
+{{-- ── MODAL DE SESIÓN ───────────────────────────────────── --}}
 <div class="modal fade session-timeout-modal"
      id="sessionTimeoutModal"
      tabindex="-1"
@@ -341,7 +1440,7 @@
 
                 <div class="session-timeout-countdown">
                     <i class="fas fa-hourglass-half"></i>
-                    <span>Se cerrará en <span id="sessionCountdownText">180</span> segundos</span>
+                    <span>Se cerrará en <span id="sessionCountdownText">60</span> segundos</span>
                 </div>
             </div>
 
@@ -358,6 +1457,7 @@
     </div>
 </div>
 
+{{-- ── SCRIPTS ──────────────────────────────────────────────── --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
@@ -365,6 +1465,204 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const dropdownPairs = [
+        ['btnNotif', 'dropNotif'],
+        ['btnMsg', 'dropMsg'],
+        ['btnUser', 'dropUser'],
+    ];
+
+    function closeTopbarDropdowns(exceptId = null) {
+        dropdownPairs.forEach(([_, dropdownId]) => {
+            if (dropdownId !== exceptId) {
+                document.getElementById(dropdownId)?.classList.remove('show');
+            }
+        });
+    }
+
+    dropdownPairs.forEach(([buttonId, dropdownId]) => {
+        const button = document.getElementById(buttonId);
+        const dropdown = document.getElementById(dropdownId);
+
+        if (!button || !dropdown) return;
+
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const isOpen = dropdown.classList.contains('show');
+            closeTopbarDropdowns(dropdownId);
+            dropdown.classList.toggle('show', !isOpen);
+        });
+
+        dropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+    });
+
+    document.addEventListener('click', function () {
+        closeTopbarDropdowns();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeTopbarDropdowns();
+        }
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const root         = document.documentElement;
+    const body         = document.body;
+    const toggleBtn    = document.getElementById('sidebarToggleBtn');
+    const btnDown      = document.getElementById('sidebarSizeDown');
+    const btnReset     = document.getElementById('sidebarSizeReset');
+    const btnUp        = document.getElementById('sidebarSizeUp');
+    const resizeHandle = document.getElementById('sidebarResizeHandle');
+
+    const STORAGE_WIDTH_KEY    = 'secretaria_academica_sidebar_width';
+    const STORAGE_COLLAPSE_KEY = 'secretaria_academica_sidebar_collapsed';
+
+    const MIN_WIDTH     = 280;
+    const MAX_WIDTH     = 460;
+    const DEFAULT_WIDTH = 350;
+    const STEP          = 20;
+
+    let isResizing = false;
+
+    function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+
+    function applyWidth(w) {
+        root.style.setProperty('--student-sidebar-width', clamp(w, MIN_WIDTH, MAX_WIDTH) + 'px');
+    }
+
+    function saveWidth(w) {
+        localStorage.setItem(STORAGE_WIDTH_KEY, String(clamp(w, MIN_WIDTH, MAX_WIDTH)));
+    }
+
+    function getSavedWidth() {
+        const v = parseInt(localStorage.getItem(STORAGE_WIDTH_KEY), 10);
+        return Number.isFinite(v) ? clamp(v, MIN_WIDTH, MAX_WIDTH) : DEFAULT_WIDTH;
+    }
+
+    function setCollapsed(collapsed) {
+        body.classList.toggle('sidebar-collapse', collapsed);
+        localStorage.setItem(STORAGE_COLLAPSE_KEY, collapsed ? '1' : '0');
+        setTimeout(ajustarSidebarScroll, 320);
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+    }
+
+    function getSavedCollapsed() {
+        return localStorage.getItem(STORAGE_COLLAPSE_KEY) === '1';
+    }
+
+    applyWidth(getSavedWidth());
+    setCollapsed(getSavedCollapsed());
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            setCollapsed(!body.classList.contains('sidebar-collapse'));
+        }, true);
+    }
+
+    if (btnDown) {
+        btnDown.addEventListener('click', function () {
+            const w = clamp(getSavedWidth() - STEP, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
+
+    if (btnReset) {
+        btnReset.addEventListener('click', function () {
+            applyWidth(DEFAULT_WIDTH);
+            saveWidth(DEFAULT_WIDTH);
+        });
+    }
+
+    if (btnUp) {
+        btnUp.addEventListener('click', function () {
+            const w = clamp(getSavedWidth() + STEP, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
+
+    if (resizeHandle) {
+        resizeHandle.addEventListener('mousedown', function (e) {
+            if (body.classList.contains('sidebar-collapse')) return;
+            isResizing = true;
+            body.classList.add('sidebar-resizing');
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!isResizing) return;
+            applyWidth(e.clientX);
+        });
+
+        document.addEventListener('mouseup', function (e) {
+            if (!isResizing) return;
+            isResizing = false;
+            body.classList.remove('sidebar-resizing');
+            const w = clamp(e.clientX, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
+
+    function ajustarSidebarScroll() {
+        const brand      = document.querySelector('.main-sidebar .brand-link');
+        const control    = document.querySelector('.sidebar-control-block');
+        const scrollArea = document.getElementById('dashboardSidebarScroll');
+        if (!brand || !scrollArea) return;
+
+        const brandH   = brand.offsetHeight;
+        const controlH = control ? control.offsetHeight : 0;
+        const libre    = window.innerHeight - brandH - controlH;
+
+        scrollArea.style.height    = Math.max(libre, 120) + 'px';
+        scrollArea.style.maxHeight = Math.max(libre, 120) + 'px';
+    }
+
+    ajustarSidebarScroll();
+    window.addEventListener('resize', ajustarSidebarScroll);
+    window.addEventListener('load', ajustarSidebarScroll);
+
+    new MutationObserver(() => setTimeout(ajustarSidebarScroll, 50))
+        .observe(body, { attributes: true, attributeFilter: ['class'] });
+
+    const pushMenu = document.querySelector('[data-widget="pushmenu"]');
+    if (pushMenu) {
+        pushMenu.addEventListener('click', () => {
+            setTimeout(() => {
+                ajustarSidebarScroll();
+                window.dispatchEvent(new Event('resize'));
+            }, 350);
+        });
+    }
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth < 992) return;
+        applyWidth(getSavedWidth());
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    /*
+    |--------------------------------------------------------------------------
+    | TIEMPOS
+    |--------------------------------------------------------------------------
+    | WARNING_TIME_MS = cuándo aparece el mensaje
+    | LOGOUT_TIME_MS  = cuándo se cierra la sesión
+    |--------------------------------------------------------------------------
+    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
     const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 
@@ -514,3 +1812,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
+

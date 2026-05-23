@@ -931,6 +931,106 @@
             box-shadow: 0 8px 18px rgba(198, 40, 40, 0.22) !important;
         }
 
+
+        /* =========================================================
+           CORRECCIÓN FINAL: MENÚ SIEMPRE EN UNA SOLA COLUMNA
+           Evita que los iconos/opciones se muevan al acercar zoom
+        ========================================================= */
+
+        .main-sidebar,
+        .main-sidebar .sidebar,
+        #dashboardSidebarScroll,
+        #dashboardSidebarScroll nav {
+            overflow-x: hidden !important;
+        }
+
+        #dashboardSidebarScroll {
+            width: 100% !important;
+        }
+
+        .dashboard-menu,
+        .dashboard-menu.nav,
+        .dashboard-menu.nav-sidebar,
+        .dashboard-menu.flex-column {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+        }
+
+        .dashboard-menu .nav-item {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 auto !important;
+            display: block !important;
+            float: none !important;
+            clear: both !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+        }
+
+        .dashboard-menu .nav-link {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            flex-wrap: nowrap !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+
+        .dashboard-menu .nav-link .nav-icon {
+            flex: 0 0 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+            margin-left: 0 !important;
+            margin-right: 14px !important;
+            text-align: center !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .dashboard-menu .nav-link p {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            display: block !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        body:not(.sidebar-collapse) .dashboard-menu .nav-link p {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-item {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link .nav-icon {
+            margin-right: 0 !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link p {
+            display: none !important;
+        }
+
         /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
