@@ -1028,6 +1028,52 @@
             box-shadow: 0 8px 18px rgba(198, 40, 40, 0.22) !important;
         }
 
+
+
+        /* ── CORRECCIÓN: EVITAR SCROLL DOBLE EN EL MENÚ ─────
+           Solo #dashboardSidebarScroll debe tener scroll vertical.
+           El .sidebar de AdminLTE trae su propio scroll y por eso
+           aparecían dos barras una al lado de la otra.
+        */
+        .main-sidebar {
+            overflow: hidden !important;
+        }
+
+        .main-sidebar .sidebar {
+            overflow: hidden !important;
+            height: auto !important;
+            max-height: none !important;
+        }
+
+        #dashboardSidebarScroll {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            scrollbar-gutter: stable !important;
+        }
+
+        #dashboardSidebarScroll nav {
+            overflow: visible !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar {
+            width: 8px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.06) !important;
+            border-radius: 999px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.45) !important;
+            border-radius: 999px !important;
+            border: 2px solid rgba(18,54,116,0.35) !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,210,31,0.75) !important;
+        }
+
         /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
@@ -1199,6 +1245,407 @@
 
         body.sidebar-collapse .dashboard-menu .nav-item.has-treeview > .nav-link .menu-parent-label {
             display: none !important;
+        }
+
+
+        /* =========================================================
+           AJUSTE FINAL IGUAL AL ESTUDIANTE
+           Topbar pegada al menú + contenido con margen interno.
+        ========================================================= */
+
+        .content-wrapper > .content.dashboard-shell {
+            padding: 0 !important;
+        }
+
+        .dashboard-shell-body {
+            padding: 4px 16px 0 24px !important;
+        }
+
+        .dashboard-shell-body .hero-banner {
+            margin-top: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .student-topbar {
+            position: relative !important;
+            z-index: 80 !important;
+            min-height: 68px !important;
+            margin: 0 0 10px !important;
+            padding: 10px 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+            overflow: visible !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.13), transparent 28%),
+                linear-gradient(90deg, #0f3370 0%, #1c4f9d 50%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            border-radius: 0 0 16px 0 !important;
+            box-shadow:
+                0 10px 24px rgba(8, 35, 78, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .student-topbar::before {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            border-radius: 0 0 16px 0 !important;
+            background:
+                linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%, rgba(255,255,255,0.04) 72%, transparent),
+                linear-gradient(135deg, transparent 0 62%, rgba(9, 43, 105, 0.18) 62% 72%, transparent 72%) !important;
+            pointer-events: none !important;
+        }
+
+        .student-topbar::after {
+            content: "" !important;
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: -7px !important;
+            height: 7px !important;
+            background: linear-gradient(180deg, rgba(8,35,78,0.12), transparent) !important;
+            pointer-events: none !important;
+        }
+
+        .student-topbar-left,
+        .student-topbar-right {
+            position: relative !important;
+            z-index: 2 !important;
+        }
+
+        .student-topbar-left {
+            display: flex !important;
+            align-items: center !important;
+            min-width: 0 !important;
+        }
+
+        .student-topbar-right {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+        }
+
+        .topbar-left-copy {
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .topbar-breadcrumb {
+            min-height: 40px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 0 16px !important;
+            border-radius: 14px !important;
+            background: rgba(255, 255, 255, 0.10) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            color: rgba(255,255,255,0.90) !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .topbar-breadcrumb i {
+            font-size: 12px !important;
+            color: rgba(255,255,255,0.84) !important;
+        }
+
+        .topbar-breadcrumb-active {
+            color: #ffd21f !important;
+            font-weight: 900 !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.16) !important;
+        }
+
+        .topbar-icon-btn {
+            position: relative !important;
+            width: 42px !important;
+            height: 42px !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.10) !important;
+            color: #ffffff !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .topbar-icon-btn:hover,
+        .student-user-chip:hover {
+            background: rgba(255,255,255,0.17) !important;
+            border-color: rgba(255,210,31,0.48) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .topbar-icon-btn i {
+            font-size: 15px !important;
+            color: #ffffff !important;
+        }
+
+        .topbar-badge {
+            position: absolute !important;
+            top: -7px !important;
+            right: -7px !important;
+            min-width: 18px !important;
+            height: 18px !important;
+            padding: 0 5px !important;
+            border-radius: 999px !important;
+            background: #e63946 !important;
+            color: #ffffff !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 2px solid #1c4f9d !important;
+            box-shadow: 0 4px 9px rgba(0,0,0,0.24) !important;
+        }
+
+        .topbar-badge.gold {
+            background: #ffd21f !important;
+            color: #123674 !important;
+        }
+
+        .topbar-divider {
+            width: 1px !important;
+            height: 34px !important;
+            margin: 0 5px !important;
+            background: rgba(255,255,255,0.20) !important;
+        }
+
+        .student-user-chip {
+            min-height: 44px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 5px 14px 5px 7px !important;
+            border-radius: 15px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.11) !important;
+            color: #ffffff !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .student-user-chip-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            font-weight: 900 !important;
+            font-size: 13px !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
+        }
+
+        .student-user-chip-info {
+            display: flex !important;
+            flex-direction: column !important;
+            line-height: 1.08 !important;
+            min-width: 0 !important;
+        }
+
+        .student-user-chip-name {
+            max-width: 190px !important;
+            color: #ffffff !important;
+            font-size: 12.5px !important;
+            font-weight: 900 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .student-user-chip-role {
+            margin-top: 3px !important;
+            color: rgba(255,255,255,0.74) !important;
+            font-size: 10.5px !important;
+            font-weight: 800 !important;
+        }
+
+        .student-user-chip-arrow {
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.78) !important;
+        }
+
+        .topbar-dropdown {
+            position: absolute !important;
+            top: calc(100% + 12px) !important;
+            right: 0 !important;
+            width: 330px !important;
+            max-width: calc(100vw - 24px) !important;
+            background: #ffffff !important;
+            display: none !important;
+            z-index: 5000 !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .topbar-dropdown.show {
+            display: block !important;
+        }
+
+        .user-profile-dropdown {
+            width: 315px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            background: #ffffff !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .user-dropdown-header {
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 15px !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.22), transparent 35%),
+                linear-gradient(135deg, #123674 0%, #1c4f9d 58%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            color: #ffffff !important;
+        }
+
+        .user-dropdown-avatar {
+            position: relative !important;
+            z-index: 2 !important;
+            width: 46px !important;
+            height: 46px !important;
+            border-radius: 15px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            flex: 0 0 46px !important;
+            box-shadow: 0 7px 16px rgba(0,0,0,0.20) !important;
+        }
+
+        .main-sidebar,
+        .main-sidebar .sidebar,
+        #dashboardSidebarScroll,
+        #dashboardSidebarScroll nav {
+            overflow-x: hidden !important;
+        }
+
+        #dashboardSidebarScroll {
+            width: 100% !important;
+        }
+
+        .dashboard-menu,
+        .dashboard-menu.nav,
+        .dashboard-menu.nav-sidebar,
+        .dashboard-menu.flex-column {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+        }
+
+        .dashboard-menu .nav-item {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 auto !important;
+            display: block !important;
+            float: none !important;
+            clear: both !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+        }
+
+        .dashboard-menu .nav-link {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            flex-wrap: nowrap !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+
+        .dashboard-menu .nav-link .nav-icon {
+            flex: 0 0 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+            margin-left: 0 !important;
+            margin-right: 14px !important;
+            text-align: center !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .dashboard-menu .nav-link p {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            display: block !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link .nav-icon {
+            margin-right: 0 !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link p {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-shell-body {
+                padding: 4px 12px 0 18px !important;
+            }
+
+            .student-topbar {
+                min-height: auto !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                margin: 0 0 10px !important;
+                padding: 10px !important;
+            }
+
+            .student-topbar-right {
+                justify-content: flex-end !important;
+                flex-wrap: wrap !important;
+            }
+
+            .topbar-breadcrumb {
+                width: fit-content !important;
+                max-width: 100% !important;
+            }
+
+            .student-user-chip-name {
+                max-width: 130px !important;
+            }
         }
 
     </style>
@@ -1521,8 +1968,9 @@
         </div>
     </div>
 
-
-            @yield('content')
+            <div class="dashboard-shell-body">
+                @yield('content')
+            </div>
         </section>
     </div>
 

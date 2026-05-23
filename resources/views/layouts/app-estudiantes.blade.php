@@ -1107,6 +1107,285 @@
             padding: 10px 18px;
             font-weight: 700;
         }
+    
+
+        /* =========================================================
+           TOPBAR INTEGRADA FINAL - ESTUDIANTE
+           Mantiene tu estructura actual, pero se integra mejor con
+           el banner: más limpia, alineada y tipo sistema premium.
+        ========================================================= */
+
+        .content-wrapper > .content.dashboard-shell {
+            padding: 0 !important;
+        }
+
+        .dashboard-shell-body {
+            padding: 4px 16px 0 24px !important;
+        }
+
+        .dashboard-shell-body .hero-banner {
+            margin-top: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .student-topbar {
+            position: relative !important;
+            z-index: 80 !important;
+            min-height: 68px !important;
+            margin: 0 0 10px !important;
+            padding: 10px 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+            overflow: visible !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.13), transparent 28%),
+                linear-gradient(90deg, #0f3370 0%, #1c4f9d 50%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            border-radius: 0 0 16px 0 !important;
+            box-shadow:
+                0 10px 24px rgba(8, 35, 78, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .student-topbar::before {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            border-radius: 0 0 16px 0 !important;
+            background:
+                linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%, rgba(255,255,255,0.04) 72%, transparent),
+                linear-gradient(135deg, transparent 0 62%, rgba(9, 43, 105, 0.18) 62% 72%, transparent 72%) !important;
+            pointer-events: none !important;
+        }
+
+        .student-topbar::after {
+            content: "" !important;
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: -7px !important;
+            height: 7px !important;
+            background: linear-gradient(180deg, rgba(8,35,78,0.12), transparent) !important;
+            pointer-events: none !important;
+        }
+
+        .student-topbar-left,
+        .student-topbar-right {
+            position: relative !important;
+            z-index: 2 !important;
+        }
+
+        .student-topbar-left {
+            display: flex !important;
+            align-items: center !important;
+            min-width: 0 !important;
+        }
+
+        .student-topbar-right {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+        }
+
+        .topbar-breadcrumb {
+            min-height: 40px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 0 16px !important;
+            border-radius: 14px !important;
+            background: rgba(255, 255, 255, 0.10) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            color: rgba(255,255,255,0.90) !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .topbar-breadcrumb i {
+            font-size: 12px !important;
+            color: rgba(255,255,255,0.84) !important;
+        }
+
+        .topbar-breadcrumb-active {
+            color: #ffd21f !important;
+            font-weight: 900 !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.16) !important;
+        }
+
+        .topbar-action-group {
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+
+        .topbar-icon-btn {
+            width: 42px !important;
+            height: 42px !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.10) !important;
+            color: #ffffff !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .topbar-icon-btn:hover,
+        .student-user-chip:hover {
+            background: rgba(255,255,255,0.17) !important;
+            border-color: rgba(255,210,31,0.48) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .topbar-icon-btn i {
+            font-size: 15px !important;
+            color: #ffffff !important;
+        }
+
+        .topbar-badge {
+            top: -7px !important;
+            right: -7px !important;
+            min-width: 18px !important;
+            height: 18px !important;
+            padding: 0 5px !important;
+            border-radius: 999px !important;
+            background: #e63946 !important;
+            color: #ffffff !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            border: 2px solid #1c4f9d !important;
+            box-shadow: 0 4px 9px rgba(0,0,0,0.24) !important;
+        }
+
+        .topbar-badge.gold {
+            background: #ffd21f !important;
+            color: #123674 !important;
+        }
+
+        .topbar-divider {
+            width: 1px !important;
+            height: 34px !important;
+            margin: 0 5px !important;
+            background: rgba(255,255,255,0.20) !important;
+        }
+
+        .student-user-chip {
+            min-height: 44px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 5px 14px 5px 7px !important;
+            border-radius: 15px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.11) !important;
+            color: #ffffff !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .student-user-chip-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            font-weight: 900 !important;
+            font-size: 13px !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
+        }
+
+        .student-user-chip-info {
+            display: flex !important;
+            flex-direction: column !important;
+            line-height: 1.08 !important;
+            min-width: 0 !important;
+        }
+
+        .student-user-chip-name {
+            max-width: 190px !important;
+            color: #ffffff !important;
+            font-size: 12.5px !important;
+            font-weight: 900 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .student-user-chip-role {
+            margin-top: 3px !important;
+            color: rgba(255,255,255,0.74) !important;
+            font-size: 10.5px !important;
+            font-weight: 800 !important;
+        }
+
+        .student-user-chip-arrow {
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.78) !important;
+        }
+
+        .topbar-dropdown,
+        .user-profile-dropdown {
+            top: calc(100% + 12px) !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            background: #ffffff !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .topbar-dropdown-header {
+            background: #f6f9ff !important;
+            border-bottom: 1px solid #e3ebf7 !important;
+        }
+
+        .topbar-dropdown-header span {
+            color: #123674 !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-mark,
+        .topbar-dropdown-footer a {
+            color: #1c4f9d !important;
+            font-weight: 800 !important;
+        }
+
+        @media (max-width: 768px) {
+            .student-topbar {
+                min-height: auto !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                margin: 0 0 12px !important;
+                padding: 10px !important;
+            }
+
+            .student-topbar-right {
+                justify-content: flex-end !important;
+                flex-wrap: wrap !important;
+            }
+
+            .topbar-breadcrumb {
+                width: fit-content !important;
+                max-width: 100% !important;
+            }
+
+            .student-user-chip-name {
+                max-width: 130px !important;
+            }
+        }
+
     </style>
 </head>
 
@@ -1380,7 +1659,9 @@
     </div>
 
 
-            @yield('content')
+            <div class="dashboard-shell-body">
+                @yield('content')
+            </div>
         </section>
     </div>
 
