@@ -28,15 +28,11 @@
         }
     }
 
-    $correoInstitucional = 'secretaria@unah.hn';
-
-    if ($user && !empty($user->email)) {
-        $correoInstitucional = $user->email;
-    } elseif ($user && !empty($user->correo_institucional)) {
-        $correoInstitucional = $user->correo_institucional;
-    } elseif ($user && optional($user->persona)->correo_institucional) {
-        $correoInstitucional = optional($user->persona)->correo_institucional;
-    }
+    $correoInstitucional =
+        $user->email
+        ?? $user->correo_institucional
+        ?? optional($user->persona)->correo_institucional
+        ?? 'secretaria@unah.hn';
 
     $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
@@ -156,379 +152,883 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
-        .content-wrapper {
-            min-height: 100vh;
-            padding-top: 0 !important;
+        :root {
+            --student-sidebar-width: 350px;
+            --student-sidebar-collapsed-width: 4.6rem;
         }
 
-        .dashboard-shell {
-            padding-top: 0 !important;
+        /* ── ANCHO DINÁMICO ──────────────────────────────── */
+        @media (min-width: 992px) {
+            body:not(.sidebar-collapse) .main-sidebar {
+                width: var(--student-sidebar-width) !important;
+            }
+            body:not(.sidebar-collapse) .content-wrapper,
+            body:not(.sidebar-collapse) .main-footer,
+            body:not(.sidebar-collapse) .main-header {
+                margin-left: var(--student-sidebar-width) !important;
+            }
+            body.sidebar-collapse .main-sidebar {
+                width: var(--student-sidebar-collapsed-width) !important;
+            }
+            body.sidebar-collapse .content-wrapper,
+            body.sidebar-collapse .main-footer,
+            body.sidebar-collapse .main-header {
+                margin-left: var(--student-sidebar-collapsed-width) !important;
+            }
         }
 
-        .secretaria-topbar {
-            position: sticky;
-            top: 0;
-            z-index: 500;
+        /* ── BLOQUE CONTROL (donde estaba el user-card) ──── */
+        .sidebar-control-block {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            min-height: 64px;
-            padding: 0 20px;
-            margin: 0 18px 0;
-            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
-            border-bottom: 4px solid #f1be1a;
-            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255,255,255,.10);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            min-height: 58px;
         }
 
-        .secretaria-topbar::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                115deg,
-                rgba(255,255,255,.07) 0%,
-                rgba(255,255,255,.02) 40%,
-                rgba(255,255,255,0) 60%
-            );
+        /* Botón colapsar */
+        .sidebar-toggle-inner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
+            color: #17346c;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(239,190,26,.35);
+            transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .sidebar-toggle-inner:hover {
+            background: linear-gradient(135deg, #ffd84a 0%, #e8b20e 100%);
+            transform: scale(1.08);
+            box-shadow: 0 6px 18px rgba(239,190,26,.50);
+        }
+
+        .sidebar-toggle-inner i {
+            transition: transform .3s ease;
             pointer-events: none;
         }
 
-        .secretaria-topbar-left,
-        .secretaria-topbar-right {
-            display: flex;
-            align-items: center;
-            min-width: 0;
-            position: relative;
-            z-index: 2;
+        body.sidebar-collapse .sidebar-toggle-inner i {
+            transform: rotate(180deg);
         }
 
-        .secretaria-topbar-right {
-            gap: 12px;
-            margin-left: auto;
-        }
-
-        .sec-breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: rgba(255,255,255,.86);
-            font-size: .98rem;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding-left: 8px;
-        }
-
-        .sec-breadcrumb .active {
-            color: #ffd34d;
-            font-weight: 800;
-        }
-
-        .sec-action-group {
-            position: relative;
-        }
-
-        .sec-icon-btn {
-            position: relative;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,.16);
-            background: rgba(255,255,255,.10);
-            color: rgba(255,255,255,.88);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all .22s ease;
-            font-size: .9rem;
-        }
-
-        .sec-icon-btn:hover {
-            background: rgba(255,255,255,.20);
-            border-color: rgba(255,255,255,.30);
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,.18);
-        }
-
-        .sec-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 4px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
-            color: #fff;
-            font-size: .6rem;
-            font-weight: 800;
-            border: 2px solid #1a4899;
-            box-shadow: 0 4px 10px rgba(229,57,53,.30);
-        }
-
-        .sec-badge.gold {
-            background: #f1be1a;
-            color: #17346c;
-            box-shadow: 0 4px 10px rgba(241,190,26,.35);
-        }
-
-        .sec-divider {
-            width: 1px;
-            height: 32px;
-            background: linear-gradient(
-                180deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,.22) 50%,
-                rgba(255,255,255,0) 100%
-            );
-            margin: 0 4px;
-            flex-shrink: 0;
-        }
-
-        .sec-user-chip {
-            min-width: 300px;
-            max-width: 360px;
-            border: 1px solid rgba(255,255,255,.16);
-            border-radius: 18px;
-            background: rgba(255,255,255,.10);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 14px;
-            backdrop-filter: blur(8px);
-            transition: all .18s ease;
-        }
-
-        .sec-user-chip:hover {
-            background: rgba(255,255,255,.16);
-            color: #fff;
-        }
-
-        .sec-user-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
-            color: #17346c;
-            font-weight: 900;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(239,190,26,.30);
-        }
-
-        .sec-user-info {
+        /* Info de tamaño */
+        .sidebar-control-info {
             display: flex;
             flex-direction: column;
-            min-width: 0;
+            gap: 6px;
             flex: 1;
-            line-height: 1.1;
-        }
-
-        .sec-user-name {
-            font-size: 1.02rem;
-            font-weight: 800;
-            color: #ffffff;
-            white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
+            transition: opacity .25s ease, max-width .25s ease;
+            max-width: 999px;
         }
 
-        .sec-user-role {
-            font-size: .74rem;
-            color: rgba(255,255,255,.70);
-            font-weight: 700;
-            margin-top: 2px;
-        }
-
-        .sec-user-arrow {
-            color: rgba(255,255,255,.85);
-            font-size: .9rem;
-        }
-
-        .sec-dropdown {
-            position: absolute;
-            top: calc(100% + 12px);
-            left: 0;
-            width: 340px;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 18px 45px rgba(15, 32, 68, .22);
-            overflow: hidden;
+        body.sidebar-collapse .sidebar-control-info {
             opacity: 0;
-            visibility: hidden;
-            transform: translateY(8px);
-            transition: all .18s ease;
-            z-index: 999;
+            max-width: 0;
+            pointer-events: none;
         }
 
-        .sec-dropdown.align-right {
-            left: auto;
-            right: 0;
-        }
-
-        .sec-dropdown.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .sec-dropdown-header {
-            padding: 14px 16px;
-            background: #f5f8ff;
-            border-bottom: 1px solid #e8eefb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .sec-dropdown-header span {
-            color: #17346c;
-            font-weight: 800;
-            font-size: .95rem;
-        }
-
-        .sec-dropdown-header a {
-            color: #2956ac;
-            font-size: .8rem;
+        .sidebar-control-label {
+            font-size: .68rem;
             font-weight: 700;
-            text-decoration: none;
+            color: rgba(255,255,255,.45);
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
-        .sec-dropdown-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .sec-dropdown-item {
+        /* Botones +/Normal/- */
+        .sidebar-size-btns {
             display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 14px 16px;
-            border-bottom: 1px solid #eef2fb;
-            background: #fff;
-        }
-
-        .sec-dropdown-item.unread {
-            background: #f8fbff;
-        }
-
-        .sec-dropdown-item.sm {
             align-items: center;
+            gap: 4px;
         }
 
-        .sec-dropdown-icon,
-        .sec-dropdown-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
+        .sidebar-size-btn {
+            border: none;
+            height: 26px;
+            border-radius: 7px;
+            background: rgba(255,255,255,.12);
+            color: rgba(255,255,255,.85);
+            font-size: .72rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            font-weight: 800;
+            padding: 0 8px;
+            transition: all .18s ease;
+            white-space: nowrap;
         }
 
-        .sec-dropdown-icon.blue {
-            background: rgba(41,86,172,.12);
-            color: #2956ac;
-        }
-
-        .sec-dropdown-icon.gold {
-            background: rgba(241,190,26,.18);
-            color: #9b7300;
-        }
-
-        .sec-dropdown-icon.green {
-            background: rgba(31,163,98,.12);
-            color: #138a50;
-        }
-
-        .sec-dropdown-icon.sm {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-        }
-
-        .sec-dropdown-avatar {
-            background: linear-gradient(135deg, #2956ac 0%, #17346c 100%);
+        .sidebar-size-btn:hover {
+            background: rgba(255,255,255,.24);
             color: #fff;
+            transform: translateY(-1px);
         }
 
-        .sec-dropdown-text {
+        .sidebar-size-btn i {
+            font-size: .65rem;
+        }
+
+        /* ── MENÚ MÁS GRANDE Y MEJOR DISTRIBUIDO ─────────── */
+        #dashboardSidebarScroll {
             display: flex;
             flex-direction: column;
-            gap: 3px;
-            min-width: 0;
         }
 
-        .sec-dropdown-text strong {
-            color: #17346c;
-            font-size: .92rem;
-            font-weight: 800;
-        }
-
-        .sec-dropdown-text span {
-            color: #53627f;
-            font-size: .85rem;
-            line-height: 1.35;
-        }
-
-        .sec-dropdown-text small {
-            color: #7f8ca6;
-            font-size: .77rem;
-            font-weight: 700;
-        }
-
-        .sec-dropdown-footer {
-            padding: 12px 16px;
-            background: #fff;
-            border-top: 1px solid #eef2fb;
-        }
-
-        .sec-dropdown-footer a {
-            color: #2956ac;
-            font-size: .85rem;
-            font-weight: 800;
-            text-decoration: none;
-        }
-
-        .sec-dropdown-footer.danger {
-            background: #fff8f8;
-        }
-
-        .sec-dropdown-footer.danger form {
-            margin: 0;
-        }
-
-        .sec-dropdown-footer.danger button {
-            width: 100%;
-            border: none;
-            background: transparent;
-            color: #c73737;
-            font-size: .9rem;
-            font-weight: 800;
-            text-align: left;
-            padding: 0;
+        #dashboardSidebarScroll nav {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            flex: 1;
+            min-height: 100%;
         }
 
+        .dashboard-menu {
+            display: flex !important;
+            flex-direction: column;
+            min-height: 100%;
+            gap: 10px;
+            padding: 18px 0 22px !important;
+        }
+
+        .dashboard-menu .nav-item {
+            padding: 0 8px;
+        }
+
+        .dashboard-menu .nav-link {
+            min-height: 56px;
+            padding: 0 18px !important;
+            border-radius: 16px !important;
+            display: flex !important;
+            align-items: center;
+            font-size: 1.06rem !important;
+            font-weight: 700 !important;
+        }
+
+        .dashboard-menu .nav-link p {
+            margin: 0 !important;
+            line-height: 1.2;
+        }
+
+        .dashboard-menu .nav-icon {
+            width: 34px !important;
+            margin-right: 14px !important;
+            font-size: 1.18rem !important;
+        }
+
+        .dashboard-menu .nav-link.active {
+            min-height: 62px;
+            font-size: 1.08rem !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,.16);
+        }
+
+        .dashboard-menu .nav-link:hover {
+            transform: translateX(2px);
+        }
+
+        /* ── RESIZE HANDLE ───────────────────────────────── */
+        @media (min-width: 992px) {
+            .sidebar-resize-handle {
+                position: fixed;
+                top: 0;
+                left: calc(var(--student-sidebar-width) - 8px);
+                width: 18px;
+                height: 100vh;
+                z-index: 2000;
+                cursor: col-resize;
+                background: rgba(255,255,255,.03);
+                transition: left .18s ease, background .18s ease;
+            }
+
+            .sidebar-resize-handle:hover {
+                background: rgba(42,119,200,.16);
+            }
+
+            .sidebar-resize-handle::before {
+                content: "";
+                position: absolute;
+                top: 0; bottom: 0; left: 8px;
+                width: 2px;
+                background: rgba(255,255,255,.35);
+            }
+
+            .sidebar-resize-handle::after {
+                content: "";
+                position: absolute;
+                top: 50%; left: 5px;
+                width: 8px; height: 52px;
+                transform: translateY(-50%);
+                border-radius: 999px;
+                background: rgba(255,255,255,.18);
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+            }
+
+            body.sidebar-collapse .sidebar-resize-handle {
+                display: none !important;
+            }
+
+            body.sidebar-resizing,
+            body.sidebar-resizing * {
+                user-select: none !important;
+                cursor: col-resize !important;
+            }
+
+            body.sidebar-resizing .sidebar-resize-handle {
+                background: rgba(42,119,200,.28);
+            }
+        }
+
+        /* ── MÓVIL ───────────────────────────────────────── */
+        @media (max-width: 991.98px) {
+            .dashboard-menu {
+                gap: 6px;
+                padding: 14px 0 18px !important;
+            }
+
+            .dashboard-menu .nav-item {
+                padding: 0 6px;
+            }
+
+            .dashboard-menu .nav-link {
+                min-height: 50px;
+                padding: 0 14px !important;
+                font-size: .98rem !important;
+                border-radius: 14px !important;
+            }
+
+            .dashboard-menu .nav-icon {
+                width: 30px !important;
+                margin-right: 12px !important;
+                font-size: 1.05rem !important;
+            }
+        }
+
+    /* =========================================================
+       TOPBAR ESTUDIANTE
+       Ajuste final sutil para combinar con el banner
+    ========================================================= */
+
+    .student-topbar {
+        position: relative !important;
+        z-index: 40 !important;
+        min-height: 52px !important;
+        margin: 0 10px 10px !important;
+        padding: 6px 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        background: linear-gradient(90deg, #123674 0%, #1c4f9d 48%, #174487 100%) !important;
+        border-bottom: 2px solid #ffd21f !important;
+        border-radius: 0 0 10px 10px !important;
+        box-shadow: 0 3px 8px rgba(8, 35, 78, 0.10) !important;
+        overflow: visible !important;
+    }
+
+    .student-topbar::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        border-radius: 0 0 10px 10px !important;
+        background: linear-gradient(
+            120deg,
+            rgba(255,255,255,0.06),
+            transparent 38%,
+            rgba(255,255,255,0.03)
+        ) !important;
+        pointer-events: none !important;
+    }
+
+    .student-topbar-left,
+    .student-topbar-right {
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    .student-topbar-left {
+        display: flex !important;
+        align-items: center !important;
+        min-width: 0 !important;
+    }
+
+    .student-topbar-right {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 7px !important;
+        min-width: 0 !important;
+    }
+
+    .topbar-left-copy {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .topbar-breadcrumb {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        padding: 7px 12px !important;
+        border-radius: 9px !important;
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.13) !important;
+        color: rgba(255,255,255,0.88) !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+    }
+
+    .topbar-breadcrumb i {
+        font-size: 12px !important;
+        color: rgba(255,255,255,0.82) !important;
+    }
+
+    .topbar-breadcrumb-active {
+        color: #ffd21f !important;
+        font-weight: 900 !important;
+    }
+
+    .topbar-action-group {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .topbar-icon-btn {
+        position: relative !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        background: rgba(255,255,255,0.08) !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.18s ease !important;
+        box-shadow: none !important;
+    }
+
+    .topbar-icon-btn:hover {
+        background: rgba(255,255,255,0.14) !important;
+        border-color: rgba(255,210,31,0.40) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .topbar-icon-btn i {
+        font-size: 14px !important;
+        color: #ffffff !important;
+    }
+
+    .topbar-badge {
+        position: absolute !important;
+        top: -6px !important;
+        right: -6px !important;
+        min-width: 17px !important;
+        height: 17px !important;
+        padding: 0 5px !important;
+        border-radius: 999px !important;
+        background: #e63946 !important;
+        color: #ffffff !important;
+        font-size: 9.5px !important;
+        font-weight: 900 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 2px solid #1c4f9d !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.22) !important;
+    }
+
+    .topbar-badge.gold {
+        background: #ffd21f !important;
+        color: #123674 !important;
+    }
+
+    .topbar-divider {
+        width: 1px !important;
+        height: 27px !important;
+        margin: 0 3px !important;
+        background: rgba(255,255,255,0.17) !important;
+    }
+
+    .student-user-chip {
+        min-height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+        padding: 5px 11px 5px 6px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255,255,255,0.17) !important;
+        background: rgba(255,255,255,0.09) !important;
+        color: #ffffff !important;
+        cursor: pointer !important;
+        transition: all 0.18s ease !important;
+        box-shadow: none !important;
+    }
+
+    .student-user-chip:hover {
+        background: rgba(255,255,255,0.14) !important;
+        border-color: rgba(255,210,31,0.40) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .student-user-chip-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #ffd21f !important;
+        color: #123674 !important;
+        font-weight: 900 !important;
+        font-size: 13px !important;
+    }
+
+    .student-user-chip-info {
+        display: flex !important;
+        flex-direction: column !important;
+        line-height: 1.1 !important;
+    }
+
+    .student-user-chip-name {
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        max-width: 175px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .student-user-chip-role {
+        margin-top: 2px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: rgba(255,255,255,0.74) !important;
+    }
+
+    .student-user-chip-arrow {
+        font-size: 11px !important;
+        color: rgba(255,255,255,0.76) !important;
+    }
+
+    .topbar-dropdown {
+        border-radius: 14px !important;
+        border: 1px solid rgba(13, 47, 104, 0.14) !important;
+        box-shadow: 0 18px 42px rgba(8, 35, 78, 0.24) !important;
+        overflow: hidden !important;
+    }
+
+    .topbar-dropdown-header {
+        background: #f6f9ff !important;
+        border-bottom: 1px solid #e3ebf7 !important;
+    }
+
+    .topbar-dropdown-header span {
+        color: #123674 !important;
+        font-weight: 900 !important;
+    }
+
+    .topbar-dropdown-mark,
+    .topbar-dropdown-footer a {
+        color: #1c4f9d !important;
+        font-weight: 800 !important;
+    }
+
+
+
+
+        /* ── DROPDOWNS TOPBAR ─────────────────────────────── */
+        .topbar-dropdown {
+            position: absolute !important;
+            top: calc(100% + 10px) !important;
+            right: 0 !important;
+            width: 330px !important;
+            max-width: calc(100vw - 24px) !important;
+            background: #ffffff !important;
+            display: none !important;
+            z-index: 5000 !important;
+        }
+
+        .topbar-dropdown.show {
+            display: block !important;
+        }
+
+        .topbar-dropdown.align-right {
+            right: 0 !important;
+        }
+
+        .topbar-dropdown-list {
+            list-style: none !important;
+            margin: 0 !important;
+            padding: 8px !important;
+        }
+
+        .topbar-dropdown-header,
+        .topbar-dropdown-footer {
+            padding: 11px 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+        }
+
+        .topbar-dropdown-item {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            padding: 10px !important;
+            border-radius: 12px !important;
+            transition: background .18s ease !important;
+        }
+
+        .topbar-dropdown-item:hover,
+        .topbar-dropdown-item.unread {
+            background: #f4f7fc !important;
+        }
+
+        .topbar-dropdown-item.sm {
+            align-items: center !important;
+        }
+
+        .topbar-dropdown-icon,
+        .topbar-dropdown-avatar {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 0 0 34px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-icon.sm {
+            width: 30px !important;
+            height: 30px !important;
+            flex-basis: 30px !important;
+        }
+
+        .topbar-dropdown-icon.blue,
+        .topbar-dropdown-avatar {
+            background: rgba(28, 79, 157, .12) !important;
+            color: #1c4f9d !important;
+        }
+
+        .topbar-dropdown-icon.gold {
+            background: rgba(255, 210, 31, .18) !important;
+            color: #8a6500 !important;
+        }
+
+        .topbar-dropdown-icon.green {
+            background: rgba(39, 174, 96, .13) !important;
+            color: #198754 !important;
+        }
+
+        .topbar-dropdown-text {
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            color: #24324b !important;
+        }
+
+        .topbar-dropdown-text strong {
+            color: #123674 !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-text span {
+            color: #5d6b82 !important;
+            font-size: 12px !important;
+            line-height: 1.35 !important;
+        }
+
+        .topbar-dropdown-text small {
+            color: #8a96a8 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+        }
+
+        .topbar-user-header {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 13px !important;
+            background: linear-gradient(90deg, #123674 0%, #1c4f9d 100%) !important;
+            color: #ffffff !important;
+        }
+
+        .topbar-user-header-avatar {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 12px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-user-header strong,
+        .topbar-user-header span {
+            display: block !important;
+        }
+
+        .topbar-user-header strong {
+            font-size: 13px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-user-header span {
+            font-size: 11px !important;
+            color: rgba(255,255,255,.78) !important;
+        }
+
+        .topbar-dropdown-footer {
+            border-top: 1px solid #e3ebf7 !important;
+        }
+
+        .topbar-dropdown-footer.danger button {
+            width: 100% !important;
+            border: none !important;
+            background: transparent !important;
+            color: #c62828 !important;
+            font-weight: 800 !important;
+            text-align: left !important;
+            padding: 0 !important;
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar-dropdown {
+                right: -8px !important;
+                width: calc(100vw - 26px) !important;
+            }
+        }
+
+
+
+        /* ── MENÚ DE USUARIO MEJORADO ─────────────────────── */
+        .user-profile-dropdown {
+            width: 315px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            background: #ffffff !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .user-profile-dropdown::before {
+            content: "" !important;
+            position: absolute !important;
+            top: -7px !important;
+            right: 28px !important;
+            width: 14px !important;
+            height: 14px !important;
+            background: #1c4f9d !important;
+            transform: rotate(45deg) !important;
+            border-left: 1px solid rgba(255,255,255,0.18) !important;
+            border-top: 1px solid rgba(255,255,255,0.18) !important;
+        }
+
+        .user-dropdown-header {
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 15px !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.22), transparent 35%),
+                linear-gradient(135deg, #123674 0%, #1c4f9d 58%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            color: #ffffff !important;
+        }
+
+        .user-dropdown-header::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background: linear-gradient(120deg, rgba(255,255,255,0.10), transparent 45%) !important;
+            pointer-events: none !important;
+        }
+
+        .user-dropdown-avatar {
+            position: relative !important;
+            z-index: 2 !important;
+            width: 46px !important;
+            height: 46px !important;
+            border-radius: 15px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            flex: 0 0 46px !important;
+            box-shadow: 0 7px 16px rgba(0,0,0,0.20) !important;
+        }
+
+        .user-dropdown-info {
+            position: relative !important;
+            z-index: 2 !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+        }
+
+        .user-dropdown-info strong {
+            color: #ffffff !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            line-height: 1.2 !important;
+            max-width: 220px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .user-dropdown-info span {
+            color: rgba(255,255,255,0.78) !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            max-width: 220px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .user-dropdown-info small {
+            margin-top: 5px !important;
+            width: fit-content !important;
+            padding: 3px 9px !important;
+            border-radius: 999px !important;
+            background: rgba(255, 210, 31, 0.18) !important;
+            border: 1px solid rgba(255, 210, 31, 0.36) !important;
+            color: #ffd21f !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+        }
+
+        .user-dropdown-body {
+            padding: 9px !important;
+            background: #ffffff !important;
+        }
+
+        .user-dropdown-option {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 11px 10px !important;
+            border-radius: 13px !important;
+            text-decoration: none !important;
+            color: #24324b !important;
+            transition: all .18s ease !important;
+        }
+
+        .user-dropdown-option:hover {
+            background: #f3f7ff !important;
+            transform: translateX(2px) !important;
+        }
+
+        .user-dropdown-option-icon {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 11px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 0 0 34px !important;
+            background: rgba(28, 79, 157, .12) !important;
+            color: #1c4f9d !important;
+        }
+
+        .user-dropdown-option-icon.gold {
+            background: rgba(255, 210, 31, .20) !important;
+            color: #8a6500 !important;
+        }
+
+        .user-dropdown-option span:not(.user-dropdown-option-icon) {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+
+        .user-dropdown-option strong {
+            color: #123674 !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+        }
+
+        .user-dropdown-option small {
+            color: #6b7890 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+        }
+
+        .user-dropdown-option-arrow {
+            color: #9aa7bb !important;
+            font-size: 11px !important;
+        }
+
+        .user-dropdown-footer {
+            padding: 10px 12px 12px !important;
+            background: #f7f9fd !important;
+            border-top: 1px solid #e3ebf7 !important;
+        }
+
+        .user-dropdown-footer form {
+            margin: 0 !important;
+        }
+
+        .user-logout-btn {
+            width: 100% !important;
+            min-height: 38px !important;
+            border: 1px solid rgba(198, 40, 40, 0.16) !important;
+            border-radius: 12px !important;
+            background: rgba(198, 40, 40, 0.07) !important;
+            color: #c62828 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+        }
+
+        .user-logout-btn:hover {
+            background: #c62828 !important;
+            color: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 8px 18px rgba(198, 40, 40, 0.22) !important;
+        }
+
+        /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -604,22 +1104,110 @@
             padding: 10px 18px;
             font-weight: 700;
         }
-
-        @media (max-width: 991.98px) {
-            .secretaria-topbar {
-                display: none;
-            }
-
-            .sec-user-chip {
-                min-width: unset;
-                max-width: unset;
-            }
+    
+        /* ── AJUSTE SUBMENÚ SECRETARÍA ───────────────────── */
+        .dashboard-menu .nav-treeview {
+            padding: 4px 0 4px 0 !important;
         }
+
+        .dashboard-menu .nav-treeview .nav-item {
+            padding: 0 10px 0 18px !important;
+        }
+
+        .dashboard-menu .nav-treeview .nav-link {
+            min-height: 42px !important;
+            padding: 0 14px !important;
+            border-radius: 12px !important;
+            font-size: .94rem !important;
+            font-weight: 700 !important;
+        }
+
+        .dashboard-menu .nav-treeview .nav-icon {
+            width: 24px !important;
+            margin-right: 10px !important;
+            font-size: .78rem !important;
+        }
+
+        /* ── CORRECCIÓN FLECHA SUBMENÚ ──────────────────────
+           Evita que la flecha de AdminLTE se salga o se vea rara
+           cuando el menú se acerca, se reduce o se cambia el zoom.
+        */
+        .dashboard-menu .nav-item.has-treeview > .nav-link {
+            position: relative !important;
+            overflow: hidden !important;
+            padding-right: 14px !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link .menu-parent-label {
+            width: 100% !important;
+            min-width: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            margin: 0 !important;
+            line-height: 1.18 !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link .menu-label-text {
+            display: block !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link .menu-caret,
+        .dashboard-menu .nav-item.has-treeview > .nav-link .right {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            margin-left: 6px !important;
+            transform: none !important;
+            flex: 0 0 24px !important;
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255,255,255,.12) !important;
+            border: 1px solid rgba(255,255,255,.14) !important;
+            color: rgba(255,255,255,.88) !important;
+            font-size: .78rem !important;
+            transition: transform .22s ease, background .18s ease, color .18s ease !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview.menu-open > .nav-link .menu-caret,
+        .dashboard-menu .nav-item.has-treeview.menu-open > .nav-link .right {
+            transform: rotate(-90deg) !important;
+            background: rgba(255,210,31,.18) !important;
+            border-color: rgba(255,210,31,.30) !important;
+            color: #ffd21f !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link:hover .menu-caret,
+        .dashboard-menu .nav-item.has-treeview > .nav-link:hover .right {
+            background: rgba(255,255,255,.18) !important;
+            color: #ffffff !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-item.has-treeview > .nav-link {
+            justify-content: center !important;
+            padding-right: 18px !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-item.has-treeview > .nav-link .menu-parent-label {
+            display: none !important;
+        }
+
     </style>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed dashboard-body">
+
+<body class="hold-transition dashboard-body">
 <div class="wrapper">
 
+    {{-- ── NAV MOBILE ──────────────────────────────────────── --}}
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
         <ul class="navbar-nav">
             <li class="nav-item">
@@ -631,36 +1219,62 @@
         <span class="mobile-title">PumaGestión</span>
     </nav>
 
-    <aside class="main-sidebar elevation-4">
-        <div class="sidebar-bg" style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
+    {{-- ── SIDEBAR ──────────────────────────────────────────── --}}
+    <aside id="studentSidebar" class="main-sidebar elevation-4">
+        <div class="sidebar-bg"
+             style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
         <div class="sidebar-overlay"></div>
 
-        <a href="javascript:void(0)" class="brand-link">
+        {{-- Logo --}}
+        <a href="{{ $dashboardUrl }}" class="brand-link">
             <div class="brand-top-glow"></div>
-
             <div class="brand-logo-wrap">
                 <img src="{{ asset('images/Logo.png') }}" alt="Logo PumaGestión" class="brand-logo-img">
             </div>
-
             <div class="brand-name">
                 <span class="brand-name-white">Puma</span><span class="brand-name-gold">Gestión</span>
             </div>
-
             <div class="brand-subtitle">FCEAC · UNAH</div>
         </a>
 
         <div class="sidebar">
-            <div class="sidebar-user-card">
-                <div class="sidebar-user-avatar">{{ $initials }}</div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">{{ $displayName }}</div>
-                    <div class="sidebar-user-role">{{ $displayRole }}</div>
+
+            {{-- ══ BLOQUE CONTROL ══ --}}
+            <div class="sidebar-control-block d-none d-lg-flex">
+
+                <button type="button"
+                        id="sidebarToggleBtn"
+                        class="sidebar-toggle-inner"
+                        title="Colapsar / Expandir menú">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="sidebar-control-info">
+                    <span class="sidebar-control-label">Tamaño del menú</span>
+                    <div class="sidebar-size-btns">
+                        <button type="button" id="sidebarSizeDown"
+                                class="sidebar-size-btn" title="Reducir">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" id="sidebarSizeReset"
+                                class="sidebar-size-btn" title="Normal">
+                            Normal
+                        </button>
+                        <button type="button" id="sidebarSizeUp"
+                                class="sidebar-size-btn" title="Ampliar">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                 </div>
+
             </div>
 
-            <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
+            {{-- ── MENÚ ──────────────────────────────────────── --}}
+            <div id="dashboardSidebarScroll" class="dashboardSidebarScroll">
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
+
+                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu"
+                        data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
                             <a href="{{ $dashboardUrl }}" class="nav-link {{ $dashboardActive ? 'active' : '' }}">
@@ -672,9 +1286,9 @@
                         <li class="nav-item has-treeview {{ $menuRevisionOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)" class="nav-link {{ $menuRevisionOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-circle-check"></i>
-                                <p>
-                                    Revisión de documentos
-                                    <i class="right fas fa-angle-left"></i>
+                                <p class="menu-parent-label">
+                                    <span class="menu-label-text">Revisión de documentos</span>
+                                    <i class="right fas fa-angle-left menu-caret"></i>
                                 </p>
                             </a>
 
@@ -743,158 +1357,171 @@
                                 <p>Configuración</p>
                             </a>
                         </li>
-
-
                     </ul>
+
                 </nav>
             </div>
         </div>
     </aside>
 
+    {{-- ── HANDLE RESIZE ────────────────────────────────────── --}}
+    <div id="sidebarResizeHandle"
+         class="sidebar-resize-handle d-none d-lg-block"
+         title="Arrastra para ajustar el ancho"></div>
+
+    {{-- ── CONTENIDO ────────────────────────────────────────── --}}
     <div class="content-wrapper">
-        <div class="student-topbar secretaria-topbar-sa">
+        <section class="content dashboard-shell">
 
-    <div class="student-topbar-left">
-        <div class="topbar-left-copy">
-            <div class="topbar-breadcrumb">
-                <i class="fas fa-house"></i>
-                <span>Inicio</span>
-                <i class="fas fa-chevron-right"></i>
-                <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
-            </div>
-            <h1 class="topbar-page-title">Panel de secretaría de carrera</h1>
-        </div>
-    </div>
+    {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
+    <div class="student-topbar">
 
-    <div class="student-topbar-right">
-        <div class="topbar-action-group">
-            <button class="topbar-icon-btn" id="btnSecNotif" title="Notificaciones">
-                <i class="fas fa-bell"></i>
-                <span class="topbar-badge">3</span>
-            </button>
-
-            <div class="topbar-dropdown" id="dropSecNotif">
-                <div class="topbar-dropdown-header">
-                    <span>Notificaciones</span>
-                    <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
-                </div>
-
-                <ul class="topbar-dropdown-list">
-                    <li class="topbar-dropdown-item unread">
-                        <div class="topbar-dropdown-icon blue">
-                            <i class="fas fa-file-circle-check"></i>
-                        </div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Nuevo documento recibido</strong>
-                            <span>Hay un trámite pendiente por revisión en secretaría.</span>
-                            <small>Hace 5 min</small>
-                        </div>
-                    </li>
-
-                    <li class="topbar-dropdown-item unread">
-                        <div class="topbar-dropdown-icon gold">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Seguimiento requerido</strong>
-                            <span>Un expediente sigue pendiente de validación.</span>
-                            <small>Hace 1 hora</small>
-                        </div>
-                    </li>
-
-                    <li class="topbar-dropdown-item">
-                        <div class="topbar-dropdown-icon green">
-                            <i class="fas fa-circle-check"></i>
-                        </div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Revisión completada</strong>
-                            <span>Se procesó correctamente una solicitud reciente.</span>
-                            <small>Ayer</small>
-                        </div>
-                    </li>
-                </ul>
-
-                <div class="topbar-dropdown-footer">
-                    <a href="#">Ver todas las notificaciones</a>
+        <div class="student-topbar-left">
+            <div class="topbar-left-copy">
+                <div class="topbar-breadcrumb">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="topbar-action-group">
-            <button class="topbar-icon-btn" id="btnSecMsg" title="Mensajes">
-                <i class="fas fa-envelope"></i>
-                <span class="topbar-badge gold">1</span>
-            </button>
+        <div class="student-topbar-right">
 
-            <div class="topbar-dropdown" id="dropSecMsg">
-                <div class="topbar-dropdown-header">
-                    <span>Mensajes</span>
-                    <a href="#" class="topbar-dropdown-mark">Ver todos</a>
-                </div>
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                    <span class="topbar-badge">3</span>
+                </button>
 
-                <ul class="topbar-dropdown-list">
-                    <li class="topbar-dropdown-item unread">
-                        <div class="topbar-dropdown-avatar">CO</div>
-                        <div class="topbar-dropdown-text">
-                            <strong>Coordinación</strong>
-                            <span>Se requiere seguimiento sobre un trámite remitido.</span>
-                            <small>Hace 30 min</small>
-                        </div>
-                    </li>
-                </ul>
+                <div class="topbar-dropdown" id="dropNotif">
+                    <div class="topbar-dropdown-header">
+                        <span>Notificaciones</span>
+                        <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
+                    </div>
 
-                <div class="topbar-dropdown-footer">
-                    <a href="#">Ir a mensajes</a>
-                </div>
-            </div>
-        </div>
+                    <ul class="topbar-dropdown-list">
+                        <li class="topbar-dropdown-item unread">
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-file-circle-check"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Nuevo documento recibido</strong>
+                                <span>Hay un trámite pendiente por revisión en secretaría.</span>
+                                <small>Hace 5 min</small>
+                            </div>
+                        </li>
 
-        <div class="topbar-divider"></div>
+                        <li class="topbar-dropdown-item unread">
+                            <div class="topbar-dropdown-icon gold">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Seguimiento requerido</strong>
+                                <span>Un expediente sigue pendiente de validación.</span>
+                                <small>Hace 1 hora</small>
+                            </div>
+                        </li>
 
-        <div class="topbar-action-group">
-            <button class="student-user-chip" id="btnSecUser" title="Mi perfil">
-                <div class="student-user-chip-avatar">{{ $initials }}</div>
-                <div class="student-user-chip-info">
-                    <span class="student-user-chip-name">{{ $displayName }}</span>
-                    <span class="student-user-chip-role">{{ $displayRole }}</span>
-                </div>
-                <i class="fas fa-chevron-down student-user-chip-arrow"></i>
-            </button>
+                        <li class="topbar-dropdown-item">
+                            <div class="topbar-dropdown-icon green">
+                                <i class="fas fa-circle-check"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Revisión completada</strong>
+                                <span>Se procesó correctamente una solicitud reciente.</span>
+                                <small>Ayer</small>
+                            </div>
+                        </li>
+                    </ul>
 
-            <div class="topbar-dropdown align-right" id="dropSecUser">
-                <div class="topbar-user-header">
-                    <div class="topbar-user-header-avatar">{{ $initials }}</div>
-                    <div>
-                        <strong>{{ $displayName }}</strong>
-                        <span>{{ $correoInstitucional }}</span>
+                    <div class="topbar-dropdown-footer">
+                        <a href="#">Ver todas las notificaciones</a>
                     </div>
                 </div>
+            </div>
 
-                <ul class="topbar-dropdown-list">
-                    <li class="topbar-dropdown-item sm">
-                        <div class="topbar-dropdown-icon blue sm">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="topbar-dropdown-text">
-                            <span>Mi perfil</span>
-                        </div>
-                    </li>
-                </ul>
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
+                    <i class="fas fa-envelope"></i>
+                    <span class="topbar-badge gold">1</span>
+                </button>
 
-                <div class="topbar-dropdown-footer danger">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit">
-                            <i class="fas fa-right-from-bracket"></i> Cerrar sesión
-                        </button>
-                    </form>
+                <div class="topbar-dropdown" id="dropMsg">
+                    <div class="topbar-dropdown-header">
+                        <span>Mensajes</span>
+                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                    </div>
+
+                    <ul class="topbar-dropdown-list">
+                        <li class="topbar-dropdown-item unread">
+                            <div class="topbar-dropdown-avatar">CO</div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Coordinación</strong>
+                                <span>Se requiere seguimiento sobre un trámite remitido.</span>
+                                <small>Hace 30 min</small>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="topbar-dropdown-footer">
+                        <a href="#">Ir a mensajes</a>
+                    </div>
                 </div>
             </div>
+
+            <div class="topbar-divider"></div>
+
+            <div class="topbar-action-group">
+                <button class="student-user-chip" id="btnUser" title="Mi perfil">
+                    <div class="student-user-chip-avatar">{{ $initials }}</div>
+                    <div class="student-user-chip-info">
+                        <span class="student-user-chip-name">{{ $displayName }}</span>
+                        <span class="student-user-chip-role">{{ $displayRole }}</span>
+                    </div>
+                    <i class="fas fa-chevron-down student-user-chip-arrow"></i>
+                </button>
+
+                <div class="topbar-dropdown align-right user-profile-dropdown" id="dropUser">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">{{ $initials }}</div>
+                        <div class="user-dropdown-info">
+                            <strong>{{ $displayName }}</strong>
+                            <span>{{ $correoInstitucional }}</span>
+                            <small>{{ $displayRole }}</small>
+                        </div>
+                    </div>
+
+                    <div class="user-dropdown-body">
+                        <a href="#" class="user-dropdown-option">
+                            <span class="user-dropdown-option-icon">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <span>
+                                <strong>Mi perfil</strong>
+                                <small>Ver información personal</small>
+                            </span>
+                            <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
+                        </a>
+                    </div>
+
+                    <div class="user-dropdown-footer">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="user-logout-btn">
+                                <i class="fas fa-right-from-bracket"></i>
+                                <span>Cerrar sesión</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
-</div>
 
-        <section class="content dashboard-shell">
+
             @yield('content')
         </section>
     </div>
@@ -902,8 +1529,10 @@
     <footer class="main-footer">
         <strong>© 2026 PumaGestión – UNAH</strong>
     </footer>
+
 </div>
 
+{{-- ── MODAL DE SESIÓN ───────────────────────────────────── --}}
 <div class="modal fade session-timeout-modal"
      id="sessionTimeoutModal"
      tabindex="-1"
@@ -924,7 +1553,7 @@
 
                 <div class="session-timeout-countdown">
                     <i class="fas fa-hourglass-half"></i>
-                    <span>Se cerrará en <span id="sessionCountdownText">180</span> segundos</span>
+                    <span>Se cerrará en <span id="sessionCountdownText">60</span> segundos</span>
                 </div>
             </div>
 
@@ -941,6 +1570,7 @@
     </div>
 </div>
 
+{{-- ── SCRIPTS ──────────────────────────────────────────────── --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
@@ -948,63 +1578,47 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const btnNotif = document.getElementById('btnSecNotif');
-    const btnMsg = document.getElementById('btnSecMsg');
-    const btnUser = document.getElementById('btnSecUser');
+    const dropdownPairs = [
+        ['btnNotif', 'dropNotif'],
+        ['btnMsg', 'dropMsg'],
+        ['btnUser', 'dropUser'],
+    ];
 
-    const dropNotif = document.getElementById('dropSecNotif');
-    const dropMsg = document.getElementById('dropSecMsg');
-    const dropUser = document.getElementById('dropSecUser');
-
-    const allDrops = [dropNotif, dropMsg, dropUser];
-
-    function closeAll(except = null) {
-        allDrops.forEach(function (drop) {
-            if (!drop) return;
-            if (drop !== except) {
-                drop.classList.remove('show');
+    function closeTopbarDropdowns(exceptId = null) {
+        dropdownPairs.forEach(([_, dropdownId]) => {
+            if (dropdownId !== exceptId) {
+                document.getElementById(dropdownId)?.classList.remove('show');
             }
         });
     }
 
-    function toggleDropdown(button, dropdown) {
+    dropdownPairs.forEach(([buttonId, dropdownId]) => {
+        const button = document.getElementById(buttonId);
+        const dropdown = document.getElementById(dropdownId);
+
         if (!button || !dropdown) return;
 
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
 
-            const willOpen = !dropdown.classList.contains('show');
-            closeAll();
-
-            if (willOpen) {
-                dropdown.classList.add('show');
-            }
-        });
-    }
-
-    toggleDropdown(btnNotif, dropNotif);
-    toggleDropdown(btnMsg, dropMsg);
-    toggleDropdown(btnUser, dropUser);
-
-    document.addEventListener('click', function (e) {
-        const groups = document.querySelectorAll('.sec-action-group');
-        let clickedInside = false;
-
-        groups.forEach(function (group) {
-            if (group.contains(e.target)) {
-                clickedInside = true;
-            }
+            const isOpen = dropdown.classList.contains('show');
+            closeTopbarDropdowns(dropdownId);
+            dropdown.classList.toggle('show', !isOpen);
         });
 
-        if (!clickedInside) {
-            closeAll();
-        }
+        dropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
     });
 
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            closeAll();
+    document.addEventListener('click', function () {
+        closeTopbarDropdowns();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeTopbarDropdowns();
         }
     });
 });
@@ -1012,8 +1626,158 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    const root         = document.documentElement;
+    const body         = document.body;
+    const toggleBtn    = document.getElementById('sidebarToggleBtn');
+    const btnDown      = document.getElementById('sidebarSizeDown');
+    const btnReset     = document.getElementById('sidebarSizeReset');
+    const btnUp        = document.getElementById('sidebarSizeUp');
+    const resizeHandle = document.getElementById('sidebarResizeHandle');
+
+    const STORAGE_WIDTH_KEY    = 'student_sidebar_width';
+    const STORAGE_COLLAPSE_KEY = 'student_sidebar_collapsed';
+
+    const MIN_WIDTH     = 280;
+    const MAX_WIDTH     = 460;
+    const DEFAULT_WIDTH = 350;
+    const STEP          = 20;
+
+    let isResizing = false;
+
+    function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+
+    function applyWidth(w) {
+        root.style.setProperty('--student-sidebar-width', clamp(w, MIN_WIDTH, MAX_WIDTH) + 'px');
+    }
+
+    function saveWidth(w) {
+        localStorage.setItem(STORAGE_WIDTH_KEY, String(clamp(w, MIN_WIDTH, MAX_WIDTH)));
+    }
+
+    function getSavedWidth() {
+        const v = parseInt(localStorage.getItem(STORAGE_WIDTH_KEY), 10);
+        return Number.isFinite(v) ? clamp(v, MIN_WIDTH, MAX_WIDTH) : DEFAULT_WIDTH;
+    }
+
+    function setCollapsed(collapsed) {
+        body.classList.toggle('sidebar-collapse', collapsed);
+        localStorage.setItem(STORAGE_COLLAPSE_KEY, collapsed ? '1' : '0');
+        setTimeout(ajustarSidebarScroll, 320);
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+    }
+
+    function getSavedCollapsed() {
+        return localStorage.getItem(STORAGE_COLLAPSE_KEY) === '1';
+    }
+
+    applyWidth(getSavedWidth());
+    setCollapsed(getSavedCollapsed());
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            setCollapsed(!body.classList.contains('sidebar-collapse'));
+        }, true);
+    }
+
+    if (btnDown) {
+        btnDown.addEventListener('click', function () {
+            const w = clamp(getSavedWidth() - STEP, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
+
+    if (btnReset) {
+        btnReset.addEventListener('click', function () {
+            applyWidth(DEFAULT_WIDTH);
+            saveWidth(DEFAULT_WIDTH);
+        });
+    }
+
+    if (btnUp) {
+        btnUp.addEventListener('click', function () {
+            const w = clamp(getSavedWidth() + STEP, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
+
+    if (resizeHandle) {
+        resizeHandle.addEventListener('mousedown', function (e) {
+            if (body.classList.contains('sidebar-collapse')) return;
+            isResizing = true;
+            body.classList.add('sidebar-resizing');
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!isResizing) return;
+            applyWidth(e.clientX);
+        });
+
+        document.addEventListener('mouseup', function (e) {
+            if (!isResizing) return;
+            isResizing = false;
+            body.classList.remove('sidebar-resizing');
+            const w = clamp(e.clientX, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
+
+    function ajustarSidebarScroll() {
+        const brand      = document.querySelector('.main-sidebar .brand-link');
+        const control    = document.querySelector('.sidebar-control-block');
+        const scrollArea = document.getElementById('dashboardSidebarScroll');
+        if (!brand || !scrollArea) return;
+
+        const brandH   = brand.offsetHeight;
+        const controlH = control ? control.offsetHeight : 0;
+        const libre    = window.innerHeight - brandH - controlH;
+
+        scrollArea.style.height    = Math.max(libre, 120) + 'px';
+        scrollArea.style.maxHeight = Math.max(libre, 120) + 'px';
+    }
+
+    ajustarSidebarScroll();
+    window.addEventListener('resize', ajustarSidebarScroll);
+    window.addEventListener('load', ajustarSidebarScroll);
+
+    new MutationObserver(() => setTimeout(ajustarSidebarScroll, 50))
+        .observe(body, { attributes: true, attributeFilter: ['class'] });
+
+    const pushMenu = document.querySelector('[data-widget="pushmenu"]');
+    if (pushMenu) {
+        pushMenu.addEventListener('click', () => {
+            setTimeout(() => {
+                ajustarSidebarScroll();
+                window.dispatchEvent(new Event('resize'));
+            }, 350);
+        });
+    }
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth < 992) return;
+        applyWidth(getSavedWidth());
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    /*
+    |--------------------------------------------------------------------------
+    | TIEMPOS
+    |--------------------------------------------------------------------------
+    | WARNING_TIME_MS = cuándo aparece el mensaje
+    | LOGOUT_TIME_MS  = cuándo se cierra la sesión
+    |--------------------------------------------------------------------------
+    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
-    const LOGOUT_TIME_MS = 31 * 60 * 1000;
+    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const modalElement = $('#sessionTimeoutModal');
@@ -1043,7 +1807,7 @@ document.addEventListener('DOMContentLoaded', function () {
         secondsLeft = Math.floor((LOGOUT_TIME_MS - WARNING_TIME_MS) / 1000);
         updateCountdownText();
 
-        countdownInterval = setInterval(function () {
+        countdownInterval = setInterval(() => {
             secondsLeft--;
             updateCountdownText();
 
@@ -1068,11 +1832,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetSessionTimers() {
         clearAllTimers();
 
-        warningTimer = setTimeout(function () {
+        warningTimer = setTimeout(() => {
             showWarningModal();
         }, WARNING_TIME_MS);
 
-        logoutTimer = setTimeout(function () {
+        logoutTimer = setTimeout(() => {
             forceLogoutByInactivity();
         }, LOGOUT_TIME_MS);
     }
@@ -1131,7 +1895,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
-    activityEvents.forEach(function (eventName) {
+    activityEvents.forEach((eventName) => {
         window.addEventListener(eventName, function () {
             if (modalVisible) return;
             resetSessionTimers();
