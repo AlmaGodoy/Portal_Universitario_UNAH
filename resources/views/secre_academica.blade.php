@@ -3,186 +3,22 @@
 @section('titulo', 'Control Académico - FCEAC')
 
 @section('content')
-
-<link rel="stylesheet" href="{{ asset('css/secre_academica.css') }}">
-
-@php
-    $nombreUsuario = $userName ?? auth()->user()->name ?? 'Secretaría Académica';
-
-    $partesNombre = preg_split('/\s+/', trim($nombreUsuario));
-    $iniciales = '';
-
-    foreach (array_slice($partesNombre, 0, 2) as $parte) {
-        if (!empty($parte)) {
-            $iniciales .= strtoupper(mb_substr($parte, 0, 1));
-        }
-    }
-                <div class="hero-photo">
-                    <img src="{{ asset('images/FCEAC.jpg') }}" alt="Edificio FCEAC" class="hero-photo-img">
-                </div>
-
-    if ($iniciales === '') {
-        $iniciales = 'SA';
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | DATOS TEMPORALES VISUALES
-    |--------------------------------------------------------------------------
-    | Tu compañero luego los cambia por datos reales desde controller o API.
-    */
-    $datosEstados = [
-        'Aprobados'  => 64,
-        'Pendientes' => 38,
-        'Revisión'   => 21,
-        'Rechazados' => 14,
-    ];
-
-    $carreras = [
-        'Economía',
-        'Informática Administrativa',
-        'Administración Aduanera',
-        'Administración y Generación de Empresas',
-        'Comercio Internacional',
-    ];
-
-    $datosCarreras = [42, 35, 28, 31, 26];
-
-    $clasesMasCanceladas = [
-        'Matemática Financiera' => 31,
-        'Contabilidad II'       => 24,
-        'Estadística I'         => 19,
-    ];
-
-    $tramitesGlobales = array_sum($datosCarreras);
-    $aprobados = $datosEstados['Aprobados'];
-    $pendientes = $datosEstados['Pendientes'];
-    $revision = $datosEstados['Revisión'];
-    $rechazados = $datosEstados['Rechazados'];
-
-    $resumenCarreras = [
-        [
-            'carrera' => 'Economía',
-            'total' => 42,
-            'aprobados' => 18,
-            'pendientes' => 12,
-            'revision' => 7,
-            'rechazados' => 5,
-        ],
-        [
-            'carrera' => 'Informática Administrativa',
-            'total' => 35,
-            'aprobados' => 16,
-            'pendientes' => 9,
-            'revision' => 6,
-            'rechazados' => 4,
-        ],
-        [
-            'carrera' => 'Administración Aduanera',
-            'total' => 28,
-            'aprobados' => 11,
-            'pendientes' => 8,
-            'revision' => 5,
-            'rechazados' => 4,
-        ],
-        [
-            'carrera' => 'Administración y Generación de Empresas',
-            'total' => 31,
-            'aprobados' => 12,
-            'pendientes' => 10,
-            'revision' => 5,
-            'rechazados' => 4,
-        ],
-        [
-            'carrera' => 'Comercio Internacional',
-            'total' => 26,
-            'aprobados' => 7,
-            'pendientes' => 9,
-            'revision' => 4,
-            'rechazados' => 6,
-        ],
-    ];
-@endphp
-
-<script>
-    window.secretariaAcademicaCharts = {
-        estadosLabels: @json(array_keys($datosEstados)),
-        estadosValores: @json(array_values($datosEstados)),
-        carrerasLabels: @json($carreras),
-        carrerasValores: @json($datosCarreras),
-        clasesLabels: @json(array_keys($clasesMasCanceladas)),
-        clasesValores: @json(array_values($clasesMasCanceladas)),
-    };
-</script>
-
-<div class="sa-view">
-
-    {{-- BANNER PRINCIPAL --}}
-    <div class="hero-banner">
-        <div class="hero-banner-bg"></div>
-        <div class="hero-wave wave-one"></div>
-        <div class="hero-wave wave-two"></div>
-        <div class="hero-gold-ribbon"></div>
-
-        <div class="hero-photo" style="background-image: url('{{ asset('images/FCEAC.jpeg') }}');"></div>
-
-        <div class="hero-content">
-            <div class="hero-top-title">Portal de Secretaría Académica UNAH</div>
-
-            <div class="hero-breadcrumb">
-                <i class="fas fa-house"></i>
-                <span>Inicio</span>
-                <i class="fas fa-angle-right sep"></i>
-                <span>Gestión Académica Facultad</span>
-            </div>
-
-            <div class="hero-faculty-title">
-                FACULTAD DE CIENCIAS ECONÓMICAS,<br>
-                ADMINISTRATIVAS Y CONTABLES
     @vite(['resources/css/graficas_secretarias.css', 'resources/js/graficas_secretarias.js'])
 
     @php
         $authUser = auth()->user();
 
-        $userName = $userName ?? optional($authUser->persona)->nombre_persona ?? 'Secretaría Académica';
+        $userName =
+            $userName
+            ?? optional($authUser->persona)->nombre_persona
+            ?? $authUser->name
+            ?? 'Secretaría Académica';
 
         $correoInstitucional =
             $authUser->email
             ?? $authUser->correo_institucional
             ?? optional($authUser->persona)->correo_institucional
             ?? 'secretaria.academica@unah.hn';
-
-        $aniosDisponibles = $aniosDisponibles ?? [date('Y')];
-        $anioSeleccionado = $anio ?? request('anio') ?? ($aniosDisponibles[0] ?? date('Y'));
-        $idDepartamentoSeleccionado = $idDepartamentoSeleccionado ?? request('id_departamento') ?? '';
-    @endphp
-
-    <section class="content graf-wrap">
-        <div id="graficasDashboard"
-            data-api-url="{{ route('api.graficas.secretaria_academica') }}"
-            data-scope-label="facultad"
-            data-scope-note="Mostrando estadísticas de todos los departamentos."
-            data-breakdown-label="departamento">
-
-            {{-- BANNER NUEVO ESTILO ESTUDIANTE --}}
-            <div class="hero-banner">
-                <div class="hero-banner-bg"></div>
-                <div class="hero-wave wave-one"></div>
-                <div class="hero-wave wave-two"></div>
-                <div class="hero-gold-ribbon"></div>
-
-                <div class="hero-photo" style="background-image: url('{{ asset('images/FCEAC.jpeg') }}');"></div>
-
-                <div class="hero-content">
-                    <div class="hero-top-title">Secretaría Académica UNAH</div>
-
-                    <div class="hero-breadcrumb">
-                        <i class="fas fa-house"></i>
-                        <span>Inicio</span>
-                        <i class="fas fa-angle-right sep"></i>
-                        <span>Control Facultad</span>
-                    </div>
-
 
         $partesNombre = preg_split('/\s+/', trim($userName));
         $iniciales = '';
@@ -196,6 +32,10 @@
         if ($iniciales === '') {
             $iniciales = 'SA';
         }
+
+        $aniosDisponibles = $aniosDisponibles ?? [date('Y')];
+        $anioSeleccionado = $anio ?? request('anio') ?? ($aniosDisponibles[0] ?? date('Y'));
+        $idDepartamentoSeleccionado = $idDepartamentoSeleccionado ?? request('id_departamento') ?? '';
 
         $departamentoLabel = 'Todos los departamentos';
 
@@ -217,256 +57,245 @@
         }
     @endphp
 
-    {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
-    <div class="student-topbar">
+    <style>
+        /* =========================================================
+           BANNER SECRETARÍA ACADÉMICA
+           Mismo diseño base del banner del estudiante
+        ========================================================= */
 
-        {{-- Izquierda --}}
-        <div class="student-topbar-left">
-            <div class="topbar-left-copy">
-                <div class="topbar-breadcrumb">
-                    <i class="fas fa-house"></i>
-                    <span>Inicio</span>
-                    <i class="fas fa-chevron-right"></i>
-                    <span class="topbar-breadcrumb-active">Secretaría Académica</span>
-                </div>
-                <h1 class="topbar-page-title">Panel de control académico</h1>
-            </div>
-        </div>
+        .hero-banner {
+            position: relative !important;
+            min-height: 225px !important;
+            margin: 8px 10px 18px !important;
+            border: 8px solid #ffffff !important;
+            border-radius: 18px !important;
+            overflow: hidden !important;
+            background: #163f86 !important;
+            box-shadow: 0 10px 24px rgba(8, 35, 78, 0.18) !important;
+        }
 
-        {{-- Derecha --}}
-        <div class="student-topbar-right">
+        .hero-banner-bg {
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 1 !important;
+            background:
+                radial-gradient(circle at 48% 44%, rgba(255, 255, 255, 0.10), transparent 25%),
+                linear-gradient(90deg, #123674 0%, #1c4f9d 48%, #174487 100%) !important;
+        }
 
-            {{-- Notificaciones --}}
-            <div class="topbar-action-group">
-                <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
-                    <i class="fas fa-bell"></i>
-                    <span class="topbar-badge">3</span>
-                </button>
+        .hero-banner-bg::before {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background:
+                linear-gradient(135deg, transparent 0 44%, rgba(9, 43, 105, 0.26) 44% 56%, transparent 56%),
+                linear-gradient(135deg, transparent 0 52%, rgba(255,255,255,0.04) 52% 53%, transparent 53%) !important;
+            pointer-events: none !important;
+        }
 
-                <div class="topbar-dropdown" id="dropNotif">
-                    <div class="topbar-dropdown-header">
-                        <span>Notificaciones</span>
-                        <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
-                    </div>
+        .hero-banner::before {
+            content: "" !important;
+            position: absolute !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            width: 250px !important;
+            height: 110px !important;
+            z-index: 2 !important;
+            opacity: 0.15 !important;
+            background-image: radial-gradient(rgba(255,255,255,0.85) 1px, transparent 1px) !important;
+            background-size: 10px 10px !important;
+            pointer-events: none !important;
+        }
 
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon blue">
-                                <i class="fas fa-chart-column"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Reporte actualizado</strong>
-                                <span>Se regeneraron las métricas globales de la facultad.</span>
-                                <small>Hace 10 min</small>
-                            </div>
-                        </li>
+        .hero-banner::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 2 !important;
+            background:
+                radial-gradient(circle at 48% 42%, rgba(255,255,255,0.08), transparent 25%),
+                linear-gradient(120deg, transparent 0%, transparent 42%, rgba(255,255,255,0.07) 52%, transparent 65%) !important;
+            pointer-events: none !important;
+        }
 
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon gold">
-                                <i class="fas fa-building-columns"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Filtro aplicado</strong>
-                                <span>Hay información disponible para el año {{ $anioSeleccionado }}.</span>
-                                <small>Hace 1 hora</small>
-                            </div>
-                        </li>
+        .hero-wave {
+            display: none !important;
+        }
 
-                        <li class="topbar-dropdown-item">
-                            <div class="topbar-dropdown-icon green">
-                                <i class="fas fa-circle-check"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Panel listo</strong>
-                                <span>La vista de Secretaría Académica está disponible.</span>
-                                <small>Hoy</small>
-                            </div>
-                        </li>
-                    </ul>
+        .hero-gold-ribbon {
+            position: absolute !important;
+            top: -10% !important;
+            right: 300px !important;
+            width: 74px !important;
+            height: 120% !important;
+            z-index: 6 !important;
+            background: linear-gradient(180deg, #ffd21f 0%, #f2bd12 55%, #dfa600 100%) !important;
+            transform: skewX(-10deg) !important;
+            box-shadow:
+                -12px 0 0 rgba(9, 44, 105, 0.55),
+                7px 0 0 rgba(255, 255, 255, 0.16) !important;
+        }
 
-                    <div class="topbar-dropdown-footer">
-                        <a href="#">Ver todas las notificaciones</a>
-                    </div>
-                </div>
-            </div>
+        .hero-gold-ribbon::before {
+            content: "" !important;
+            position: absolute !important;
+            left: -16px !important;
+            top: 0 !important;
+            width: 5px !important;
+            height: 100% !important;
+            background: rgba(7, 37, 92, 0.72) !important;
+            border-radius: 999px !important;
+        }
 
-            <div class="top-search-row">
-                <div class="tsr-input-wrap">
-                    <input type="text" placeholder="Buscar expediente en toda la facultad..." id="top-search">
-                </div>
-                <div class="tsr-user">
-                    <div class="tsr-avatar" style="background: var(--blue-unah); color: white;">
-                        {{ strtoupper(substr($userName, 0, 1)) }}{{ strtoupper(substr(explode(' ', $userName)[1] ?? '', 0, 1)) }}
-                    </div>
-                    <span class="tsr-name">{{ $userName }}</span>
-                </div>
-            </div>
+        .hero-photo {
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 370px !important;
+            height: 100% !important;
+            z-index: 4 !important;
+            overflow: hidden !important;
+            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%) !important;
+        }
 
-            <div class="graf-toolbar">
-                <div class="graf-toolbar-left">
-                    <p class="graf-label mb-0">
-                        <i class="fas fa-filter"></i> Filtrar por año
-                    </p>
+        .hero-photo::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 2 !important;
+            background: linear-gradient(90deg, rgba(18, 54, 116, 0.18), transparent 34%) !important;
+            pointer-events: none !important;
+        }
 
-                    <select id="anioSelectGraficas" class="graf-select">
-                        @forelse($aniosDisponibles as $anioItem)
-                            <option value="{{ $anioItem }}" {{ (string)$anioSeleccionado === (string)$anioItem ? 'selected' : '' }}>
-                                {{ $anioItem }}
-                            </option>
-                        @empty
-                            <option value="{{ date('Y') }}">{{ date('Y') }}</option>
-                        @endforelse
-                    </select>
+        .hero-photo-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            display: block !important;
+        }
 
-                    <select id="filtroDepartamento" class="graf-select">
-                        <option value="">Todos los departamentos</option>
-                        @foreach($departamentos as $departamento)
-                            <option value="{{ $departamento->id_departamento }}"
-                                {{ (string)$idDepartamentoSeleccionado === (string)$departamento->id_departamento ? 'selected' : '' }}>
-                                {{ $departamento->nombre_departamento }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+        .hero-content {
+            position: relative !important;
+            z-index: 8 !important;
+            width: calc(100% - 365px) !important;
+            min-height: 225px !important;
+            padding: 38px 46px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+        }
 
-                <div class="graf-status" id="estadoCargaGraficas">
-                    Listo para consultar estadísticas de facultad
-                </div>
-            </div>
+        .hero-faculty-title {
+            margin: 0 0 20px 0 !important;
+            color: #ffd21f !important;
+            font-size: clamp(26px, 2.1vw, 36px) !important;
+            line-height: 1.13 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.2px !important;
+            text-transform: uppercase !important;
+            text-shadow:
+                0 3px 7px rgba(0, 0, 0, 0.24),
+                0 0 8px rgba(255, 210, 31, 0.08) !important;
+        }
 
-            <div class="scope-note-box" id="scopeNoteGraficas">
-                Mostrando estadísticas de todos los departamentos.
-            </div>
+        .hero-service-strip {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            width: fit-content !important;
+            max-width: 100% !important;
+        }
 
-            <div class="stats-grid">
-                <div class="stat-card bg-a">
-                    <i class="fas fa-ban bg"></i>
-                    <div class="title">Cancelaciones Excepcionales</div>
-                    <div class="value" id="totalCancelaciones">0</div>
-                    <div class="foot">Total anual registrado</div>
-                </div>
+        .hero-service-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 8px 13px !important;
+            border-radius: 12px !important;
+            color: #ffffff !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            white-space: nowrap !important;
+            background: rgba(255, 255, 255, 0.11) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                0 5px 12px rgba(0, 0, 0, 0.10) !important;
+        }
 
-                <div class="stat-card bg-b">
-                    <i class="fas fa-right-left bg"></i>
-                    <div class="title">Cambios de Carrera</div>
-                    <div class="value" id="totalCambios">0</div>
-                    <div class="foot">Total anual registrado</div>
-                </div>
-            </div>
+        .hero-service-pill i {
+            color: #ffd21f !important;
+            font-size: 13px !important;
+        }
 
-            <div class="donut-grid">
-                <div class="chart-card donut-card">
-                    <div class="chart-head">
-                        <h4>Distribución de Cancelaciones por Departamento</h4>
-                        <p>Pasa el cursor sobre el gráfico para ver el total por departamento</p>
-                    </div>
-                    <div class="chart-body donut-body">
-                        <div class="donut-canvas-wrap">
-                            <canvas id="donutCancelaciones"></canvas>
-                        </div>
-                        <div class="donut-empty" id="donutEmptyCancelaciones">Esperando datos...</div>
-                    </div>
-                </div>
+        .hero-service-pill.main-pill {
+            background: rgba(255, 210, 31, 0.16) !important;
+            border-color: rgba(255, 210, 31, 0.38) !important;
+        }
 
-                <div class="chart-card donut-card">
-                    <div class="chart-head">
-                        <h4>Distribución de Cambios de Carrera por Departamento</h4>
-                        <p>Pasa el cursor sobre el gráfico para ver el total por departamento</p>
-                    </div>
-                    <div class="chart-body donut-body">
-                        <div class="donut-canvas-wrap">
-                            <canvas id="donutCambios"></canvas>
-                        </div>
-                        <div class="donut-empty" id="donutEmptyCambios">Esperando datos...</div>
-                    </div>
-                </div>
-            </div>
-                </div>
-            </div>
+        @media (max-width: 1200px) {
+            .hero-photo {
+                width: 330px !important;
+            }
 
-            {{-- FILA SUPERIOR --}}
-            <div class="top-search-row">
-                <div class="tsr-input-wrap">
-                    <input type="text" placeholder="Buscar expediente en toda la facultad..." id="top-search">
-                </div>
-            {{-- Mensajes --}}
-            <div class="topbar-action-group">
-                <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
-                    <i class="fas fa-envelope"></i>
-                    <span class="topbar-badge gold">1</span>
-                </button>
+            .hero-gold-ribbon {
+                right: 268px !important;
+                width: 66px !important;
+            }
 
-                <div class="topbar-dropdown" id="dropMsg">
-                    <div class="topbar-dropdown-header">
-                        <span>Mensajes</span>
-                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
-                    </div>
+            .hero-content {
+                width: calc(100% - 320px) !important;
+                padding: 34px 38px !important;
+            }
 
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-avatar">DG</div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Dirección académica</strong>
-                                <span>Revisa el comportamiento global de los trámites del período actual.</span>
-                                <small>Hace 30 min</small>
-                            </div>
-                        </li>
-                    </ul>
+            .hero-faculty-title {
+                font-size: 28px !important;
+            }
 
-                    <div class="topbar-dropdown-footer">
-                        <a href="#">Ir a mensajes</a>
-                    </div>
-                </div>
-            </div>
+            .hero-service-pill {
+                font-size: 12px !important;
+                padding: 7px 11px !important;
+            }
+        }
 
-            <div class="topbar-divider"></div>
+        @media (max-width: 900px) {
+            .hero-banner {
+                min-height: 255px !important;
+                border-width: 6px !important;
+                margin: 8px 8px 16px !important;
+            }
 
-            {{-- Usuario --}}
-            <div class="topbar-action-group">
-                <button class="student-user-chip" id="btnUser" title="Mi perfil">
-                    <div class="student-user-chip-avatar">{{ $iniciales }}</div>
-                    <div class="student-user-chip-info">
-                        <span class="student-user-chip-name">{{ $userName }}</span>
-                        <span class="student-user-chip-role">Secretaría Académica</span>
-                    </div>
-                    <i class="fas fa-chevron-down student-user-chip-arrow"></i>
-                </button>
+            .hero-photo {
+                width: 100% !important;
+                opacity: 0.20 !important;
+                clip-path: none !important;
+            }
 
-                <div class="topbar-dropdown align-right" id="dropUser">
-                    <div class="topbar-user-header">
-                        <div class="topbar-user-header-avatar">{{ $iniciales }}</div>
-                        <div>
-                            <strong>{{ $userName }}</strong>
-                            <span>{{ $correoInstitucional }}</span>
-                        </div>
-                    </div>
+            .hero-gold-ribbon {
+                right: 35px !important;
+                width: 56px !important;
+                opacity: 0.90 !important;
+            }
 
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item sm">
-                            <div class="topbar-dropdown-icon blue sm">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <span>Mi perfil</span>
-                            </div>
-                        </li>
-                    </ul>
+            .hero-content {
+                width: 100% !important;
+                padding: 32px 26px !important;
+            }
 
-                    <div class="topbar-dropdown-footer danger">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit">
-                                <i class="fas fa-right-from-bracket"></i> Cerrar sesión
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+            .hero-service-strip {
+                gap: 8px !important;
+            }
 
-        </div>
-    </div>
+            .hero-service-pill {
+                font-size: 12px !important;
+            }
+        }
+    </style>
 
-    {{-- ══ BANNER ESTILO ESTUDIANTE ═══════════════════════ --}}
+    {{-- ══ BANNER SECRETARÍA ACADÉMICA ═════════════════════ --}}
     <div class="hero-banner">
         <div class="hero-banner-bg"></div>
         <div class="hero-wave wave-one"></div>
@@ -483,45 +312,78 @@
                 ADMINISTRATIVAS Y CONTABLES
             </div>
 
-            <div class="hero-stats-strip">
-                <div class="hero-stat">
+            <div class="hero-service-strip">
+                <div class="hero-service-pill main-pill">
                     <i class="fas fa-building-columns"></i>
-                    <span>Vista: <strong>Facultad completa</strong></span>
+                    <span>Control académico FCEAC</span>
                 </div>
 
-                <div class="hero-stat-divider"></div>
-
-                <div class="hero-stat">
-                    <i class="fas fa-calendar-days"></i>
-                    <span>Año: <strong>{{ $anioSeleccionado }}</strong></span>
-                </div>
-
-                <div class="hero-stat-divider"></div>
-
-                <div class="hero-stat">
+                <div class="hero-service-pill">
                     <i class="fas fa-sitemap"></i>
-                    <span>Departamento: <strong>{{ $departamentoLabel }}</strong></span>
+                    <span>Gestión por departamento</span>
+                </div>
+
+                <div class="hero-service-pill">
+                    <i class="fas fa-chart-column"></i>
+                    <span>Estadísticas globales</span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- TÍTULO DE SECCIÓN --}}
-    <div class="student-intro-strip" style="margin-top: 26px;">
-    <div class="student-intro-text">
-        <h2>Resumen gráfico de trámites</h2>
-        <p>
-            Visualiza el comportamiento global de cancelaciones excepcionales y cambios de carrera
-            de toda la facultad.
-        </p>
+    {{-- INFORMACIÓN --}}
+    <div class="student-info-grid">
+        <div class="info-panel">
+            <div class="info-panel-header">
+                <i class="fas fa-circle-info"></i>
+                <h3>Recomendaciones</h3>
+            </div>
+
+            <div class="info-panel-body">
+                <ul class="student-tips">
+                    <li>Revisa el comportamiento global de los trámites académicos de la facultad.</li>
+                    <li>Utiliza los filtros por año y departamento para interpretar mejor la información.</li>
+                    <li>Verifica los datos antes de emitir reportes o tomar decisiones administrativas.</li>
+                    <li>Usa esta vista como apoyo para el seguimiento académico a nivel de facultad.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-panel-header">
+                <i class="fas fa-list-check"></i>
+                <h3>¿Qué puedes hacer aquí?</h3>
+            </div>
+
+            <div class="info-panel-body">
+                <div class="info-step">
+                    <span class="step-number">1</span>
+                    <div>
+                        <strong>Consultar estadísticas</strong>
+                        <p>Visualiza el comportamiento general de trámites académicos en toda la facultad.</p>
+                    </div>
+                </div>
+
+                <div class="info-step">
+                    <span class="step-number">2</span>
+                    <div>
+                        <strong>Filtrar información</strong>
+                        <p>Analiza los datos por año y departamento para obtener resultados más específicos.</p>
+                    </div>
+                </div>
+
+                <div class="info-step">
+                    <span class="step-number">3</span>
+                    <div>
+                        <strong>Dar seguimiento</strong>
+                        <p>Usa los indicadores como apoyo para la gestión académica y administrativa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="student-user-chip intro-user-chip">
-        <div class="student-user-chip-avatar">{{ $iniciales }}</div>
-        <div class="student-user-chip-name intro-user-name">{{ $userName }}</div>
-    </div>
-</div>
-
+    {{-- GRÁFICAS --}}
     @include('graficas_dashboard', [
         'apiUrl' => route('api.graficas.secretaria_academica'),
         'scopeLabel' => 'facultad',
