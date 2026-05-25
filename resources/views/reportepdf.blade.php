@@ -85,7 +85,19 @@
         <tbody>
             @forelse($tramitesReporte as $index => $tramite)
                 @php
-                    $estadoClase = strtolower(trim($tramite['estado'] ?? 'pendiente'));
+                    /*
+                        Corrección:
+                        Antes el PDF leía solo $tramite['estado'].
+                        Ahora primero toma $tramite['estado_actual'], igual que el listado web.
+                    */
+                    $estadoMostrar = $tramite['estado_actual'] ?? $tramite['estado'] ?? 'pendiente';
+
+                    $estadoKey = \Illuminate\Support\Str::of($estadoMostrar)
+                        ->lower()
+                        ->ascii()
+                        ->replace(' ', '_')
+                        ->toString();
+
                     $tipoBonito = \Illuminate\Support\Str::of($tramite['tipo'] ?? 'No definido')
                         ->replace('_', ' ')
                         ->title();
@@ -102,13 +114,14 @@
                         }
                     }
 
-                    $badgeClass = match ($estadoClase) {
-                        'aprobada', 'aprobado' => 'inst-badge inst-badge-aprobada',
+                    $badgeClass = match ($estadoKey) {
+                        'aprobada', 'aprobado', 'aceptada', 'aceptado' => 'inst-badge inst-badge-aprobada',
                         'rechazada', 'rechazado' => 'inst-badge inst-badge-rechazada',
-                        'revision', 'revisión' => 'inst-badge inst-badge-revision',
+                        'revision', 'revision_', 'en_revision' => 'inst-badge inst-badge-revision',
                         default => 'inst-badge inst-badge-pendiente',
                     };
                 @endphp
+
                 <tr>
                     <td class="texto-centro col-num">{{ $index + 1 }}</td>
                     <td class="col-estudiante">{{ $tramite['estudiante'] ?? 'Sin nombre' }}</td>
@@ -118,10 +131,14 @@
                     @endif
 
                     <td class="col-tipo">{{ $tipoBonito }}</td>
-                    <td class="texto-centro col-fecha fecha-columna">{!! $fechaFormateada !!}</td>
+
+                    <td class="texto-centro col-fecha fecha-columna">
+                        {!! $fechaFormateada !!}
+                    </td>
+
                     <td class="texto-centro col-estado">
                         <span class="{{ $badgeClass }}">
-                            {{ strtoupper($tramite['estado'] ?? 'pendiente') }}
+                            {{ strtoupper($estadoMostrar) }}
                         </span>
                     </td>
                 </tr>
