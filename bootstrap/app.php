@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'session.timeout' => SessionTimeout::class,
         ]);
 
+        $middleware->redirectGuestsTo(fn () => route('portal'));
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
