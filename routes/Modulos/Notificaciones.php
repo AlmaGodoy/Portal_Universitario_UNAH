@@ -5,38 +5,23 @@ use App\Http\Controllers\NotificacionController;
 
 /*
 |--------------------------------------------------------------------------
-| MODULO: NOTIFICACIONES (API)
+| MODULO: NOTIFICACIONES
 |--------------------------------------------------------------------------
 */
+
 Route::prefix('api/notificaciones')->middleware(['auth', 'session.timeout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | DEBUG TEMPORAL
-    |---------------------------------------------------------------------------
-    */
-    Route::get('debug-usuario', function () {
-        $user = auth()->user();
-
-        return response()->json([
-            'usuario_logueado' => $user,
-            'id_usuario' => $user->id_usuario ?? null,
-            'id' => $user->id ?? null,
-            'id_persona' => $user->id_persona ?? null,
-            'id_login' => $user->id_login ?? null,
-            'id_usuario_login' => $user->id_usuario_login ?? null,
-            'correo' => $user->email ?? $user->correo ?? $user->correo_institucional ?? null,
-        ]);
-    })->name('api.notificaciones.debug-usuario');
-
-    /*
+    | API - NOTIFICACIONES PARA USUARIOS AUTENTICADOS
     |--------------------------------------------------------------------------
-    | ESTUDIANTE
-    |--------------------------------------------------------------------------
-    | roleid:2 = estudiante
+    | 2 = estudiante
+    | 5 = secretaria de carrera / secretaria académica
+    | 1 = admin
+    | 3,4 = coordinación si también lo ocupan
     |--------------------------------------------------------------------------
     */
-    Route::middleware('roleid:2')->group(function () {
+    Route::middleware('roleid:1,2,3,4,5')->group(function () {
 
         Route::get('recientes', [NotificacionController::class, 'recientes'])
             ->name('api.notificaciones.recientes');
@@ -51,17 +36,14 @@ Route::prefix('api/notificaciones')->middleware(['auth', 'session.timeout'])->gr
 
 /*
 |--------------------------------------------------------------------------
-| FRONTEND - NOTIFICACIONES
+| FRONTEND - BANDEJA DE NOTIFICACIONES
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'session.timeout'])->group(function () {
+Route::middleware(['auth', 'session.timeout', 'roleid:1,2,3,4,5'])->group(function () {
 
-    Route::middleware('roleid:2')->group(function () {
+    Route::get('/notificaciones', [NotificacionController::class, 'index'])
+        ->name('notificaciones.index');
 
-        Route::get('/notificaciones', [NotificacionController::class, 'index'])
-            ->name('notificaciones.index');
-
-        Route::get('/notificaciones/abrir/{id_notificacion}', [NotificacionController::class, 'abrir'])
-            ->name('notificaciones.abrir');
-    });
+    Route::get('/notificaciones/abrir/{id_notificacion}', [NotificacionController::class, 'abrir'])
+        ->name('notificaciones.abrir');
 });
