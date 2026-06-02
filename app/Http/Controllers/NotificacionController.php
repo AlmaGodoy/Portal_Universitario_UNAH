@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notificacion;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificacionController extends Controller
 {
     /**
-     * Obtener el id del usuario autenticado.
+     * Detecta el id_usuario del usuario autenticado.
      */
     private function obtenerIdUsuarioAutenticado()
     {
@@ -27,7 +26,7 @@ class NotificacionController extends Controller
     }
 
     /**
-     * Devuelve las últimas notificaciones para la campanita.
+     * API: obtener notificaciones recientes para la campanita.
      */
     public function recientes()
     {
@@ -37,11 +36,19 @@ class NotificacionController extends Controller
             return response()->json([
                 'ok' => false,
                 'message' => 'Usuario no autenticado.',
+                'id_usuario_detectado' => null,
                 'unread_count' => 0,
                 'notificaciones' => [],
             ], 401);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | IMPORTANTE:
+        |--------------------------------------------------------------------------
+        | Aquí NO usamos ->noLeidas(), porque el dropdown debe mostrar también
+        | notificaciones leídas. El filtro noLeidas() solo se usa para el contador.
+        */
         $notificaciones = Notificacion::paraUsuario($idUsuario)
             ->recientes()
             ->limit(5)
@@ -88,7 +95,14 @@ class NotificacionController extends Controller
             ->recientes()
             ->paginate(10);
 
-        return view('notificaciones.index', compact('notificaciones'));
+        /*
+        |--------------------------------------------------------------------------
+        | IMPORTANTE:
+        |--------------------------------------------------------------------------
+        | Esta línea busca la vista:
+        | resources/views/notificaciones.blade.php
+        */
+        return view('notificaciones', compact('notificaciones'));
     }
 
     /**
@@ -125,7 +139,7 @@ class NotificacionController extends Controller
     }
 
     /**
-     * Marcar todas como leídas.
+     * Marcar todas las notificaciones como leídas.
      */
     public function marcarTodasLeidas()
     {
@@ -172,7 +186,7 @@ class NotificacionController extends Controller
     }
 
     /**
-     * Formatear fecha para mostrar en la campanita.
+     * Formatear fecha para mostrar texto amigable.
      */
     private function formatearTiempo($fecha)
     {
