@@ -1523,9 +1523,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const notifList = document.getElementById('notifList');
     const btnMarcarTodas = document.getElementById('btnMarcarTodasNotif');
 
-    const URL_NOTIF_RECIENTES = "{{ url('/api/notificaciones/recientes') }}";
-    const URL_MARCAR_TODAS = "{{ url('/api/notificaciones/marcar-todas-leidas') }}";
-    const URL_ABRIR_BASE = "{{ url('/notificaciones/abrir') }}";
+    /*
+    |--------------------------------------------------------------------------
+    | RUTAS DE NOTIFICACIONES
+    |--------------------------------------------------------------------------
+    | Usamos rutas relativas para evitar problemas cuando APP_URL no coincide
+    | con el puerto real del navegador, por ejemplo localhost vs localhost:8080.
+    */
+    const URL_NOTIF_RECIENTES = "/api/notificaciones/recientes";
+    const URL_MARCAR_TODAS = "/api/notificaciones/marcar-todas-leidas";
+    const URL_ABRIR_BASE = "/notificaciones/abrir";
 
     function escaparHtml(valor) {
         return String(valor ?? '')
@@ -1604,6 +1611,7 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const response = await fetch(URL_NOTIF_RECIENTES, {
                 method: 'GET',
+                credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1611,13 +1619,22 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!response.ok) {
+                console.error('Error HTTP notificaciones:', response.status, response.statusText);
                 throw new Error('No se pudieron cargar las notificaciones.');
             }
 
             const data = await response.json();
+
+            if (!data.ok) {
+                console.error('Respuesta inválida de notificaciones:', data);
+                throw new Error('Respuesta inválida de notificaciones.');
+            }
+
             actualizarBadge(data.unread_count || 0);
             renderizarNotificaciones(data.notificaciones || []);
         } catch (error) {
+            console.error('Error cargando notificaciones:', error);
+
             if (notifList) {
                 notifList.innerHTML = `
                     <li class="topbar-dropdown-empty">
@@ -1626,6 +1643,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     </li>
                 `;
             }
+
+            actualizarBadge(0);
         }
     }
 
@@ -1635,6 +1654,7 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const response = await fetch(URL_MARCAR_TODAS, {
                 method: 'PUT',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
@@ -1645,12 +1665,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!response.ok) {
+                console.error('Error HTTP marcar todas:', response.status, response.statusText);
                 throw new Error('No se pudieron marcar las notificaciones.');
             }
 
             await cargarNotificaciones();
         } catch (error) {
-            console.error(error);
+            console.error('Error marcando notificaciones:', error);
         }
     }
 
@@ -1659,9 +1680,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     cargarNotificaciones();
-
-    // Actualización periódica tipo "tiempo real" sin WebSockets.
-    // Más adelante se puede reemplazar por Laravel Reverb/Echo.
     setInterval(cargarNotificaciones, 15000);
 });
 </script>

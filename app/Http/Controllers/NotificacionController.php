@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Notificacion;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class NotificacionController extends Controller
 {
-    /**
-     * Detecta el id_usuario del usuario autenticado.
-     */
     private function obtenerIdUsuarioAutenticado()
     {
         $user = Auth::user();
@@ -25,9 +24,6 @@ class NotificacionController extends Controller
             ?? null;
     }
 
-    /**
-     * API: obtener notificaciones recientes para la campanita.
-     */
     public function recientes()
     {
         $idUsuario = $this->obtenerIdUsuarioAutenticado();
@@ -42,15 +38,9 @@ class NotificacionController extends Controller
             ], 401);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | IMPORTANTE:
-        |--------------------------------------------------------------------------
-        | Aquí NO usamos ->noLeidas(), porque el dropdown debe mostrar también
-        | notificaciones leídas. El filtro noLeidas() solo se usa para el contador.
-        */
-        $notificaciones = Notificacion::paraUsuario($idUsuario)
-            ->recientes()
+        $notificaciones = DB::table('tbl_notificacion')
+            ->where('id_usuario_destino', $idUsuario)
+            ->orderByDesc('id_notificacion')
             ->limit(5)
             ->get()
             ->map(function ($notificacion) {
@@ -61,15 +51,16 @@ class NotificacionController extends Controller
                     'tipo' => $notificacion->tipo,
                     'url_destino' => $notificacion->url_destino,
                     'leida' => (bool) $notificacion->leida,
-                    'fecha_creacion' => optional($notificacion->fecha_creacion)->format('Y-m-d H:i:s'),
+                    'fecha_creacion' => $notificacion->fecha_creacion,
                     'tiempo' => $this->formatearTiempo($notificacion->fecha_creacion),
-                    'icono' => $notificacion->icono,
-                    'color' => $notificacion->color,
+                    'icono' => $this->iconoPorTipo($notificacion->tipo),
+                    'color' => $this->colorPorTipo($notificacion->tipo),
                 ];
             });
 
-        $noLeidas = Notificacion::paraUsuario($idUsuario)
-            ->noLeidas()
+        $noLeidas = DB::table('tbl_notificacion')
+            ->where('id_usuario_destino', $idUsuario)
+            ->where('leida', 0)
             ->count();
 
         return response()->json([
@@ -80,9 +71,6 @@ class NotificacionController extends Controller
         ]);
     }
 
-    /**
-     * Vista completa de notificaciones.
-     */
     public function index()
     {
         $idUsuario = $this->obtenerIdUsuarioAutenticado();
@@ -91,24 +79,21 @@ class NotificacionController extends Controller
             abort(401, 'Usuario no autenticado.');
         }
 
-        $notificaciones = Notificacion::paraUsuario($idUsuario)
-            ->recientes()
+        $notificaciones = DB::table('tbl_notificacion')
+            ->where('id_usuario_destino', $idUsuario)
+            ->orderByDesc('id_notificacion')
             ->paginate(10);
 
-        /*
-        |--------------------------------------------------------------------------
-        | IMPORTANTE:
-        |--------------------------------------------------------------------------
-        | Esta línea busca la vista:
-        | resources/views/notificaciones.blade.php
-        */
+        $notificaciones->getCollection()->transform(function ($notificacion) {
+            $notificacion->icono = $this->iconoPorTipo($notificacion->tipo);
+            $notificacion->color = $this->colorPorTipo($notificacion->tipo);
+            return $notificacion;
+        });
+
         return view('notificaciones', compact('notificaciones'));
     }
 
-    /**
-     * Marcar una notificación como leída.
-     */
-    public function marcarLeida($idNotificacion)
+    public function marcarLeida($id_notificacion)
     {
         $idUsuario = $this->obtenerIdUsuarioAutenticado();
 
@@ -119,18 +104,25 @@ class NotificacionController extends Controller
             ], 401);
         }
 
-        $notificacion = Notificacion::paraUsuario($idUsuario)
-            ->where('id_notificacion', $idNotificacion)
-            ->first();
+        $existe = DB::table('tbl_notificacion')
+            ->where('id_notificacion', $id_notificacion)
+            ->where('id_usuario_destino', $idUsuario)
+            ->exists();
 
-        if (!$notificacion) {
+        if (!$existe) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Notificación no encontrada.',
             ], 404);
         }
 
-        $notificacion->marcarComoLeida();
+        DB::table('tbl_notificacion')
+            ->where('id_notificacion', $id_notificacion)
+            ->where('id_usuario_destino', $idUsuario)
+            ->update([
+                'leida' => 1,
+                'fecha_leida' => now(),
+            ]);
 
         return response()->json([
             'ok' => true,
@@ -138,9 +130,6 @@ class NotificacionController extends Controller
         ]);
     }
 
-    /**
-     * Marcar todas las notificaciones como leídas.
-     */
     public function marcarTodasLeidas()
     {
         $idUsuario = $this->obtenerIdUsuarioAutenticado();
@@ -152,8 +141,9 @@ class NotificacionController extends Controller
             ], 401);
         }
 
-        Notificacion::paraUsuario($idUsuario)
-            ->noLeidas()
+        DB::table('tbl_notificacion')
+            ->where('id_usuario_destino', $idUsuario)
+            ->where('leida', 0)
             ->update([
                 'leida' => 1,
                 'fecha_leida' => now(),
@@ -165,10 +155,7 @@ class NotificacionController extends Controller
         ]);
     }
 
-    /**
-     * Abrir una notificación, marcarla como leída y redirigir.
-     */
-    public function abrir($idNotificacion)
+    public function abrir($id_notificacion)
     {
         $idUsuario = $this->obtenerIdUsuarioAutenticado();
 
@@ -176,33 +163,61 @@ class NotificacionController extends Controller
             abort(401, 'Usuario no autenticado.');
         }
 
-        $notificacion = Notificacion::paraUsuario($idUsuario)
-            ->where('id_notificacion', $idNotificacion)
-            ->firstOrFail();
+        $notificacion = DB::table('tbl_notificacion')
+            ->where('id_notificacion', $id_notificacion)
+            ->where('id_usuario_destino', $idUsuario)
+            ->first();
 
-        $notificacion->marcarComoLeida();
+        if (!$notificacion) {
+            abort(404, 'Notificación no encontrada.');
+        }
+
+        DB::table('tbl_notificacion')
+            ->where('id_notificacion', $id_notificacion)
+            ->where('id_usuario_destino', $idUsuario)
+            ->update([
+                'leida' => 1,
+                'fecha_leida' => now(),
+            ]);
 
         return redirect($notificacion->url_destino ?: '/dashboard');
     }
 
-    /**
-     * Formatear fecha para mostrar texto amigable.
-     */
+    private function iconoPorTipo($tipo)
+    {
+        return match ($tipo) {
+            'success' => 'fas fa-circle-check',
+            'warning' => 'fas fa-triangle-exclamation',
+            'danger', 'error' => 'fas fa-circle-xmark',
+            default => 'fas fa-file-alt',
+        };
+    }
+
+    private function colorPorTipo($tipo)
+    {
+        return match ($tipo) {
+            'success' => 'green',
+            'warning' => 'gold',
+            'danger', 'error' => 'red',
+            default => 'blue',
+        };
+    }
+
     private function formatearTiempo($fecha)
     {
         if (!$fecha) {
             return '';
         }
 
-        $diff = now()->diffInSeconds($fecha);
+        $fechaCarbon = Carbon::parse($fecha);
+        $diff = now()->diffInSeconds($fechaCarbon);
 
         if ($diff < 60) {
             return 'Hace unos segundos';
         }
 
         if ($diff < 3600) {
-            $minutos = floor($diff / 60);
-            return 'Hace ' . $minutos . ' min';
+            return 'Hace ' . floor($diff / 60) . ' min';
         }
 
         if ($diff < 86400) {
@@ -214,7 +229,6 @@ class NotificacionController extends Controller
             return 'Ayer';
         }
 
-        $dias = floor($diff / 86400);
-        return 'Hace ' . $dias . ' días';
+        return 'Hace ' . floor($diff / 86400) . ' días';
     }
 }
