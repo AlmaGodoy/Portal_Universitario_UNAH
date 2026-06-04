@@ -1648,7 +1648,157 @@
             }
         }
 
-    </style>
+    
+
+        /* =========================================================
+           FIX DEFINITIVO: QUITAR DOBLE SCROLL EN SECRETARÍA
+           Deja UN solo scroll: el del menú (#dashboardSidebarScroll).
+           AdminLTE / OverlayScrollbars a veces agrega un segundo scroll
+           dentro de .sidebar; aquí se neutraliza.
+        ========================================================= */
+        html,
+        body {
+            min-height: 100% !important;
+            overflow-x: hidden !important;
+        }
+
+        .wrapper,
+        .content-wrapper,
+        .content-wrapper > .content,
+        .dashboard-shell,
+        .dashboard-shell-body {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+        }
+
+        .main-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            z-index: 1038 !important;
+        }
+
+        .main-sidebar .sidebar {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Oculta el scroll extra que puede crear AdminLTE/OverlayScrollbars */
+        .main-sidebar .sidebar .os-scrollbar,
+        .main-sidebar .sidebar .os-scrollbar-vertical,
+        .main-sidebar .sidebar .os-scrollbar-horizontal,
+        .main-sidebar .os-scrollbar,
+        .main-sidebar .os-scrollbar-vertical,
+        .main-sidebar .os-scrollbar-horizontal {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .main-sidebar .sidebar .os-host,
+        .main-sidebar .sidebar .os-padding,
+        .main-sidebar .sidebar .os-viewport,
+        .main-sidebar .sidebar .os-content {
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        /* Este es el ÚNICO scroll permitido en el menú */
+        #dashboardSidebarScroll {
+            width: 100% !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            overscroll-behavior: contain !important;
+            scrollbar-gutter: stable !important;
+            padding-bottom: 12px !important;
+        }
+
+        #dashboardSidebarScroll nav,
+        #dashboardSidebarScroll .dashboard-menu {
+            overflow: visible !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar {
+            width: 8px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.06) !important;
+            border-radius: 999px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.45) !important;
+            border-radius: 999px !important;
+            border: 2px solid rgba(18,54,116,0.35) !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,210,31,0.75) !important;
+        }
+
+        body.sidebar-collapse #dashboardSidebarScroll {
+            overflow-y: hidden !important;
+        }
+
+
+        /* =========================================================
+           NOTIFICACIONES DINÁMICAS SECRETARÍA
+           Quita datos hipotéticos y usa tbl_notificacion vía API.
+        ========================================================= */
+        #notifBadge.notif-hidden,
+        .topbar-badge.notif-hidden {
+            display: none !important;
+        }
+
+        .topbar-dropdown-empty {
+            padding: 20px 14px !important;
+            text-align: center !important;
+            color: #6b7890 !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            line-height: 1.4 !important;
+        }
+
+        .topbar-dropdown-empty i {
+            color: #9aa7bb !important;
+            font-size: 17px !important;
+            margin-bottom: 6px !important;
+        }
+
+        .topbar-dropdown-item-link {
+            display: block !important;
+            color: inherit !important;
+            text-decoration: none !important;
+            border-radius: 12px !important;
+        }
+
+        .topbar-dropdown-item-link:hover {
+            color: inherit !important;
+            text-decoration: none !important;
+        }
+
+        .topbar-dropdown-icon.red {
+            background: rgba(198, 40, 40, .13) !important;
+            color: #c62828 !important;
+        }
+
+        .topbar-dropdown-text span {
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+
+</style>
 </head>
 
 <body class="hold-transition dashboard-body">
@@ -1839,52 +1989,30 @@
             <div class="topbar-action-group">
                 <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
                     <i class="fas fa-bell"></i>
-                    <span class="topbar-badge">3</span>
+                    <span class="topbar-badge notif-hidden" id="notifBadge"></span>
                 </button>
 
                 <div class="topbar-dropdown" id="dropNotif">
                     <div class="topbar-dropdown-header">
                         <span>Notificaciones</span>
-                        <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
+                        <a href="#" class="topbar-dropdown-mark" id="btnMarcarTodasNotif">Marcar todas</a>
                     </div>
 
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon blue">
-                                <i class="fas fa-file-circle-check"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Nuevo documento recibido</strong>
-                                <span>Hay un trámite pendiente por revisión en secretaría.</span>
-                                <small>Hace 5 min</small>
-                            </div>
-                        </li>
-
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon gold">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Seguimiento requerido</strong>
-                                <span>Un expediente sigue pendiente de validación.</span>
-                                <small>Hace 1 hora</small>
-                            </div>
-                        </li>
-
+                    <ul class="topbar-dropdown-list" id="notifList">
                         <li class="topbar-dropdown-item">
-                            <div class="topbar-dropdown-icon green">
-                                <i class="fas fa-circle-check"></i>
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-spinner fa-spin"></i>
                             </div>
                             <div class="topbar-dropdown-text">
-                                <strong>Revisión completada</strong>
-                                <span>Se procesó correctamente una solicitud reciente.</span>
-                                <small>Ayer</small>
+                                <strong>Cargando...</strong>
+                                <span>Obteniendo tus notificaciones.</span>
+                                <small>Un momento</small>
                             </div>
                         </li>
                     </ul>
 
                     <div class="topbar-dropdown-footer">
-                        <a href="#">Ver todas las notificaciones</a>
+                        <a href="{{ url('/notificaciones') }}">Ver todas las notificaciones</a>
                     </div>
                 </div>
             </div>
@@ -2069,6 +2197,162 @@ document.addEventListener('DOMContentLoaded', function () {
             closeTopbarDropdowns();
         }
     });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const notifBadge = document.getElementById('notifBadge');
+    const notifList = document.getElementById('notifList');
+    const btnMarcarTodas = document.getElementById('btnMarcarTodasNotif');
+
+    const URL_NOTIF_RECIENTES = "{{ url('/api/notificaciones/recientes') }}";
+    const URL_MARCAR_TODAS = "{{ url('/api/notificaciones/marcar-todas-leidas') }}";
+    const URL_ABRIR_BASE = "{{ url('/notificaciones/abrir') }}";
+
+    function escaparHtml(valor) {
+        return String(valor ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function normalizarColor(color) {
+        const permitidos = ['blue', 'gold', 'green', 'red'];
+        return permitidos.includes(color) ? color : 'blue';
+    }
+
+    function normalizarIcono(icono) {
+        return icono && typeof icono === 'string' ? icono : 'fas fa-bell';
+    }
+
+    function actualizarBadge(cantidad) {
+        const total = Number(cantidad || 0);
+        if (!notifBadge) return;
+
+        if (total > 0) {
+            notifBadge.textContent = total > 99 ? '99+' : String(total);
+            notifBadge.classList.remove('notif-hidden');
+        } else {
+            notifBadge.textContent = '';
+            notifBadge.classList.add('notif-hidden');
+        }
+    }
+
+    function renderizarNotificaciones(notificaciones) {
+        if (!notifList) return;
+
+        if (!Array.isArray(notificaciones) || notificaciones.length === 0) {
+            notifList.innerHTML = `
+                <li class="topbar-dropdown-empty">
+                    <i class="fas fa-bell-slash"></i><br>
+                    No tienes notificaciones por ahora.
+                </li>
+            `;
+            return;
+        }
+
+        notifList.innerHTML = notificaciones.map((notif) => {
+            const id = notif.id_notificacion;
+            const titulo = escaparHtml(notif.titulo || 'Notificación');
+            const mensaje = escaparHtml(notif.mensaje || 'Tienes una actualización pendiente.');
+            const tiempo = escaparHtml(notif.tiempo || notif.fecha_creacion || '');
+            const color = normalizarColor(notif.color);
+            const icono = escaparHtml(normalizarIcono(notif.icono));
+            const unreadClass = notif.leida ? '' : 'unread';
+            const abrirUrl = `${URL_ABRIR_BASE}/${encodeURIComponent(id)}`;
+
+            return `
+                <li>
+                    <a href="${abrirUrl}" class="topbar-dropdown-item-link">
+                        <div class="topbar-dropdown-item ${unreadClass}">
+                            <div class="topbar-dropdown-icon ${color}">
+                                <i class="${icono}"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>${titulo}</strong>
+                                <span>${mensaje}</span>
+                                <small>${tiempo}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async function cargarNotificaciones() {
+        try {
+            const response = await fetch(URL_NOTIF_RECIENTES, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                const textoError = await response.text();
+                console.error('Error al cargar notificaciones:', response.status, textoError);
+                throw new Error('No se pudieron cargar las notificaciones.');
+            }
+
+            const data = await response.json();
+
+            actualizarBadge(data.unread_count || 0);
+            renderizarNotificaciones(data.notificaciones || []);
+        } catch (error) {
+            console.error('Error cargando notificaciones:', error);
+
+            if (notifList) {
+                notifList.innerHTML = `
+                    <li class="topbar-dropdown-empty">
+                        <i class="fas fa-triangle-exclamation"></i><br>
+                        No se pudieron cargar las notificaciones.
+                    </li>
+                `;
+            }
+
+            actualizarBadge(0);
+        }
+    }
+
+    async function marcarTodasComoLeidas(event) {
+        event.preventDefault();
+
+        try {
+            const response = await fetch(URL_MARCAR_TODAS, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                const textoError = await response.text();
+                console.error('Error marcando notificaciones:', response.status, textoError);
+                throw new Error('No se pudieron marcar las notificaciones.');
+            }
+
+            await cargarNotificaciones();
+        } catch (error) {
+            console.error('Error marcando notificaciones:', error);
+        }
+    }
+
+    if (btnMarcarTodas) {
+        btnMarcarTodas.addEventListener('click', marcarTodasComoLeidas);
+    }
+
+    cargarNotificaciones();
+    setInterval(cargarNotificaciones, 15000);
 });
 </script>
 

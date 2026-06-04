@@ -45,15 +45,25 @@
     @endphp
 
     <style>
+
+        /* =========================================================
+           AJUSTE IGUAL AL PANEL DEL ESTUDIANTE
+           Acerca el contenido al menú lateral y sube ligeramente el banner.
+        ========================================================= */
+
+        .dashboard-shell-body {
+            padding: 0 16px 0 10px !important;
+        }
+
         /* =========================================================
            BANNER SECRETARÍA DE CARRERA
-           Igual al banner del estudiante, con textos del rol
+           Mismo diseño, posición y proporciones del banner del estudiante
         ========================================================= */
 
         .hero-banner {
             position: relative !important;
             min-height: 225px !important;
-            margin: 8px 10px 18px !important;
+            margin: -6px 6px 18px 0 !important;
             border: 8px solid #ffffff !important;
             border-radius: 18px !important;
             overflow: hidden !important;
@@ -252,7 +262,7 @@
             .hero-banner {
                 min-height: 255px !important;
                 border-width: 6px !important;
-                margin: 8px 8px 16px !important;
+                margin: 8px 6px 16px 0 !important;
             }
 
             .hero-photo {

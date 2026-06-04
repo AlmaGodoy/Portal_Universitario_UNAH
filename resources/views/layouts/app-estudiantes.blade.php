@@ -55,6 +55,16 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
+        /* =========================================================
+           FIX ZOOM: Ancho mínimo del body para que el layout no
+           colapse al hacer zoom en el navegador. El sidebar ya usa
+           position:fixed de AdminLTE, esto evita que el contenido
+           se comprima indefinidamente.
+        ========================================================= */
+        html, body {
+            min-width: 960px !important;
+        }
+
         :root {
             --student-sidebar-width: 350px;
             --student-sidebar-collapsed-width: 4.6rem;
@@ -78,6 +88,21 @@
             body.sidebar-collapse .main-header {
                 margin-left: var(--student-sidebar-collapsed-width) !important;
             }
+        }
+
+        /* =========================================================
+           FIX ZOOM: El sidebar de AdminLTE ya tiene position:fixed,
+           pero forzamos que mantenga su ancho mínimo en todo momento
+           para que no se vea aplastado al hacer zoom.
+        ========================================================= */
+        .main-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            min-width: 60px !important; /* nunca colapsa a menos de esto */
+            overflow: hidden !important;
+            z-index: 1038 !important;
         }
 
         /* ── BLOQUE CONTROL (donde estaba el user-card) ──── */
@@ -297,6 +322,10 @@
 
         /* ── MÓVIL ───────────────────────────────────────── */
         @media (max-width: 991.98px) {
+            html, body {
+                min-width: 0 !important; /* en móvil sí permitimos responsive normal */
+            }
+
             .dashboard-menu {
                 gap: 6px;
                 padding: 14px 0 18px !important;
@@ -322,37 +351,48 @@
 
     /* =========================================================
        TOPBAR ESTUDIANTE
-       Ajuste final sutil para combinar con el banner
     ========================================================= */
 
     .student-topbar {
         position: relative !important;
-        z-index: 40 !important;
-        min-height: 52px !important;
-        margin: 0 10px 10px !important;
-        padding: 6px 14px !important;
+        z-index: 80 !important;
+        min-height: 68px !important;
+        margin: 0 0 10px !important;
+        padding: 10px 18px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 12px !important;
-        background: linear-gradient(90deg, #123674 0%, #1c4f9d 48%, #174487 100%) !important;
-        border-bottom: 2px solid #ffd21f !important;
-        border-radius: 0 0 10px 10px !important;
-        box-shadow: 0 3px 8px rgba(8, 35, 78, 0.10) !important;
+        gap: 14px !important;
         overflow: visible !important;
+        background:
+            radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.13), transparent 28%),
+            linear-gradient(90deg, #0f3370 0%, #1c4f9d 50%, #174487 100%) !important;
+        border-bottom: 3px solid #ffd21f !important;
+        border-radius: 0 0 16px 0 !important;
+        box-shadow:
+            0 10px 24px rgba(8, 35, 78, 0.16),
+            inset 0 1px 0 rgba(255,255,255,0.10) !important;
     }
 
     .student-topbar::before {
         content: "" !important;
         position: absolute !important;
         inset: 0 !important;
-        border-radius: 0 0 10px 10px !important;
-        background: linear-gradient(
-            120deg,
-            rgba(255,255,255,0.06),
-            transparent 38%,
-            rgba(255,255,255,0.03)
-        ) !important;
+        border-radius: 0 0 16px 0 !important;
+        background:
+            linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%, rgba(255,255,255,0.04) 72%, transparent),
+            linear-gradient(135deg, transparent 0 62%, rgba(9, 43, 105, 0.18) 62% 72%, transparent 72%) !important;
+        pointer-events: none !important;
+    }
+
+    .student-topbar::after {
+        content: "" !important;
+        position: absolute !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: -7px !important;
+        height: 7px !important;
+        background: linear-gradient(180deg, rgba(8,35,78,0.12), transparent) !important;
         pointer-events: none !important;
     }
 
@@ -372,36 +412,34 @@
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
-        gap: 7px !important;
+        gap: 8px !important;
         min-width: 0 !important;
     }
 
-    .topbar-left-copy {
-        display: flex !important;
-        align-items: center !important;
-    }
-
     .topbar-breadcrumb {
+        min-height: 40px !important;
         display: inline-flex !important;
         align-items: center !important;
-        gap: 7px !important;
-        padding: 7px 12px !important;
-        border-radius: 9px !important;
-        background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.13) !important;
-        color: rgba(255,255,255,0.88) !important;
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
+        gap: 8px !important;
+        padding: 0 16px !important;
+        border-radius: 14px !important;
+        background: rgba(255, 255, 255, 0.10) !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        color: rgba(255,255,255,0.90) !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
     }
 
     .topbar-breadcrumb i {
         font-size: 12px !important;
-        color: rgba(255,255,255,0.82) !important;
+        color: rgba(255,255,255,0.84) !important;
     }
 
     .topbar-breadcrumb-active {
         color: #ffd21f !important;
         font-weight: 900 !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.16) !important;
     }
 
     .topbar-action-group {
@@ -411,49 +449,49 @@
     }
 
     .topbar-icon-btn {
-        position: relative !important;
-        width: 36px !important;
-        height: 36px !important;
-        border-radius: 10px !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
-        background: rgba(255,255,255,0.08) !important;
+        width: 42px !important;
+        height: 42px !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        background: rgba(255,255,255,0.10) !important;
         color: #ffffff !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
-        transition: all 0.18s ease !important;
-        box-shadow: none !important;
+        transition: all .18s ease !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
     }
 
-    .topbar-icon-btn:hover {
-        background: rgba(255,255,255,0.14) !important;
-        border-color: rgba(255,210,31,0.40) !important;
+    .topbar-icon-btn:hover,
+    .student-user-chip:hover {
+        background: rgba(255,255,255,0.17) !important;
+        border-color: rgba(255,210,31,0.48) !important;
         transform: translateY(-1px) !important;
     }
 
     .topbar-icon-btn i {
-        font-size: 14px !important;
+        font-size: 15px !important;
         color: #ffffff !important;
     }
 
     .topbar-badge {
         position: absolute !important;
-        top: -6px !important;
-        right: -6px !important;
-        min-width: 17px !important;
-        height: 17px !important;
+        top: -7px !important;
+        right: -7px !important;
+        min-width: 18px !important;
+        height: 18px !important;
         padding: 0 5px !important;
         border-radius: 999px !important;
         background: #e63946 !important;
         color: #ffffff !important;
-        font-size: 9.5px !important;
+        font-size: 10px !important;
         font-weight: 900 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         border: 2px solid #1c4f9d !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.22) !important;
+        box-shadow: 0 4px 9px rgba(0,0,0,0.24) !important;
     }
 
     .topbar-badge.gold {
@@ -461,38 +499,41 @@
         color: #123674 !important;
     }
 
+    /* Oculta completamente el badge de notificaciones cuando no hay pendientes */
+    #notifBadge.notif-hidden {
+        display: none !important;
+    }
+
+    #notifBadge:not(.notif-hidden) {
+        display: flex !important;
+    }
+
     .topbar-divider {
         width: 1px !important;
-        height: 27px !important;
-        margin: 0 3px !important;
-        background: rgba(255,255,255,0.17) !important;
+        height: 34px !important;
+        margin: 0 5px !important;
+        background: rgba(255,255,255,0.20) !important;
     }
 
     .student-user-chip {
-        min-height: 38px !important;
+        min-height: 44px !important;
         display: inline-flex !important;
         align-items: center !important;
-        gap: 9px !important;
-        padding: 5px 11px 5px 6px !important;
-        border-radius: 12px !important;
-        border: 1px solid rgba(255,255,255,0.17) !important;
-        background: rgba(255,255,255,0.09) !important;
+        gap: 10px !important;
+        padding: 5px 14px 5px 7px !important;
+        border-radius: 15px !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        background: rgba(255,255,255,0.11) !important;
         color: #ffffff !important;
         cursor: pointer !important;
-        transition: all 0.18s ease !important;
-        box-shadow: none !important;
-    }
-
-    .student-user-chip:hover {
-        background: rgba(255,255,255,0.14) !important;
-        border-color: rgba(255,210,31,0.40) !important;
-        transform: translateY(-1px) !important;
+        transition: all .18s ease !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
     }
 
     .student-user-chip-avatar {
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 10px !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 13px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -500,61 +541,37 @@
         color: #123674 !important;
         font-weight: 900 !important;
         font-size: 13px !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
     }
 
     .student-user-chip-info {
         display: flex !important;
         flex-direction: column !important;
-        line-height: 1.1 !important;
+        line-height: 1.08 !important;
+        min-width: 0 !important;
     }
 
     .student-user-chip-name {
-        font-size: 12px !important;
-        font-weight: 900 !important;
+        max-width: 190px !important;
         color: #ffffff !important;
-        max-width: 175px !important;
+        font-size: 12.5px !important;
+        font-weight: 900 !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
     }
 
     .student-user-chip-role {
-        margin-top: 2px !important;
-        font-size: 10px !important;
-        font-weight: 700 !important;
+        margin-top: 3px !important;
         color: rgba(255,255,255,0.74) !important;
+        font-size: 10.5px !important;
+        font-weight: 800 !important;
     }
 
     .student-user-chip-arrow {
         font-size: 11px !important;
-        color: rgba(255,255,255,0.76) !important;
+        color: rgba(255,255,255,0.78) !important;
     }
-
-    .topbar-dropdown {
-        border-radius: 14px !important;
-        border: 1px solid rgba(13, 47, 104, 0.14) !important;
-        box-shadow: 0 18px 42px rgba(8, 35, 78, 0.24) !important;
-        overflow: hidden !important;
-    }
-
-    .topbar-dropdown-header {
-        background: #f6f9ff !important;
-        border-bottom: 1px solid #e3ebf7 !important;
-    }
-
-    .topbar-dropdown-header span {
-        color: #123674 !important;
-        font-weight: 900 !important;
-    }
-
-    .topbar-dropdown-mark,
-    .topbar-dropdown-footer a {
-        color: #1c4f9d !important;
-        font-weight: 800 !important;
-    }
-
-
-
 
         /* ── DROPDOWNS TOPBAR ─────────────────────────────── */
         .topbar-dropdown {
@@ -566,6 +583,10 @@
             background: #ffffff !important;
             display: none !important;
             z-index: 5000 !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
         }
 
         .topbar-dropdown.show {
@@ -589,6 +610,22 @@
             align-items: center !important;
             justify-content: space-between !important;
             gap: 10px !important;
+        }
+
+        .topbar-dropdown-header {
+            background: #f6f9ff !important;
+            border-bottom: 1px solid #e3ebf7 !important;
+        }
+
+        .topbar-dropdown-header span {
+            color: #123674 !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-mark,
+        .topbar-dropdown-footer a {
+            color: #1c4f9d !important;
+            font-weight: 800 !important;
         }
 
         .topbar-dropdown-item {
@@ -643,6 +680,27 @@
             color: #198754 !important;
         }
 
+
+        .topbar-dropdown-icon.red {
+            background: rgba(198, 40, 40, .13) !important;
+            color: #c62828 !important;
+        }
+
+        .topbar-dropdown-empty {
+            padding: 16px 14px !important;
+            text-align: center !important;
+            color: #6b7890 !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+        }
+
+        .topbar-dropdown-item-link {
+            text-decoration: none !important;
+            color: inherit !important;
+            display: block !important;
+            border-radius: 12px !important;
+        }
+
         .topbar-dropdown-text {
             min-width: 0 !important;
             display: flex !important;
@@ -669,42 +727,6 @@
             font-weight: 700 !important;
         }
 
-        .topbar-user-header {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            padding: 13px !important;
-            background: linear-gradient(90deg, #123674 0%, #1c4f9d 100%) !important;
-            color: #ffffff !important;
-        }
-
-        .topbar-user-header-avatar {
-            width: 38px !important;
-            height: 38px !important;
-            border-radius: 12px !important;
-            background: #ffd21f !important;
-            color: #123674 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-weight: 900 !important;
-        }
-
-        .topbar-user-header strong,
-        .topbar-user-header span {
-            display: block !important;
-        }
-
-        .topbar-user-header strong {
-            font-size: 13px !important;
-            font-weight: 900 !important;
-        }
-
-        .topbar-user-header span {
-            font-size: 11px !important;
-            color: rgba(255,255,255,.78) !important;
-        }
-
         .topbar-dropdown-footer {
             border-top: 1px solid #e3ebf7 !important;
         }
@@ -726,16 +748,9 @@
             }
         }
 
-
-
-        /* ── MENÚ DE USUARIO MEJORADO ─────────────────────── */
+        /* ── MENÚ DE USUARIO ─────────────────────────────── */
         .user-profile-dropdown {
             width: 315px !important;
-            border-radius: 18px !important;
-            border: 1px solid rgba(18, 54, 116, 0.14) !important;
-            background: #ffffff !important;
-            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
-            overflow: hidden !important;
         }
 
         .user-profile-dropdown::before {
@@ -931,10 +946,8 @@
             box-shadow: 0 8px 18px rgba(198, 40, 40, 0.22) !important;
         }
 
-
         /* =========================================================
            CORRECCIÓN FINAL: MENÚ SIEMPRE EN UNA SOLA COLUMNA
-           Evita que los iconos/opciones se muevan al acercar zoom
         ========================================================= */
 
         .main-sidebar,
@@ -1107,14 +1120,8 @@
             padding: 10px 18px;
             font-weight: 700;
         }
-    
 
-        /* =========================================================
-           TOPBAR INTEGRADA FINAL - ESTUDIANTE
-           Mantiene tu estructura actual, pero se integra mejor con
-           el banner: más limpia, alineada y tipo sistema premium.
-        ========================================================= */
-
+        /* ── SHELL DEL CONTENIDO ─────────────────────────── */
         .content-wrapper > .content.dashboard-shell {
             padding: 0 !important;
         }
@@ -1127,239 +1134,6 @@
             margin-top: 0 !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
-        }
-
-        .student-topbar {
-            position: relative !important;
-            z-index: 80 !important;
-            min-height: 68px !important;
-            margin: 0 0 10px !important;
-            padding: 10px 18px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            gap: 14px !important;
-            overflow: visible !important;
-            background:
-                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.13), transparent 28%),
-                linear-gradient(90deg, #0f3370 0%, #1c4f9d 50%, #174487 100%) !important;
-            border-bottom: 3px solid #ffd21f !important;
-            border-radius: 0 0 16px 0 !important;
-            box-shadow:
-                0 10px 24px rgba(8, 35, 78, 0.16),
-                inset 0 1px 0 rgba(255,255,255,0.10) !important;
-        }
-
-        .student-topbar::before {
-            content: "" !important;
-            position: absolute !important;
-            inset: 0 !important;
-            border-radius: 0 0 16px 0 !important;
-            background:
-                linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%, rgba(255,255,255,0.04) 72%, transparent),
-                linear-gradient(135deg, transparent 0 62%, rgba(9, 43, 105, 0.18) 62% 72%, transparent 72%) !important;
-            pointer-events: none !important;
-        }
-
-        .student-topbar::after {
-            content: "" !important;
-            position: absolute !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: -7px !important;
-            height: 7px !important;
-            background: linear-gradient(180deg, rgba(8,35,78,0.12), transparent) !important;
-            pointer-events: none !important;
-        }
-
-        .student-topbar-left,
-        .student-topbar-right {
-            position: relative !important;
-            z-index: 2 !important;
-        }
-
-        .student-topbar-left {
-            display: flex !important;
-            align-items: center !important;
-            min-width: 0 !important;
-        }
-
-        .student-topbar-right {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-end !important;
-            gap: 8px !important;
-            min-width: 0 !important;
-        }
-
-        .topbar-breadcrumb {
-            min-height: 40px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            padding: 0 16px !important;
-            border-radius: 14px !important;
-            background: rgba(255, 255, 255, 0.10) !important;
-            border: 1px solid rgba(255, 255, 255, 0.18) !important;
-            color: rgba(255,255,255,0.90) !important;
-            font-size: 13px !important;
-            font-weight: 800 !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
-        }
-
-        .topbar-breadcrumb i {
-            font-size: 12px !important;
-            color: rgba(255,255,255,0.84) !important;
-        }
-
-        .topbar-breadcrumb-active {
-            color: #ffd21f !important;
-            font-weight: 900 !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.16) !important;
-        }
-
-        .topbar-action-group {
-            position: relative !important;
-            display: inline-flex !important;
-            align-items: center !important;
-        }
-
-        .topbar-icon-btn {
-            width: 42px !important;
-            height: 42px !important;
-            border-radius: 14px !important;
-            border: 1px solid rgba(255,255,255,0.18) !important;
-            background: rgba(255,255,255,0.10) !important;
-            color: #ffffff !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            cursor: pointer !important;
-            transition: all .18s ease !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
-        }
-
-        .topbar-icon-btn:hover,
-        .student-user-chip:hover {
-            background: rgba(255,255,255,0.17) !important;
-            border-color: rgba(255,210,31,0.48) !important;
-            transform: translateY(-1px) !important;
-        }
-
-        .topbar-icon-btn i {
-            font-size: 15px !important;
-            color: #ffffff !important;
-        }
-
-        .topbar-badge {
-            top: -7px !important;
-            right: -7px !important;
-            min-width: 18px !important;
-            height: 18px !important;
-            padding: 0 5px !important;
-            border-radius: 999px !important;
-            background: #e63946 !important;
-            color: #ffffff !important;
-            font-size: 10px !important;
-            font-weight: 900 !important;
-            border: 2px solid #1c4f9d !important;
-            box-shadow: 0 4px 9px rgba(0,0,0,0.24) !important;
-        }
-
-        .topbar-badge.gold {
-            background: #ffd21f !important;
-            color: #123674 !important;
-        }
-
-        .topbar-divider {
-            width: 1px !important;
-            height: 34px !important;
-            margin: 0 5px !important;
-            background: rgba(255,255,255,0.20) !important;
-        }
-
-        .student-user-chip {
-            min-height: 44px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            padding: 5px 14px 5px 7px !important;
-            border-radius: 15px !important;
-            border: 1px solid rgba(255,255,255,0.18) !important;
-            background: rgba(255,255,255,0.11) !important;
-            color: #ffffff !important;
-            cursor: pointer !important;
-            transition: all .18s ease !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
-        }
-
-        .student-user-chip-avatar {
-            width: 36px !important;
-            height: 36px !important;
-            border-radius: 13px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            background: #ffd21f !important;
-            color: #123674 !important;
-            font-weight: 900 !important;
-            font-size: 13px !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
-        }
-
-        .student-user-chip-info {
-            display: flex !important;
-            flex-direction: column !important;
-            line-height: 1.08 !important;
-            min-width: 0 !important;
-        }
-
-        .student-user-chip-name {
-            max-width: 190px !important;
-            color: #ffffff !important;
-            font-size: 12.5px !important;
-            font-weight: 900 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        .student-user-chip-role {
-            margin-top: 3px !important;
-            color: rgba(255,255,255,0.74) !important;
-            font-size: 10.5px !important;
-            font-weight: 800 !important;
-        }
-
-        .student-user-chip-arrow {
-            font-size: 11px !important;
-            color: rgba(255,255,255,0.78) !important;
-        }
-
-        .topbar-dropdown,
-        .user-profile-dropdown {
-            top: calc(100% + 12px) !important;
-            border-radius: 18px !important;
-            border: 1px solid rgba(18, 54, 116, 0.14) !important;
-            background: #ffffff !important;
-            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
-            overflow: hidden !important;
-        }
-
-        .topbar-dropdown-header {
-            background: #f6f9ff !important;
-            border-bottom: 1px solid #e3ebf7 !important;
-        }
-
-        .topbar-dropdown-header span {
-            color: #123674 !important;
-            font-weight: 900 !important;
-        }
-
-        .topbar-dropdown-mark,
-        .topbar-dropdown-footer a {
-            color: #1c4f9d !important;
-            font-weight: 800 !important;
         }
 
         @media (max-width: 768px) {
@@ -1385,7 +1159,6 @@
                 max-width: 130px !important;
             }
         }
-
     </style>
 </head>
 
@@ -1500,7 +1273,6 @@
                             </a>
                         </li>
 
-
                     </ul>
                 </nav>
             </div>
@@ -1515,6 +1287,7 @@
     {{-- ── CONTENIDO ────────────────────────────────────────── --}}
     <div class="content-wrapper">
         <section class="content dashboard-shell">
+
     {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
     <div class="student-topbar">
 
@@ -1534,48 +1307,30 @@
             <div class="topbar-action-group">
                 <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
                     <i class="fas fa-bell"></i>
-                    <span class="topbar-badge">3</span>
+                    <span class="topbar-badge notif-hidden" id="notifBadge"></span>
                 </button>
 
                 <div class="topbar-dropdown" id="dropNotif">
                     <div class="topbar-dropdown-header">
                         <span>Notificaciones</span>
-                        <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
+                        <a href="#" class="topbar-dropdown-mark" id="btnMarcarTodasNotif">Marcar todas</a>
                     </div>
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon blue">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Trámite actualizado</strong>
-                                <span>Tu solicitud de cambio fue revisada.</span>
-                                <small>Hace 5 min</small>
-                            </div>
-                        </li>
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon gold">
-                                <i class="fas fa-triangle-exclamation"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Observación emitida</strong>
-                                <span>Revisa tu cancelación de clases.</span>
-                                <small>Hace 1 hora</small>
-                            </div>
-                        </li>
+
+                    <ul class="topbar-dropdown-list" id="notifList">
                         <li class="topbar-dropdown-item">
-                            <div class="topbar-dropdown-icon green">
-                                <i class="fas fa-circle-check"></i>
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-spinner fa-spin"></i>
                             </div>
                             <div class="topbar-dropdown-text">
-                                <strong>Trámite aprobado</strong>
-                                <span>Tu solicitud fue aprobada.</span>
-                                <small>Ayer</small>
+                                <strong>Cargando...</strong>
+                                <span>Obteniendo tus notificaciones.</span>
+                                <small>Un momento</small>
                             </div>
                         </li>
                     </ul>
+
                     <div class="topbar-dropdown-footer">
-                        <a href="#">Ver todas las notificaciones</a>
+                        <a href="{{ route('notificaciones.index') }}">Ver todas las notificaciones</a>
                     </div>
                 </div>
             </div>
@@ -1640,7 +1395,6 @@
                             </span>
                             <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
                         </a>
-
                     </div>
 
                     <div class="user-dropdown-footer">
@@ -1657,7 +1411,6 @@
 
         </div>
     </div>
-
 
             <div class="dashboard-shell-body">
                 @yield('content')
@@ -1688,7 +1441,7 @@
 
             <div class="session-timeout-body">
                 <p>Tu sesión está por expirar por inactividad.</p>
-                <p class="session-timeout-note">Presiona <strong>“Continuar sesión”</strong> para seguir trabajando.</p>
+                <p class="session-timeout-note">Presiona <strong>"Continuar sesión"</strong> para seguir trabajando.</p>
 
                 <div class="session-timeout-countdown">
                     <i class="fas fa-hourglass-half"></i>
@@ -1760,6 +1513,156 @@ document.addEventListener('DOMContentLoaded', function () {
             closeTopbarDropdowns();
         }
     });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const notifBadge = document.getElementById('notifBadge');
+    const notifList = document.getElementById('notifList');
+    const btnMarcarTodas = document.getElementById('btnMarcarTodasNotif');
+
+    const URL_NOTIF_RECIENTES = "{{ url('/api/notificaciones/recientes') }}";
+    const URL_MARCAR_TODAS = "{{ url('/api/notificaciones/marcar-todas-leidas') }}";
+    const URL_ABRIR_BASE = "{{ url('/notificaciones/abrir') }}";
+
+    function escaparHtml(valor) {
+        return String(valor ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function normalizarColor(color) {
+        const permitidos = ['blue', 'gold', 'green', 'red'];
+        return permitidos.includes(color) ? color : 'blue';
+    }
+
+    function normalizarIcono(icono) {
+        return icono && typeof icono === 'string' ? icono : 'fas fa-bell';
+    }
+
+    function actualizarBadge(cantidad) {
+        const total = Number(cantidad || 0);
+        if (!notifBadge) return;
+
+        if (total > 0) {
+            notifBadge.textContent = total > 99 ? '99+' : String(total);
+            notifBadge.classList.remove('notif-hidden');
+        } else {
+            notifBadge.textContent = '';
+            notifBadge.classList.add('notif-hidden');
+        }
+    }
+
+    function renderizarNotificaciones(notificaciones) {
+        if (!notifList) return;
+
+        if (!Array.isArray(notificaciones) || notificaciones.length === 0) {
+            notifList.innerHTML = `
+                <li class="topbar-dropdown-empty">
+                    <i class="fas fa-bell-slash mb-2"></i><br>
+                    No tienes notificaciones por ahora.
+                </li>
+            `;
+            return;
+        }
+
+        notifList.innerHTML = notificaciones.map((notif) => {
+            const id = notif.id_notificacion;
+            const titulo = escaparHtml(notif.titulo);
+            const mensaje = escaparHtml(notif.mensaje);
+            const tiempo = escaparHtml(notif.tiempo || notif.fecha_creacion || '');
+            const color = normalizarColor(notif.color);
+            const icono = escaparHtml(normalizarIcono(notif.icono));
+            const unreadClass = notif.leida ? '' : 'unread';
+            const abrirUrl = `${URL_ABRIR_BASE}/${encodeURIComponent(id)}`;
+
+            return `
+                <li>
+                    <a href="${abrirUrl}" class="topbar-dropdown-item-link">
+                        <div class="topbar-dropdown-item ${unreadClass}">
+                            <div class="topbar-dropdown-icon ${color}">
+                                <i class="${icono}"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>${titulo}</strong>
+                                <span>${mensaje}</span>
+                                <small>${tiempo}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async function cargarNotificaciones() {
+        try {
+            const response = await fetch(URL_NOTIF_RECIENTES, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudieron cargar las notificaciones.');
+            }
+
+            const data = await response.json();
+            actualizarBadge(data.unread_count || 0);
+            renderizarNotificaciones(data.notificaciones || []);
+        } catch (error) {
+            if (notifList) {
+                notifList.innerHTML = `
+                    <li class="topbar-dropdown-empty">
+                        <i class="fas fa-triangle-exclamation mb-2"></i><br>
+                        No se pudieron cargar las notificaciones.
+                    </li>
+                `;
+            }
+        }
+    }
+
+    async function marcarTodasComoLeidas(event) {
+        event.preventDefault();
+
+        try {
+            const response = await fetch(URL_MARCAR_TODAS, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudieron marcar las notificaciones.');
+            }
+
+            await cargarNotificaciones();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    if (btnMarcarTodas) {
+        btnMarcarTodas.addEventListener('click', marcarTodasComoLeidas);
+    }
+
+    cargarNotificaciones();
+
+    // Actualización periódica tipo "tiempo real" sin WebSockets.
+    // Más adelante se puede reemplazar por Laravel Reverb/Echo.
+    setInterval(cargarNotificaciones, 15000);
 });
 </script>
 
@@ -1907,14 +1810,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | TIEMPOS
-    |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = cuándo aparece el mensaje
-    | LOGOUT_TIME_MS  = cuándo se cierra la sesión
-    |--------------------------------------------------------------------------
-    */
     const WARNING_TIME_MS = 28 * 60 * 1000;
     const LOGOUT_TIME_MS  = 31 * 60 * 1000;
 
@@ -1949,7 +1844,6 @@ document.addEventListener('DOMContentLoaded', function () {
         countdownInterval = setInterval(() => {
             secondsLeft--;
             updateCountdownText();
-
             if (secondsLeft <= 0) {
                 clearInterval(countdownInterval);
             }
@@ -2064,5 +1958,3 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
-
-
