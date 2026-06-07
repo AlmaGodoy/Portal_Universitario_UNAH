@@ -8,9 +8,28 @@
             Selecciona tu portal
         </h3>
 
+        {{-- ================= MENSAJES DEL SISTEMA ================= --}}
+        @if(session('success'))
+            <div class="alert alert-success text-center mb-4">
+                {{ session('success') }}
+            </div>
+        @endif
+
         @if(session('status'))
-            <div class="alert alert-success text-center">
+            <div class="alert alert-success text-center mb-4">
                 {{ session('status') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger text-center mb-4">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger text-center mb-4">
+                {{ $errors->first() }}
             </div>
         @endif
 
