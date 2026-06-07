@@ -22,3 +22,12 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.env.backup_antes_smtp_local
+.env.backup_smtp_587
+.env.docker.tmp
+backup_actual_final_hoy_limpio.sql
+backup_actual_server_limpio.sql
+backup_docker_final.sql
+bd_oficial_actual_limpia.sql
+mail_server.env
+rutinas_server_actual.sql

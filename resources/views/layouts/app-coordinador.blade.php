@@ -1,11 +1,12 @@
 @php
+    use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Route;
 
-    $user = auth()->user();
+    $user = Auth::user();
 
-    $displayName = 'Coordinadora';
-    $displayRole = 'Coordinadora';
+    $displayName = 'Coordinador de Carrera';
+    $displayRole = 'Coordinador de Carrera';
 
     if ($user) {
         if (isset($user->persona) && $user->persona && !empty($user->persona->nombre_persona)) {
@@ -43,51 +44,84 @@
     }
 
     if ($initials === '') {
-        $initials = 'C';
+        $initials = 'CD';
     }
 
-    $cancelacionRouteName = null;
-
-    if (Route::has('cancelacion.coordinadora.index')) {
-        $cancelacionRouteName = 'cancelacion.coordinadora.index';
-    } elseif (Route::has('resolucion.cancelacion.vista')) {
-        $cancelacionRouteName = 'resolucion.cancelacion.vista';
-    } elseif (Route::has('coordinador.cancelacion.index')) {
-        $cancelacionRouteName = 'coordinador.cancelacion.index';
-    }
-
-    $cancelacionUrl = $cancelacionRouteName
-        ? route($cancelacionRouteName)
+    /*
+    |--------------------------------------------------------------------------
+    | RUTAS SEGURAS
+    |--------------------------------------------------------------------------
+    */
+    $dashboardUrl = Route::has('empleado.dashboard')
+        ? route('empleado.dashboard')
         : 'javascript:void(0)';
 
-    $backupRouteName = Route::has('backup.index') ? 'backup.index' : null;
+    $cambioCarreraUrl = Route::has('coordinador.cambio-carrera.index')
+        ? route('coordinador.cambio-carrera.index')
+        : 'javascript:void(0)';
 
-    $backupUrl = $backupRouteName
-        ? route($backupRouteName)
+    if (Route::has('cancelacion.coordinadora.index')) {
+        $cancelacionUrl = route('cancelacion.coordinadora.index');
+    } elseif (Route::has('resolucion.cancelacion.vista')) {
+        $cancelacionUrl = route('resolucion.cancelacion.vista');
+    } elseif (Route::has('coordinador.cancelacion.index')) {
+        $cancelacionUrl = route('coordinador.cancelacion.index');
+    } else {
+        $cancelacionUrl = 'javascript:void(0)';
+    }
+
+    $respaldoUrl = Route::has('backup.index')
+        ? route('backup.index')
+        : 'javascript:void(0)';
+
+    $seguridadUrl = Route::has('seguridad.index')
+        ? route('seguridad.index')
+        : 'javascript:void(0)';
+
+    $reportesUrl = Route::has('reporte.tramites.vista')
+        ? route('reporte.tramites.vista')
+        : 'javascript:void(0)';
+
+    $auditoriaUrl = Route::has('auditoria')
+        ? route('auditoria')
+        : 'javascript:void(0)';
+
+    $bitacoraUrl = Route::has('bitacora.index')
+        ? route('bitacora.index')
+        : 'javascript:void(0)';
+
+    $soporteUrl = Route::has('soporte.vista')
+        ? route('soporte.vista')
+        : url('/soporte');
+
+    $configuracionUrl = Route::has('configuracion.index')
+        ? route('configuracion.index')
         : 'javascript:void(0)';
 
     /*
     |--------------------------------------------------------------------------
-    | RUTA DE SOPORTE
+    | ACTIVOS DEL MENÚ
     |--------------------------------------------------------------------------
     */
-    $soporteUrl = url('/soporte');
+    $dashboardActive = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
 
-    $dashboardActive     = request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*');
-    $cambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
-    $cancelacionActive   = request()->routeIs('cancelacion.coordinadora.*')
-                            || request()->routeIs('resolucion.cancelacion.*')
-                            || request()->routeIs('coordinador.cancelacion.*');
-    $backupActive        = request()->routeIs('backup.*') || request()->is('respaldos*');
-    $soporteActive       = request()->is('soporte') || request()->is('api/soporte*');
-    $reportesActive      = request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*');
-    $auditoriaActive     = request()->routeIs('auditoria') || request()->routeIs('auditoria*');
-    $bitacoraActive      = request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*');
+    $menuCambioCarreraActive = request()->routeIs('coordinador.cambio-carrera.*');
+
+    $menuCancelacionActive = request()->routeIs('cancelacion.coordinadora.*')
+        || request()->routeIs('resolucion.cancelacion.*')
+        || request()->routeIs('coordinador.cancelacion.*');
+
+    $menuRevisionOpen = $menuCambioCarreraActive || $menuCancelacionActive;
+
+    $respaldoActive = request()->routeIs('backup.*') || request()->is('respaldos*');
+    $seguridadActive = request()->routeIs('seguridad.*') || request()->is('seguridad*');
+    $reportesActive = request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*');
+    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+    $bitacoraActive = request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*');
+    $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
     $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion*');
 
-    $tramitesMenuOpen = $cambioCarreraActive || $cancelacionActive;
-
-    $pageTitle = trim($__env->yieldContent('title', 'Panel de Coordinación'));
+    $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Panel de Coordinación')));
 @endphp
 
 <!DOCTYPE html>
@@ -96,547 +130,944 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('title', 'Panel de Coordinación')</title>
+    <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @vite(['resources/css/dashboard.css'])
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
     <style>
-        .coordinator-topbar {
-            position: sticky;
-            top: 0;
-            z-index: 500;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            min-height: 64px;
-            padding: 0 20px;
-            margin: 0 18px 0;
-            background: linear-gradient(90deg, #102b67 0%, #163880 18%, #1d4f9f 42%, #1a4899 100%);
-            border-bottom: 4px solid #f1be1a;
-            box-shadow: 0 6px 24px rgba(10,28,75,.30), 0 2px 6px rgba(10,28,75,.18);
-            border-radius: 0;
+        :root {
+            --student-sidebar-width: 350px;
+            --student-sidebar-collapsed-width: 4.6rem;
         }
 
-        .coordinator-topbar::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                115deg,
-                rgba(255,255,255,.07) 0%,
-                rgba(255,255,255,.02) 40%,
-                rgba(255,255,255,0) 60%
-            );
+        /* ── ANCHO DINÁMICO ──────────────────────────────── */
+        @media (min-width: 992px) {
+            body:not(.sidebar-collapse) .main-sidebar {
+                width: var(--student-sidebar-width) !important;
+            }
+            body:not(.sidebar-collapse) .content-wrapper,
+            body:not(.sidebar-collapse) .main-footer,
+            body:not(.sidebar-collapse) .main-header {
+                margin-left: var(--student-sidebar-width) !important;
+            }
+            body.sidebar-collapse .main-sidebar {
+                width: var(--student-sidebar-collapsed-width) !important;
+            }
+            body.sidebar-collapse .content-wrapper,
+            body.sidebar-collapse .main-footer,
+            body.sidebar-collapse .main-header {
+                margin-left: var(--student-sidebar-collapsed-width) !important;
+            }
+        }
+
+        /* ── BLOQUE CONTROL (donde estaba el user-card) ──── */
+        .sidebar-control-block {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255,255,255,.10);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            min-height: 58px;
+        }
+
+        /* Botón colapsar */
+        .sidebar-toggle-inner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
+            color: #17346c;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(239,190,26,.35);
+            transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .sidebar-toggle-inner:hover {
+            background: linear-gradient(135deg, #ffd84a 0%, #e8b20e 100%);
+            transform: scale(1.08);
+            box-shadow: 0 6px 18px rgba(239,190,26,.50);
+        }
+
+        .sidebar-toggle-inner i {
+            transition: transform .3s ease;
             pointer-events: none;
         }
 
-        .coordinator-topbar::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 4px;
-            width: 4px;
-            background: linear-gradient(180deg, #ffe566 0%, #f1be1a 50%, #e0aa00 100%);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-            padding: 10px 18px;
-            margin: 14px 14px 0;
-            border-radius: 0 0 20px 20px;
-            background: linear-gradient(135deg, #204998 0%, #2956ac 55%, #234a97 100%);
-            border-bottom: 4px solid #f1be1a;
-            box-shadow: 0 14px 28px rgba(12, 35, 82, .18);
-            position: relative;
-            z-index: 20;
+        body.sidebar-collapse .sidebar-toggle-inner i {
+            transform: rotate(180deg);
         }
 
-        .coordinator-topbar-left,
-        .coordinator-topbar-right {
+        /* Info de tamaño */
+        .sidebar-control-info {
             display: flex;
-            align-items: center;
-            min-width: 0;
-            position: relative;
-            z-index: 2;
-        }
-
-        .coordinator-topbar-right {
+            flex-direction: column;
             gap: 6px;
-        }
-
-        .coordinator-topbar-right {
-            gap: 12px;
-            margin-left: auto;
-        }
-
-        .coord-breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: rgba(255,255,255,.86);
-            font-size: .98rem;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding-left: 8px;
-        }
-
-        .coord-breadcrumb i {
-            font-size: .86rem;
-        }
-
-        .coord-breadcrumb .active {
-            color: #ffd34d;
-            font-weight: 800;
-        }
-
-        .coord-action-group {
-            position: relative;
-        }
-
-        .coord-icon-btn {
-            position: relative;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,.16);
-            background: rgba(255,255,255,.10);
-            color: rgba(255,255,255,.88);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all .22s ease;
-            font-size: .9rem;
-        }
-
-        .coord-icon-btn:hover {
-            background: rgba(255,255,255,.20);
-            border-color: rgba(255,255,255,.30);
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,.18);
-            width: 58px;
-            height: 52px;
-            border: 1px solid rgba(255,255,255,.14);
-            border-radius: 16px;
-            background: rgba(255,255,255,.08);
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.15rem;
-            transition: all .18s ease;
-            backdrop-filter: blur(8px);
-        }
-
-        .coord-icon-btn:hover {
-            background: rgba(255,255,255,.16);
-            transform: translateY(-1px);
-            color: #fff;
-        }
-
-        .coord-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 4px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
-            color: #fff;
-            font-size: .6rem;
-            font-weight: 800;
-            border: 2px solid #1a4899;
-            box-shadow: 0 4px 10px rgba(229,57,53,.30);
-        }
-
-        .coord-badge.gold {
-            background: linear-gradient(135deg, #efbe1a 0%, #dca600 100%);
-            color: #16315d;
-            border-color: #1a4899;
-            box-shadow: 0 4px 10px rgba(239,190,26,.28);
-            top: -6px;
-            right: -4px;
-            min-width: 24px;
-            height: 24px;
-            padding: 0 7px;
-            border-radius: 999px;
-            background: #e23b35;
-            color: #fff;
-            font-size: .76rem;
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(226,59,53,.35);
-        }
-
-        .coord-badge.gold {
-            background: #f1be1a;
-            color: #17346c;
-            box-shadow: 0 4px 10px rgba(241,190,26,.35);
-        }
-
-        .coord-divider {
-            width: 1px;
-            height: 32px;
-            background: linear-gradient(
-                180deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,.22) 50%,
-                rgba(255,255,255,0) 100%
-            );
-            margin: 0 4px;
-            flex-shrink: 0;
-        }
-
-        .coord-user-chip {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-height: 44px;
-            padding: 6px 12px 6px 6px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,.18);
-            background: rgba(255,255,255,.12);
-            color: #fff;
-            cursor: pointer;
-            transition: all .22s ease;
-            min-width: unset;
-            max-width: unset;
-        }
-
-        .coord-user-chip:hover {
-            background: rgba(255,255,255,.20);
-            border-color: rgba(255,255,255,.32);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,.18);
-            height: 40px;
-            background: rgba(255,255,255,.18);
-        }
-
-        .coord-user-chip {
-            min-width: 360px;
-            max-width: 460px;
-            border: 1px solid rgba(255,255,255,.16);
-            border-radius: 18px;
-            background: rgba(255,255,255,.10);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 14px;
-            backdrop-filter: blur(8px);
-            transition: all .18s ease;
-        }
-
-        .coord-user-chip:hover {
-            background: rgba(255,255,255,.16);
-            color: #fff;
-        }
-
-        .coord-user-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
-            color: #163a78;
-            font-weight: 900;
-            font-size: .82rem;
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
-            color: #17346c;
-            font-weight: 900;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(239,190,26,.30);
-        }
-
-        .coord-user-info {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
             flex: 1;
-            line-height: 1.1;
-        }
-
-        .coord-user-name {
-            font-size: .83rem;
-            font-weight: 900;
-            color: #ffffff;
-            line-height: 1;
-            font-size: 1.02rem;
-            font-weight: 800;
-            white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
+            transition: opacity .25s ease, max-width .25s ease;
+            max-width: 999px;
         }
 
-        .coord-user-role {
-            font-size: .68rem;
-            color: rgba(255,255,255,.60);
-            font-weight: 700;
-            line-height: 1;
-            margin-top: 2px;
-        }
-
-        .coord-user-arrow {
-            font-size: .62rem;
-            color: rgba(255,255,255,.50);
-            margin-left: 2px;
-            margin-top: 4px;
-            color: rgba(255,255,255,.82);
-            font-size: .92rem;
-            font-weight: 700;
-        }
-
-        .coord-user-arrow {
-            color: rgba(255,255,255,.85);
-            font-size: .9rem;
-        }
-
-        .coord-dropdown {
-            position: absolute;
-            top: calc(100% + 12px);
-            left: 0;
-            width: 340px;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 18px 45px rgba(15, 32, 68, .22);
-            overflow: hidden;
+        body.sidebar-collapse .sidebar-control-info {
             opacity: 0;
-            visibility: hidden;
-            transform: translateY(8px);
-            transition: all .18s ease;
-            z-index: 999;
+            max-width: 0;
+            pointer-events: none;
         }
 
-        .coord-dropdown.align-right {
-            left: auto;
-            right: 0;
-        }
-
-        .coord-dropdown.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .coord-dropdown-header {
-            padding: 14px 16px;
-            background: #f5f8ff;
-            border-bottom: 1px solid #e8eefb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .coord-dropdown-header span {
-            color: #17346c;
-            font-weight: 800;
-            font-size: .95rem;
-        }
-
-        .coord-dropdown-header a {
-            color: #2956ac;
-            font-size: .8rem;
+        .sidebar-control-label {
+            font-size: .68rem;
             font-weight: 700;
-            text-decoration: none;
+            color: rgba(255,255,255,.45);
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
-        .coord-dropdown-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .coord-dropdown-item {
+        /* Botones +/Normal/- */
+        .sidebar-size-btns {
             display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 14px 16px;
-            border-bottom: 1px solid #eef2fb;
-            background: #fff;
-        }
-
-        .coord-dropdown-item.unread {
-            background: #f8fbff;
-        }
-
-        .coord-dropdown-item.sm {
             align-items: center;
+            gap: 4px;
         }
 
-        .coord-dropdown-icon,
-        .coord-dropdown-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
+        .sidebar-size-btn {
+            border: none;
+            height: 26px;
+            border-radius: 7px;
+            background: rgba(255,255,255,.12);
+            color: rgba(255,255,255,.85);
+            font-size: .72rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            font-weight: 800;
+            padding: 0 8px;
+            transition: all .18s ease;
+            white-space: nowrap;
         }
 
-        .coord-dropdown-icon.blue {
-            background: rgba(41,86,172,.12);
-            color: #2956ac;
-        }
-
-        .coord-dropdown-icon.gold {
-            background: rgba(241,190,26,.18);
-            color: #9b7300;
-        }
-
-        .coord-dropdown-icon.green {
-            background: rgba(31,163,98,.12);
-            color: #138a50;
-        }
-
-        .coord-dropdown-icon.sm {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-        }
-
-        .coord-dropdown-avatar {
-            background: linear-gradient(135deg, #2956ac 0%, #17346c 100%);
+        .sidebar-size-btn:hover {
+            background: rgba(255,255,255,.24);
             color: #fff;
+            transform: translateY(-1px);
         }
 
-        .coord-dropdown-text {
+        .sidebar-size-btn i {
+            font-size: .65rem;
+        }
+
+        /* ── MENÚ MÁS GRANDE Y MEJOR DISTRIBUIDO ─────────── */
+        #dashboardSidebarScroll {
             display: flex;
             flex-direction: column;
-            gap: 3px;
-            min-width: 0;
         }
 
-        .coord-dropdown-text strong {
-            color: #17346c;
-            font-size: .92rem;
-            font-weight: 800;
-        }
-
-        .coord-dropdown-text span {
-            color: #53627f;
-            font-size: .85rem;
-            line-height: 1.35;
-        }
-
-        .coord-dropdown-text small {
-            color: #7f8ca6;
-            font-size: .77rem;
-            font-weight: 700;
-        }
-
-        .coord-dropdown-footer {
-            padding: 12px 16px;
-            background: #fff;
-            border-top: 1px solid #eef2fb;
-        }
-
-        .coord-dropdown-footer a {
-            color: #2956ac;
-            font-size: .85rem;
-            font-weight: 800;
-            text-decoration: none;
-        }
-
-        .coord-dropdown-footer.danger {
-            background: #fff8f8;
-        }
-
-        .coord-dropdown-footer.danger form {
-            margin: 0;
-        }
-
-        .coord-dropdown-footer.danger button {
-            width: 100%;
-            border: none;
-            background: transparent;
-            color: #c73737;
-            font-size: .9rem;
-            font-weight: 800;
-            text-align: left;
-            padding: 0;
+        #dashboardSidebarScroll nav {
             display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 100%;
+        }
+
+        .dashboard-menu {
+            display: flex !important;
+            flex-direction: column;
+            min-height: 100%;
+            gap: 10px;
+            padding: 18px 0 22px !important;
+        }
+
+        .dashboard-menu .nav-item {
+            padding: 0 8px;
+        }
+
+        .dashboard-menu .nav-link {
+            min-height: 56px;
+            padding: 0 18px !important;
+            border-radius: 16px !important;
+            display: flex !important;
             align-items: center;
-            gap: 8px;
+            font-size: 1.06rem !important;
+            font-weight: 700 !important;
         }
 
-        .coord-user-header {
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, #f5f8ff 0%, #eef3ff 100%);
-            border-bottom: 1px solid #e8eefb;
+        .dashboard-menu .nav-link p {
+            margin: 0 !important;
+            line-height: 1.2;
         }
 
-        .coord-user-header-avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #ffd34d 0%, #f1be1a 100%);
-            color: #17346c;
-            font-size: 1rem;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+        .dashboard-menu .nav-icon {
+            width: 34px !important;
+            margin-right: 14px !important;
+            font-size: 1.18rem !important;
         }
 
-        .coord-user-header strong {
-            display: block;
-            color: #17346c;
-            font-size: .96rem;
-            font-weight: 800;
-            margin-bottom: 3px;
+        .dashboard-menu .nav-link.active {
+            min-height: 62px;
+            font-size: 1.08rem !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,.16);
         }
 
-        .coord-user-header span {
-            color: #62708b;
-            font-size: .84rem;
-            word-break: break-word;
+        .dashboard-menu .nav-link:hover {
+            transform: translateX(2px);
         }
 
-        .content-wrapper {
-            min-height: 100vh;
-            padding-top: 0 !important;
+        /* ── RESIZE HANDLE ───────────────────────────────── */
+        @media (min-width: 992px) {
+            .sidebar-resize-handle {
+                position: fixed;
+                top: 0;
+                left: calc(var(--student-sidebar-width) - 8px);
+                width: 18px;
+                height: 100vh;
+                z-index: 2000;
+                cursor: col-resize;
+                background: rgba(255,255,255,.03);
+                transition: left .18s ease, background .18s ease;
+            }
+
+            .sidebar-resize-handle:hover {
+                background: rgba(42,119,200,.16);
+            }
+
+            .sidebar-resize-handle::before {
+                content: "";
+                position: absolute;
+                top: 0; bottom: 0; left: 8px;
+                width: 2px;
+                background: rgba(255,255,255,.35);
+            }
+
+            .sidebar-resize-handle::after {
+                content: "";
+                position: absolute;
+                top: 50%; left: 5px;
+                width: 8px; height: 52px;
+                transform: translateY(-50%);
+                border-radius: 999px;
+                background: rgba(255,255,255,.18);
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+            }
+
+            body.sidebar-collapse .sidebar-resize-handle {
+                display: none !important;
+            }
+
+            body.sidebar-resizing,
+            body.sidebar-resizing * {
+                user-select: none !important;
+                cursor: col-resize !important;
+            }
+
+            body.sidebar-resizing .sidebar-resize-handle {
+                background: rgba(42,119,200,.28);
+            }
         }
 
-        .dashboard-shell {
-            padding-top: 0 !important;
+        /* ── MÓVIL ───────────────────────────────────────── */
+        @media (max-width: 991.98px) {
+            .dashboard-menu {
+                gap: 6px;
+                padding: 14px 0 18px !important;
+            }
+
+            .dashboard-menu .nav-item {
+                padding: 0 6px;
+            }
+
+            .dashboard-menu .nav-link {
+                min-height: 50px;
+                padding: 0 14px !important;
+                font-size: .98rem !important;
+                border-radius: 14px !important;
+            }
+
+            .dashboard-menu .nav-icon {
+                width: 30px !important;
+                margin-right: 12px !important;
+                font-size: 1.05rem !important;
+            }
         }
 
+    /* =========================================================
+       TOPBAR ESTUDIANTE
+       Ajuste final sutil para combinar con el banner
+    ========================================================= */
+
+    .student-topbar {
+        position: relative !important;
+        z-index: 40 !important;
+        min-height: 52px !important;
+        margin: 0 10px 10px !important;
+        padding: 6px 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        background: linear-gradient(90deg, #123674 0%, #1c4f9d 48%, #174487 100%) !important;
+        border-bottom: 2px solid #ffd21f !important;
+        border-radius: 0 0 10px 10px !important;
+        box-shadow: 0 3px 8px rgba(8, 35, 78, 0.10) !important;
+        overflow: visible !important;
+    }
+
+    .student-topbar::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        border-radius: 0 0 10px 10px !important;
+        background: linear-gradient(
+            120deg,
+            rgba(255,255,255,0.06),
+            transparent 38%,
+            rgba(255,255,255,0.03)
+        ) !important;
+        pointer-events: none !important;
+    }
+
+    .student-topbar-left,
+    .student-topbar-right {
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    .student-topbar-left {
+        display: flex !important;
+        align-items: center !important;
+        min-width: 0 !important;
+    }
+
+    .student-topbar-right {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 7px !important;
+        min-width: 0 !important;
+    }
+
+    .topbar-left-copy {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .topbar-breadcrumb {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        padding: 7px 12px !important;
+        border-radius: 9px !important;
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.13) !important;
+        color: rgba(255,255,255,0.88) !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+    }
+
+    .topbar-breadcrumb i {
+        font-size: 12px !important;
+        color: rgba(255,255,255,0.82) !important;
+    }
+
+    .topbar-breadcrumb-active {
+        color: #ffd21f !important;
+        font-weight: 900 !important;
+    }
+
+    .topbar-action-group {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .topbar-icon-btn {
+        position: relative !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        background: rgba(255,255,255,0.08) !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.18s ease !important;
+        box-shadow: none !important;
+    }
+
+    .topbar-icon-btn:hover {
+        background: rgba(255,255,255,0.14) !important;
+        border-color: rgba(255,210,31,0.40) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .topbar-icon-btn i {
+        font-size: 14px !important;
+        color: #ffffff !important;
+    }
+
+    .topbar-badge {
+        position: absolute !important;
+        top: -6px !important;
+        right: -6px !important;
+        min-width: 17px !important;
+        height: 17px !important;
+        padding: 0 5px !important;
+        border-radius: 999px !important;
+        background: #e63946 !important;
+        color: #ffffff !important;
+        font-size: 9.5px !important;
+        font-weight: 900 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 2px solid #1c4f9d !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.22) !important;
+    }
+
+    .topbar-badge.gold {
+        background: #ffd21f !important;
+        color: #123674 !important;
+    }
+
+    .topbar-divider {
+        width: 1px !important;
+        height: 27px !important;
+        margin: 0 3px !important;
+        background: rgba(255,255,255,0.17) !important;
+    }
+
+    .student-user-chip {
+        min-height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+        padding: 5px 11px 5px 6px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255,255,255,0.17) !important;
+        background: rgba(255,255,255,0.09) !important;
+        color: #ffffff !important;
+        cursor: pointer !important;
+        transition: all 0.18s ease !important;
+        box-shadow: none !important;
+    }
+
+    .student-user-chip:hover {
+        background: rgba(255,255,255,0.14) !important;
+        border-color: rgba(255,210,31,0.40) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .student-user-chip-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #ffd21f !important;
+        color: #123674 !important;
+        font-weight: 900 !important;
+        font-size: 13px !important;
+    }
+
+    .student-user-chip-info {
+        display: flex !important;
+        flex-direction: column !important;
+        line-height: 1.1 !important;
+    }
+
+    .student-user-chip-name {
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        max-width: 175px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .student-user-chip-role {
+        margin-top: 2px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: rgba(255,255,255,0.74) !important;
+    }
+
+    .student-user-chip-arrow {
+        font-size: 11px !important;
+        color: rgba(255,255,255,0.76) !important;
+    }
+
+    .topbar-dropdown {
+        border-radius: 14px !important;
+        border: 1px solid rgba(13, 47, 104, 0.14) !important;
+        box-shadow: 0 18px 42px rgba(8, 35, 78, 0.24) !important;
+        overflow: hidden !important;
+    }
+
+    .topbar-dropdown-header {
+        background: #f6f9ff !important;
+        border-bottom: 1px solid #e3ebf7 !important;
+    }
+
+    .topbar-dropdown-header span {
+        color: #123674 !important;
+        font-weight: 900 !important;
+    }
+
+    .topbar-dropdown-mark,
+    .topbar-dropdown-footer a {
+        color: #1c4f9d !important;
+        font-weight: 800 !important;
+    }
+
+
+
+
+        /* ── DROPDOWNS TOPBAR ─────────────────────────────── */
+        .topbar-dropdown {
+            position: absolute !important;
+            top: calc(100% + 10px) !important;
+            right: 0 !important;
+            width: 330px !important;
+            max-width: calc(100vw - 24px) !important;
+            background: #ffffff !important;
+            display: none !important;
+            z-index: 5000 !important;
+        }
+
+        .topbar-dropdown.show {
+            display: block !important;
+        }
+
+        .topbar-dropdown.align-right {
+            right: 0 !important;
+        }
+
+        .topbar-dropdown-list {
+            list-style: none !important;
+            margin: 0 !important;
+            padding: 8px !important;
+        }
+
+        .topbar-dropdown-header,
+        .topbar-dropdown-footer {
+            padding: 11px 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+        }
+
+        .topbar-dropdown-item {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            padding: 10px !important;
+            border-radius: 12px !important;
+            transition: background .18s ease !important;
+        }
+
+        .topbar-dropdown-item:hover,
+        .topbar-dropdown-item.unread {
+            background: #f4f7fc !important;
+        }
+
+        .topbar-dropdown-item.sm {
+            align-items: center !important;
+        }
+
+        .topbar-dropdown-icon,
+        .topbar-dropdown-avatar {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 0 0 34px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-icon.sm {
+            width: 30px !important;
+            height: 30px !important;
+            flex-basis: 30px !important;
+        }
+
+        .topbar-dropdown-icon.blue,
+        .topbar-dropdown-avatar {
+            background: rgba(28, 79, 157, .12) !important;
+            color: #1c4f9d !important;
+        }
+
+        .topbar-dropdown-icon.gold {
+            background: rgba(255, 210, 31, .18) !important;
+            color: #8a6500 !important;
+        }
+
+        .topbar-dropdown-icon.green {
+            background: rgba(39, 174, 96, .13) !important;
+            color: #198754 !important;
+        }
+
+        .topbar-dropdown-text {
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            color: #24324b !important;
+        }
+
+        .topbar-dropdown-text strong {
+            color: #123674 !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-dropdown-text span {
+            color: #5d6b82 !important;
+            font-size: 12px !important;
+            line-height: 1.35 !important;
+        }
+
+        .topbar-dropdown-text small {
+            color: #8a96a8 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+        }
+
+        .topbar-user-header {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 13px !important;
+            background: linear-gradient(90deg, #123674 0%, #1c4f9d 100%) !important;
+            color: #ffffff !important;
+        }
+
+        .topbar-user-header-avatar {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 12px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-user-header strong,
+        .topbar-user-header span {
+            display: block !important;
+        }
+
+        .topbar-user-header strong {
+            font-size: 13px !important;
+            font-weight: 900 !important;
+        }
+
+        .topbar-user-header span {
+            font-size: 11px !important;
+            color: rgba(255,255,255,.78) !important;
+        }
+
+        .topbar-dropdown-footer {
+            border-top: 1px solid #e3ebf7 !important;
+        }
+
+        .topbar-dropdown-footer.danger button {
+            width: 100% !important;
+            border: none !important;
+            background: transparent !important;
+            color: #c62828 !important;
+            font-weight: 800 !important;
+            text-align: left !important;
+            padding: 0 !important;
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar-dropdown {
+                right: -8px !important;
+                width: calc(100vw - 26px) !important;
+            }
+        }
+
+
+
+        /* ── MENÚ DE USUARIO MEJORADO ─────────────────────── */
+        .user-profile-dropdown {
+            width: 315px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            background: #ffffff !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .user-profile-dropdown::before {
+            content: "" !important;
+            position: absolute !important;
+            top: -7px !important;
+            right: 28px !important;
+            width: 14px !important;
+            height: 14px !important;
+            background: #1c4f9d !important;
+            transform: rotate(45deg) !important;
+            border-left: 1px solid rgba(255,255,255,0.18) !important;
+            border-top: 1px solid rgba(255,255,255,0.18) !important;
+        }
+
+        .user-dropdown-header {
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 15px !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.22), transparent 35%),
+                linear-gradient(135deg, #123674 0%, #1c4f9d 58%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            color: #ffffff !important;
+        }
+
+        .user-dropdown-header::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background: linear-gradient(120deg, rgba(255,255,255,0.10), transparent 45%) !important;
+            pointer-events: none !important;
+        }
+
+        .user-dropdown-avatar {
+            position: relative !important;
+            z-index: 2 !important;
+            width: 46px !important;
+            height: 46px !important;
+            border-radius: 15px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            flex: 0 0 46px !important;
+            box-shadow: 0 7px 16px rgba(0,0,0,0.20) !important;
+        }
+
+        .user-dropdown-info {
+            position: relative !important;
+            z-index: 2 !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+        }
+
+        .user-dropdown-info strong {
+            color: #ffffff !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            line-height: 1.2 !important;
+            max-width: 220px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .user-dropdown-info span {
+            color: rgba(255,255,255,0.78) !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            max-width: 220px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .user-dropdown-info small {
+            margin-top: 5px !important;
+            width: fit-content !important;
+            padding: 3px 9px !important;
+            border-radius: 999px !important;
+            background: rgba(255, 210, 31, 0.18) !important;
+            border: 1px solid rgba(255, 210, 31, 0.36) !important;
+            color: #ffd21f !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+        }
+
+        .user-dropdown-body {
+            padding: 9px !important;
+            background: #ffffff !important;
+        }
+
+        .user-dropdown-option {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 11px 10px !important;
+            border-radius: 13px !important;
+            text-decoration: none !important;
+            color: #24324b !important;
+            transition: all .18s ease !important;
+        }
+
+        .user-dropdown-option:hover {
+            background: #f3f7ff !important;
+            transform: translateX(2px) !important;
+        }
+
+        .user-dropdown-option-icon {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 11px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 0 0 34px !important;
+            background: rgba(28, 79, 157, .12) !important;
+            color: #1c4f9d !important;
+        }
+
+        .user-dropdown-option-icon.gold {
+            background: rgba(255, 210, 31, .20) !important;
+            color: #8a6500 !important;
+        }
+
+        .user-dropdown-option span:not(.user-dropdown-option-icon) {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+
+        .user-dropdown-option strong {
+            color: #123674 !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+        }
+
+        .user-dropdown-option small {
+            color: #6b7890 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+        }
+
+        .user-dropdown-option-arrow {
+            color: #9aa7bb !important;
+            font-size: 11px !important;
+        }
+
+        .user-dropdown-footer {
+            padding: 10px 12px 12px !important;
+            background: #f7f9fd !important;
+            border-top: 1px solid #e3ebf7 !important;
+        }
+
+        .user-dropdown-footer form {
+            margin: 0 !important;
+        }
+
+        .user-logout-btn {
+            width: 100% !important;
+            min-height: 38px !important;
+            border: 1px solid rgba(198, 40, 40, 0.16) !important;
+            border-radius: 12px !important;
+            background: rgba(198, 40, 40, 0.07) !important;
+            color: #c62828 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+        }
+
+        .user-logout-btn:hover {
+            background: #c62828 !important;
+            color: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 8px 18px rgba(198, 40, 40, 0.22) !important;
+        }
+
+
+
+        /* ── CORRECCIÓN: EVITAR SCROLL DOBLE EN EL MENÚ ─────
+           Solo #dashboardSidebarScroll debe tener scroll vertical.
+           El .sidebar de AdminLTE trae su propio scroll y por eso
+           aparecían dos barras una al lado de la otra.
+        */
+        .main-sidebar {
+            overflow: hidden !important;
+        }
+
+        .main-sidebar .sidebar {
+            overflow: hidden !important;
+            height: auto !important;
+            max-height: none !important;
+        }
+
+        #dashboardSidebarScroll {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            scrollbar-gutter: stable !important;
+        }
+
+        #dashboardSidebarScroll nav {
+            overflow: visible !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar {
+            width: 8px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.06) !important;
+            border-radius: 999px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.45) !important;
+            border-radius: 999px !important;
+            border: 2px solid rgba(18,54,116,0.35) !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,210,31,0.75) !important;
+        }
+
+        /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
             overflow: hidden;
-            box-shadow: 0 24px 60px rgba(17, 43, 94, .28);
+            box-shadow: 0 24px 60px rgba(17,43,94,.28);
         }
 
         .session-timeout-header {
@@ -707,25 +1138,661 @@
             padding: 10px 18px;
             font-weight: 700;
         }
+    
+        /* ── AJUSTE SUBMENÚ SECRETARÍA ───────────────────── */
+        .dashboard-menu .nav-treeview {
+            padding: 4px 0 4px 0 !important;
+        }
 
-        @media (max-width: 1199.98px) {
-            .coord-user-chip {
-                min-width: unset;
-                min-width: 300px;
-                max-width: 340px;
+        .dashboard-menu .nav-treeview .nav-item {
+            padding: 0 10px 0 18px !important;
+        }
+
+        .dashboard-menu .nav-treeview .nav-link {
+            min-height: 42px !important;
+            padding: 0 14px !important;
+            border-radius: 12px !important;
+            font-size: .94rem !important;
+            font-weight: 700 !important;
+        }
+
+        .dashboard-menu .nav-treeview .nav-icon {
+            width: 24px !important;
+            margin-right: 10px !important;
+            font-size: .78rem !important;
+        }
+
+        /* ── CORRECCIÓN FLECHA SUBMENÚ ──────────────────────
+           Evita que la flecha de AdminLTE se salga o se vea rara
+           cuando el menú se acerca, se reduce o se cambia el zoom.
+        */
+        .dashboard-menu .nav-item.has-treeview > .nav-link {
+            position: relative !important;
+            overflow: hidden !important;
+            padding-right: 14px !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link .menu-parent-label {
+            width: 100% !important;
+            min-width: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            margin: 0 !important;
+            line-height: 1.18 !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link .menu-label-text {
+            display: block !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link .menu-caret,
+        .dashboard-menu .nav-item.has-treeview > .nav-link .right {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            margin-left: 6px !important;
+            transform: none !important;
+            flex: 0 0 24px !important;
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255,255,255,.12) !important;
+            border: 1px solid rgba(255,255,255,.14) !important;
+            color: rgba(255,255,255,.88) !important;
+            font-size: .78rem !important;
+            transition: transform .22s ease, background .18s ease, color .18s ease !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview.menu-open > .nav-link .menu-caret,
+        .dashboard-menu .nav-item.has-treeview.menu-open > .nav-link .right {
+            transform: rotate(-90deg) !important;
+            background: rgba(255,210,31,.18) !important;
+            border-color: rgba(255,210,31,.30) !important;
+            color: #ffd21f !important;
+        }
+
+        .dashboard-menu .nav-item.has-treeview > .nav-link:hover .menu-caret,
+        .dashboard-menu .nav-item.has-treeview > .nav-link:hover .right {
+            background: rgba(255,255,255,.18) !important;
+            color: #ffffff !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-item.has-treeview > .nav-link {
+            justify-content: center !important;
+            padding-right: 18px !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-item.has-treeview > .nav-link .menu-parent-label {
+            display: none !important;
+        }
+
+
+        /* =========================================================
+           AJUSTE FINAL IGUAL AL ESTUDIANTE
+           Topbar pegada al menú + contenido con margen interno.
+        ========================================================= */
+
+        .content-wrapper > .content.dashboard-shell {
+            padding: 0 !important;
+        }
+
+        .dashboard-shell-body {
+            padding: 4px 16px 0 24px !important;
+        }
+
+        .dashboard-shell-body .hero-banner {
+            margin-top: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .student-topbar {
+            position: relative !important;
+            z-index: 80 !important;
+            min-height: 68px !important;
+            margin: 0 0 10px !important;
+            padding: 10px 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+            overflow: visible !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.13), transparent 28%),
+                linear-gradient(90deg, #0f3370 0%, #1c4f9d 50%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            border-radius: 0 0 16px 0 !important;
+            box-shadow:
+                0 10px 24px rgba(8, 35, 78, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .student-topbar::before {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            border-radius: 0 0 16px 0 !important;
+            background:
+                linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%, rgba(255,255,255,0.04) 72%, transparent),
+                linear-gradient(135deg, transparent 0 62%, rgba(9, 43, 105, 0.18) 62% 72%, transparent 72%) !important;
+            pointer-events: none !important;
+        }
+
+        .student-topbar::after {
+            content: "" !important;
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: -7px !important;
+            height: 7px !important;
+            background: linear-gradient(180deg, rgba(8,35,78,0.12), transparent) !important;
+            pointer-events: none !important;
+        }
+
+        .student-topbar-left,
+        .student-topbar-right {
+            position: relative !important;
+            z-index: 2 !important;
+        }
+
+        .student-topbar-left {
+            display: flex !important;
+            align-items: center !important;
+            min-width: 0 !important;
+        }
+
+        .student-topbar-right {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+        }
+
+        .topbar-left-copy {
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .topbar-breadcrumb {
+            min-height: 40px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 0 16px !important;
+            border-radius: 14px !important;
+            background: rgba(255, 255, 255, 0.10) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            color: rgba(255,255,255,0.90) !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .topbar-breadcrumb i {
+            font-size: 12px !important;
+            color: rgba(255,255,255,0.84) !important;
+        }
+
+        .topbar-breadcrumb-active {
+            color: #ffd21f !important;
+            font-weight: 900 !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.16) !important;
+        }
+
+        .topbar-icon-btn {
+            position: relative !important;
+            width: 42px !important;
+            height: 42px !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.10) !important;
+            color: #ffffff !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .topbar-icon-btn:hover,
+        .student-user-chip:hover {
+            background: rgba(255,255,255,0.17) !important;
+            border-color: rgba(255,210,31,0.48) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .topbar-icon-btn i {
+            font-size: 15px !important;
+            color: #ffffff !important;
+        }
+
+        .topbar-badge {
+            position: absolute !important;
+            top: -7px !important;
+            right: -7px !important;
+            min-width: 18px !important;
+            height: 18px !important;
+            padding: 0 5px !important;
+            border-radius: 999px !important;
+            background: #e63946 !important;
+            color: #ffffff !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 2px solid #1c4f9d !important;
+            box-shadow: 0 4px 9px rgba(0,0,0,0.24) !important;
+        }
+
+        .topbar-badge.gold {
+            background: #ffd21f !important;
+            color: #123674 !important;
+        }
+
+        .topbar-divider {
+            width: 1px !important;
+            height: 34px !important;
+            margin: 0 5px !important;
+            background: rgba(255,255,255,0.20) !important;
+        }
+
+        .student-user-chip {
+            min-height: 44px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 5px 14px 5px 7px !important;
+            border-radius: 15px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.11) !important;
+            color: #ffffff !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
+
+        .student-user-chip-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            font-weight: 900 !important;
+            font-size: 13px !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
+        }
+
+        .student-user-chip-info {
+            display: flex !important;
+            flex-direction: column !important;
+            line-height: 1.08 !important;
+            min-width: 0 !important;
+        }
+
+        .student-user-chip-name {
+            max-width: 190px !important;
+            color: #ffffff !important;
+            font-size: 12.5px !important;
+            font-weight: 900 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .student-user-chip-role {
+            margin-top: 3px !important;
+            color: rgba(255,255,255,0.74) !important;
+            font-size: 10.5px !important;
+            font-weight: 800 !important;
+        }
+
+        .student-user-chip-arrow {
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.78) !important;
+        }
+
+        .topbar-dropdown {
+            position: absolute !important;
+            top: calc(100% + 12px) !important;
+            right: 0 !important;
+            width: 330px !important;
+            max-width: calc(100vw - 24px) !important;
+            background: #ffffff !important;
+            display: none !important;
+            z-index: 5000 !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .topbar-dropdown.show {
+            display: block !important;
+        }
+
+        .user-profile-dropdown {
+            width: 315px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(18, 54, 116, 0.14) !important;
+            background: #ffffff !important;
+            box-shadow: 0 22px 48px rgba(8, 35, 78, 0.26) !important;
+            overflow: hidden !important;
+        }
+
+        .user-dropdown-header {
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 15px !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.22), transparent 35%),
+                linear-gradient(135deg, #123674 0%, #1c4f9d 58%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            color: #ffffff !important;
+        }
+
+        .user-dropdown-avatar {
+            position: relative !important;
+            z-index: 2 !important;
+            width: 46px !important;
+            height: 46px !important;
+            border-radius: 15px !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            flex: 0 0 46px !important;
+            box-shadow: 0 7px 16px rgba(0,0,0,0.20) !important;
+        }
+
+        .main-sidebar,
+        .main-sidebar .sidebar,
+        #dashboardSidebarScroll,
+        #dashboardSidebarScroll nav {
+            overflow-x: hidden !important;
+        }
+
+        #dashboardSidebarScroll {
+            width: 100% !important;
+        }
+
+        .dashboard-menu,
+        .dashboard-menu.nav,
+        .dashboard-menu.nav-sidebar,
+        .dashboard-menu.flex-column {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+        }
+
+        .dashboard-menu .nav-item {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 auto !important;
+            display: block !important;
+            float: none !important;
+            clear: both !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+        }
+
+        .dashboard-menu .nav-link {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            flex-wrap: nowrap !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+
+        .dashboard-menu .nav-link .nav-icon {
+            flex: 0 0 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+            margin-left: 0 !important;
+            margin-right: 14px !important;
+            text-align: center !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .dashboard-menu .nav-link p {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            display: block !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link .nav-icon {
+            margin-right: 0 !important;
+        }
+
+        body.sidebar-collapse .dashboard-menu .nav-link p {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-shell-body {
+                padding: 4px 12px 0 18px !important;
+            }
+
+            .student-topbar {
+                min-height: auto !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                margin: 0 0 10px !important;
+                padding: 10px !important;
+            }
+
+            .student-topbar-right {
+                justify-content: flex-end !important;
+                flex-wrap: wrap !important;
+            }
+
+            .topbar-breadcrumb {
+                width: fit-content !important;
+                max-width: 100% !important;
+            }
+
+            .student-user-chip-name {
+                max-width: 130px !important;
             }
         }
 
-        @media (max-width: 991.98px) {
-            .coordinator-topbar {
-                display: none;
-            }
+    
+
+        /* =========================================================
+           FIX DEFINITIVO: QUITAR DOBLE SCROLL EN SECRETARÍA
+           Deja UN solo scroll: el del menú (#dashboardSidebarScroll).
+           AdminLTE / OverlayScrollbars a veces agrega un segundo scroll
+           dentro de .sidebar; aquí se neutraliza.
+        ========================================================= */
+        html,
+        body {
+            min-height: 100% !important;
+            overflow-x: hidden !important;
         }
-    </style>
+
+        .wrapper,
+        .content-wrapper,
+        .content-wrapper > .content,
+        .dashboard-shell,
+        .dashboard-shell-body {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+        }
+
+        .main-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            z-index: 1038 !important;
+        }
+
+        .main-sidebar .sidebar {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Oculta el scroll extra que puede crear AdminLTE/OverlayScrollbars */
+        .main-sidebar .sidebar .os-scrollbar,
+        .main-sidebar .sidebar .os-scrollbar-vertical,
+        .main-sidebar .sidebar .os-scrollbar-horizontal,
+        .main-sidebar .os-scrollbar,
+        .main-sidebar .os-scrollbar-vertical,
+        .main-sidebar .os-scrollbar-horizontal {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .main-sidebar .sidebar .os-host,
+        .main-sidebar .sidebar .os-padding,
+        .main-sidebar .sidebar .os-viewport,
+        .main-sidebar .sidebar .os-content {
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        /* Este es el ÚNICO scroll permitido en el menú */
+        #dashboardSidebarScroll {
+            width: 100% !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            overscroll-behavior: contain !important;
+            scrollbar-gutter: stable !important;
+            padding-bottom: 12px !important;
+        }
+
+        #dashboardSidebarScroll nav,
+        #dashboardSidebarScroll .dashboard-menu {
+            overflow: visible !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar {
+            width: 8px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.06) !important;
+            border-radius: 999px !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.45) !important;
+            border-radius: 999px !important;
+            border: 2px solid rgba(18,54,116,0.35) !important;
+        }
+
+        #dashboardSidebarScroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,210,31,0.75) !important;
+        }
+
+        body.sidebar-collapse #dashboardSidebarScroll {
+            overflow-y: hidden !important;
+        }
+
+
+        /* =========================================================
+           NOTIFICACIONES DINÁMICAS SECRETARÍA
+           Quita datos hipotéticos y usa tbl_notificacion vía API.
+        ========================================================= */
+        #notifBadge.notif-hidden,
+        .topbar-badge.notif-hidden {
+            display: none !important;
+        }
+
+        .topbar-dropdown-empty {
+            padding: 20px 14px !important;
+            text-align: center !important;
+            color: #6b7890 !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            line-height: 1.4 !important;
+        }
+
+        .topbar-dropdown-empty i {
+            color: #9aa7bb !important;
+            font-size: 17px !important;
+            margin-bottom: 6px !important;
+        }
+
+        .topbar-dropdown-item-link {
+            display: block !important;
+            color: inherit !important;
+            text-decoration: none !important;
+            border-radius: 12px !important;
+        }
+
+        .topbar-dropdown-item-link:hover {
+            color: inherit !important;
+            text-decoration: none !important;
+        }
+
+        .topbar-dropdown-icon.red {
+            background: rgba(198, 40, 40, .13) !important;
+            color: #c62828 !important;
+        }
+
+        .topbar-dropdown-text span {
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+
+</style>
 </head>
+
 <body class="hold-transition dashboard-body">
 <div class="wrapper">
 
+    {{-- ── NAV MOBILE ──────────────────────────────────────── --}}
     <nav class="main-header navbar navbar-expand navbar-dark d-lg-none">
         <ul class="navbar-nav">
             <li class="nav-item">
@@ -737,68 +1804,89 @@
         <span class="mobile-title">PumaGestión</span>
     </nav>
 
-    <aside class="main-sidebar elevation-4">
-        <div class="sidebar-bg" style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
+    {{-- ── SIDEBAR ──────────────────────────────────────────── --}}
+    <aside id="studentSidebar" class="main-sidebar elevation-4">
+        <div class="sidebar-bg"
+             style="background-image: url('{{ asset('images/Edificio2.jpeg') }}');"></div>
         <div class="sidebar-overlay"></div>
 
-        <a href="javascript:void(0)" class="brand-link">
+        {{-- Logo --}}
+        <a href="{{ $dashboardUrl }}" class="brand-link">
             <div class="brand-top-glow"></div>
-
             <div class="brand-logo-wrap">
                 <img src="{{ asset('images/Logo.png') }}" alt="Logo PumaGestión" class="brand-logo-img">
             </div>
-
             <div class="brand-name">
                 <span class="brand-name-white">Puma</span><span class="brand-name-gold">Gestión</span>
             </div>
-
             <div class="brand-subtitle">FCEAC · UNAH</div>
         </a>
 
         <div class="sidebar">
-            <div class="sidebar-user-card">
-                <div class="sidebar-user-avatar">{{ $initials }}</div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">{{ $displayName }}</div>
-                    <div class="sidebar-user-role">{{ $displayRole }}</div>
+
+            {{-- ══ BLOQUE CONTROL ══ --}}
+            <div class="sidebar-control-block d-none d-lg-flex">
+
+                <button type="button"
+                        id="sidebarToggleBtn"
+                        class="sidebar-toggle-inner"
+                        title="Colapsar / Expandir menú">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="sidebar-control-info">
+                    <span class="sidebar-control-label">Tamaño del menú</span>
+                    <div class="sidebar-size-btns">
+                        <button type="button" id="sidebarSizeDown"
+                                class="sidebar-size-btn" title="Reducir">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" id="sidebarSizeReset"
+                                class="sidebar-size-btn" title="Normal">
+                            Normal
+                        </button>
+                        <button type="button" id="sidebarSizeUp"
+                                class="sidebar-size-btn" title="Ampliar">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                 </div>
+
             </div>
 
-            <div id="dashboardSidebarScroll" class="dashboard-sidebar-scroll">
+            {{-- ── MENÚ ──────────────────────────────────────── --}}
+            <div id="dashboardSidebarScroll" class="dashboardSidebarScroll">
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu" data-widget="treeview" role="menu" data-accordion="false">
+
+                    <ul class="nav nav-pills nav-sidebar flex-column dashboard-menu"
+                        data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ $dashboardActive ? 'active' : '' }}">
+                            <a href="{{ $dashboardUrl }}" class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-house"></i>
                                 <p>Inicio</p>
                             </a>
                         </li>
 
-                        {{-- Trámites --}}
-                        <li class="nav-item has-treeview {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'menu-open' : '' }}">
-                            <a href="javascript:void(0)"
-                               class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*', 'coordinador.cancelacion.*') ? 'active' : '' }}">
+                        <li class="nav-item has-treeview {{ $menuRevisionOpen ? 'menu-open' : '' }}">
+                            <a href="javascript:void(0)" class="nav-link {{ $menuRevisionOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-folder-open"></i>
-                                <p>
-                                    Trámites
-                                    <i class="right fas fa-angle-left"></i>
+                                <p class="menu-parent-label">
+                                    <span class="menu-label-text">Trámites</span>
+                                    <i class="right fas fa-angle-left menu-caret"></i>
                                 </p>
                             </a>
 
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ route('coordinador.cambio-carrera.index') }}"
-                                       class="nav-link {{ request()->routeIs('coordinador.cambio-carrera.*') ? 'active' : '' }}">
+                                    <a href="{{ $cambioCarreraUrl }}" class="nav-link {{ $menuCambioCarreraActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cambio de carrera</p>
                                     </a>
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="{{ route('cancelacion.coordinadora.index') }}"
-                                       class="nav-link {{ request()->routeIs('cancelacion.coordinadora.*') ? 'active' : '' }}">
+                                    <a href="{{ $cancelacionUrl }}" class="nav-link {{ $menuCancelacionActive ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Cancelación</p>
                                     </a>
@@ -807,230 +1895,216 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ $backupUrl }}"
-                               class="nav-link {{ $backupActive ? 'active' : '' }}">
+                            <a href="{{ $respaldoUrl }}" class="nav-link {{ $respaldoActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-database"></i>
                                 <p>Respaldo</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('seguridad.index') }}"
-                               class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
+                            <a href="{{ $seguridadUrl }}" class="nav-link {{ $seguridadActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-shield-halved"></i>
                                 <p>Seguridad</p>
                             </a>
                         </li>
 
-                        {{-- Reportes --}}
                         <li class="nav-item">
-                            <a href="{{ route('reporte.tramites.vista') }}"
-                               class="nav-link {{ request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*') ? 'active' : '' }}">
+                            <a href="{{ $reportesUrl }}" class="nav-link {{ $reportesActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-bar"></i>
                                 <p>Reportes</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('auditoria') }}"
-                               class="nav-link {{ request()->routeIs('auditoria*') ? 'active' : '' }}">
+                            <a href="{{ $auditoriaUrl }}" class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
-                        {{-- Bitácora --}}
                         <li class="nav-item">
-                            <a href="{{ route('bitacora.index') }}" class="nav-link {{ request()->routeIs('bitacora.index') ? 'active' : '' }}">
+                            <a href="{{ $bitacoraUrl }}" class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Bitácora</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                            <a href="{{ $soporteUrl }}" class="nav-link {{ $soporteActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-headset"></i>
+                                <p>Soporte</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
                         </li>
-
                     </ul>
+
                 </nav>
             </div>
         </div>
     </aside>
 
-    <button id="sidebarToggleBtn" class="sidebar-float-toggle d-none d-lg-flex" type="button" title="Colapsar/Expandir menú">
-        <i class="fas fa-chevron-left"></i>
-    </button>
+    {{-- ── HANDLE RESIZE ────────────────────────────────────── --}}
+    <div id="sidebarResizeHandle"
+         class="sidebar-resize-handle d-none d-lg-block"
+         title="Arrastra para ajustar el ancho"></div>
 
+    {{-- ── CONTENIDO ────────────────────────────────────────── --}}
     <div class="content-wrapper">
+        <section class="content dashboard-shell">
 
-        @if (!trim($__env->yieldContent('hide_topbar')))
-            <div class="student-topbar coordinator-topbar-sa">
+    {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
+    <div class="student-topbar">
 
-                <div class="student-topbar-left">
-                    <div class="topbar-left-copy">
-                        <div class="topbar-breadcrumb">
-                            <i class="fas fa-house"></i>
-                            <span>Inicio</span>
-                            <i class="fas fa-chevron-right"></i>
-                            <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
-                        </div>
-                        <h1 class="topbar-page-title">Panel de coordinación académica</h1>
-                    </div>
-                </div>
-
-                <div class="student-topbar-right">
-
-                    <div class="topbar-action-group">
-                        <button class="topbar-icon-btn" id="btnCoordNotif" title="Notificaciones">
-                            <i class="fas fa-bell"></i>
-                            <span class="topbar-badge">3</span>
-                        </button>
-
-                        <div class="topbar-dropdown" id="dropCoordNotif">
-                            <div class="topbar-dropdown-header">
-                                <span>Notificaciones</span>
-                                <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
-                            </div>
-
-                            <ul class="topbar-dropdown-list">
-                                <li class="topbar-dropdown-item unread">
-                                    <div class="topbar-dropdown-icon blue">
-                                        <i class="fas fa-file-circle-check"></i>
-                                    </div>
-                                    <div class="topbar-dropdown-text">
-                                        <strong>Nuevo trámite recibido</strong>
-                                        <span>Hay una solicitud pendiente de revisión en coordinación.</span>
-                                        <small>Hace 5 min</small>
-                                    </div>
-                                </li>
-
-                                <li class="topbar-dropdown-item unread">
-                                    <div class="topbar-dropdown-icon gold">
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                    <div class="topbar-dropdown-text">
-                                        <strong>Seguimiento requerido</strong>
-                                        <span>Una solicitud continúa en estado de revisión.</span>
-                                        <small>Hace 1 hora</small>
-                                    </div>
-                                </li>
-
-                                <li class="topbar-dropdown-item">
-                                    <div class="topbar-dropdown-icon green">
-                                        <i class="fas fa-circle-check"></i>
-                                    </div>
-                                    <div class="topbar-dropdown-text">
-                                        <strong>Dictamen emitido</strong>
-                                        <span>Se registró correctamente una resolución reciente.</span>
-                                        <small>Ayer</small>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <div class="topbar-dropdown-footer">
-                                <a href="#">Ver todas las notificaciones</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="topbar-action-group">
-                        <button class="topbar-icon-btn" id="btnCoordMsg" title="Mensajes">
-                            <i class="fas fa-envelope"></i>
-                            <span class="topbar-badge gold">1</span>
-                        </button>
-
-                        <div class="topbar-dropdown" id="dropCoordMsg">
-                            <div class="topbar-dropdown-header">
-                                <span>Mensajes</span>
-                                <a href="#" class="topbar-dropdown-mark">Ver todos</a>
-                            </div>
-
-                            <ul class="topbar-dropdown-list">
-                                <li class="topbar-dropdown-item unread">
-                                    <div class="topbar-dropdown-avatar">SA</div>
-                                    <div class="topbar-dropdown-text">
-                                        <strong>Secretaría Académica</strong>
-                                        <span>Se actualizó un trámite que requiere validación de coordinación.</span>
-                                        <small>Hace 30 min</small>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <div class="topbar-dropdown-footer">
-                                <a href="#">Ir a mensajes</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="topbar-divider"></div>
-
-                    <div class="topbar-action-group">
-                        <button class="student-user-chip" id="btnCoordUser" title="Mi perfil">
-                            <div class="student-user-chip-avatar">{{ $initials }}</div>
-                            <div class="student-user-chip-info">
-                                <span class="student-user-chip-name">{{ $displayName }}</span>
-                                <span class="student-user-chip-role">Coordinadora</span>
-                            </div>
-                            <i class="fas fa-chevron-down student-user-chip-arrow"></i>
-                        </button>
-
-                        <div class="topbar-dropdown align-right" id="dropCoordUser">
-                            <div class="topbar-user-header">
-                                <div class="topbar-user-header-avatar">{{ $initials }}</div>
-                                <div>
-                                    <strong>{{ $displayName }}</strong>
-                                    <span>{{ $correoInstitucional }}</span>
-                                </div>
-                            </div>
-
-                            <ul class="topbar-dropdown-list">
-                                <li class="topbar-dropdown-item sm">
-                                    <div class="topbar-dropdown-icon blue sm">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="topbar-dropdown-text">
-                                        <span>Mi perfil</span>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <div class="topbar-dropdown-footer danger">
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit">
-                                        <i class="fas fa-right-from-bracket"></i> Cerrar sesión
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
+        <div class="student-topbar-left">
+            <div class="topbar-left-copy">
+                <div class="topbar-breadcrumb">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
                 </div>
             </div>
-        @endif
+        </div>
 
-        <section class="content dashboard-shell">
-            @yield('content')
+        <div class="student-topbar-right">
+
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                    <span class="topbar-badge notif-hidden" id="notifBadge"></span>
+                </button>
+
+                <div class="topbar-dropdown" id="dropNotif">
+                    <div class="topbar-dropdown-header">
+                        <span>Notificaciones</span>
+                        <a href="#" class="topbar-dropdown-mark" id="btnMarcarTodasNotif">Marcar todas</a>
+                    </div>
+
+                    <ul class="topbar-dropdown-list" id="notifList">
+                        <li class="topbar-dropdown-item">
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Cargando...</strong>
+                                <span>Obteniendo tus notificaciones.</span>
+                                <small>Un momento</small>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="topbar-dropdown-footer">
+                        <a href="{{ url('/notificaciones') }}">Ver todas las notificaciones</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
+                    <i class="fas fa-envelope"></i>
+                    <span class="topbar-badge gold">1</span>
+                </button>
+
+                <div class="topbar-dropdown" id="dropMsg">
+                    <div class="topbar-dropdown-header">
+                        <span>Mensajes</span>
+                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                    </div>
+
+                    <ul class="topbar-dropdown-list">
+                        <li class="topbar-dropdown-item unread">
+                            <div class="topbar-dropdown-avatar">SC</div>
+                            <div class="topbar-dropdown-text">
+                                <strong>Secretaría de Carrera</strong>
+                                <span>Se requiere seguimiento sobre un trámite remitido.</span>
+                                <small>Hace 30 min</small>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="topbar-dropdown-footer">
+                        <a href="#">Ir a mensajes</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topbar-divider"></div>
+
+            <div class="topbar-action-group">
+                <button class="student-user-chip" id="btnUser" title="Mi perfil">
+                    <div class="student-user-chip-avatar">{{ $initials }}</div>
+                    <div class="student-user-chip-info">
+                        <span class="student-user-chip-name">{{ $displayName }}</span>
+                        <span class="student-user-chip-role">{{ $displayRole }}</span>
+                    </div>
+                    <i class="fas fa-chevron-down student-user-chip-arrow"></i>
+                </button>
+
+                <div class="topbar-dropdown align-right user-profile-dropdown" id="dropUser">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">{{ $initials }}</div>
+                        <div class="user-dropdown-info">
+                            <strong>{{ $displayName }}</strong>
+                            <span>{{ $correoInstitucional }}</span>
+                            <small>{{ $displayRole }}</small>
+                        </div>
+                    </div>
+
+                    <div class="user-dropdown-body">
+                        <a href="#" class="user-dropdown-option">
+                            <span class="user-dropdown-option-icon">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <span>
+                                <strong>Mi perfil</strong>
+                                <small>Ver información personal</small>
+                            </span>
+                            <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
+                        </a>
+                    </div>
+
+                    <div class="user-dropdown-footer">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="user-logout-btn">
+                                <i class="fas fa-right-from-bracket"></i>
+                                <span>Cerrar sesión</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+            <div class="dashboard-shell-body">
+                @yield('content')
+            </div>
         </section>
     </div>
 
     <footer class="main-footer">
         <strong>© 2026 PumaGestión – UNAH</strong>
     </footer>
+
 </div>
 
+{{-- ── MODAL DE SESIÓN ───────────────────────────────────── --}}
 <div class="modal fade session-timeout-modal"
-    id="sessionTimeoutModal"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="sessionTimeoutModalLabel"
-    aria-hidden="true"
-    data-backdrop="static"
-    data-keyboard="false">
+     id="sessionTimeoutModal"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="sessionTimeoutModalLabel"
+     aria-hidden="true"
+     data-backdrop="static"
+     data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="session-timeout-header">
@@ -1043,7 +2117,7 @@
 
                 <div class="session-timeout-countdown">
                     <i class="fas fa-hourglass-half"></i>
-                    <span>Se cerrará en <span id="sessionCountdownText">180</span> segundos</span>
+                    <span>Se cerrará en <span id="sessionCountdownText">60</span> segundos</span>
                 </div>
             </div>
 
@@ -1060,70 +2134,354 @@
     </div>
 </div>
 
+{{-- ── SCRIPTS ──────────────────────────────────────────────── --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-@vite(['resources/js/dashboard.js'])
+<script src="{{ asset('js/dashboard.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const btnNotif = document.getElementById('btnCoordNotif');
-    const btnMsg   = document.getElementById('btnCoordMsg');
-    const btnUser  = document.getElementById('btnCoordUser');
+    const dropdownPairs = [
+        ['btnNotif', 'dropNotif'],
+        ['btnMsg', 'dropMsg'],
+        ['btnUser', 'dropUser'],
+    ];
 
-    const dropNotif = document.getElementById('dropCoordNotif');
-    const dropMsg   = document.getElementById('dropCoordMsg');
-    const dropUser  = document.getElementById('dropCoordUser');
-
-    const allDrops = [dropNotif, dropMsg, dropUser];
-
-    function closeAll(except = null) {
-        allDrops.forEach(drop => {
-            if (!drop) return;
-            if (drop !== except) {
-                drop.classList.remove('show');
+    function closeTopbarDropdowns(exceptId = null) {
+        dropdownPairs.forEach(([_, dropdownId]) => {
+            if (dropdownId !== exceptId) {
+                document.getElementById(dropdownId)?.classList.remove('show');
             }
         });
     }
 
-    function toggleDropdown(button, dropdown) {
+    dropdownPairs.forEach(([buttonId, dropdownId]) => {
+        const button = document.getElementById(buttonId);
+        const dropdown = document.getElementById(dropdownId);
+
         if (!button || !dropdown) return;
 
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
 
-            const willOpen = !dropdown.classList.contains('show');
-            closeAll();
-            if (willOpen) {
-                dropdown.classList.add('show');
+            const isOpen = dropdown.classList.contains('show');
+            closeTopbarDropdowns(dropdownId);
+            dropdown.classList.toggle('show', !isOpen);
+        });
+
+        dropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+    });
+
+    document.addEventListener('click', function () {
+        closeTopbarDropdowns();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeTopbarDropdowns();
+        }
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const notifBadge = document.getElementById('notifBadge');
+    const notifList = document.getElementById('notifList');
+    const btnMarcarTodas = document.getElementById('btnMarcarTodasNotif');
+
+    const URL_NOTIF_RECIENTES = "{{ url('/api/notificaciones/recientes') }}";
+    const URL_MARCAR_TODAS = "{{ url('/api/notificaciones/marcar-todas-leidas') }}";
+    const URL_ABRIR_BASE = "{{ url('/notificaciones/abrir') }}";
+
+    function escaparHtml(valor) {
+        return String(valor ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function normalizarColor(color) {
+        const permitidos = ['blue', 'gold', 'green', 'red'];
+        return permitidos.includes(color) ? color : 'blue';
+    }
+
+    function normalizarIcono(icono) {
+        return icono && typeof icono === 'string' ? icono : 'fas fa-bell';
+    }
+
+    function actualizarBadge(cantidad) {
+        const total = Number(cantidad || 0);
+        if (!notifBadge) return;
+
+        if (total > 0) {
+            notifBadge.textContent = total > 99 ? '99+' : String(total);
+            notifBadge.classList.remove('notif-hidden');
+        } else {
+            notifBadge.textContent = '';
+            notifBadge.classList.add('notif-hidden');
+        }
+    }
+
+    function renderizarNotificaciones(notificaciones) {
+        if (!notifList) return;
+
+        if (!Array.isArray(notificaciones) || notificaciones.length === 0) {
+            notifList.innerHTML = `
+                <li class="topbar-dropdown-empty">
+                    <i class="fas fa-bell-slash"></i><br>
+                    No tienes notificaciones por ahora.
+                </li>
+            `;
+            return;
+        }
+
+        notifList.innerHTML = notificaciones.map((notif) => {
+            const id = notif.id_notificacion;
+            const titulo = escaparHtml(notif.titulo || 'Notificación');
+            const mensaje = escaparHtml(notif.mensaje || 'Tienes una actualización pendiente.');
+            const tiempo = escaparHtml(notif.tiempo || notif.fecha_creacion || '');
+            const color = normalizarColor(notif.color);
+            const icono = escaparHtml(normalizarIcono(notif.icono));
+            const unreadClass = notif.leida ? '' : 'unread';
+            const abrirUrl = `${URL_ABRIR_BASE}/${encodeURIComponent(id)}`;
+
+            return `
+                <li>
+                    <a href="${abrirUrl}" class="topbar-dropdown-item-link">
+                        <div class="topbar-dropdown-item ${unreadClass}">
+                            <div class="topbar-dropdown-icon ${color}">
+                                <i class="${icono}"></i>
+                            </div>
+                            <div class="topbar-dropdown-text">
+                                <strong>${titulo}</strong>
+                                <span>${mensaje}</span>
+                                <small>${tiempo}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async function cargarNotificaciones() {
+        try {
+            const response = await fetch(URL_NOTIF_RECIENTES, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                const textoError = await response.text();
+                console.error('Error al cargar notificaciones:', response.status, textoError);
+                throw new Error('No se pudieron cargar las notificaciones.');
             }
+
+            const data = await response.json();
+
+            actualizarBadge(data.unread_count || 0);
+            renderizarNotificaciones(data.notificaciones || []);
+        } catch (error) {
+            console.error('Error cargando notificaciones:', error);
+
+            if (notifList) {
+                notifList.innerHTML = `
+                    <li class="topbar-dropdown-empty">
+                        <i class="fas fa-triangle-exclamation"></i><br>
+                        No se pudieron cargar las notificaciones.
+                    </li>
+                `;
+            }
+
+            actualizarBadge(0);
+        }
+    }
+
+    async function marcarTodasComoLeidas(event) {
+        event.preventDefault();
+
+        try {
+            const response = await fetch(URL_MARCAR_TODAS, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                const textoError = await response.text();
+                console.error('Error marcando notificaciones:', response.status, textoError);
+                throw new Error('No se pudieron marcar las notificaciones.');
+            }
+
+            await cargarNotificaciones();
+        } catch (error) {
+            console.error('Error marcando notificaciones:', error);
+        }
+    }
+
+    if (btnMarcarTodas) {
+        btnMarcarTodas.addEventListener('click', marcarTodasComoLeidas);
+    }
+
+    cargarNotificaciones();
+    setInterval(cargarNotificaciones, 15000);
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const root         = document.documentElement;
+    const body         = document.body;
+    const toggleBtn    = document.getElementById('sidebarToggleBtn');
+    const btnDown      = document.getElementById('sidebarSizeDown');
+    const btnReset     = document.getElementById('sidebarSizeReset');
+    const btnUp        = document.getElementById('sidebarSizeUp');
+    const resizeHandle = document.getElementById('sidebarResizeHandle');
+
+    const STORAGE_WIDTH_KEY    = 'student_sidebar_width';
+    const STORAGE_COLLAPSE_KEY = 'student_sidebar_collapsed';
+
+    const MIN_WIDTH     = 280;
+    const MAX_WIDTH     = 460;
+    const DEFAULT_WIDTH = 350;
+    const STEP          = 20;
+
+    let isResizing = false;
+
+    function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+
+    function applyWidth(w) {
+        root.style.setProperty('--student-sidebar-width', clamp(w, MIN_WIDTH, MAX_WIDTH) + 'px');
+    }
+
+    function saveWidth(w) {
+        localStorage.setItem(STORAGE_WIDTH_KEY, String(clamp(w, MIN_WIDTH, MAX_WIDTH)));
+    }
+
+    function getSavedWidth() {
+        const v = parseInt(localStorage.getItem(STORAGE_WIDTH_KEY), 10);
+        return Number.isFinite(v) ? clamp(v, MIN_WIDTH, MAX_WIDTH) : DEFAULT_WIDTH;
+    }
+
+    function setCollapsed(collapsed) {
+        body.classList.toggle('sidebar-collapse', collapsed);
+        localStorage.setItem(STORAGE_COLLAPSE_KEY, collapsed ? '1' : '0');
+        setTimeout(ajustarSidebarScroll, 320);
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+    }
+
+    function getSavedCollapsed() {
+        return localStorage.getItem(STORAGE_COLLAPSE_KEY) === '1';
+    }
+
+    applyWidth(getSavedWidth());
+    setCollapsed(getSavedCollapsed());
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            setCollapsed(!body.classList.contains('sidebar-collapse'));
+        }, true);
+    }
+
+    if (btnDown) {
+        btnDown.addEventListener('click', function () {
+            const w = clamp(getSavedWidth() - STEP, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
         });
     }
 
-    toggleDropdown(btnNotif, dropNotif);
-    toggleDropdown(btnMsg, dropMsg);
-    toggleDropdown(btnUser, dropUser);
+    if (btnReset) {
+        btnReset.addEventListener('click', function () {
+            applyWidth(DEFAULT_WIDTH);
+            saveWidth(DEFAULT_WIDTH);
+        });
+    }
 
-    document.addEventListener('click', function (e) {
-        const groups = document.querySelectorAll('.coord-action-group');
-        let clickedInside = false;
+    if (btnUp) {
+        btnUp.addEventListener('click', function () {
+            const w = clamp(getSavedWidth() + STEP, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
 
-        groups.forEach(group => {
-            if (group.contains(e.target)) {
-                clickedInside = true;
-            }
+    if (resizeHandle) {
+        resizeHandle.addEventListener('mousedown', function (e) {
+            if (body.classList.contains('sidebar-collapse')) return;
+            isResizing = true;
+            body.classList.add('sidebar-resizing');
+            e.preventDefault();
         });
 
-        if (!clickedInside) {
-            closeAll();
-        }
-    });
+        document.addEventListener('mousemove', function (e) {
+            if (!isResizing) return;
+            applyWidth(e.clientX);
+        });
 
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            closeAll();
-        }
+        document.addEventListener('mouseup', function (e) {
+            if (!isResizing) return;
+            isResizing = false;
+            body.classList.remove('sidebar-resizing');
+            const w = clamp(e.clientX, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(w);
+            saveWidth(w);
+        });
+    }
+
+    function ajustarSidebarScroll() {
+        const brand      = document.querySelector('.main-sidebar .brand-link');
+        const control    = document.querySelector('.sidebar-control-block');
+        const scrollArea = document.getElementById('dashboardSidebarScroll');
+        if (!brand || !scrollArea) return;
+
+        const brandH   = brand.offsetHeight;
+        const controlH = control ? control.offsetHeight : 0;
+        const libre    = window.innerHeight - brandH - controlH;
+
+        scrollArea.style.height    = Math.max(libre, 120) + 'px';
+        scrollArea.style.maxHeight = Math.max(libre, 120) + 'px';
+    }
+
+    ajustarSidebarScroll();
+    window.addEventListener('resize', ajustarSidebarScroll);
+    window.addEventListener('load', ajustarSidebarScroll);
+
+    new MutationObserver(() => setTimeout(ajustarSidebarScroll, 50))
+        .observe(body, { attributes: true, attributeFilter: ['class'] });
+
+    const pushMenu = document.querySelector('[data-widget="pushmenu"]');
+    if (pushMenu) {
+        pushMenu.addEventListener('click', () => {
+            setTimeout(() => {
+                ajustarSidebarScroll();
+                window.dispatchEvent(new Event('resize'));
+            }, 350);
+        });
+    }
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth < 992) return;
+        applyWidth(getSavedWidth());
     });
 });
 </script>
@@ -1134,8 +2492,8 @@ document.addEventListener('DOMContentLoaded', function () {
     |--------------------------------------------------------------------------
     | TIEMPOS
     |--------------------------------------------------------------------------
-    | WARNING_TIME_MS = 28 minutos
-    | LOGOUT_TIME_MS  = 31 minutos
+    | WARNING_TIME_MS = cuándo aparece el mensaje
+    | LOGOUT_TIME_MS  = cuándo se cierra la sesión
     |--------------------------------------------------------------------------
     */
     const WARNING_TIME_MS = 28 * 60 * 1000;
@@ -1287,3 +2645,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
+

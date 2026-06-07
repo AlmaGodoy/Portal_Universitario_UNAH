@@ -6,7 +6,14 @@
     @vite(['resources/css/graficas_secretarias.css', 'resources/js/graficas_secretarias.js'])
 
     @php
-        $nombreUsuario = $userName ?? auth()->user()->name ?? 'Coordinador';
+        $authUser = auth()->user();
+
+        $nombreUsuario =
+            $userName
+            ?? optional($authUser->persona)->nombre_persona
+            ?? $authUser->name
+            ?? 'Coordinador';
+
         $partesNombre = preg_split('/\s+/', trim($nombreUsuario));
         $iniciales = '';
 
@@ -20,12 +27,265 @@
             $iniciales = 'C';
         }
 
-        $totalActivos = $totalActivos ?? 2;
-        $totalRevision = $totalRevision ?? 1;
-        $totalAprobados = $totalAprobados ?? 3;
+        $aniosDisponibles = $aniosDisponibles ?? [date('Y')];
+        $anioSeleccionado = $anio ?? request('anio') ?? ($aniosDisponibles[0] ?? date('Y'));
+        $idCarreraSeleccionada = $idCarreraSeleccionada ?? request('id_carrera') ?? '';
+
+        $nombreCarrera =
+            $nombreCarrera
+            ?? $carreraNombre
+            ?? $carreraSeleccionadaNombre
+            ?? 'Carrera asignada';
     @endphp
 
-    {{-- BANNER PRINCIPAL --}}
+    <style>
+        /* =========================================================
+           AJUSTE DE ALINEACIÓN GENERAL
+           Igual al dashboard de estudiante: contenido pegado al menú y banner más arriba.
+        ========================================================= */
+
+        .dashboard-shell-body {
+            padding: 0 16px 0 10px !important;
+        }
+
+        /* =========================================================
+           BANNER COORDINADOR
+           Igual al banner institucional del estudiante
+        ========================================================= */
+
+        .hero-banner {
+            position: relative !important;
+            min-height: 225px !important;
+            margin: -6px 6px 18px 0 !important;
+            border: 8px solid #ffffff !important;
+            border-radius: 18px !important;
+            overflow: hidden !important;
+            background: #163f86 !important;
+            box-shadow: 0 10px 24px rgba(8, 35, 78, 0.18) !important;
+        }
+
+        .hero-banner-bg {
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 1 !important;
+            background:
+                radial-gradient(circle at 48% 44%, rgba(255, 255, 255, 0.10), transparent 25%),
+                linear-gradient(90deg, #123674 0%, #1c4f9d 48%, #174487 100%) !important;
+        }
+
+        .hero-banner-bg::before {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background:
+                linear-gradient(135deg, transparent 0 44%, rgba(9, 43, 105, 0.26) 44% 56%, transparent 56%),
+                linear-gradient(135deg, transparent 0 52%, rgba(255,255,255,0.04) 52% 53%, transparent 53%) !important;
+            pointer-events: none !important;
+        }
+
+        .hero-banner::before {
+            content: "" !important;
+            position: absolute !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            width: 250px !important;
+            height: 110px !important;
+            z-index: 2 !important;
+            opacity: 0.15 !important;
+            background-image: radial-gradient(rgba(255,255,255,0.85) 1px, transparent 1px) !important;
+            background-size: 10px 10px !important;
+            pointer-events: none !important;
+        }
+
+        .hero-banner::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 2 !important;
+            background:
+                radial-gradient(circle at 48% 42%, rgba(255,255,255,0.08), transparent 25%),
+                linear-gradient(120deg, transparent 0%, transparent 42%, rgba(255,255,255,0.07) 52%, transparent 65%) !important;
+            pointer-events: none !important;
+        }
+
+        .hero-wave {
+            display: none !important;
+        }
+
+        .hero-gold-ribbon {
+            position: absolute !important;
+            top: -10% !important;
+            right: 300px !important;
+            width: 74px !important;
+            height: 120% !important;
+            z-index: 6 !important;
+            background: linear-gradient(180deg, #ffd21f 0%, #f2bd12 55%, #dfa600 100%) !important;
+            transform: skewX(-10deg) !important;
+            box-shadow:
+                -12px 0 0 rgba(9, 44, 105, 0.55),
+                7px 0 0 rgba(255, 255, 255, 0.16) !important;
+        }
+
+        .hero-gold-ribbon::before {
+            content: "" !important;
+            position: absolute !important;
+            left: -16px !important;
+            top: 0 !important;
+            width: 5px !important;
+            height: 100% !important;
+            background: rgba(7, 37, 92, 0.72) !important;
+            border-radius: 999px !important;
+        }
+
+        .hero-photo {
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 370px !important;
+            height: 100% !important;
+            z-index: 4 !important;
+            overflow: hidden !important;
+            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%) !important;
+        }
+
+        .hero-photo::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 2 !important;
+            background: linear-gradient(90deg, rgba(18, 54, 116, 0.18), transparent 34%) !important;
+            pointer-events: none !important;
+        }
+
+        .hero-photo-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            display: block !important;
+        }
+
+        .hero-content {
+            position: relative !important;
+            z-index: 8 !important;
+            width: calc(100% - 365px) !important;
+            min-height: 225px !important;
+            padding: 38px 46px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+        }
+
+        .hero-faculty-title {
+            margin: 0 0 20px 0 !important;
+            color: #ffd21f !important;
+            font-size: clamp(26px, 2.1vw, 36px) !important;
+            line-height: 1.13 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.2px !important;
+            text-transform: uppercase !important;
+            text-shadow:
+                0 3px 7px rgba(0, 0, 0, 0.24),
+                0 0 8px rgba(255, 210, 31, 0.08) !important;
+        }
+
+        .hero-service-strip {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            width: fit-content !important;
+            max-width: 100% !important;
+        }
+
+        .hero-service-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 8px 13px !important;
+            border-radius: 12px !important;
+            color: #ffffff !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            white-space: nowrap !important;
+            background: rgba(255, 255, 255, 0.11) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                0 5px 12px rgba(0, 0, 0, 0.10) !important;
+        }
+
+        .hero-service-pill i {
+            color: #ffd21f !important;
+            font-size: 13px !important;
+        }
+
+        .hero-service-pill.main-pill {
+            background: rgba(255, 210, 31, 0.16) !important;
+            border-color: rgba(255, 210, 31, 0.38) !important;
+        }
+
+        @media (max-width: 1200px) {
+            .hero-photo {
+                width: 330px !important;
+            }
+
+            .hero-gold-ribbon {
+                right: 268px !important;
+                width: 66px !important;
+            }
+
+            .hero-content {
+                width: calc(100% - 320px) !important;
+                padding: 34px 38px !important;
+            }
+
+            .hero-faculty-title {
+                font-size: 28px !important;
+            }
+
+            .hero-service-pill {
+                font-size: 12px !important;
+                padding: 7px 11px !important;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .hero-banner {
+                min-height: 255px !important;
+                border-width: 6px !important;
+                margin: 8px 6px 16px 0 !important;
+            }
+
+            .hero-photo {
+                width: 100% !important;
+                opacity: 0.20 !important;
+                clip-path: none !important;
+            }
+
+            .hero-gold-ribbon {
+                right: 35px !important;
+                width: 56px !important;
+                opacity: 0.90 !important;
+            }
+
+            .hero-content {
+                width: 100% !important;
+                padding: 32px 26px !important;
+            }
+
+            .hero-service-strip {
+                gap: 8px !important;
+            }
+
+            .hero-service-pill {
+                font-size: 12px !important;
+            }
+        }
+    </style>
+
+    {{-- ══ BANNER ══════════════════════════════════════════ --}}
     <div class="hero-banner">
         <div class="hero-banner-bg"></div>
         <div class="hero-wave wave-one"></div>
@@ -42,45 +302,78 @@
                 ADMINISTRATIVAS Y CONTABLES
             </div>
 
-            <div class="hero-stats-strip">
-                <div class="hero-stat">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Trámites activos: <strong>{{ $totalActivos }}</strong></span>
+            <div class="hero-service-strip">
+                <div class="hero-service-pill main-pill">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Coordinación académica</span>
                 </div>
 
-                <div class="hero-stat-divider"></div>
-
-                <div class="hero-stat">
-                    <i class="fas fa-clock"></i>
-                    <span>En revisión: <strong>{{ $totalRevision }}</strong></span>
+                <div class="hero-service-pill">
+                    <i class="fas fa-file-signature"></i>
+                    <span>Dictámenes y revisiones</span>
                 </div>
 
-                <div class="hero-stat-divider"></div>
-
-                <div class="hero-stat">
-                    <i class="fas fa-circle-check"></i>
-                    <span>Aprobados: <strong>{{ $totalAprobados }}</strong></span>
+                <div class="hero-service-pill">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Seguimiento por carrera</span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- FRANJA INFORMATIVA --}}
-   <div class="student-intro-strip">
-    <div class="student-intro-text">
-        <h2>Resumen gráfico de trámites</h2>
-        <p>
-            Visualiza el comportamiento de cancelaciones excepcionales y cambios de carrera
-            correspondientes a la carrera asignada al coordinador.
-        </p>
+    {{-- INFORMACIÓN --}}
+    <div class="student-info-grid">
+        <div class="info-panel">
+            <div class="info-panel-header">
+                <i class="fas fa-circle-info"></i>
+                <h3>Recomendaciones</h3>
+            </div>
+
+            <div class="info-panel-body">
+                <ul class="student-tips">
+                    <li>Revisa las gráficas para identificar el comportamiento de los trámites de la carrera.</li>
+                    <li>Da seguimiento a las solicitudes que requieren revisión, validación o dictamen académico.</li>
+                    <li>Verifica el año de gestión antes de interpretar los resultados mostrados.</li>
+                    <li>Utiliza esta vista como apoyo para la toma de decisiones de coordinación.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-panel-header">
+                <i class="fas fa-list-check"></i>
+                <h3>¿Qué puedes hacer aquí?</h3>
+            </div>
+
+            <div class="info-panel-body">
+                <div class="info-step">
+                    <span class="step-number">1</span>
+                    <div>
+                        <strong>Consultar el resumen</strong>
+                        <p>Visualiza el comportamiento general de cancelaciones y cambios de carrera.</p>
+                    </div>
+                </div>
+
+                <div class="info-step">
+                    <span class="step-number">2</span>
+                    <div>
+                        <strong>Analizar los estados</strong>
+                        <p>Identifica trámites pendientes, en revisión o finalizados dentro de la carrera asignada.</p>
+                    </div>
+                </div>
+
+                <div class="info-step">
+                    <span class="step-number">3</span>
+                    <div>
+                        <strong>Apoyar decisiones</strong>
+                        <p>Usa la información gráfica como respaldo para la gestión académica de coordinación.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="student-user-chip">
-        <div class="student-user-chip-avatar">{{ $iniciales }}</div>
-        <div class="student-user-chip-name nombre-usuario-negro">{{ $nombreUsuario }}</div>
-    </div>
-</div>
-
+    {{-- GRÁFICAS --}}
     @include('graficas_dashboard', [
         'apiUrl' => route('api.graficas.secretaria_carrera'),
         'scopeLabel' => 'carrera',
@@ -90,7 +383,7 @@
         'aniosDisponibles' => $aniosDisponibles ?? [],
         'carreras' => $carreras ?? collect(),
         'idCarreraSeleccionada' => $idCarreraSeleccionada ?? null,
-        'anio' => $anio ?? null,
+        'anio' => $anioSeleccionado ?? null,
         'rootId' => 'graficasDashboard',
     ])
 @endsection
