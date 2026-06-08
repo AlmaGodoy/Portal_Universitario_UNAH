@@ -40,6 +40,15 @@
 
     <style>
         /* =========================================================
+           AJUSTE DE ALINEACIÓN GENERAL
+           Igual al dashboard de estudiante: contenido pegado al menú y banner más arriba.
+        ========================================================= */
+
+        .dashboard-shell-body {
+            padding: 0 16px 0 10px !important;
+        }
+
+        /* =========================================================
            BANNER COORDINADOR
            Igual al banner institucional del estudiante
         ========================================================= */
@@ -47,7 +56,7 @@
         .hero-banner {
             position: relative !important;
             min-height: 225px !important;
-            margin: 8px 10px 18px !important;
+            margin: -6px 6px 18px 0 !important;
             border: 8px solid #ffffff !important;
             border-radius: 18px !important;
             overflow: hidden !important;
@@ -246,7 +255,7 @@
             .hero-banner {
                 min-height: 255px !important;
                 border-width: 6px !important;
-                margin: 8px 8px 16px !important;
+                margin: 8px 6px 16px 0 !important;
             }
 
             .hero-photo {
