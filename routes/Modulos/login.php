@@ -19,14 +19,18 @@ Route::get('/portal', function () {
         $loginTipo = session('login_tipo');
 
         if ($loginTipo === 'estudiante') {
-            return redirect()->route('panel.estudiante');
+            if (Route::has('panel.estudiante')) {
+                return redirect()->route('panel.estudiante');
+            }
+
+            return redirect('/estudiantes');
         }
 
         if ($loginTipo === 'empleado') {
             return redirect()->route('empleado.dashboard');
         }
 
-        return redirect()->route('portal');
+        return redirect('/portal');
     }
 
     return view('auth.choose_portal');
