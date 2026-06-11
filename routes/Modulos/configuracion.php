@@ -17,9 +17,8 @@ use App\Http\Controllers\ConfiguracionController;
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'session.timeout'])->group(function () {
-    Route::get('/configuracion', function () {
-        return view('configuracion');
-    })->name('configuracion.index');
+    Route::get('/configuracion', [ConfiguracionController::class, 'index'])
+        ->name('configuracion.index');
 });
 
 /*

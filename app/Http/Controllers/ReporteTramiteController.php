@@ -208,7 +208,7 @@ class ReporteTramiteController extends Controller
         $tramitesReporte = [];
 
         foreach ($resultado as $tramite) {
-            $estado = strtolower(trim((string) ($tramite->estado_actual ?? '')));
+            $estadoNormalizado = $this->normalizarEstado($tramite->estado_actual ?? '');
             $fechaSolicitud = $tramite->fecha_solicitud ?? null;
 
             $cumpleMesFiltro = true;
@@ -227,26 +227,27 @@ class ReporteTramiteController extends Controller
             }
 
             $tramitesReporte[] = [
-                'id_tramite'           => $tramite->id_tramite ?? '',
-                'estudiante'           => $tramite->estudiante ?? 'Sin nombre',
-                'carrera'              => $tramite->carrera ?? '',
-                'tipo'                 => $tramite->tipo ?? 'No definido',
-                'estado_actual'        => $tramite->estado_actual ?? 'pendiente',
-                'fecha_solicitud'      => $tramite->fecha_solicitud ?? 'Sin fecha',
-                'observaciones'        => $tramite->observaciones ?? '',
+                'id_tramite'               => $tramite->id_tramite ?? '',
+                'estudiante'               => $tramite->estudiante ?? 'Sin nombre',
+                'carrera'                  => $tramite->carrera ?? '',
+                'tipo'                     => $tramite->tipo ?? 'No definido',
+                'estado'                   => $estadoNormalizado,
+                'estado_actual'            => $estadoNormalizado,
+                'fecha_solicitud'          => $tramite->fecha_solicitud ?? 'Sin fecha',
+                'observaciones'            => $tramite->observaciones ?? '',
                 'observaciones_resolucion' => $tramite->observaciones_resolucion ?? '',
-                'fecha_resolucion'     => $tramite->fecha_resolucion ?? '',
+                'fecha_resolucion'         => $tramite->fecha_resolucion ?? '',
             ];
 
-            if ($estado === 'aprobada' || $estado === 'aprobado') {
+            if ($estadoNormalizado === 'aprobada') {
                 $aprobadosMes++;
             }
 
-            if ($estado === 'rechazada' || $estado === 'rechazado') {
+            if ($estadoNormalizado === 'rechazada') {
                 $rechazadosMes++;
             }
 
-            if ($estado === 'pendiente') {
+            if ($estadoNormalizado === 'pendiente') {
                 $pendientesTotal++;
 
                 $tramitesPendientes[] = [
@@ -254,11 +255,11 @@ class ReporteTramiteController extends Controller
                     'estudiante'      => $tramite->estudiante ?? 'Sin nombre',
                     'tipo'            => $tramite->tipo ?? 'No definido',
                     'fecha_solicitud' => $tramite->fecha_solicitud ?? 'Sin fecha',
-                    'estado'          => $tramite->estado_actual ?? 'pendiente'
+                    'estado'          => $estadoNormalizado
                 ];
             }
 
-            if ($estado === 'revision' || $estado === 'revisión') {
+            if ($estadoNormalizado === 'revision') {
                 $revisionTotal++;
             }
         }
@@ -311,33 +312,34 @@ class ReporteTramiteController extends Controller
         $tramitesReporte = [];
 
         foreach ($resultado as $tramite) {
-            $estado = strtolower(trim((string) ($tramite->estado_actual ?? '')));
+            $estadoNormalizado = $this->normalizarEstado($tramite->estado_actual ?? '');
 
             $tramitesReporte[] = [
-                'id_tramite'           => $tramite->id_tramite ?? '',
-                'estudiante'           => $tramite->estudiante ?? 'Sin nombre',
-                'carrera'              => $tramite->carrera ?? 'Sin carrera',
-                'tipo'                 => $tramite->tipo ?? 'No definido',
-                'estado_actual'        => $tramite->estado_actual ?? 'pendiente',
-                'fecha_solicitud'      => $tramite->fecha_solicitud ?? 'Sin fecha',
-                'observaciones'        => $tramite->observaciones ?? '',
+                'id_tramite'               => $tramite->id_tramite ?? '',
+                'estudiante'               => $tramite->estudiante ?? 'Sin nombre',
+                'carrera'                  => $tramite->carrera ?? 'Sin carrera',
+                'tipo'                     => $tramite->tipo ?? 'No definido',
+                'estado'                   => $estadoNormalizado,
+                'estado_actual'            => $estadoNormalizado,
+                'fecha_solicitud'          => $tramite->fecha_solicitud ?? 'Sin fecha',
+                'observaciones'            => $tramite->observaciones ?? '',
                 'observaciones_resolucion' => $tramite->observaciones_resolucion ?? '',
-                'fecha_resolucion'     => $tramite->fecha_resolucion ?? '',
+                'fecha_resolucion'         => $tramite->fecha_resolucion ?? '',
             ];
 
-            if ($estado === 'aprobada' || $estado === 'aprobado') {
+            if ($estadoNormalizado === 'aprobada') {
                 $aprobadosMes++;
             }
 
-            if ($estado === 'rechazada' || $estado === 'rechazado') {
+            if ($estadoNormalizado === 'rechazada') {
                 $rechazadosMes++;
             }
 
-            if ($estado === 'pendiente') {
+            if ($estadoNormalizado === 'pendiente') {
                 $pendientesTotal++;
             }
 
-            if ($estado === 'revision' || $estado === 'revisión') {
+            if ($estadoNormalizado === 'revision') {
                 $revisionTotal++;
             }
         }
@@ -381,5 +383,20 @@ class ReporteTramiteController extends Controller
         }
 
         return Auth::user()->id_persona ?? null;
+    }
+
+    /**
+     * Normaliza estados para usarlos en vista, conteos y exportaciones
+     */
+    private function normalizarEstado($estado): string
+    {
+        $estado = mb_strtolower(trim((string) $estado), 'UTF-8');
+
+        return match ($estado) {
+            'aprobado', 'aprobada' => 'aprobada',
+            'rechazado', 'rechazada' => 'rechazada',
+            'revision', 'revisión' => 'revision',
+            default => 'pendiente',
+        };
     }
 }

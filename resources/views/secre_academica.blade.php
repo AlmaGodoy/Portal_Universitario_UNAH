@@ -20,6 +20,10 @@
             ?? optional($authUser->persona)->correo_institucional
             ?? 'secretaria.academica@unah.hn';
 
+        $aniosDisponibles = $aniosDisponibles ?? [date('Y')];
+        $anioSeleccionado = $anio ?? request('anio') ?? ($aniosDisponibles[0] ?? date('Y'));
+        $idDepartamentoSeleccionado = $idDepartamentoSeleccionado ?? request('id_departamento') ?? '';
+
         $partesNombre = preg_split('/\s+/', trim($userName));
         $iniciales = '';
 
@@ -57,6 +61,27 @@
         }
     @endphp
 
+    {{-- TOPBAR --}}
+    <div class="student-topbar">
+        <div class="student-topbar-left">
+            <div class="topbar-left-copy">
+                <div class="topbar-breadcrumb">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="topbar-breadcrumb-active">Secretaría Académica</span>
+                </div>
+                <h1 class="topbar-page-title">Panel de control académico</h1>
+            </div>
+        </div>
+
+        <div class="student-topbar-right">
+            {{-- Notificaciones --}}
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                    <span class="topbar-badge">3</span>
+                </button>
     <style>
         /* =========================================================
            BANNER SECRETARÍA ACADÉMICA
@@ -147,6 +172,12 @@
             border-radius: 999px !important;
         }
 
+            {{-- Mensajes --}}
+            <div class="topbar-action-group">
+                <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
+                    <i class="fas fa-envelope"></i>
+                    <span class="topbar-badge gold">1</span>
+                </button>
         .hero-photo {
             position: absolute !important;
             top: 0 !important;
@@ -285,6 +316,20 @@
                 padding: 32px 26px !important;
             }
 
+                    <div class="topbar-dropdown-footer danger">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit">
+                                <i class="fas fa-right-from-bracket"></i> Cerrar sesión
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- BANNER PRINCIPAL --}}
             .hero-service-strip {
                 gap: 8px !important;
             }
@@ -328,6 +373,22 @@
                     <span>Estadísticas globales</span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- FRANJA INFORMATIVA --}}
+    <div class="student-intro-strip" style="margin-top: 26px;">
+        <div class="student-intro-text">
+            <h2>Resumen gráfico de trámites</h2>
+            <p>
+                Visualiza el comportamiento global de cancelaciones excepcionales y cambios de carrera
+                de toda la facultad.
+            </p>
+        </div>
+
+        <div class="student-user-chip intro-user-chip">
+            <div class="student-user-chip-avatar">{{ $iniciales }}</div>
+            <div class="student-user-chip-name intro-user-name">{{ $userName }}</div>
         </div>
     </div>
 
@@ -396,4 +457,69 @@
         'anio' => $anioSeleccionado ?? null,
         'rootId' => 'graficasDashboard',
     ])
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btnNotif = document.getElementById('btnNotif');
+            const btnMsg   = document.getElementById('btnMsg');
+            const btnUser  = document.getElementById('btnUser');
+
+            const dropNotif = document.getElementById('dropNotif');
+            const dropMsg   = document.getElementById('dropMsg');
+            const dropUser  = document.getElementById('dropUser');
+
+            const allDrops = [dropNotif, dropMsg, dropUser];
+
+            function closeAll(except = null) {
+                allDrops.forEach(drop => {
+                    if (!drop) return;
+                    if (drop !== except) {
+                        drop.classList.remove('show');
+                    }
+                });
+            }
+
+            function toggleDropdown(button, dropdown) {
+                if (!button || !dropdown) return;
+
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const willOpen = !dropdown.classList.contains('show');
+                    closeAll();
+
+                    if (willOpen) {
+                        dropdown.classList.add('show');
+                    }
+                });
+            }
+
+            toggleDropdown(btnNotif, dropNotif);
+            toggleDropdown(btnMsg, dropMsg);
+            toggleDropdown(btnUser, dropUser);
+
+            document.addEventListener('click', function (e) {
+                const groups = document.querySelectorAll('.topbar-action-group');
+                let clickedInside = false;
+
+                groups.forEach(group => {
+                    if (group.contains(e.target)) {
+                        clickedInside = true;
+                    }
+                });
+
+                if (!clickedInside) {
+                    closeAll();
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeAll();
+                }
+            });
+        });
+    </script>
+@endsection
 @endsection
