@@ -139,25 +139,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function obtenerBotonAccion(tramite) {
-        const estadoTramite = (tramite.estado_tramite || '').toString().trim().toLowerCase();
-        const estadoRegistro = Number(tramite.estado ?? 1);
-
-        if (estadoRegistro === 1 && estadoTramite === 'pendiente') {
-            return `
-                <button
-                    type="button"
-                    class="cc-btn-danger"
-                    onclick="window.cancelarTramiteCambioCarrera(${tramite.id_tramite})"
-                >
-                    Cancelar trámite
-                </button>
-            `;
-        }
-
-        return `<span class="sin-acciones">No disponible</span>`;
-    }
-
+  function obtenerBotonAccion(tramite) {
+    return `
+        <button
+            type="button"
+            class="cc-btn-danger"
+            onclick="window.cancelarTramiteCambioCarrera(${tramite.id_tramite})"
+        >
+            Cancelar trámite
+        </button>
+    `;
+}
+    
     async function cargarMisTramites() {
         if (!tbody || !inputPersona) return;
 
