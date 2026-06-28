@@ -17,7 +17,11 @@
             </div>
 
             <a href="{{ url('/empleado/dashboard') }}" class="cc-btn-volver">
+
                 <i class="fas fa-arrow-left"></i> Regresar
+
+                <i class="fas fa-arrow-left"></i> Volver
+
             </a>
         </div>
     </div>
