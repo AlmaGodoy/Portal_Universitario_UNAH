@@ -16,7 +16,7 @@
                 </div>
 
                 <a href="{{ route('dashboard') }}" class="cc-btn-volver">
-                    <i class="fas fa-arrow-left"></i> Volver al dashboard
+                    <i class="fas fa-arrow-left"></i> Regresar
                 </a>
             </div>
         </div>

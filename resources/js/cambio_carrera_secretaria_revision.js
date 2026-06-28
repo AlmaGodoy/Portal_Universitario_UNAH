@@ -77,10 +77,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function obtenerMensajeError(data, fallback = 'Ocurrió un error.') {
-        if (!data) return fallback;
-        if (typeof data === 'string') return data;
-        return data.mensaje || data.message || fallback;
+    if (!data) return fallback;
+
+    if (typeof data === 'string') return data;
+
+    if (data.errors) {
+        const errores = Object.values(data.errors).flat();
+        if (errores.length > 0) {
+            return errores[0];
+        }
     }
+
+    return data.mensaje || data.message || fallback;
+}
 
     /*
     =====================================================
@@ -186,65 +195,87 @@ document.addEventListener('DOMContentLoaded', () => {
     =====================================================
     */
     formRevision.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (enviando) return;
+    if (enviando) return;
 
-        const payload = {
-            id_tramite: inputTramite ? inputTramite.value : '',
-            indice_periodo: inputIndicePeriodo ? inputIndicePeriodo.value : '',
-            indice_global: inputIndiceGlobal ? inputIndiceGlobal.value : '',
-            clases_aprobadas: inputClasesAprobadas ? inputClasesAprobadas.value : '',
-            observaciones_secretaria: inputObservaciones ? inputObservaciones.value : ''
-        };
+    const payload = {
+        id_tramite: inputTramite ? inputTramite.value : '',
+        indice_periodo: inputIndicePeriodo ? inputIndicePeriodo.value : '',
+        indice_global: inputIndiceGlobal ? inputIndiceGlobal.value : '',
+        clases_aprobadas: inputClasesAprobadas ? inputClasesAprobadas.value : '',
+        observaciones_secretaria: inputObservaciones ? inputObservaciones.value : ''
+    };
 
-        enviando = true;
-        limpiarMsg();
-        bloquearFormulario(true);
+    const indicePeriodo = parseFloat(payload.indice_periodo) || 0;
+    const indiceGlobal = parseFloat(payload.indice_global) || 0;
+    const clasesAprobadas = parseInt(payload.clases_aprobadas, 10) || 0;
+
+    if (indicePeriodo <= 0) {
+        setMsg('El índice de período debe ser mayor que cero.', false);
+        if (inputIndicePeriodo) inputIndicePeriodo.focus();
+        return;
+    }
+
+    if (indiceGlobal <= 0) {
+        setMsg('El índice global debe ser mayor que cero.', false);
+        if (inputIndiceGlobal) inputIndiceGlobal.focus();
+        return;
+    }
+
+    if (clasesAprobadas <= 0) {
+        setMsg('La cantidad de clases aprobadas debe ser mayor que cero.', false);
+        if (inputClasesAprobadas) inputClasesAprobadas.focus();
+        return;
+    }
+
+    enviando = true;
+    limpiarMsg();
+    bloquearFormulario(true);
+
+    try {
+        const res = await fetch('/api/cambio-carrera/secretaria/guardar-revision', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const raw = await res.text();
+        let data = null;
 
         try {
-            const res = await fetch('/api/cambio-carrera/secretaria/guardar-revision', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const raw = await res.text();
-            let data = null;
-
-            try {
-                data = raw ? JSON.parse(raw) : null;
-            } catch (parseError) {
-                console.error('Respuesta no JSON al guardar revisión:', raw);
-                bloquearFormulario(false);
-                enviando = false;
-                setMsg('El servidor devolvió una respuesta inválida al guardar la revisión.', false);
-                return;
-            }
-
-            if (!res.ok || data?.resultado === 'ERROR') {
-                bloquearFormulario(false);
-                enviando = false;
-                setMsg(obtenerMensajeError(data, 'No se pudo guardar la revisión.'), false);
-                return;
-            }
-
-            setMsg(data?.mensaje || 'Revisión de Secretaría guardada correctamente.', true);
-            await cargarDetalleTramite();
-
-        } catch (error) {
-            console.error('Error guardando revisión:', error);
+            data = raw ? JSON.parse(raw) : null;
+        } catch (parseError) {
+            console.error('Respuesta no JSON al guardar revisión:', raw);
             bloquearFormulario(false);
-            setMsg('Error al guardar la revisión.', false);
-        } finally {
             enviando = false;
-            bloquearFormulario(false);
+            setMsg('El servidor devolvió una respuesta inválida al guardar la revisión.', false);
+            return;
         }
-    });
+
+        if (!res.ok || data?.resultado === 'ERROR') {
+            bloquearFormulario(false);
+            enviando = false;
+            setMsg(obtenerMensajeError(data, 'No se pudo guardar la revisión.'), false);
+            return;
+        }
+
+        setMsg(data?.mensaje || 'Revisión de Secretaría guardada correctamente.', true);
+        await cargarDetalleTramite();
+
+    } catch (error) {
+        console.error('Error guardando revisión:', error);
+        bloquearFormulario(false);
+        setMsg('Error al guardar la revisión.', false);
+    } finally {
+        enviando = false;
+        bloquearFormulario(false);
+    }
+});
 
     cargarDetalleTramite();
     cargarDocumentosTramite();

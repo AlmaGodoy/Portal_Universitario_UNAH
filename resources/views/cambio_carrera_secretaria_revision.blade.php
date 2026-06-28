@@ -103,13 +103,13 @@
 
                 <form id="formRevisionSecretaria">
                     <label for="indice_periodo">Índice de período</label>
-                    <input type="number" step="0.01" id="indice_periodo" placeholder="Ej: 80.00">
+                    <input type="number" step="0.01" id="indice_periodo" placeholder="Ej: 80.00" required>
 
                     <label for="indice_global">Índice global</label>
-                    <input type="number" step="0.01" id="indice_global" placeholder="Ej: 82.00">
+                    <input type="number" step="0.01" id="indice_global" placeholder="Ej: 82.00" required>
 
                     <label for="clases_aprobadas">Cantidad de clases aprobadas</label>
-                    <input type="number" id="clases_aprobadas" placeholder="Ej: 10">
+                    <input type="number" id="clases_aprobadas" placeholder="Ej: 10" required>
 
                     <label for="observaciones_secretaria">Observaciones de Secretaría</label>
                     <textarea
