@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const datoIndicePeriodo = document.getElementById('dato-indice-periodo');
     const datoIndiceGlobal = document.getElementById('dato-indice-global');
     const datoClasesAprobadas = document.getElementById('dato-clases-aprobadas');
+    const datoObservacionSecretaria = document.getElementById('dato-observacion-secretaria');
 
     const docHistorial = document.getElementById('doc-historial');
 
@@ -94,6 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (datoIndicePeriodo) datoIndicePeriodo.textContent = t.indice_periodo ?? '';
             if (datoIndiceGlobal) datoIndiceGlobal.textContent = t.indice_global ?? '';
             if (datoClasesAprobadas) datoClasesAprobadas.textContent = t.cantidad_clases_aprobadas ?? '';
+            if (datoObservacionSecretaria) {
+    datoObservacionSecretaria.textContent = t.observacion_secretaria || 'Sin observaciones';
+}
 
             if (t.puede_dictaminar === false) {
                 bloquearFormulario(true);

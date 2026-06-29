@@ -71,6 +71,10 @@
                     <strong>Justificación</strong>
                     <span id="dato-justificacion">Cargando...</span>
                 </div>
+                <div class="estado-item full">
+    <strong>Observación de Secretaría</strong>
+    <span id="dato-observacion-secretaria">Sin observaciones</span>
+</div>
 
                 <div class="estado-item">
                     <strong>Índice de período</strong>
