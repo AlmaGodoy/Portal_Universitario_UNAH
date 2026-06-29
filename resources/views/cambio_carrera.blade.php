@@ -16,7 +16,7 @@
 
             
                 <a href="{{ route('dashboard') }}" class="cc-btn-volver">
-                    <i class="fas fa-arrow-left"></i> Volver al dashboard
+                    <i class="fas fa-arrow-left"></i> Regresar 
                 </a>
             </div>
         </div>
@@ -46,7 +46,10 @@
                 Completa el formulario. Al crear el trámite, se habilitará la sección para subir tu
                 <strong>Historial Académico (PDF)</strong>.
             </p>
-
+        
+            <div id="infoCalendarioCambioCarrera" class="cc-calendario-info">
+    Cargando información del calendario de cambio de carrera...
+</div>
             <form id="formCambioCarrera" class="cc-form">
                 <div class="cc-form-group">
                       <label for="id_carrera_destino">

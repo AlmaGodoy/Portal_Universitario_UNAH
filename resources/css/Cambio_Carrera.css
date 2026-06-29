@@ -1205,4 +1205,36 @@ form button:hover {
 
 .msg.warning {
     color: #856404;
+
+}
+
+
+/* Calendario mensaje*/
+
+
+.cc-calendario-info {
+    display: block;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.cc-calendario-info.activo {
+    background: #e8f3ff;
+    border: 1px solid #b9d9ff;
+    color: #174a7c;
+}
+
+.cc-calendario-info.inactivo {
+    background: #fff4db;
+    border: 1px solid #f0c36d;
+    color: #6b4a00;
+}
+
+.cc-calendario-info.error {
+    background: #fdecea;
+    border: 1px solid #f5b5b5;
+    color: #b42318;
 }
