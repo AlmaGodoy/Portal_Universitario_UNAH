@@ -20,7 +20,6 @@
 
                 <i class="fas fa-arrow-left"></i> Regresar
 
-                <i class="fas fa-arrow-left"></i> Volver
 
             </a>
         </div>

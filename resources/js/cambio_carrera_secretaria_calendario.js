@@ -258,14 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             >
                                 ${textoBotonEstado}
                             </button>
-
-                            <button 
-                                type="button"
-                                onclick="eliminarCalendario(${id})" 
-                                class="cc-btn-danger"
-                            >
-                                Eliminar
-                            </button>
                         </td>
                     </tr>
                 `;
@@ -368,42 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (buscarCalendarioInput) {
     buscarCalendarioInput.addEventListener('input', filtrarCalendarios);
 }
-
-   
-    // ===============================
-    // ELIMINAR LÓGICAMENTE
-    // ===============================
-    window.eliminarCalendario = async function(id) {
-        const confirmado = confirm('¿Seguro que deseas eliminar este calendario?');
-
-        if (!confirmado) {
-            return;
-        }
-
-        try {
-            const res = await fetch(`/api/cambio-carrera/secretaria/calendarios/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrf,
-                    'Accept': 'application/json'
-                }
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || data.resultado === 'ERROR') {
-                setMsg(data.mensaje || 'Error al eliminar calendario.', 'error');
-                return;
-            }
-
-            setMsg('Calendario eliminado correctamente.', 'success');
-            cargarCalendarios();
-
-        } catch (error) {
-            console.error(error);
-            setMsg('Error de conexión al eliminar calendario.', 'error');
-        }
-    };
 
 
     cargarCalendarios();
