@@ -671,20 +671,27 @@ class CambioCarreraController extends Controller
         ]);
 
         if (($respuesta['resultado'] ?? 'OK') !== 'ERROR') {
-            $accionTexto = 'Cambió estado';
-
-            if ($calendarioAntes) {
-                $accionTexto = ((int) $calendarioAntes->estado === 1)
-                    ? 'Desactivó calendario académico'
-                    : 'Activó calendario académico';
-            }
-
-            $this->registrarBitacoraCalendario(
-                'CAMBIAR_ESTADO_CALENDARIO_ACADEMICO',
-                $accionTexto . ' ID: ' . $id_calendario
-            );
-        }
-
+    if ($calendarioAntes && (int) $calendarioAntes->estado === 1) {
+        $this->registrarBitacoraCalendario(
+            'DESACTIVAR_CALENDARIO_ACADEMICO',
+            'Desactivó calendario académico ID: ' . $id_calendario .
+            '. Tipo: ' . $calendarioAntes->tipo_tramite_academico .
+            '. Fecha inicio: ' . $calendarioAntes->fecha_inicio_calendario_academico .
+            '. Fecha final: ' . $calendarioAntes->fecha_final_calendario_academico
+        );
+    } else {
+        $this->registrarBitacoraCalendario(
+            'ACTIVAR_CALENDARIO_ACADEMICO',
+            'Activó calendario académico ID: ' . $id_calendario .
+            ($calendarioAntes
+                ? '. Tipo: ' . $calendarioAntes->tipo_tramite_academico .
+                  '. Fecha inicio: ' . $calendarioAntes->fecha_inicio_calendario_academico .
+                  '. Fecha final: ' . $calendarioAntes->fecha_final_calendario_academico
+                : ''
+            )
+        );
+    }
+}
         return response()->json($respuesta, 200);
 
     } catch (\Throwable $e) {
