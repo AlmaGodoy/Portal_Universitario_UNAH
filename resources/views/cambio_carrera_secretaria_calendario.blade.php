@@ -16,9 +16,12 @@
                 <p>Gestión de fechas para Cambio de Carrera y Cancelación.</p>
             </div>
 
-           <a href="{{ url('/empleado/dashboard') }}" class="cc-btn-volver">
-    <i class="fas fa-arrow-left"></i> Volver
-</a>
+            <a href="{{ url('/empleado/dashboard') }}" class="cc-btn-volver">
+
+                <i class="fas fa-arrow-left"></i> Regresar
+
+
+            </a>
         </div>
     </div>
 
@@ -26,12 +29,18 @@
     <div class="cc-card">
         <div class="cc-card-head">
             <h3>Crear nuevo calendario</h3>
+            <p class="cc-card-subtitle">
+                Define el período en el que los estudiantes podrán realizar solicitudes.
+            </p>
         </div>
 
         <form id="formCalendario" class="cc-form">
 
             <div class="cc-form-group">
-                <label>Tipo de trámite</label>
+                <label for="tipo_tramite_academico">
+                    Tipo de trámite <span class="required">*</span>
+                </label>
+
                 <select id="tipo_tramite_academico" required>
                     <option value="">Seleccione...</option>
                     <option value="cambio_carrera">Cambio de carrera</option>
@@ -40,17 +49,23 @@
             </div>
 
             <div class="cc-form-group">
-                <label>Fecha inicio</label>
+                <label for="fecha_inicio">
+                    Fecha inicio <span class="required">*</span>
+                </label>
+
                 <input type="date" id="fecha_inicio" required>
             </div>
 
             <div class="cc-form-group">
-                <label>Fecha fin</label>
+                <label for="fecha_fin">
+                    Fecha fin <span class="required">*</span>
+                </label>
+
                 <input type="date" id="fecha_fin" required>
             </div>
 
             <button type="submit" class="cc-btn-primary">
-                Crear calendario
+                <i class="fas fa-calendar-plus"></i> Crear calendario
             </button>
 
         </form>
@@ -62,23 +77,42 @@
     <div class="cc-card">
         <div class="cc-card-head">
             <h3>Listado de calendarios</h3>
+            <p class="cc-card-subtitle">
+                Consulta los calendarios creados y administra su estado.
+            </p>
         </div>
 
+        <div class="cc-form-group" style="margin-bottom: 18px;">
+    <label for="buscarCalendario">
+        Buscar calendario
+    </label>
+
+    <input 
+        type="text" 
+        id="buscarCalendario" 
+        class="form-control"
+        placeholder="Buscar por identificación, tipo, fecha o estado..."
+    >
+</div>
+
         <div class="table-responsive">
-            <table class="table table-bordered">
+            <table class="table table-bordered cc-table">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Tipo</th>
-                        <th>Inicio</th>
-                        <th>Fin</th>
+                        <th>Tipo de trámite</th>
+                        <th>Fecha inicio</th>
+                        <th>Fecha fin</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody id="tbodyCalendarios">
                     <tr>
-                        <td colspan="6">Cargando...</td>
+                        <td colspan="8" class="text-center">
+                            Cargando calendarios...
+                        </td>
                     </tr>
                 </tbody>
             </table>

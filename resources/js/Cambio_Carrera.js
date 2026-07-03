@@ -139,25 +139,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function obtenerBotonAccion(tramite) {
-        const estadoTramite = (tramite.estado_tramite || '').toString().trim().toLowerCase();
-        const estadoRegistro = Number(tramite.estado ?? 1);
-
-        if (estadoRegistro === 1 && estadoTramite === 'pendiente') {
-            return `
-                <button
-                    type="button"
-                    class="cc-btn-danger"
-                    onclick="window.cancelarTramiteCambioCarrera(${tramite.id_tramite})"
-                >
-                    Cancelar trámite
-                </button>
-            `;
-        }
-
-        return `<span class="sin-acciones">No disponible</span>`;
-    }
-
+  function obtenerBotonAccion(tramite) {
+    return `
+        <button
+            type="button"
+            class="cc-btn-danger"
+            onclick="window.cancelarTramiteCambioCarrera(${tramite.id_tramite})"
+        >
+            Cancelar trámite
+        </button>
+    `;
+}
+    
     async function cargarMisTramites() {
         if (!tbody || !inputPersona) return;
 
@@ -495,7 +488,70 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+   async function cargarInfoCalendarioCambioCarrera() {
+    const contenedor = document.getElementById('infoCalendarioCambioCarrera');
+
+    if (!contenedor) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/cambio-carrera/calendario-info');
+        const data = await res.json();
+
+        if (!res.ok || data.resultado === 'ERROR') {
+            contenedor.style.display = 'block';
+            contenedor.className = 'cc-calendario-info inactivo';
+            contenedor.innerHTML = `
+                Actualmente no hay fechas configuradas para cambio de carrera.
+            `;
+            return;
+        }
+
+        const fechaInicio = formatearFecha(data.fecha_inicio_calendario_academico);
+        const fechaFin = formatearFecha(data.fecha_final_calendario_academico);
+        const estaActivo = Number(data.estado) === 1;
+
+        contenedor.style.display = 'block';
+        contenedor.className = estaActivo
+            ? 'cc-calendario-info activo'
+            : 'cc-calendario-info inactivo';
+
+        contenedor.innerHTML = `
+            <strong>Fechas configuradas para Cambio de Carrera:</strong><br>
+            El período establecido es del 
+            <strong>${fechaInicio}</strong> al <strong>${fechaFin}</strong>.
+
+            ${!estaActivo ? `
+                <br><br>
+                <strong>Nota:</strong> Este calendario está desactivado actualmente.
+            ` : ''}
+        `;
+
+    } catch (error) {
+        console.error(error);
+
+        contenedor.style.display = 'block';
+        contenedor.className = 'cc-calendario-info error';
+        contenedor.innerHTML = `
+            No se pudieron cargar las fechas de cambio de carrera.
+        `;
+    }
+}
+function formatearFecha(fecha) {
+    if (!fecha) return 'No disponible';
+
+    const partes = fecha.split('T')[0].split('-');
+
+    if (partes.length !== 3) {
+        return fecha;
+    }
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
     cargarCalendarioVigente();
     cargarCarreras();
     cargarMisTramites();
+    cargarInfoCalendarioCambioCarrera();
 });

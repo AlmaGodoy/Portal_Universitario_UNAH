@@ -11,45 +11,69 @@ use Illuminate\Database\QueryException;
 class CambioCarreraController extends Controller
 {
     public function crear(Request $request)
-    {
-        $request->validate([
-            'id_persona'         => 'required|integer',
-            'id_calendario'      => 'required|integer',
-            'id_carrera_destino' => 'required|integer',
-            'direccion'          => 'required|string|max:255',
-        ]);
+{
+    
+    $request->validate([
+        'id_persona'         => 'required|integer',
+        'id_carrera_destino' => 'required|integer',
+        'direccion'          => 'required|string|max:255',
+    ]);
 
-        try {
-            DB::statement('CALL INS_CAMBIO_CARRERA(?, ?, ?, ?, ?)', [
-                $request->id_persona,
-                $request->id_calendario,
-                $request->id_carrera_destino,
-                $request->direccion,
-                12 // ID de usuario para bitácora
-            ]);
+    try {
+        
+        $calendarioActivo = DB::table('tbl_calendario_academico')
+            ->where('tipo_tramite_academico', 'cambio_carrera')
+            ->where('estado', 1)
+            ->where('eliminado', 0)
+            ->whereDate('fecha_inicio_calendario_academico', '<=', now()->toDateString())
+            ->whereDate('fecha_final_calendario_academico', '>=', now()->toDateString())
+            ->orderByDesc('id_calendario_academico')
+            ->first();
 
-            $ultimoTramite = DB::table('tbl_tramite')
-                ->where('id_persona', $request->id_persona)
-                ->orderByDesc('id_tramite')
-                ->first();
-
-            return response()->json([
-                'resultado'  => 'OK',
-                'mensaje'    => 'Trámite y bitácora registrados exitosamente',
-                'id_tramite' => $ultimoTramite->id_tramite ?? null
-            ], 201);
-
-        } catch (\Throwable $e) {
+       
+        if (!$calendarioActivo) {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje'   => $this->obtenerMensajeLimpio(
-                    $e,
-                    'No fue posible crear la solicitud de cambio de carrera.'
-                )
-            ], $this->obtenerCodigoHttp($e, 500));
+                'mensaje'   => 'Actualmente no existe una fecha habilitada para realizar solicitudes de cambio de carrera. Secretaría de Carrera debe crear o activar un calendario.'
+            ], 422);
         }
-    }
 
+       
+        DB::statement('CALL INS_CAMBIO_CARRERA(?, ?, ?, ?, ?)', [
+            $request->id_persona,
+            $calendarioActivo->id_calendario_academico,
+            $request->id_carrera_destino,
+            $request->direccion,
+            Auth::id() ?? 12
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | OBTENER EL ÚLTIMO TRÁMITE CREADO
+        |--------------------------------------------------------------------------
+        */
+        $ultimoTramite = DB::table('tbl_tramite')
+            ->where('id_persona', $request->id_persona)
+            ->where('tipo_tramite_academico', 'cambio_carrera')
+            ->orderByDesc('id_tramite')
+            ->first();
+
+        return response()->json([
+            'resultado'  => 'OK',
+            'mensaje'    => 'Trámite registrado correctamente. Ahora sube tu Historial Académico en PDF para completar la solicitud.',
+            'id_tramite' => $ultimoTramite->id_tramite ?? null
+        ], 201);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $this->obtenerMensajeLimpio(
+                $e,
+                'No fue posible crear la solicitud de cambio de carrera.'
+            )
+        ], $this->obtenerCodigoHttp($e, 500));
+    }
+}
     // Consultar trámite
     public function ver($codigo)
     {
@@ -205,20 +229,43 @@ class CambioCarreraController extends Controller
         }
     }
 
-    public function calendarioVigente()
-    {
-        try {
-            $data = DB::select('CALL SEL_CALENDARIO_VIGENTE_CAMBIO_CARRERA()');
+ public function calendarioVigente()
+{
+    try {
+       
+        $calendario = DB::table('tbl_calendario_academico')
+            ->where('tipo_tramite_academico', 'cambio_carrera')
+            ->where('estado', 1)
+            ->where('eliminado', 0)
+            ->whereDate('fecha_inicio_calendario_academico', '<=', now()->toDateString())
+            ->whereDate('fecha_final_calendario_academico', '>=', now()->toDateString())
+            ->orderByDesc('id_calendario_academico')
+            ->first();
 
-            return response()->json($data[0] ?? null, 200);
-
-        } catch (\Throwable $e) {
+        /*
+        |--------------------------------------------------------------------------
+        | SI NO EXISTE, DEVOLVER ERROR CONTROLADO
+        |--------------------------------------------------------------------------
+        */
+        if (!$calendario) {
             return response()->json([
                 'resultado' => 'ERROR',
-                'mensaje' => $e->getMessage()
-            ], 500);
+                'mensaje'   => 'Actualmente no existe una fecha habilitada para realizar solicitudes de cambio de carrera.'
+            ], 404);
         }
+
+        return response()->json($calendario, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $this->obtenerMensajeLimpio(
+                $e,
+                'No fue posible consultar el calendario vigente.'
+            )
+        ], $this->obtenerCodigoHttp($e, 500));
     }
+}
 
     public function carreras()
     {
@@ -282,6 +329,7 @@ class CambioCarreraController extends Controller
                 't.fecha_solicitud',
                 't.direccion',
                 't.resolucion_de_tramite_academico as estado_tramite',
+                't.observacion_secretaria as observaciones_secretaria',
                 'p.nombre_persona as estudiante',
                 'c.nombre_carrera as carrera_destino',
                 'e.indice_periodo',
@@ -302,55 +350,90 @@ class CambioCarreraController extends Controller
         return response()->json($tramite);
     }
 
-    public function guardarRevisionSecretaria(Request $request)
-    {
-        $request->validate([
-            'id_tramite' => 'required|integer',
-            'indice_periodo' => 'nullable|numeric',
-            'indice_global' => 'nullable|numeric',
-            'clases_aprobadas' => 'nullable|integer',
-        ]);
+   public function guardarRevisionSecretaria(Request $request)
+{
+    $idTramite = (int) $request->input('id_tramite');
+    $indicePeriodo = (float) $request->input('indice_periodo', 0);
+    $indiceGlobal = (float) $request->input('indice_global', 0);
+    $clasesAprobadas = (int) $request->input('clases_aprobadas', 0);
 
-        $idCarreraSecretaria = $this->obtenerCarreraSecretariaAutenticada();
-
-        if (!$idCarreraSecretaria) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje' => 'No tienes una carrera asignada como secretaria.'
-            ], 403);
-        }
-
-        $tramite = DB::table('tbl_tramite')
-            ->where('id_tramite', $request->id_tramite)
-            ->where('id_carrera_destino', $idCarreraSecretaria)
-            ->first();
-
-        if (!$tramite) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje' => 'No puedes revisar un trámite que no pertenece a tu carrera.'
-            ], 403);
-        }
-
-        DB::table('tbl_estudiante')
-            ->where('id_persona', $tramite->id_persona)
-            ->update([
-                'indice_periodo' => $request->indice_periodo,
-                'indice_global' => $request->indice_global,
-                'cantidad_clases_aprobadas' => $request->clases_aprobadas
-            ]);
-
-        DB::table('tbl_tramite')
-            ->where('id_tramite', $request->id_tramite)
-            ->update([
-                'resolucion_de_tramite_academico' => 'revision'
-            ]);
-
+    if ($idTramite <= 0) {
         return response()->json([
-            'resultado' => 'OK',
-            'mensaje' => 'Revisión de Secretaría guardada correctamente.'
-        ]);
+            'resultado' => 'ERROR',
+            'mensaje' => 'No se encontró el trámite que se desea revisar.'
+        ], 422);
     }
+
+    if ($indicePeriodo <= 0) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'El índice de período debe ser mayor que cero.'
+        ], 422);
+    }
+
+    if ($indiceGlobal <= 0) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'El índice global debe ser mayor que cero.'
+        ], 422);
+    }
+
+    if ($clasesAprobadas <= 0) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'La cantidad de clases aprobadas debe ser mayor que cero.'
+        ], 422);
+    }
+
+    $request->validate([
+        'id_tramite' => 'required|integer',
+        'indice_periodo' => 'required|numeric|gt:0',
+        'indice_global' => 'required|numeric|gt:0',
+        'clases_aprobadas' => 'required|integer|gt:0',
+        'observaciones_secretaria' => 'nullable|string|max:500',
+    ]);
+
+    $idCarreraSecretaria = $this->obtenerCarreraSecretariaAutenticada();
+
+    if (!$idCarreraSecretaria) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No tienes una carrera asignada como secretaria.'
+        ], 403);
+    }
+
+    $tramite = DB::table('tbl_tramite')
+        ->where('id_tramite', $idTramite)
+        ->where('id_carrera_destino', $idCarreraSecretaria)
+        ->first();
+
+    if (!$tramite) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'No puedes revisar un trámite que no pertenece a tu carrera.'
+        ], 403);
+    }
+
+    DB::table('tbl_estudiante')
+        ->where('id_persona', $tramite->id_persona)
+        ->update([
+            'indice_periodo' => $indicePeriodo,
+            'indice_global' => $indiceGlobal,
+            'cantidad_clases_aprobadas' => $clasesAprobadas
+        ]);
+
+    DB::table('tbl_tramite')
+    ->where('id_tramite', $idTramite)
+    ->update([
+        'resolucion_de_tramite_academico' => 'revision',
+        'observacion_secretaria' => $request->input('observaciones_secretaria')
+    ]);
+
+    return response()->json([
+        'resultado' => 'OK',
+        'mensaje' => 'Revisión de Secretaría guardada correctamente.'
+    ]);
+}
 
     public function listadoCoordinacion()
     {
@@ -402,6 +485,7 @@ class CambioCarreraController extends Controller
                 't.direccion',
                 't.resolucion_de_tramite_academico as estado_tramite',
                 't.observacion_dictamen',
+                't.observacion_secretaria',
                 'p.nombre_persona as estudiante',
                 'c.nombre_carrera as carrera_destino',
                 'e.indice_periodo',
@@ -476,79 +560,150 @@ class CambioCarreraController extends Controller
     }
 
     public function crearCalendarioAcademico(Request $request)
-    {
-        $request->validate([
-            'tipo_tramite_academico' => 'required|string|in:cambio_carrera,cancelacion',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin'    => 'required|date',
+{
+    $request->validate([
+        'tipo_tramite_academico' => 'required|string|in:cambio_carrera,cancelacion',
+        'fecha_inicio' => 'required|date',
+        'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+    ], [
+        'tipo_tramite_academico.required' => 'Debe seleccionar el tipo de trámite.',
+        'tipo_tramite_academico.in' => 'El tipo de trámite seleccionado no es válido.',
+        'fecha_inicio.required' => 'Debe seleccionar la fecha de inicio.',
+        'fecha_fin.required' => 'Debe seleccionar la fecha final.',
+        'fecha_fin.after_or_equal' => 'La fecha de inicio no puede ser mayor que la fecha final.',
+    ]);
+
+    try {
+        $data = DB::select('CALL INS_CALENDARIO_ACADEMICO(?, ?, ?)', [
+            $request->tipo_tramite_academico,
+            $request->fecha_inicio,
+            $request->fecha_fin
         ]);
 
-        try {
-            $data = DB::select('CALL INS_CALENDARIO_ACADEMICO(?, ?, ?)', [
-                $request->tipo_tramite_academico,
-                $request->fecha_inicio,
-                $request->fecha_fin
-            ]);
+        $respuesta = (array) ($data[0] ?? [
+            'resultado' => 'OK',
+            'mensaje'   => 'Calendario creado correctamente.'
+        ]);
 
-            return response()->json($data[0] ?? [
-                'resultado' => 'OK',
-                'mensaje'   => 'Calendario creado correctamente.'
-            ], 201);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
+        if (($respuesta['resultado'] ?? 'OK') !== 'ERROR') {
+            $this->registrarBitacoraCalendario(
+                'CREAR_CALENDARIO_ACADEMICO',
+                'Creó calendario académico para ' .
+                $request->tipo_tramite_academico .
+                '. Fecha inicio: ' . $request->fecha_inicio .
+                '. Fecha final: ' . $request->fecha_fin
+            );
         }
+
+        return response()->json($respuesta, 201);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $this->obtenerMensajeLimpio(
+                $e,
+                'No fue posible crear el calendario académico.'
+            )
+        ], $this->obtenerCodigoHttp($e, 500));
     }
+}
 
     public function actualizarCalendarioAcademico(Request $request, $id_calendario)
-    {
-        $request->validate([
-            'fecha_inicio' => 'required|date',
-            'fecha_fin'    => 'required|date',
+{
+    $request->validate([
+        'fecha_inicio' => 'required|date',
+        'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+    ], [
+        'fecha_inicio.required' => 'Debe seleccionar la fecha de inicio.',
+        'fecha_fin.required' => 'Debe seleccionar la fecha final.',
+        'fecha_fin.after_or_equal' => 'La fecha de inicio no puede ser mayor que la fecha final.',
+    ]);
+
+    try {
+        $data = DB::select('CALL UPD_CALENDARIO_ACADEMICO(?, ?, ?)', [
+            $id_calendario,
+            $request->fecha_inicio,
+            $request->fecha_fin
         ]);
 
-        try {
-            $data = DB::select('CALL UPD_CALENDARIO_ACADEMICO(?, ?, ?)', [
-                $id_calendario,
-                $request->fecha_inicio,
-                $request->fecha_fin
-            ]);
+        $respuesta = (array) ($data[0] ?? [
+            'resultado' => 'OK',
+            'mensaje'   => 'Calendario actualizado correctamente.'
+        ]);
 
-            return response()->json($data[0] ?? [
-                'resultado' => 'OK',
-                'mensaje'   => 'Calendario actualizado correctamente.'
-            ], 200);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
+        if (($respuesta['resultado'] ?? 'OK') !== 'ERROR') {
+            $this->registrarBitacoraCalendario(
+                'ACTUALIZAR_CALENDARIO_ACADEMICO',
+                'Actualizó calendario académico ID: ' .
+                $id_calendario .
+                '. Nueva fecha inicio: ' . $request->fecha_inicio .
+                '. Nueva fecha final: ' . $request->fecha_fin
+            );
         }
+
+        return response()->json($respuesta, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $this->obtenerMensajeLimpio(
+                $e,
+                'No fue posible actualizar el calendario académico.'
+            )
+        ], $this->obtenerCodigoHttp($e, 500));
     }
+}
 
     public function cambiarEstadoCalendarioAcademico($id_calendario)
-    {
-        try {
-            $data = DB::select('CALL UPD_ESTADO_CALENDARIO_ACADEMICO(?)', [
-                $id_calendario
-            ]);
+{
+    try {
+        $calendarioAntes = DB::table('tbl_calendario_academico')
+            ->where('id_calendario_academico', $id_calendario)
+            ->first();
 
-            return response()->json($data[0] ?? [
-                'resultado' => 'OK',
-                'mensaje'   => 'Estado del calendario actualizado correctamente.'
-            ], 200);
+        $data = DB::select('CALL UPD_ESTADO_CALENDARIO_ACADEMICO(?)', [
+            $id_calendario
+        ]);
 
-        } catch (\Throwable $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
-        }
+        $respuesta = (array) ($data[0] ?? [
+            'resultado' => 'OK',
+            'mensaje'   => 'Estado del calendario actualizado correctamente.'
+        ]);
+
+        if (($respuesta['resultado'] ?? 'OK') !== 'ERROR') {
+    if ($calendarioAntes && (int) $calendarioAntes->estado === 1) {
+        $this->registrarBitacoraCalendario(
+            'DESACTIVAR_CALENDARIO_ACADEMICO',
+            'Desactivó calendario académico ID: ' . $id_calendario .
+            '. Tipo: ' . $calendarioAntes->tipo_tramite_academico .
+            '. Fecha inicio: ' . $calendarioAntes->fecha_inicio_calendario_academico .
+            '. Fecha final: ' . $calendarioAntes->fecha_final_calendario_academico
+        );
+    } else {
+        $this->registrarBitacoraCalendario(
+            'ACTIVAR_CALENDARIO_ACADEMICO',
+            'Activó calendario académico ID: ' . $id_calendario .
+            ($calendarioAntes
+                ? '. Tipo: ' . $calendarioAntes->tipo_tramite_academico .
+                  '. Fecha inicio: ' . $calendarioAntes->fecha_inicio_calendario_academico .
+                  '. Fecha final: ' . $calendarioAntes->fecha_final_calendario_academico
+                : ''
+            )
+        );
     }
+}
+        return response()->json($respuesta, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $this->obtenerMensajeLimpio(
+                $e,
+                'No fue posible cambiar el estado del calendario académico.'
+            )
+        ], $this->obtenerCodigoHttp($e, 500));
+    }
+}
 
     private function obtenerMensajeLimpio(Throwable $e, string $mensajeGenerico): string
     {
@@ -659,24 +814,48 @@ class CambioCarreraController extends Controller
     }
 
     public function eliminarCalendarioAcademico($id_calendario)
-    {
-        try {
-            $data = DB::select('CALL DEL_LOGICO_CALENDARIO_ACADEMICO(?)', [
-                $id_calendario
-            ]);
+{
+    try {
+        $calendario = DB::table('tbl_calendario_academico')
+            ->where('id_calendario_academico', $id_calendario)
+            ->first();
 
-            return response()->json($data[0] ?? [
-                'resultado' => 'OK',
-                'mensaje'   => 'Calendario eliminado correctamente.'
-            ], 200);
+        $data = DB::select('CALL DEL_LOGICO_CALENDARIO_ACADEMICO(?)', [
+            $id_calendario
+        ]);
 
-        } catch (\Throwable $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
+        $respuesta = (array) ($data[0] ?? [
+            'resultado' => 'OK',
+            'mensaje'   => 'Calendario eliminado correctamente.'
+        ]);
+
+        if (($respuesta['resultado'] ?? 'OK') !== 'ERROR') {
+            $descripcion = 'Eliminó calendario académico ID: ' . $id_calendario;
+
+            if ($calendario) {
+                $descripcion .= '. Tipo: ' . $calendario->tipo_tramite_academico .
+                    '. Fecha inicio: ' . $calendario->fecha_inicio_calendario_academico .
+                    '. Fecha final: ' . $calendario->fecha_final_calendario_academico;
+            }
+
+            $this->registrarBitacoraCalendario(
+                'ELIMINAR_CALENDARIO_ACADEMICO',
+                $descripcion
+            );
         }
+
+        return response()->json($respuesta, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje'   => $this->obtenerMensajeLimpio(
+                $e,
+                'No fue posible eliminar el calendario académico.'
+            )
+        ], $this->obtenerCodigoHttp($e, 500));
     }
+}
 
     public function verDocumento($id_tramite)
     {
@@ -737,4 +916,47 @@ class CambioCarreraController extends Controller
             ], 500);
         }
     }
+
+    private function registrarBitacoraCalendario(string $accion, string $descripcion): void
+{
+    try {
+        DB::statement('CALL INS_BITACORA(?, ?, ?, ?, ?)', [
+            Auth::id() ?? 12,
+            1,
+            $accion,
+            now(),
+            $descripcion
+        ]);
+    } catch (\Throwable $e) {
+        // No detenemos la acción principal si falla la bitácora
+    }
+}
+public function calendarioInfo()
+{
+    try {
+        $calendarios = DB::select('CALL SEL_CALENDARIOS_ACADEMICOS()');
+
+        $calendario = collect($calendarios)
+            ->where('tipo_tramite_academico', 'cambio_carrera')
+            ->sortByDesc('id_calendario_academico')
+            ->sortByDesc('estado')
+            ->first();
+
+        if (!$calendario) {
+            return response()->json([
+                'resultado' => 'ERROR',
+                'mensaje' => 'No hay fechas configuradas para cambio de carrera.'
+            ], 404);
+        }
+
+        return response()->json($calendario, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => $e->getMessage()
+        ], 500);
+    }
+}
+
 }

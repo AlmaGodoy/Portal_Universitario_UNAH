@@ -1,149 +1,258 @@
 @extends('layouts.app-estudiantes')
 
-@php
-    $user = auth()->user();
 
-    $correoInstitucional =
-        $user->email
-        ?? $user->correo_institucional
-        ?? optional($user->persona)->correo_institucional
-        ?? 'estudiante@unah.hn';
-@endphp
 
 @section('titulo', 'Panel del Alumno')
 
 @section('content')
 
-    {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
-    <div class="student-topbar">
+<style>
+    /* =========================================================
+       AJUSTE DE ALINEACIÓN GENERAL
+       Acerca el contenido al menú lateral y sube ligeramente el banner.
+    ========================================================= */
 
-        {{-- Izquierda --}}
-        <div class="student-topbar-left">
-            <div class="topbar-left-copy">
-                <div class="topbar-breadcrumb">
-                    <i class="fas fa-house"></i>
-                    <span>Inicio</span>
-                    <i class="fas fa-chevron-right"></i>
-                    <span class="topbar-breadcrumb-active">Panel del Alumno</span>
-                </div>
-            </div>
-        </div>
+    .dashboard-shell-body {
+        padding: 0 16px 0 10px !important;
+    }
 
-        {{-- Derecha --}}
-        <div class="student-topbar-right">
+    /* =========================================================
+       BANNER PANEL ESTUDIANTE
+       Banner principal institucional
+    ========================================================= */
 
-            {{-- Notificaciones --}}
-            <div class="topbar-action-group">
-                <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
-                    <i class="fas fa-bell"></i>
-                    <span class="topbar-badge">3</span>
-                </button>
+    .hero-banner {
+        position: relative !important;
+        min-height: 225px !important;
+        margin: -6px 6px 18px 0 !important;
+        border: 8px solid #ffffff !important;
+        border-radius: 18px !important;
+        overflow: hidden !important;
+        background: #163f86 !important;
+        box-shadow: 0 10px 24px rgba(8, 35, 78, 0.18) !important;
+    }
 
-                <div class="topbar-dropdown" id="dropNotif">
-                    <div class="topbar-dropdown-header">
-                        <span>Notificaciones</span>
-                        <a href="#" class="topbar-dropdown-mark">Marcar todas</a>
-                    </div>
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon blue"><i class="fas fa-file-alt"></i></div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Trámite actualizado</strong>
-                                <span>Tu solicitud de cambio fue revisada.</span>
-                                <small>Hace 5 min</small>
-                            </div>
-                        </li>
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-icon gold"><i class="fas fa-triangle-exclamation"></i></div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Observación emitida</strong>
-                                <span>Revisa tu cancelación de clases.</span>
-                                <small>Hace 1 hora</small>
-                            </div>
-                        </li>
-                        <li class="topbar-dropdown-item">
-                            <div class="topbar-dropdown-icon green"><i class="fas fa-circle-check"></i></div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Trámite aprobado</strong>
-                                <span>Tu solicitud fue aprobada.</span>
-                                <small>Ayer</small>
-                            </div>
-                        </li>
-                    </ul>
-                    <div class="topbar-dropdown-footer">
-                        <a href="#">Ver todas las notificaciones</a>
-                    </div>
-                </div>
-            </div>
+    .hero-banner-bg {
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 1 !important;
+        background:
+            radial-gradient(circle at 48% 44%, rgba(255, 255, 255, 0.10), transparent 25%),
+            linear-gradient(90deg, #123674 0%, #1c4f9d 48%, #174487 100%) !important;
+    }
 
-            {{-- Mensajes --}}
-            <div class="topbar-action-group">
-                <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
-                    <i class="fas fa-envelope"></i>
-                    <span class="topbar-badge gold">1</span>
-                </button>
+    .hero-banner-bg::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        background:
+            linear-gradient(135deg, transparent 0 44%, rgba(9, 43, 105, 0.26) 44% 56%, transparent 56%),
+            linear-gradient(135deg, transparent 0 52%, rgba(255,255,255,0.04) 52% 53%, transparent 53%) !important;
+        pointer-events: none !important;
+    }
 
-                <div class="topbar-dropdown" id="dropMsg">
-                    <div class="topbar-dropdown-header">
-                        <span>Mensajes</span>
-                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
-                    </div>
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-avatar">SC</div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Secretaría FCEAC</strong>
-                                <span>Tu expediente fue recibido correctamente.</span>
-                                <small>Hace 30 min</small>
-                            </div>
-                        </li>
-                    </ul>
-                    <div class="topbar-dropdown-footer">
-                        <a href="#">Ir a mensajes</a>
-                    </div>
-                </div>
-            </div>
+    .hero-banner::before {
+        content: "" !important;
+        position: absolute !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 250px !important;
+        height: 110px !important;
+        z-index: 2 !important;
+        opacity: 0.15 !important;
+        background-image: radial-gradient(rgba(255,255,255,0.85) 1px, transparent 1px) !important;
+        background-size: 10px 10px !important;
+        pointer-events: none !important;
+    }
 
-            <div class="topbar-divider"></div>
+    .hero-banner::after {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 2 !important;
+        background:
+            radial-gradient(circle at 48% 42%, rgba(255,255,255,0.08), transparent 25%),
+            linear-gradient(120deg, transparent 0%, transparent 42%, rgba(255,255,255,0.07) 52%, transparent 65%) !important;
+        pointer-events: none !important;
+    }
 
-            {{-- Usuario --}}
-            <div class="topbar-action-group">
-                <button class="student-user-chip" id="btnUser" title="Mi perfil">
-                    <div class="student-user-chip-avatar">{{ $initials ?? 'A' }}</div>
-                    <div class="student-user-chip-info">
-                        <span class="student-user-chip-name">{{ $displayName ?? 'Alumno' }}</span>
-                        <span class="student-user-chip-role">Estudiante</span>
-                    </div>
-                    <i class="fas fa-chevron-down student-user-chip-arrow"></i>
-                </button>
+    .hero-wave {
+        display: none !important;
+    }
 
-                <div class="topbar-dropdown align-right" id="dropUser">
-                    <div class="topbar-user-header">
-                        <div class="topbar-user-header-avatar">{{ $initials ?? 'A' }}</div>
-                        <div>
-                            <strong>{{ $displayName ?? 'Alumno' }}</strong>
-                            <span>{{ $correoInstitucional }}</span>
-                        </div>
-                    </div>
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item sm">
-                            <div class="topbar-dropdown-icon blue sm"><i class="fas fa-user"></i></div>
-                            <div class="topbar-dropdown-text"><span>Mi perfil</span></div>
-                        </li>
-                    </ul>
-                    <div class="topbar-dropdown-footer danger">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit">
-                                <i class="fas fa-right-from-bracket"></i> Cerrar sesión
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+    .hero-gold-ribbon {
+        position: absolute !important;
+        top: -10% !important;
+        right: 300px !important;
+        width: 74px !important;
+        height: 120% !important;
+        z-index: 6 !important;
+        background: linear-gradient(180deg, #ffd21f 0%, #f2bd12 55%, #dfa600 100%) !important;
+        transform: skewX(-10deg) !important;
+        box-shadow:
+            -12px 0 0 rgba(9, 44, 105, 0.55),
+            7px 0 0 rgba(255, 255, 255, 0.16) !important;
+    }
 
-        </div>
-    </div>
+    .hero-gold-ribbon::before {
+        content: "" !important;
+        position: absolute !important;
+        left: -16px !important;
+        top: 0 !important;
+        width: 5px !important;
+        height: 100% !important;
+        background: rgba(7, 37, 92, 0.72) !important;
+        border-radius: 999px !important;
+    }
+
+    .hero-photo {
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 370px !important;
+        height: 100% !important;
+        z-index: 4 !important;
+        overflow: hidden !important;
+        clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%) !important;
+    }
+
+    .hero-photo::after {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 2 !important;
+        background: linear-gradient(90deg, rgba(18, 54, 116, 0.18), transparent 34%) !important;
+        pointer-events: none !important;
+    }
+
+    .hero-photo-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center !important;
+        display: block !important;
+    }
+
+    .hero-content {
+        position: relative !important;
+        z-index: 8 !important;
+        width: calc(100% - 365px) !important;
+        min-height: 225px !important;
+        padding: 38px 46px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+    }
+
+    .hero-faculty-title {
+        margin: 0 0 20px 0 !important;
+        color: #ffd21f !important;
+        font-size: clamp(26px, 2.1vw, 36px) !important;
+        line-height: 1.13 !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.2px !important;
+        text-transform: uppercase !important;
+        text-shadow:
+            0 3px 7px rgba(0, 0, 0, 0.24),
+            0 0 8px rgba(255, 210, 31, 0.08) !important;
+    }
+
+    .hero-service-strip {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        width: fit-content !important;
+        max-width: 100% !important;
+    }
+
+    .hero-service-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 8px 13px !important;
+        border-radius: 12px !important;
+        color: #ffffff !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        white-space: nowrap !important;
+        background: rgba(255, 255, 255, 0.11) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.12),
+            0 5px 12px rgba(0, 0, 0, 0.10) !important;
+    }
+
+    .hero-service-pill i {
+        color: #ffd21f !important;
+        font-size: 13px !important;
+    }
+
+    .hero-service-pill.main-pill {
+        background: rgba(255, 210, 31, 0.16) !important;
+        border-color: rgba(255, 210, 31, 0.38) !important;
+    }
+
+    @media (max-width: 1200px) {
+        .hero-photo {
+            width: 330px !important;
+        }
+
+        .hero-gold-ribbon {
+            right: 268px !important;
+            width: 66px !important;
+        }
+
+        .hero-content {
+            width: calc(100% - 320px) !important;
+            padding: 34px 38px !important;
+        }
+
+        .hero-faculty-title {
+            font-size: 28px !important;
+        }
+
+        .hero-service-pill {
+            font-size: 12px !important;
+            padding: 7px 11px !important;
+        }
+    }
+
+    @media (max-width: 900px) {
+
+        .hero-banner {
+            min-height: 255px !important;
+            border-width: 6px !important;
+            margin: 8px 6px 16px 0 !important;
+        }
+
+        .hero-photo {
+            width: 100% !important;
+            opacity: 0.20 !important;
+            clip-path: none !important;
+        }
+
+        .hero-gold-ribbon {
+            right: 35px !important;
+            width: 56px !important;
+            opacity: 0.90 !important;
+        }
+
+        .hero-content {
+            width: 100% !important;
+            padding: 32px 26px !important;
+        }
+
+        .hero-service-strip {
+            gap: 8px !important;
+        }
+
+        .hero-service-pill {
+            font-size: 12px !important;
+        }
+    }
+</style>
 
     {{-- ══ BANNER ══════════════════════════════════════════ --}}
     <div class="hero-banner">
@@ -158,27 +267,25 @@
 
         <div class="hero-content">
 
-            {{-- Título principal --}}
             <div class="hero-faculty-title">
                 FACULTAD DE CIENCIAS ECONÓMICAS,<br>
                 ADMINISTRATIVAS Y CONTABLES
             </div>
 
-            {{-- Franja de datos --}}
-            <div class="hero-stats-strip">
-                <div class="hero-stat">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Trámites activos: <strong>2</strong></span>
+            <div class="hero-service-strip">
+                <div class="hero-service-pill main-pill">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Gestiones académicas FCEAC</span>
                 </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat">
-                    <i class="fas fa-clock"></i>
-                    <span>En revisión: <strong>1</strong></span>
+
+                <div class="hero-service-pill">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Solicitudes según calendario</span>
                 </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat">
-                    <i class="fas fa-circle-check"></i>
-                    <span>Aprobados: <strong>3</strong></span>
+
+                <div class="hero-service-pill">
+                    <i class="fas fa-route"></i>
+                    <span>Seguimiento en línea</span>
                 </div>
             </div>
         </div>
@@ -241,14 +348,18 @@
     <div class="student-main-grid">
         <div class="student-module-card">
             <div class="module-badge">Trámite Académico</div>
+
             <div class="module-icon">
                 <i class="fas fa-right-left"></i>
             </div>
+
             <h2>Cambio de Carrera</h2>
+
             <p>
                 Inicia tu solicitud de cambio de carrera, adjunta la documentación necesaria
                 y consulta el estado del proceso desde el módulo correspondiente.
             </p>
+
             <div class="module-actions">
                 <a href="{{ route('cambio-carrera.index') }}" class="module-btn primary">
                     <i class="fas fa-arrow-right"></i> Ir al módulo
@@ -258,14 +369,18 @@
 
         <div class="student-module-card">
             <div class="module-badge">Trámite Académico</div>
+
             <div class="module-icon gold">
                 <i class="fas fa-ban"></i>
             </div>
+
             <h2>Cancelación de Clases</h2>
+
             <p>
                 Accede al proceso de cancelación de clases para registrar tu solicitud
                 y dar seguimiento a la resolución correspondiente.
             </p>
+
             <div class="module-actions">
                 <a href="{{ route('cancelacion.index') }}" class="module-btn secondary">
                     <i class="fas fa-arrow-right"></i> Ir al módulo

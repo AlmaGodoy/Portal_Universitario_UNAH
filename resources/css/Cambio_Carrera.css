@@ -1161,3 +1161,80 @@ form button:hover {
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+
+.required {
+    color: #dc3545;
+    font-weight: 800;
+}
+
+
+.required {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.cc-card-subtitle {
+    margin: 4px 0 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.cc-table th {
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.cc-table td {
+    vertical-align: middle;
+}
+
+.msg {
+    margin-top: 15px;
+    font-weight: 600;
+}
+
+.msg.success {
+    color: #198754;
+}
+
+.msg.error {
+    color: #dc3545;
+}
+
+.msg.warning {
+    color: #856404;
+
+}
+
+
+/* Calendario mensaje*/
+
+
+.cc-calendario-info {
+    display: block;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.cc-calendario-info.activo {
+    background: #e8f3ff;
+    border: 1px solid #b9d9ff;
+    color: #174a7c;
+}
+
+.cc-calendario-info.inactivo {
+    background: #fff4db;
+    border: 1px solid #f0c36d;
+    color: #6b4a00;
+}
+
+.cc-calendario-info.error {
+    background: #fdecea;
+    border: 1px solid #f5b5b5;
+    color: #b42318;
+}

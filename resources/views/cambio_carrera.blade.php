@@ -16,7 +16,7 @@
 
             
                 <a href="{{ route('dashboard') }}" class="cc-btn-volver">
-                    <i class="fas fa-arrow-left"></i> Volver al dashboard
+                    <i class="fas fa-arrow-left"></i> Regresar 
                 </a>
             </div>
         </div>
@@ -46,17 +46,24 @@
                 Completa el formulario. Al crear el trámite, se habilitará la sección para subir tu
                 <strong>Historial Académico (PDF)</strong>.
             </p>
-
+        
+            <div id="infoCalendarioCambioCarrera" class="cc-calendario-info">
+    Cargando información del calendario de cambio de carrera...
+</div>
             <form id="formCambioCarrera" class="cc-form">
                 <div class="cc-form-group">
-                    <label for="id_carrera_destino">Carrera destino</label>
+                      <label for="id_carrera_destino">
+                        Carrera destino <span class="required">*</span>
+                    </label>
                     <select id="id_carrera_destino" required>
                         <option value="">Cargando carreras...</option>
                     </select>
                 </div>
 
                 <div class="cc-form-group">
-                    <label for="direccion">Motivo por el cual solicita el cambio de carrera</label>
+                      <label for="direccion">
+                        Motivo por el cual solicita el cambio de carrera <span class="required">*</span>
+                    </label>
                     <textarea
                         id="direccion"
                         placeholder="Escriba aquí el motivo por el cual solicita el cambio de carrera"
@@ -87,7 +94,9 @@
                     <input type="hidden" id="id_tramite" value="">
 
                     <div class="cc-form-group">
-                        <label for="archivo">Selecciona tu PDF</label>
+                        <label for="archivo">
+                            Selecciona tu PDF <span class="required">*</span>
+                        </label>
                         <input type="file" id="archivo" accept="application/pdf" required>
                     </div>
 

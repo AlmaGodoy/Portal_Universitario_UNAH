@@ -196,11 +196,26 @@
                         <tbody>
                             @forelse($tramitesReporte as $index => $tramite)
                                 @php
-                                    $estadoClase = strtolower(trim($tramite['estado'] ?? 'pendiente'));
+                                    $estadoMostrar = $tramite['estado_actual'] ?? $tramite['estado'] ?? 'pendiente';
+
+                                    $estadoKey = \Illuminate\Support\Str::of($estadoMostrar)
+                                        ->lower()
+                                        ->ascii()
+                                        ->replace(' ', '_')
+                                        ->toString();
+
+                                    $estadoClase = match($estadoKey) {
+                                        'aprobado', 'aprobada', 'aceptado', 'aceptada' => 'aprobada',
+                                        'rechazado', 'rechazada' => 'rechazada',
+                                        'revision', 'en_revision' => 'revision',
+                                        default => 'pendiente',
+                                    };
+
                                     $tipoBonito = \Illuminate\Support\Str::of($tramite['tipo'] ?? 'No definido')
                                         ->replace('_', ' ')
                                         ->title();
                                 @endphp
+
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $tramite['estudiante'] ?? 'Sin nombre' }}</td>
@@ -208,7 +223,7 @@
                                     <td>{{ $tramite['fecha_solicitud'] ?? 'Sin fecha' }}</td>
                                     <td>
                                         <span class="estado estado-{{ $estadoClase }}">
-                                            {{ strtoupper($tramite['estado'] ?? 'pendiente') }}
+                                            {{ strtoupper($estadoMostrar) }}
                                         </span>
                                     </td>
                                 </tr>
