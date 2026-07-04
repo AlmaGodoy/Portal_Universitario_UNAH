@@ -110,12 +110,51 @@ class GraficasController extends Controller
             'vista'                      => 'secretaria_academica',
             'anio'                       => $anio,
             'mes'                        => $mes,
-            'cancelaciones'              => $this->graficas->obtenerCancelacionesPorPeriodoYAnio($anio, $idDepartamento, null, $mes),
-            'cambio_carrera'             => $this->graficas->obtenerCambiosCarreraPorPeriodoYAnio($anio, $idDepartamento, null, $mes),
-            'distribucion_cancelaciones' => $this->graficas->obtenerDistribucionCancelaciones($anio, 'departamento', $idDepartamento, null, $mes),
-            'distribucion_cambios'       => $this->graficas->obtenerDistribucionCambiosCarrera($anio, 'departamento', $idDepartamento, null, $mes),
+
+            'cancelaciones'              => $this->graficas->obtenerCancelacionesPorPeriodoYAnio(
+                $anio,
+                $idDepartamento,
+                null,
+                $mes
+            ),
+
+            'cambio_carrera'             => $this->graficas->obtenerCambiosCarreraPorPeriodoYAnio(
+                $anio,
+                $idDepartamento,
+                null,
+                $mes
+            ),
+
+            'distribucion_cancelaciones' => $this->graficas->obtenerDistribucionCancelaciones(
+                $anio,
+                'departamento',
+                $idDepartamento,
+                null,
+                $mes
+            ),
+
+            'distribucion_cambios'       => $this->graficas->obtenerDistribucionCambiosCarrera(
+                $anio,
+                'departamento',
+                $idDepartamento,
+                null,
+                $mes
+            ),
+
+            /*
+             * Estados reales para el bloque "Estados de Trámites"
+             * del dashboard.
+             */
+            'estados_tramites'           => $this->graficas->obtenerEstadosTramites(
+                $anio,
+                $idDepartamento,
+                null,
+                $mes
+            ),
+
             'logins'                     => $this->graficas->obtenerLoginsAlumnosPorPeriodoYAnio($anio),
             'incidentes'                 => $this->graficas->obtenerIncidentesPorPeriodoYAnio($anio),
+
             'nota'                       => $idDepartamento && $nombreDepartamento
                 ? "Mostrando datos de: {$nombreDepartamento}."
                 : "Mostrando datos de todos los trámites de la facultad.",
@@ -149,12 +188,51 @@ class GraficasController extends Controller
             'vista'                      => 'secretaria_carrera',
             'anio'                       => $anio,
             'mes'                        => $mes,
-            'cancelaciones'              => $this->graficas->obtenerCancelacionesPorPeriodoYAnio($anio, null, $idCarrera, $mes),
-            'cambio_carrera'             => $this->graficas->obtenerCambiosCarreraPorPeriodoYAnio($anio, null, $idCarrera, $mes),
-            'distribucion_cancelaciones' => $this->graficas->obtenerDistribucionCancelaciones($anio, 'carrera', null, $idCarrera, $mes),
-            'distribucion_cambios'       => $this->graficas->obtenerDistribucionCambiosCarrera($anio, 'carrera', null, $idCarrera, $mes),
+
+            'cancelaciones'              => $this->graficas->obtenerCancelacionesPorPeriodoYAnio(
+                $anio,
+                null,
+                $idCarrera,
+                $mes
+            ),
+
+            'cambio_carrera'             => $this->graficas->obtenerCambiosCarreraPorPeriodoYAnio(
+                $anio,
+                null,
+                $idCarrera,
+                $mes
+            ),
+
+            'distribucion_cancelaciones' => $this->graficas->obtenerDistribucionCancelaciones(
+                $anio,
+                'carrera',
+                null,
+                $idCarrera,
+                $mes
+            ),
+
+            'distribucion_cambios'       => $this->graficas->obtenerDistribucionCambiosCarrera(
+                $anio,
+                'carrera',
+                null,
+                $idCarrera,
+                $mes
+            ),
+
+            /*
+             * Estados reales para el bloque "Estados de Trámites"
+             * del dashboard.
+             */
+            'estados_tramites'           => $this->graficas->obtenerEstadosTramites(
+                $anio,
+                null,
+                $idCarrera,
+                $mes
+            ),
+
             'logins'                     => $this->graficas->obtenerLoginsAlumnosPorPeriodoYAnio($anio),
             'incidentes'                 => $this->graficas->obtenerIncidentesPorPeriodoYAnio($anio),
+
             'nota'                       => $idCarrera && $nombreCarrera
                 ? "Mostrando datos de la carrera: {$nombreCarrera}."
                 : "Mostrando datos generales.",
@@ -238,3 +316,4 @@ class GraficasController extends Controller
             : null;
     }
 }
+
