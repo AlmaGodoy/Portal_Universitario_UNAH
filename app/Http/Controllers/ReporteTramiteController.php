@@ -180,7 +180,8 @@ class ReporteTramiteController extends Controller
     }
 
     /**
-     * Método interno reutilizable para coordinador y secretaría de carrera
+     * Método interno reutilizable para coordinador y secretaría de carrera.
+     * El filtro de mes usa fecha_periodo, que debe venir del calendario académico.
      */
     private function obtenerDatosReporte(Request $request): array
     {
@@ -208,14 +209,20 @@ class ReporteTramiteController extends Controller
         $tramitesReporte = [];
 
         foreach ($resultado as $tramite) {
-            $estado = strtolower(trim((string) ($tramite->estado_actual ?? '')));
-            $fechaSolicitud = $tramite->fecha_solicitud ?? null;
+            $estado = strtolower(trim((string) ($tramite->estado_actual ?? 'pendiente')));
+
+            /*
+             * Antes se filtraba por fecha_solicitud.
+             * Ahora se filtra por fecha_periodo, que viene de:
+             * ca.fecha_inicio_calendario_academico.
+             */
+            $fechaPeriodo = $tramite->fecha_periodo ?? null;
 
             $cumpleMesFiltro = true;
 
-            if (!empty($mesReporte) && !empty($fechaSolicitud)) {
+            if (!empty($mesReporte) && !empty($fechaPeriodo)) {
                 try {
-                    $fechaTramiteFiltro = Carbon::parse($fechaSolicitud);
+                    $fechaTramiteFiltro = Carbon::parse($fechaPeriodo);
                     $cumpleMesFiltro = ((int) $fechaTramiteFiltro->month === (int) $mesReporte);
                 } catch (\Exception $e) {
                     $cumpleMesFiltro = false;
@@ -227,15 +234,16 @@ class ReporteTramiteController extends Controller
             }
 
             $tramitesReporte[] = [
-                'id_tramite'           => $tramite->id_tramite ?? '',
-                'estudiante'           => $tramite->estudiante ?? 'Sin nombre',
-                'carrera'              => $tramite->carrera ?? '',
-                'tipo'                 => $tramite->tipo ?? 'No definido',
-                'estado_actual'        => $tramite->estado_actual ?? 'pendiente',
-                'fecha_solicitud'      => $tramite->fecha_solicitud ?? 'Sin fecha',
-                'observaciones'        => $tramite->observaciones ?? '',
-                'observaciones_resolucion' => $tramite->observaciones_resolucion ?? '',
-                'fecha_resolucion'     => $tramite->fecha_resolucion ?? '',
+                'id_tramite'                => $tramite->id_tramite ?? '',
+                'estudiante'                => $tramite->estudiante ?? 'Sin nombre',
+                'carrera'                   => $tramite->carrera ?? '',
+                'tipo'                      => $tramite->tipo ?? 'No definido',
+                'estado_actual'             => $tramite->estado_actual ?? 'pendiente',
+                'fecha_solicitud'           => $tramite->fecha_solicitud ?? 'Sin fecha',
+                'fecha_periodo'             => $tramite->fecha_periodo ?? '',
+                'observaciones'             => $tramite->observaciones ?? '',
+                'observaciones_resolucion'  => $tramite->observaciones_resolucion ?? '',
+                'fecha_resolucion'          => $tramite->fecha_resolucion ?? '',
             ];
 
             if ($estado === 'aprobada' || $estado === 'aprobado') {
@@ -254,11 +262,17 @@ class ReporteTramiteController extends Controller
                     'estudiante'      => $tramite->estudiante ?? 'Sin nombre',
                     'tipo'            => $tramite->tipo ?? 'No definido',
                     'fecha_solicitud' => $tramite->fecha_solicitud ?? 'Sin fecha',
+                    'fecha_periodo'   => $tramite->fecha_periodo ?? '',
                     'estado'          => $tramite->estado_actual ?? 'pendiente'
                 ];
             }
 
-            if ($estado === 'revision' || $estado === 'revisión') {
+            if (
+                $estado === 'revision' ||
+                $estado === 'revisión' ||
+                $estado === 'en_revision' ||
+                $estado === 'en revisión'
+            ) {
                 $revisionTotal++;
             }
         }
@@ -311,18 +325,19 @@ class ReporteTramiteController extends Controller
         $tramitesReporte = [];
 
         foreach ($resultado as $tramite) {
-            $estado = strtolower(trim((string) ($tramite->estado_actual ?? '')));
+            $estado = strtolower(trim((string) ($tramite->estado_actual ?? 'pendiente')));
 
             $tramitesReporte[] = [
-                'id_tramite'           => $tramite->id_tramite ?? '',
-                'estudiante'           => $tramite->estudiante ?? 'Sin nombre',
-                'carrera'              => $tramite->carrera ?? 'Sin carrera',
-                'tipo'                 => $tramite->tipo ?? 'No definido',
-                'estado_actual'        => $tramite->estado_actual ?? 'pendiente',
-                'fecha_solicitud'      => $tramite->fecha_solicitud ?? 'Sin fecha',
-                'observaciones'        => $tramite->observaciones ?? '',
-                'observaciones_resolucion' => $tramite->observaciones_resolucion ?? '',
-                'fecha_resolucion'     => $tramite->fecha_resolucion ?? '',
+                'id_tramite'                => $tramite->id_tramite ?? '',
+                'estudiante'                => $tramite->estudiante ?? 'Sin nombre',
+                'carrera'                   => $tramite->carrera ?? 'Sin carrera',
+                'tipo'                      => $tramite->tipo ?? 'No definido',
+                'estado_actual'             => $tramite->estado_actual ?? 'pendiente',
+                'fecha_solicitud'           => $tramite->fecha_solicitud ?? 'Sin fecha',
+                'fecha_periodo'             => $tramite->fecha_periodo ?? '',
+                'observaciones'             => $tramite->observaciones ?? '',
+                'observaciones_resolucion'  => $tramite->observaciones_resolucion ?? '',
+                'fecha_resolucion'          => $tramite->fecha_resolucion ?? '',
             ];
 
             if ($estado === 'aprobada' || $estado === 'aprobado') {
@@ -337,7 +352,12 @@ class ReporteTramiteController extends Controller
                 $pendientesTotal++;
             }
 
-            if ($estado === 'revision' || $estado === 'revisión') {
+            if (
+                $estado === 'revision' ||
+                $estado === 'revisión' ||
+                $estado === 'en_revision' ||
+                $estado === 'en revisión'
+            ) {
                 $revisionTotal++;
             }
         }
@@ -383,3 +403,4 @@ class ReporteTramiteController extends Controller
         return Auth::user()->id_persona ?? null;
     }
 }
+
