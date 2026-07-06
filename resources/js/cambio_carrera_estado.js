@@ -72,22 +72,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const res = await fetch(`/api/cambio-carrera/ver/${idPersona}`, {
-                headers: { 'Accept': 'application/json' }
-            });
+           const res = await fetch('/api/cambio-carrera/estado-actual', {
+    headers: { 'Accept': 'application/json' }
+});
 
-            const data = await res.json();
+const response = await res.json();
 
-            if (!Array.isArray(data) || data.length === 0) {
-                estadoTramite.innerHTML = `
-                    <div class="estado-empty">
-                        <p>No tienes trámites registrados.</p>
-                    </div>
-                `;
-                return;
-            }
+if (!res.ok || !response || response.resultado === 'ERROR') {
+    estadoTramite.innerHTML = `
+        <div class="estado-empty">
+            <p>${response?.mensaje || 'No se pudo cargar el estado del trámite.'}</p>
+        </div>
+    `;
+    return;
+}
 
-            const tramite = seleccionarTramiteMasReciente(data);
+if (!response.data) {
+    estadoTramite.innerHTML = `
+        <div class="estado-empty">
+            <p>No tienes trámites registrados.</p>
+        </div>
+    `;
+    return;
+}
+
+const tramite = response.data;
 
             if (!tramite) {
                 estadoTramite.innerHTML = `
@@ -159,9 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
 
                             <div class="estado-item full">
-                                <strong>Dictamen / Observación</strong>
-                                <span>${tramite.dictamen ?? tramite.observacion ?? tramite.observacion_dictamen ?? 'Aún no hay dictamen registrado.'}</span>
-                            </div>
+    <strong>Observación</strong>
+    <span>${tramite.dictamen && tramite.dictamen.trim() !== '' ? tramite.dictamen : 'No hay observación registrada.'}</span>
+</div>
                         </div>
                     </div>
                 </div>

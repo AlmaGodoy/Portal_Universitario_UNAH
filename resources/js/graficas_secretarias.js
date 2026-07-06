@@ -401,26 +401,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderEstados(containerId, noteId, cancelPayload, cambioPayload) {
+    function obtenerEstadosReales(estadosPayload) {
+        return {
+            pendiente: safeNumber(estadosPayload?.pendiente ?? estadosPayload?.pendientes ?? 0),
+            revision: safeNumber(estadosPayload?.revision ?? estadosPayload?.revisión ?? estadosPayload?.en_revision ?? 0),
+            aprobado: safeNumber(estadosPayload?.aprobado ?? estadosPayload?.aprobada ?? estadosPayload?.aprobados ?? 0),
+            rechazado: safeNumber(estadosPayload?.rechazado ?? estadosPayload?.rechazada ?? estadosPayload?.rechazados ?? 0)
+        };
+    }
+
+    function renderEstados(containerId, noteId, estadosPayload) {
         const container = document.getElementById(containerId);
         const note = document.getElementById(noteId);
         if (!container) return;
 
-        const total = getPayloadTotal(cancelPayload) + getPayloadTotal(cambioPayload);
+        const estadosReales = obtenerEstadosReales(estadosPayload);
+
+        const estados = [
+            { label: 'Pendiente', value: estadosReales.pendiente, className: 'estado-pendiente' },
+            { label: 'En revisión', value: estadosReales.revision, className: 'estado-revision' },
+            { label: 'Aprobado', value: estadosReales.aprobado, className: 'estado-aprobado' },
+            { label: 'Rechazado', value: estadosReales.rechazado, className: 'estado-rechazado' }
+        ];
+
+        const total = estados.reduce((sum, item) => sum + safeNumber(item.value), 0);
 
         if (total === 0) {
             container.classList.add('bar-chart-placeholder');
-            container.innerHTML = `<div>No hay datos suficientes para estimar estados.</div>`;
-            if (note) note.textContent = 'Sin datos para el filtro actual.';
+            container.innerHTML = `<div>No hay datos suficientes para mostrar estados.</div>`;
+            if (note) note.textContent = 'Sin datos reales de estados para el filtro actual.';
             return;
         }
-
-        const estados = [
-            { label: 'Pendiente', value: Math.max(Math.round(total * 0.30), total > 0 ? 1 : 0), className: 'estado-pendiente' },
-            { label: 'En revisión', value: Math.round(total * 0.20), className: 'estado-revision' },
-            { label: 'Aprobado', value: Math.round(total * 0.35), className: 'estado-aprobado' },
-            { label: 'Rechazado', value: Math.round(total * 0.15), className: 'estado-rechazado' }
-        ];
 
         const maxValue = Math.max(...estados.map(item => item.value), 1);
 
@@ -445,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         if (note) {
-            note.textContent = 'Estimación visual basada en el volumen total actual del filtro.';
+            note.textContent = 'Estados reales según los trámites del filtro actual.';
         }
     }
 
@@ -569,8 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderEstados(
                 'chartEstados',
                 'noteEstados',
-                result.cancelaciones,
-                result.cambio_carrera
+                result.estados_tramites
             );
 
             renderTendencia(
@@ -660,5 +670,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cargarGraficas();
 });
-
 

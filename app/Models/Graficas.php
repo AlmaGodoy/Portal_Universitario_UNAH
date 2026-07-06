@@ -246,6 +246,80 @@ class Graficas extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | ESTADOS REALES DE TRÁMITES
+    |--------------------------------------------------------------------------
+    */
+    public function obtenerEstadosTramites(
+        ?int $anio = null,
+        ?int $idDepartamento = null,
+        ?int $idCarrera = null,
+        ?int $mes = null
+    ): array {
+        $rows = collect(DB::select("
+            SELECT
+                CASE
+                    WHEN LOWER(TRIM(COALESCE(NULLIF(TRIM(t.resolucion_de_tramite_academico), ''), 'pendiente'))) IN ('aprobada', 'aprobado')
+                        THEN 'aprobado'
+
+                    WHEN LOWER(TRIM(COALESCE(NULLIF(TRIM(t.resolucion_de_tramite_academico), ''), 'pendiente'))) IN ('rechazada', 'rechazado')
+                        THEN 'rechazado'
+
+                    WHEN LOWER(TRIM(COALESCE(NULLIF(TRIM(t.resolucion_de_tramite_academico), ''), 'pendiente'))) IN ('revision', 'revisión', 'en_revision', 'en revisión')
+                        THEN 'revision'
+
+                    ELSE 'pendiente'
+                END AS estado,
+                COUNT(DISTINCT t.id_tramite) AS total
+            FROM tbl_tramite t
+            INNER JOIN tbl_persona p
+                ON p.id_persona = t.id_persona
+            INNER JOIN tbl_calendario_academico ca
+                ON ca.id_calendario_academico = t.id_calendario_academico
+            LEFT JOIN tbl_estudiante es
+                ON es.id_persona = t.id_persona
+            LEFT JOIN tbl_carrera c
+                ON c.id_carrera = CASE
+                    WHEN LOWER(TRIM(t.tipo_tramite_academico)) = 'cambio_carrera'
+                        THEN t.id_carrera_destino
+                    ELSE es.id_carrera
+                END
+            LEFT JOIN tbl_departamento d
+                ON d.id_departamento = c.id_departamento
+            WHERE t.estado = 1
+              AND p.estado = 1
+              AND LOWER(TRIM(t.tipo_tramite_academico)) IN ('cancelacion', 'cambio_carrera')
+              AND (? IS NULL OR YEAR(ca.fecha_inicio_calendario_academico) = ?)
+              AND (? IS NULL OR MONTH(ca.fecha_inicio_calendario_academico) = ?)
+              AND (? IS NULL OR d.id_departamento = ?)
+              AND (? IS NULL OR c.id_carrera = ?)
+            GROUP BY estado
+        ", [
+            $anio, $anio,
+            $mes, $mes,
+            $idDepartamento, $idDepartamento,
+            $idCarrera, $idCarrera,
+        ]));
+
+        $estados = [
+            'pendiente' => 0,
+            'revision'  => 0,
+            'aprobado'  => 0,
+            'rechazado' => 0,
+        ];
+
+        foreach ($rows as $row) {
+            $estado = $row->estado ?? 'pendiente';
+
+            if (array_key_exists($estado, $estados)) {
+                $estados[$estado] = (int) ($row->total ?? 0);
+            }
+        }
+
+        return $estados;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | PENDIENTES / PLACEHOLDERS
     |--------------------------------------------------------------------------
     */
@@ -295,3 +369,4 @@ class Graficas extends Model
         return $text;
     }
 }
+
