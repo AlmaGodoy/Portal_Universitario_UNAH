@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fechaInicioInput = document.getElementById('fecha_inicio');
     const fechaFinInput = document.getElementById('fecha_fin');
 
+    const buscarCalendarioInput = document.getElementById('buscarCalendario');
+
     // ===============================
     // MENSAJES
     // ===============================
@@ -23,6 +25,75 @@ document.addEventListener('DOMContentLoaded', () => {
                 msg.className = 'msg';
             }, 5000);
         }
+
+    }
+
+    // ===============================
+    // FORMATEAR TEXTO
+    // ===============================
+    function formatearTipo(tipo) {
+        if (!tipo) return 'No definido';
+
+        const tipos = {
+            cambio_carrera: 'Cambio de carrera',
+            cancelacion: 'Cancelación'
+        };
+
+        return tipos[tipo] || tipo;
+    }
+
+    function formatearEstado(estado) {
+        return Number(estado) === 1 ? 'Activo' : 'Inactivo';
+    }
+
+    function formatearFecha(fecha) {
+        if (!fecha) return 'No disponible';
+
+        const partes = fecha.split('T')[0].split('-');
+
+        if (partes.length !== 3) {
+            return fecha;
+        }
+
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    
+
+    // ===============================
+    // VALIDAR FORMULARIO
+    // ===============================
+    function validarFormulario() {
+        const tipo = tipoInput.value;
+        const fechaInicio = fechaInicioInput.value;
+        const fechaFin = fechaFinInput.value;
+
+        if (!tipo) {
+            setMsg('Debe seleccionar el tipo de trámite.', 'error');
+            tipoInput.focus();
+            return false;
+        }
+
+        if (!fechaInicio) {
+            setMsg('Debe seleccionar la fecha de inicio.', 'error');
+            fechaInicioInput.focus();
+            return false;
+        }
+
+        if (!fechaFin) {
+            setMsg('Debe seleccionar la fecha final.', 'error');
+            fechaFinInput.focus();
+            return false;
+        }
+
+        if (fechaInicio > fechaFin) {
+            setMsg('La fecha de inicio no puede ser mayor que la fecha final.', 'error');
+            fechaInicioInput.focus();
+            return false;
+        }
+
+        return true;
+
     }
 
     // ===============================
@@ -91,6 +162,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return true;
     }
+
+    function filtrarCalendarios() {
+    const texto = buscarCalendarioInput.value.toLowerCase().trim();
+    const filas = tbody.querySelectorAll('tr');
+
+    filas.forEach(fila => {
+        const contenidoFila = fila.textContent.toLowerCase();
+
+        if (contenidoFila.includes(texto)) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+}
 
     // ===============================
     // CARGAR CALENDARIOS
@@ -171,14 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 class="cc-btn-secondary"
                             >
                                 ${textoBotonEstado}
-                            </button>
-
-                            <button 
-                                type="button"
-                                onclick="eliminarCalendario(${id})" 
-                                class="cc-btn-danger"
-                            >
-                                Eliminar
                             </button>
                         </td>
                     </tr>
@@ -279,40 +357,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // ===============================
-    // ELIMINAR LÓGICAMENTE
-    // ===============================
-    window.eliminarCalendario = async function(id) {
-        const confirmado = confirm('¿Seguro que deseas eliminar este calendario?');
+    if (buscarCalendarioInput) {
+    buscarCalendarioInput.addEventListener('input', filtrarCalendarios);
+}
 
-        if (!confirmado) {
-            return;
-        }
-
-        try {
-            const res = await fetch(`/api/cambio-carrera/secretaria/calendarios/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrf,
-                    'Accept': 'application/json'
-                }
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || data.resultado === 'ERROR') {
-                setMsg(data.mensaje || 'Error al eliminar calendario.', 'error');
-                return;
-            }
-
-            setMsg('Calendario eliminado correctamente.', 'success');
-            cargarCalendarios();
-
-        } catch (error) {
-            console.error(error);
-            setMsg('Error de conexión al eliminar calendario.', 'error');
-        }
-    };
 
     cargarCalendarios();
 

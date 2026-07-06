@@ -22,7 +22,10 @@ Route::prefix('api/cambio-carrera')->middleware(['auth', 'session.timeout'])->gr
     });
 
     Route::get('calendario-vigente', [CambioCarreraController::class, 'calendarioVigente']);
+    Route::get('calendario-info', [CambioCarreraController::class, 'calendarioInfo']);
     Route::get('carreras', [CambioCarreraController::class, 'carreras']);
+    
+    
 
     Route::middleware('roleid:5,1')->group(function () {
         Route::get('secretaria/listado', [CambioCarreraController::class, 'listadoSecretaria']);
@@ -42,6 +45,7 @@ Route::prefix('api/cambio-carrera')->middleware(['auth', 'session.timeout'])->gr
         Route::put('secretaria/calendarios/{id_calendario}', [CambioCarreraController::class, 'actualizarCalendarioAcademico']);
         Route::put('secretaria/calendarios/estado/{id_calendario}', [CambioCarreraController::class, 'cambiarEstadoCalendarioAcademico']);
         Route::delete('secretaria/calendarios/{id_calendario}', [CambioCarreraController::class, 'eliminarCalendarioAcademico']);
+       
     });
 });
 

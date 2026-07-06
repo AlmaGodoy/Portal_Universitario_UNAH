@@ -17,7 +17,10 @@
             </div>
 
             <a href="{{ url('/empleado/dashboard') }}" class="cc-btn-volver">
-                <i class="fas fa-arrow-left"></i> Volver
+
+                <i class="fas fa-arrow-left"></i> Regresar
+
+
             </a>
         </div>
     </div>
@@ -78,6 +81,19 @@
                 Consulta los calendarios creados y administra su estado.
             </p>
         </div>
+
+        <div class="cc-form-group" style="margin-bottom: 18px;">
+    <label for="buscarCalendario">
+        Buscar calendario
+    </label>
+
+    <input 
+        type="text" 
+        id="buscarCalendario" 
+        class="form-control"
+        placeholder="Buscar por identificación, tipo, fecha o estado..."
+    >
+</div>
 
         <div class="table-responsive">
             <table class="table table-bordered cc-table">
