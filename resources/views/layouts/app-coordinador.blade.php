@@ -98,6 +98,10 @@
         ? route('configuracion.index')
         : 'javascript:void(0)';
 
+    $perfilCoordinadorUrl = Route::has('coordinador.mi-perfil')
+        ? route('coordinador.mi-perfil')
+        : 'javascript:void(0)';
+
     /*
     |--------------------------------------------------------------------------
     | ACTIVOS DEL MENÚ
@@ -120,6 +124,9 @@
     $bitacoraActive = request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*');
     $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
     $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion*');
+
+    $perfilCoordinadorActive = request()->routeIs('coordinador.mi-perfil')
+        || request()->is('coordinador/mi-perfil');
 
     $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Panel de Coordinación')));
 @endphp
@@ -936,6 +943,16 @@
         .user-dropdown-option:hover {
             background: #f3f7ff !important;
             transform: translateX(2px) !important;
+        }
+
+        .user-dropdown-option.active {
+            background: #eaf2ff !important;
+            box-shadow: inset 3px 0 0 #ffd21f !important;
+        }
+
+        .user-dropdown-option.active .user-dropdown-option-icon {
+            background: #1c4f9d !important;
+            color: #ffffff !important;
         }
 
         .user-dropdown-option-icon {
@@ -2057,14 +2074,17 @@
                     </div>
 
                     <div class="user-dropdown-body">
-                        <a href="#" class="user-dropdown-option">
+                        <a href="{{ $perfilCoordinadorUrl }}"
+                           class="user-dropdown-option {{ $perfilCoordinadorActive ? 'active' : '' }}">
                             <span class="user-dropdown-option-icon">
-                                <i class="fas fa-user"></i>
+                                <i class="fas fa-user-tie"></i>
                             </span>
+
                             <span>
                                 <strong>Mi perfil</strong>
-                                <small>Ver información personal</small>
+                                <small>Ver información laboral</small>
                             </span>
+
                             <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
                         </a>
                     </div>
