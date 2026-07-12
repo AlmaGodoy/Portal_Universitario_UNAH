@@ -72,6 +72,13 @@
         : 'javascript:void(0)';
 
     $backupActive = request()->routeIs('backup.*') || request()->is('respaldos*');
+
+    $perfilSecretariaAcademicaUrl = Route::has('secretaria-academica.mi-perfil')
+        ? route('secretaria-academica.mi-perfil')
+        : 'javascript:void(0)';
+
+    $perfilSecretariaAcademicaActive = request()->routeIs('secretaria-academica.mi-perfil')
+        || request()->is('secretaria-academica/mi-perfil');
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -87,6 +94,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    @yield('page-assets')
 
     <style>
         :root {
@@ -965,6 +973,16 @@
             transform: translateX(2px) !important;
         }
 
+        .user-dropdown-option.active {
+            background: #eaf2ff !important;
+            box-shadow: inset 3px 0 0 #ffd21f !important;
+        }
+
+        .user-dropdown-option.active .user-dropdown-option-icon {
+            background: #1c4f9d !important;
+            color: #ffffff !important;
+        }
+
         .user-dropdown-option-icon {
             width: 34px !important;
             height: 34px !important;
@@ -1380,17 +1398,19 @@
                     </div>
 
                     <div class="user-dropdown-body">
-                        <a href="#" class="user-dropdown-option">
+                        <a href="{{ $perfilSecretariaAcademicaUrl }}"
+                           class="user-dropdown-option {{ $perfilSecretariaAcademicaActive ? 'active' : '' }}">
                             <span class="user-dropdown-option-icon">
-                                <i class="fas fa-user"></i>
+                                <i class="fas fa-user-shield"></i>
                             </span>
+
                             <span>
                                 <strong>Mi perfil</strong>
-                                <small>Ver información personal</small>
+                                <small>Ver información laboral y global</small>
                             </span>
+
                             <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
                         </a>
-
                     </div>
 
                     <div class="user-dropdown-footer">
