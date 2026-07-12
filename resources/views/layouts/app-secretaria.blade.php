@@ -92,10 +92,6 @@
         ? route('configuracion.index')
         : 'javascript:void(0)';
 
-    $perfilSecretariaUrl = Route::has('secretaria-carrera.mi-perfil')
-        ? route('secretaria-carrera.mi-perfil')
-        : 'javascript:void(0)';
-
     /*
     |--------------------------------------------------------------------------
     | ACTIVOS DEL MENÚ
@@ -136,9 +132,6 @@
     $configuracionActive = request()->routeIs('configuracion.index')
         || request()->is('configuracion')
         || request()->is('configuracion*');
-
-    $perfilSecretariaActive = request()->routeIs('secretaria-carrera.mi-perfil')
-        || request()->is('secretaria-carrera/mi-perfil');
 
     $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Secretaría de Carrera')));
 @endphp
@@ -955,16 +948,6 @@
         .user-dropdown-option:hover {
             background: #f3f7ff !important;
             transform: translateX(2px) !important;
-        }
-
-        .user-dropdown-option.active {
-            background: #eaf2ff !important;
-            box-shadow: inset 3px 0 0 #ffd21f !important;
-        }
-
-        .user-dropdown-option.active .user-dropdown-option-icon {
-            background: #1c4f9d !important;
-            color: #ffffff !important;
         }
 
         .user-dropdown-option-icon {
@@ -2086,17 +2069,14 @@
                     </div>
 
                     <div class="user-dropdown-body">
-                        <a href="{{ $perfilSecretariaUrl }}"
-                           class="user-dropdown-option {{ $perfilSecretariaActive ? 'active' : '' }}">
+                        <a href="#" class="user-dropdown-option">
                             <span class="user-dropdown-option-icon">
-                                <i class="fas fa-user-tie"></i>
+                                <i class="fas fa-user"></i>
                             </span>
-
                             <span>
                                 <strong>Mi perfil</strong>
-                                <small>Ver información laboral</small>
+                                <small>Ver información personal</small>
                             </span>
-
                             <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
                         </a>
                     </div>

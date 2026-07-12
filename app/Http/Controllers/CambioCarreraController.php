@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 
 class CambioCarreraController extends Controller
 {
@@ -222,11 +223,14 @@ class CambioCarreraController extends Controller
             return response()->json($respuesta, 200);
 
         } catch (\Throwable $e) {
-            return response()->json([
-                'resultado' => 'ERROR',
-                'mensaje'   => $e->getMessage()
-            ], 500);
-        }
+    return response()->json([
+        'resultado' => 'ERROR',
+        'mensaje' => $this->obtenerMensajeLimpio(
+            $e,
+            'No fue posible cancelar el trámite.'
+        )
+    ], $this->obtenerCodigoHttp($e, 500));
+}
     }
 
  public function calendarioVigente()
@@ -917,18 +921,42 @@ class CambioCarreraController extends Controller
         }
     }
 
-    private function registrarBitacoraCalendario(string $accion, string $descripcion): void
-{
+   private function registrarBitacoraCalendario(
+    string $accion,
+    string $descripcion
+): void {
     try {
-        DB::statement('CALL INS_BITACORA(?, ?, ?, ?, ?)', [
-            Auth::id() ?? 12,
-            1,
-            $accion,
-            now(),
-            $descripcion
-        ]);
+        $idUsuario = Auth::id();
+
+        if (!$idUsuario) {
+            return;
+        }
+
+        DB::select(
+            'CALL INS_BITACORA_EVENTO_NUEVO(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                $idUsuario,                                    // p_id_usuario
+                1,                                             // p_id_objeto
+                null,                                          // p_id_tramite
+                null,                                          // p_id_carrera_contexto
+                'Calendario Académico',                        // p_modulo
+                $accion,                                       // p_accion
+                $descripcion,                                  // p_descripcion
+                'INFO',                                        // p_nivel
+                request()->ip(),                               // p_ip_address
+                substr((string) request()->userAgent(), 0, 500) // p_user_agent
+            ]
+        );
+
     } catch (\Throwable $e) {
-        // No detenemos la acción principal si falla la bitácora
+        \Illuminate\Support\Facades\Log::error(
+            'No se pudo registrar la acción del calendario en bitácora',
+            [
+                'accion' => $accion,
+                'descripcion' => $descripcion,
+                'error' => $e->getMessage()
+            ]
+        );
     }
 }
 public function calendarioInfo()
