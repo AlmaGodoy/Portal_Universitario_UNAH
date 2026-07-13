@@ -15,4 +15,6 @@ import './cambio_carrera_coordinacion_dictamen.js';
 import './resolucion_cancelacion_coordinador.js';
 import './soporte.js';
 import './equivalencias_alumno.js';
-
+import './bitacora_coordinador.js';
+import './bitacora_coordinador.js';
+import './bitacora_secretaria_general.js';
