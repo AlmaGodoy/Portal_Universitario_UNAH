@@ -18,3 +18,5 @@ import './equivalencias_alumno.js';
 import './bitacora_coordinador.js';
 import './bitacora_coordinador.js';
 import './bitacora_secretaria_general.js';
+import './auditoria_secretaria_carrera.js';
+
