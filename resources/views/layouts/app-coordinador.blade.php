@@ -86,9 +86,11 @@
         ? route('auditoria')
         : 'javascript:void(0)';
 
-    $bitacoraUrl = Route::has('bitacora.index')
-        ? route('bitacora.index')
-        : 'javascript:void(0)';
+    $bitacoraUrl = Route::has('bitacora.coordinador')
+        ? route('bitacora.coordinador')
+        : (Route::has('bitacora.index')
+            ? route('bitacora.index')
+            : 'javascript:void(0)');
 
     $soporteUrl = Route::has('soporte.vista')
         ? route('soporte.vista')
@@ -121,7 +123,8 @@
     $seguridadActive = request()->routeIs('seguridad.*') || request()->is('seguridad*');
     $reportesActive = request()->routeIs('reporte.tramites.vista') || request()->is('reporte-tramites*');
     $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
-    $bitacoraActive = request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*');
+    $bitacoraActive = request()->routeIs('bitacora.coordinador')
+        || request()->is('bitacora/coordinador');
     $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
     $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion*');
 
@@ -145,6 +148,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    @stack('styles')
 
     <style>
         :root {
@@ -2663,6 +2667,7 @@ document.addEventListener('DOMContentLoaded', function () {
     resetSessionTimers();
 });
 </script>
+@stack('scripts')
 </body>
 </html>
 

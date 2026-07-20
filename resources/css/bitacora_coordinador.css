@@ -1,0 +1,697 @@
+/* =========================================================
+   Página general
+   ========================================================= */
+
+.coord-bita-page,
+.coord-bita-page *,
+.coord-bita-page *::before,
+.coord-bita-page *::after {
+    box-sizing: border-box;
+}
+
+.coord-bita-page {
+    width: 100%;
+    padding: 28px 18px 36px;
+    color: #20344f;
+    font-family: inherit;
+}
+
+/* =========================================================
+   Encabezado principal
+   ========================================================= */
+
+.coord-bita-header {
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: none !important;
+    border-radius: 18px !important;
+    color: #ffffff !important;
+    background: linear-gradient(
+        135deg,
+        #174a96 0%,
+        #2458a6 100%
+    ) !important;
+    box-shadow: 0 10px 24px rgba(23, 74, 150, 0.18);
+}
+
+.coord-bita-header__content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 24px;
+    background: transparent !important;
+}
+
+.coord-bita-header__information {
+    min-width: 0;
+}
+
+.coord-bita-header__role {
+    display: block;
+    margin-bottom: 5px;
+    color: rgba(255, 255, 255, 0.84) !important;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.coord-bita-header__title {
+    margin: 0 0 5px;
+    color: #ffffff !important;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.coord-bita-header__subtitle {
+    max-width: 820px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-size: 0.98rem;
+    line-height: 1.55;
+}
+
+/* =========================================================
+   Botones
+   ========================================================= */
+
+.coord-bita-button {
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+    min-height: 46px;
+    padding: 10px 18px !important;
+    border: 1px solid transparent !important;
+    border-radius: 12px !important;
+    font-family: inherit;
+    font-size: 0.94rem;
+    font-weight: 800 !important;
+    line-height: 1;
+    text-decoration: none !important;
+    cursor: pointer;
+    box-shadow: none;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.coord-bita-button--back {
+    border-color: #d7e3f8 !important;
+    color: #174a96 !important;
+    background: #ffffff !important;
+}
+
+.coord-bita-button--back:hover,
+.coord-bita-button--back:focus {
+    color: #123d7f !important;
+    background: #f4f8ff !important;
+    transform: translateY(-1px);
+}
+
+.coord-bita-button--search {
+    border: none !important;
+    color: #ffffff !important;
+    background: linear-gradient(
+        135deg,
+        #174a96 0%,
+        #2458a6 100%
+    ) !important;
+    box-shadow: 0 10px 18px rgba(23, 74, 150, 0.18) !important;
+}
+
+.coord-bita-button--search:hover,
+.coord-bita-button--search:focus {
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(23, 74, 150, 0.23) !important;
+}
+
+.coord-bita-button--search:disabled {
+    cursor: wait;
+    opacity: 0.72;
+    transform: none;
+}
+
+.coord-bita-button--clear {
+    border-color: #cdd9ea !important;
+    color: #405574 !important;
+    background: #ffffff !important;
+}
+
+.coord-bita-button--clear:hover,
+.coord-bita-button--clear:focus {
+    color: #174a96 !important;
+    background: #f4f8ff !important;
+}
+
+/* =========================================================
+   Alertas
+   ========================================================= */
+
+.coord-bita-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    font-size: 0.94rem;
+    line-height: 1.5;
+}
+
+.coord-bita-alert--success {
+    border-color: #b7e1c3;
+    color: #166534;
+    background: #edf9f0;
+}
+
+.coord-bita-alert--danger {
+    border-color: #f2b8b5;
+    color: #a93226;
+    background: #fff4f3;
+}
+
+.coord-bita-alert__list {
+    margin: 7px 0 0;
+    padding-left: 20px;
+}
+
+/* =========================================================
+   Tarjetas
+   ========================================================= */
+
+.coord-bita-card {
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid #dbe5f2 !important;
+    border-radius: 18px !important;
+    background: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(18, 61, 127, 0.06);
+}
+
+.coord-bita-card__header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #dbe5f2;
+    background: #f7faff !important;
+}
+
+.coord-bita-card__header--between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.coord-bita-card__heading {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.coord-bita-card__icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    color: #174a96;
+    background: #eaf3ff;
+    font-size: 1.05rem;
+}
+
+.coord-bita-card__title {
+    margin: 0 0 3px;
+    color: #163b77 !important;
+    font-size: 1.08rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.coord-bita-card__subtitle {
+    margin: 0;
+    color: #6b7b93 !important;
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.coord-bita-card__body {
+    padding: 20px;
+    background: #ffffff !important;
+}
+
+.coord-bita-card__footer {
+    padding: 14px 20px;
+    border-top: 1px solid #dbe5f2;
+    background: #fbfdff;
+}
+
+.coord-bita-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border: 1px solid #cfe0f6;
+    border-radius: 999px;
+    color: #174a96;
+    background: #edf5ff;
+    font-size: 0.86rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* =========================================================
+   Filtros
+   ========================================================= */
+
+.coord-bita-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(150px, 1fr));
+    gap: 18px 14px;
+}
+
+.coord-bita-field {
+    min-width: 0;
+}
+
+.coord-bita-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #143c79 !important;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.coord-bita-input,
+.coord-bita-select {
+    width: 100% !important;
+    min-height: 46px !important;
+    padding: 10px 12px !important;
+    border: 1px solid #cdd9ea !important;
+    border-radius: 12px !important;
+    outline: none !important;
+    color: #20344f !important;
+    background: #ffffff !important;
+    font-family: inherit;
+    font-size: 0.92rem;
+    box-shadow: none !important;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.coord-bita-select {
+    cursor: pointer;
+}
+
+.coord-bita-input::placeholder {
+    color: #96a4b8;
+}
+
+.coord-bita-input:focus,
+.coord-bita-select:focus {
+    border-color: #2458a6 !important;
+    box-shadow: 0 0 0 3px rgba(36, 88, 166, 0.1) !important;
+}
+
+.coord-bita-input.coord-bita-invalid,
+.coord-bita-select.coord-bita-invalid {
+    border-color: #c0392b !important;
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1) !important;
+}
+
+.coord-bita-error {
+    display: none;
+    margin-top: 7px;
+    color: #b42318;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.coord-bita-error.coord-bita-error--visible {
+    display: block;
+}
+
+.coord-bita-help {
+    display: block;
+    margin-top: 6px;
+    color: #6b7b93;
+    font-size: 0.79rem;
+    line-height: 1.4;
+}
+
+.coord-bita-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+/* =========================================================
+   Tabla
+   ========================================================= */
+
+.coord-bita-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: #ffffff !important;
+}
+
+.coord-bita-table {
+    width: 100% !important;
+    min-width: 2100px;
+    margin: 0 !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    color: #20344f !important;
+    background: #ffffff !important;
+}
+
+.coord-bita-table thead,
+.coord-bita-table thead tr,
+.coord-bita-table thead th {
+    color: #143c79 !important;
+    background: #f7faff !important;
+}
+
+.coord-bita-table thead th {
+    padding: 14px 15px !important;
+    border: none !important;
+    border-bottom: 1px solid #dbe5f2 !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.02em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.coord-bita-table tbody tr,
+.coord-bita-table tbody td {
+    background: #ffffff !important;
+}
+
+.coord-bita-table tbody td {
+    padding: 14px 15px !important;
+    border: none !important;
+    border-bottom: 1px solid #e7edf5 !important;
+    color: #3c506d !important;
+    font-size: 0.88rem;
+    vertical-align: middle;
+}
+
+.coord-bita-table tbody tr:hover td {
+    background: #f8fbff !important;
+}
+
+.coord-bita-record-id {
+    color: #174a96;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.coord-bita-person {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 220px;
+}
+
+.coord-bita-person__avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #234f95 0%,
+        #d6a419 100%
+    );
+    box-shadow: 0 5px 12px rgba(23, 74, 150, 0.16);
+}
+
+.coord-bita-person__info,
+.coord-bita-student {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.coord-bita-person__name,
+.coord-bita-student__name {
+    color: #20344f;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.coord-bita-person__email,
+.coord-bita-student__email {
+    color: #77869d;
+    font-size: 0.76rem;
+    overflow-wrap: anywhere;
+}
+
+.coord-bita-student {
+    min-width: 200px;
+}
+
+.coord-bita-tag {
+    display: inline-flex;
+    align-items: center;
+    max-width: 260px;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.coord-bita-tag--role {
+    border-color: #e0d8f2;
+    color: #5c3c91;
+    background: #f5f0ff;
+}
+
+.coord-bita-tag--type {
+    border-color: #d6e2f2;
+    color: #2458a6;
+    background: #edf5ff;
+}
+
+.coord-bita-tag--status {
+    border-color: #e1e7ef;
+    color: #4d607c;
+    background: #f5f7fa;
+}
+
+.coord-bita-tag--career {
+    border-color: #cfe7d6;
+    color: #21723f;
+    background: #effaf2;
+}
+
+.coord-bita-tag--module {
+    border-color: #d6e2f2;
+    color: #174a96;
+    background: #f7faff;
+}
+
+.coord-bita-tag--action {
+    color: #705500;
+    background: #fff8d9;
+}
+
+.coord-bita-description {
+    min-width: 300px;
+    max-width: 470px;
+    color: #52647e !important;
+    line-height: 1.55;
+    white-space: normal;
+}
+
+.coord-bita-level {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 92px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.coord-bita-level--info {
+    color: #174a96;
+    background: #eaf3ff;
+}
+
+.coord-bita-level--warning {
+    color: #8a6500;
+    background: #fff4c7;
+}
+
+.coord-bita-level--error {
+    color: #a93226;
+    background: #ffe9e7;
+}
+
+.coord-bita-level--security {
+    color: #5d3a9b;
+    background: #f0e9ff;
+}
+
+.coord-bita-level--critical {
+    color: #8b1e18;
+    background: #ffdeda;
+}
+
+.coord-bita-nowrap {
+    white-space: nowrap;
+}
+
+.coord-bita-muted {
+    color: #8a98ac;
+}
+
+/* =========================================================
+   Sin registros
+   ========================================================= */
+
+.coord-bita-empty {
+    padding: 54px 20px;
+    text-align: center;
+    background: #ffffff !important;
+}
+
+.coord-bita-empty__icon {
+    display: block;
+    margin-bottom: 12px;
+    color: #9badc5;
+    font-size: 2.5rem;
+}
+
+.coord-bita-empty__title {
+    margin: 0 0 7px;
+    color: #163b77;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.coord-bita-empty__text {
+    margin: 0;
+    color: #6b7b93;
+    line-height: 1.55;
+}
+
+/* =========================================================
+   Paginación
+   ========================================================= */
+
+.coord-bita-card__footer .pagination {
+    margin: 0;
+}
+
+.coord-bita-card__footer .page-link {
+    margin: 0 3px;
+    border: 1px solid #dbe5f2;
+    border-radius: 9px;
+    color: #174a96;
+    background: #ffffff;
+    box-shadow: none;
+}
+
+.coord-bita-card__footer .page-item.active .page-link {
+    border-color: #174a96;
+    color: #ffffff;
+    background: #174a96;
+}
+
+.coord-bita-card__footer .page-link:hover {
+    color: #174a96;
+    background: #edf5ff;
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 1399.98px) {
+    .coord-bita-filter-grid {
+        grid-template-columns: repeat(
+            4,
+            minmax(160px, 1fr)
+        );
+    }
+}
+
+@media (max-width: 991.98px) {
+    .coord-bita-page {
+        padding: 20px 12px 30px;
+    }
+
+    .coord-bita-header__content,
+    .coord-bita-card__header--between {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .coord-bita-header__title {
+        font-size: 1.6rem;
+    }
+
+    .coord-bita-filter-grid {
+        grid-template-columns: repeat(
+            2,
+            minmax(160px, 1fr)
+        );
+    }
+}
+
+@media (max-width: 575.98px) {
+    .coord-bita-page {
+        padding: 16px 8px 26px;
+    }
+
+    .coord-bita-header__content {
+        padding: 20px;
+    }
+
+    .coord-bita-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .coord-bita-card__body {
+        padding: 16px;
+    }
+
+    .coord-bita-card__header {
+        padding: 14px 16px;
+    }
+
+    .coord-bita-filter-actions,
+    .coord-bita-button,
+    .coord-bita-button--back {
+        width: 100%;
+    }
+
+    .coord-bita-card__heading {
+        align-items: flex-start;
+    }
+}
