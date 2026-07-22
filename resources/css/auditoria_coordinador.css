@@ -1,0 +1,836 @@
+.coord-aud-page,
+.coord-aud-page *,
+.coord-aud-page *::before,
+.coord-aud-page *::after {
+    box-sizing: border-box;
+}
+
+.coord-aud-page {
+    width: 100%;
+    padding: 26px 18px 40px;
+    color: #263950;
+    font-family: inherit;
+}
+
+/* =========================================================
+   ENCABEZADO
+========================================================= */
+
+.coord-aud-hero {
+    position: relative;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-radius: 18px;
+    background:
+        radial-gradient(
+            circle at 92% 0%,
+            rgba(255, 209, 24, 0.23),
+            transparent 32%
+        ),
+        linear-gradient(
+            135deg,
+            #123674 0%,
+            #1b4f9b 55%,
+            #316da9 100%
+        );
+    box-shadow: 0 14px 30px rgba(13, 52, 112, 0.2);
+}
+
+.coord-aud-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0.1),
+        transparent 45%
+    );
+    pointer-events: none;
+}
+
+.coord-aud-hero__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+}
+
+.coord-aud-hero__information {
+    min-width: 0;
+}
+
+.coord-aud-hero__eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #ffd21f;
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.coord-aud-hero__title {
+    margin: 0 0 7px;
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.coord-aud-hero__description {
+    max-width: 760px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.91);
+    font-size: 0.96rem;
+    line-height: 1.55;
+}
+
+.coord-aud-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+.coord-aud-career-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 330px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.11);
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+/* =========================================================
+   BOTONES
+========================================================= */
+
+.coord-aud-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 43px;
+    padding: 10px 17px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease;
+}
+
+.coord-aud-button--back {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #163b77;
+    background: #ffffff;
+}
+
+.coord-aud-button--back:hover {
+    color: #123674;
+    background: #f4f8ff;
+    transform: translateY(-1px);
+}
+
+.coord-aud-button--search {
+    border: none;
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #174a96,
+        #245eaa
+    );
+    box-shadow: 0 8px 17px rgba(23, 74, 150, 0.2);
+}
+
+.coord-aud-button--search:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 11px 22px rgba(23, 74, 150, 0.26);
+}
+
+.coord-aud-button--search:disabled {
+    cursor: wait;
+    opacity: 0.7;
+    transform: none;
+}
+
+.coord-aud-button--clear {
+    border-color: #ccd8e8;
+    color: #405675;
+    background: #ffffff;
+}
+
+.coord-aud-button--clear:hover {
+    color: #174a96;
+    background: #f4f8ff;
+}
+
+/* =========================================================
+   ALERTAS
+========================================================= */
+
+.coord-aud-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid transparent;
+    border-radius: 13px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.coord-aud-alert--success {
+    border-color: #b9dfc3;
+    color: #166534;
+    background: #edf9f0;
+}
+
+.coord-aud-alert--danger {
+    border-color: #f1bbb8;
+    color: #a93226;
+    background: #fff4f3;
+}
+
+.coord-aud-alert__list {
+    margin: 7px 0 0;
+    padding-left: 20px;
+}
+
+/* =========================================================
+   RESUMEN
+========================================================= */
+
+.coord-aud-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 21px;
+}
+
+.coord-aud-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+    padding: 17px 18px;
+    border: 1px solid #dbe5f2;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 7px 20px rgba(18, 61, 127, 0.06);
+}
+
+.coord-aud-summary-card__icon {
+    width: 45px;
+    height: 45px;
+    min-width: 45px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 13px;
+    color: #174a96;
+    background: #eaf3ff;
+    font-size: 1.08rem;
+}
+
+.coord-aud-summary-card__label {
+    display: block;
+    margin-bottom: 3px;
+    color: #718096;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.coord-aud-summary-card__value {
+    display: block;
+    color: #153b77;
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+
+.coord-aud-summary-card__value--text {
+    font-size: 1rem;
+}
+
+.coord-aud-summary-card__value--date {
+    font-size: 0.9rem;
+}
+
+/* =========================================================
+   TARJETAS
+========================================================= */
+
+.coord-aud-card {
+    margin-bottom: 22px;
+    overflow: hidden;
+    border: 1px solid #dbe5f2;
+    border-radius: 17px;
+    background: #ffffff;
+    box-shadow: 0 8px 23px rgba(18, 61, 127, 0.06);
+}
+
+.coord-aud-card__header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #dbe5f2;
+    background: #f7faff;
+}
+
+.coord-aud-card__header--between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.coord-aud-card__heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.coord-aud-card__icon {
+    width: 41px;
+    height: 41px;
+    min-width: 41px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    color: #174a96;
+    background: #eaf3ff;
+}
+
+.coord-aud-card__title {
+    margin: 0 0 3px;
+    color: #163b77;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.coord-aud-card__subtitle {
+    margin: 0;
+    color: #6f7f96;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.coord-aud-card__body {
+    padding: 20px;
+}
+
+.coord-aud-card__footer {
+    padding: 14px 20px;
+    border-top: 1px solid #dbe5f2;
+    background: #fbfdff;
+}
+
+.coord-aud-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border: 1px solid #cfdef2;
+    border-radius: 999px;
+    color: #174a96;
+    background: #edf5ff;
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* =========================================================
+   FILTROS
+========================================================= */
+
+.coord-aud-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        6,
+        minmax(150px, 1fr)
+    );
+    gap: 17px 13px;
+}
+
+.coord-aud-field {
+    min-width: 0;
+}
+
+.coord-aud-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #143c79;
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.coord-aud-input,
+.coord-aud-select {
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 11px;
+    border: 1px solid #ccd8e8;
+    border-radius: 11px;
+    outline: none;
+    color: #263950;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 0.88rem;
+    box-shadow: none;
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.coord-aud-select {
+    cursor: pointer;
+}
+
+.coord-aud-input::placeholder {
+    color: #98a5b7;
+}
+
+.coord-aud-input:focus,
+.coord-aud-select:focus {
+    border-color: #245ca8;
+    box-shadow: 0 0 0 3px rgba(36, 92, 168, 0.1);
+}
+
+.coord-aud-input.coord-aud-invalid,
+.coord-aud-select.coord-aud-invalid {
+    border-color: #c0392b;
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.09);
+}
+
+.coord-aud-error {
+    display: none;
+    margin-top: 6px;
+    color: #b42318;
+    font-size: 0.77rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.coord-aud-error.coord-aud-error--visible {
+    display: block;
+}
+
+.coord-aud-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 21px;
+}
+
+/* =========================================================
+   TABLA
+========================================================= */
+
+.coord-aud-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: #ffffff;
+}
+
+.coord-aud-table {
+    width: 100%;
+    min-width: 2700px;
+    margin: 0;
+    border-collapse: collapse;
+    color: #2e425d;
+    background: #ffffff;
+}
+
+.coord-aud-table thead th {
+    padding: 13px 14px;
+    border-bottom: 1px solid #dbe5f2;
+    color: #143c79;
+    background: #f7faff;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.coord-aud-table tbody td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #e7edf5;
+    color: #40536e;
+    background: #ffffff;
+    font-size: 0.83rem;
+    vertical-align: middle;
+}
+
+.coord-aud-table tbody tr:hover td {
+    background: #f8fbff;
+}
+
+.coord-aud-record-id {
+    color: #174a96;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.coord-aud-person {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 215px;
+}
+
+.coord-aud-person__avatar {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #174a96,
+        #d5a819
+    );
+    box-shadow: 0 5px 11px rgba(23, 74, 150, 0.17);
+}
+
+.coord-aud-person__information,
+.coord-aud-student {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.coord-aud-person__name,
+.coord-aud-student__name {
+    color: #263950;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.coord-aud-person__email,
+.coord-aud-student__email {
+    color: #7b899d;
+    font-size: 0.72rem;
+    overflow-wrap: anywhere;
+}
+
+.coord-aud-student {
+    min-width: 195px;
+}
+
+.coord-aud-tag {
+    display: inline-flex;
+    align-items: center;
+    max-width: 255px;
+    padding: 6px 9px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 0.73rem;
+    font-weight: 800;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.coord-aud-tag--role {
+    border-color: #e0d8f2;
+    color: #5c3c91;
+    background: #f5f0ff;
+}
+
+.coord-aud-tag--career {
+    border-color: #cfe7d6;
+    color: #21723f;
+    background: #effaf2;
+}
+
+.coord-aud-tag--object {
+    border-color: #e2d9c5;
+    color: #785900;
+    background: #fff8df;
+}
+
+.coord-aud-tag--action {
+    color: #705500;
+    background: #fff8d9;
+}
+
+.coord-aud-operation {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 96px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.coord-aud-operation--insert {
+    color: #17623a;
+    background: #e8f8ee;
+}
+
+.coord-aud-operation--update {
+    color: #174a96;
+    background: #eaf3ff;
+}
+
+.coord-aud-operation--delete {
+    color: #a93226;
+    background: #ffe9e7;
+}
+
+.coord-aud-operation--login,
+.coord-aud-operation--logout {
+    color: #5d3a9b;
+    background: #f0e9ff;
+}
+
+.coord-aud-operation--legacy {
+    color: #775b00;
+    background: #fff4c7;
+}
+
+.coord-aud-operation--other {
+    color: #52647e;
+    background: #eef2f7;
+}
+
+.coord-aud-code {
+    padding: 5px 8px;
+    border: 1px solid #dce5f0;
+    border-radius: 7px;
+    color: #174a96;
+    background: #f6f9fd;
+    font-family: Consolas, monospace;
+    font-size: 0.73rem;
+    white-space: nowrap;
+}
+
+.coord-aud-description {
+    min-width: 290px;
+    max-width: 450px;
+    color: #52647e;
+    line-height: 1.5;
+    white-space: normal;
+}
+
+.coord-aud-value-cell {
+    min-width: 220px;
+    max-width: 330px;
+}
+
+.coord-aud-value-preview {
+    max-height: 125px;
+    margin: 0;
+    padding: 8px 9px;
+    overflow: auto;
+    border: 1px solid #e0e7ef;
+    border-radius: 8px;
+    color: #4b5f7a;
+    background: #f8fafc;
+    font-family: Consolas, monospace;
+    font-size: 0.69rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.coord-aud-level {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 88px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.coord-aud-level--info {
+    color: #174a96;
+    background: #eaf3ff;
+}
+
+.coord-aud-level--warning {
+    color: #876400;
+    background: #fff4c7;
+}
+
+.coord-aud-level--error {
+    color: #a93226;
+    background: #ffe9e7;
+}
+
+.coord-aud-level--security {
+    color: #5d3a9b;
+    background: #f0e9ff;
+}
+
+.coord-aud-nowrap {
+    white-space: nowrap;
+}
+
+.coord-aud-muted {
+    color: #8b98aa;
+}
+
+/* =========================================================
+   VACÍO
+========================================================= */
+
+.coord-aud-empty {
+    padding: 52px 20px;
+    text-align: center;
+}
+
+.coord-aud-empty__icon {
+    display: block;
+    margin-bottom: 11px;
+    color: #9badc5;
+    font-size: 2.4rem;
+}
+
+.coord-aud-empty__title {
+    margin: 0 0 6px;
+    color: #163b77;
+    font-size: 1.1rem;
+    font-weight: 900;
+}
+
+.coord-aud-empty__description {
+    margin: 0;
+    color: #6b7b93;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   PAGINACIÓN
+========================================================= */
+
+.coord-aud-card__footer .pagination {
+    margin: 0;
+}
+
+.coord-aud-card__footer .page-link {
+    margin: 0 3px;
+    border: 1px solid #dbe5f2;
+    border-radius: 8px;
+    color: #174a96;
+    background: #ffffff;
+    box-shadow: none;
+}
+
+.coord-aud-card__footer .page-item.active .page-link {
+    border-color: #174a96;
+    color: #ffffff;
+    background: #174a96;
+}
+
+.coord-aud-card__footer .page-link:hover {
+    color: #174a96;
+    background: #edf5ff;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1399.98px) {
+    .coord-aud-filter-grid {
+        grid-template-columns: repeat(
+            4,
+            minmax(155px, 1fr)
+        );
+    }
+}
+
+@media (max-width: 991.98px) {
+    .coord-aud-page {
+        padding: 20px 12px 32px;
+    }
+
+    .coord-aud-hero__content,
+    .coord-aud-card__header--between {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .coord-aud-hero__actions {
+        justify-content: flex-start;
+    }
+
+    .coord-aud-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .coord-aud-filter-grid {
+        grid-template-columns: repeat(
+            2,
+            minmax(150px, 1fr)
+        );
+    }
+
+    .coord-aud-hero__title {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .coord-aud-page {
+        padding: 15px 8px 26px;
+    }
+
+    .coord-aud-hero__content {
+        padding: 20px;
+    }
+
+    .coord-aud-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .coord-aud-card__body {
+        padding: 16px;
+    }
+
+    .coord-aud-card__header {
+        padding: 14px 16px;
+    }
+
+    .coord-aud-button,
+    .coord-aud-hero__actions {
+        width: 100%;
+    }
+
+    .coord-aud-filter-actions {
+        flex-direction: column;
+    }
+
+    .coord-aud-card__heading {
+        align-items: flex-start;
+    }
+}
