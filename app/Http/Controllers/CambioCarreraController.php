@@ -222,14 +222,27 @@ class CambioCarreraController extends Controller
 
             return response()->json($respuesta, 200);
 
-        } catch (\Throwable $e) {
+     } catch (\Throwable $e) {
+
+    if (str_contains(
+        strtolower($e->getMessage()),
+        'ya fue aprobado o rechazado'
+    )) {
+        return response()->json([
+            'resultado' => 'ERROR',
+            'mensaje' => 'Este trámite ya no puede cancelarse porque ya fue aprobado o rechazado.'
+        ], 422);
+    }
+
+    Log::error('Error al cancelar el trámite de cambio de carrera', [
+        'id_tramite' => $id_tramite,
+        'error' => $e->getMessage()
+    ]);
+
     return response()->json([
         'resultado' => 'ERROR',
-        'mensaje' => $this->obtenerMensajeLimpio(
-            $e,
-            'No fue posible cancelar el trámite.'
-        )
-    ], $this->obtenerCodigoHttp($e, 500));
+        'mensaje' => 'No fue posible cancelar el trámite. Inténtalo nuevamente.'
+    ], 500);
 }
     }
 
