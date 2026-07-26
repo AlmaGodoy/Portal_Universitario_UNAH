@@ -98,6 +98,17 @@
         : url('/api/mensajes/recientes');
 
     $mensajesActive = request()->routeIs('mensajes.*') || request()->is('mensajes*');
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DEL PANEL PRINCIPAL Y TÍTULO DINÁMICO
+    |--------------------------------------------------------------------------
+    */
+    $dashboardUrl = Route::has('empleado.dashboard')
+        ? route('empleado.dashboard')
+        : 'javascript:void(0)';
+
+    $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Secretaría Académica')));
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -105,7 +116,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('titulo', 'Secretaría Académica')</title>
+    <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -537,6 +548,24 @@
     .topbar-breadcrumb i {
         font-size: 12px !important;
         color: rgba(255,255,255,0.82) !important;
+    }
+
+    .topbar-breadcrumb-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        color: rgba(255,255,255,0.90) !important;
+        text-decoration: none !important;
+        font-weight: 800 !important;
+    }
+
+    .topbar-breadcrumb-link:hover {
+        color: #ffd21f !important;
+        text-decoration: none !important;
+    }
+
+    .topbar-breadcrumb-link i {
+        color: inherit !important;
     }
 
     .topbar-breadcrumb-active {
@@ -1182,7 +1211,7 @@
         <div class="sidebar-overlay"></div>
 
         {{-- Logo --}}
-        <a href="{{ route('empleado.dashboard') }}" class="brand-link">
+        <a href="{{ $dashboardUrl }}" class="brand-link">
             <div class="brand-top-glow"></div>
             <div class="brand-logo-wrap">
                 <img src="{{ asset('images/Logo.png') }}" alt="Logo PumaGestión" class="brand-logo-img">
@@ -1232,8 +1261,8 @@
                         data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ request()->routeIs('empleado.dashboard') ? 'active' : '' }}">
+                            <a href="{{ $dashboardUrl }}"
+                               class="nav-link {{ request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-house"></i>
                                 <p>Inicio</p>
                             </a>
@@ -1324,10 +1353,16 @@
         <div class="student-topbar-left">
             <div class="topbar-left-copy">
                 <div class="topbar-breadcrumb">
-                    <i class="fas fa-house"></i>
-                    <span>Inicio</span>
+                    <a href="{{ $dashboardUrl }}" class="topbar-breadcrumb-link">
+                        <i class="fas fa-house"></i>
+                        <span>Inicio</span>
+                    </a>
+
                     <i class="fas fa-chevron-right"></i>
-                    <span class="topbar-breadcrumb-active">@yield('titulo', 'Secretaría Académica')</span>
+
+                    <span class="topbar-breadcrumb-active">
+                        {{ $pageTitle }}
+                    </span>
                 </div>
             </div>
         </div>

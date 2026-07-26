@@ -1813,6 +1813,25 @@
             overflow: hidden !important;
         }
 
+
+        .topbar-breadcrumb-link {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            color: rgba(255,255,255,0.90) !important;
+            text-decoration: none !important;
+            font-weight: 800 !important;
+        }
+
+        .topbar-breadcrumb-link:hover {
+            color: #ffd21f !important;
+            text-decoration: none !important;
+        }
+
+        .topbar-breadcrumb-link i {
+            color: inherit !important;
+        }
+
 </style>
 </head>
 
@@ -2004,10 +2023,16 @@
         <div class="student-topbar-left">
             <div class="topbar-left-copy">
                 <div class="topbar-breadcrumb">
-                    <i class="fas fa-house"></i>
-                    <span>Inicio</span>
+                    <a href="{{ $dashboardUrl }}" class="topbar-breadcrumb-link">
+                        <i class="fas fa-house"></i>
+                        <span>Inicio</span>
+                    </a>
+
                     <i class="fas fa-chevron-right"></i>
-                    <span class="topbar-breadcrumb-active">{{ $pageTitle }}</span>
+
+                    <span class="topbar-breadcrumb-active">
+                        {{ $pageTitle }}
+                    </span>
                 </div>
             </div>
         </div>

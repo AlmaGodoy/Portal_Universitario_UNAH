@@ -1,5 +1,6 @@
 @php
     use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\Route;
 
     $user = auth()->user();
 
@@ -17,6 +18,7 @@
             $persona = DB::table('tbl_persona')
                 ->where('id_persona', $user->id_persona)
                 ->first();
+
             if ($persona && !empty($persona->nombre_persona)) {
                 $displayName = trim($persona->nombre_persona);
             }
@@ -25,18 +27,69 @@
         }
     }
 
-    $parts    = preg_split('/\s+/', trim($displayName));
+    $parts = preg_split('/\s+/', trim($displayName));
     $initials = '';
+
     foreach (array_slice($parts, 0, 2) as $part) {
-        if (!empty($part)) $initials .= strtoupper(mb_substr($part, 0, 1));
+        if (!empty($part)) {
+            $initials .= strtoupper(mb_substr($part, 0, 1));
+        }
     }
-    if ($initials === '') $initials = 'A';
+
+    if ($initials === '') {
+        $initials = 'A';
+    }
 
     $correoInstitucional =
         $user->email
         ?? $user->correo_institucional
         ?? optional($user->persona)->correo_institucional
         ?? 'estudiante@unah.hn';
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTAS SEGURAS
+    |--------------------------------------------------------------------------
+    */
+    $dashboardUrl = Route::has('dashboard')
+        ? route('dashboard')
+        : url('/dashboard');
+
+    $equivalenciasUrl = url('/equivalencias');
+
+    $misTramitesUrl = Route::has('mis.tramites')
+        ? route('mis.tramites')
+        : url('/mis-tramites');
+
+    $mensajesUrl = Route::has('mensajes.index')
+        ? route('mensajes.index')
+        : url('/mensajes');
+
+    $configuracionUrl = Route::has('configuracion.index')
+        ? route('configuracion.index')
+        : url('/configuracion');
+
+    $soporteUrl = url('/soporte');
+
+    $notificacionesUrl = Route::has('notificaciones.index')
+        ? route('notificaciones.index')
+        : url('/notificaciones');
+
+    $perfilEstudianteUrl = url('/estudiante/mi-perfil');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVOS DEL MENÚ
+    |--------------------------------------------------------------------------
+    */
+    $dashboardActive = request()->routeIs('dashboard') || request()->is('dashboard*');
+    $equivalenciasActive = request()->is('equivalencias') || request()->is('equivalencias*');
+    $misTramitesActive = request()->routeIs('mis.tramites') || request()->is('mis-tramites');
+    $mensajesActive = request()->routeIs('mensajes.*') || request()->is('mensajes*');
+    $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion');
+    $soporteActive = request()->is('soporte') || request()->is('soporte*');
+
+    $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Panel del Alumno')));
 @endphp
 
 <!DOCTYPE html>
@@ -45,7 +98,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('titulo', 'Portal Estudiantil')</title>
+    <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -57,13 +110,8 @@
     @stack('styles')
 
     <style>
-        /* =========================================================
-           FIX ZOOM: Ancho mínimo del body para que el layout no
-           colapse al hacer zoom en el navegador. El sidebar ya usa
-           position:fixed de AdminLTE, esto evita que el contenido
-           se comprima indefinidamente.
-        ========================================================= */
-        html, body {
+        html,
+        body {
             min-width: 960px !important;
         }
 
@@ -72,19 +120,21 @@
             --student-sidebar-collapsed-width: 4.6rem;
         }
 
-        /* ── ANCHO DINÁMICO ──────────────────────────────── */
         @media (min-width: 992px) {
             body:not(.sidebar-collapse) .main-sidebar {
                 width: var(--student-sidebar-width) !important;
             }
+
             body:not(.sidebar-collapse) .content-wrapper,
             body:not(.sidebar-collapse) .main-footer,
             body:not(.sidebar-collapse) .main-header {
                 margin-left: var(--student-sidebar-width) !important;
             }
+
             body.sidebar-collapse .main-sidebar {
                 width: var(--student-sidebar-collapsed-width) !important;
             }
+
             body.sidebar-collapse .content-wrapper,
             body.sidebar-collapse .main-footer,
             body.sidebar-collapse .main-header {
@@ -92,22 +142,16 @@
             }
         }
 
-        /* =========================================================
-           FIX ZOOM: El sidebar de AdminLTE ya tiene position:fixed,
-           pero forzamos que mantenga su ancho mínimo en todo momento
-           para que no se vea aplastado al hacer zoom.
-        ========================================================= */
         .main-sidebar {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             height: 100vh !important;
-            min-width: 60px !important; /* nunca colapsa a menos de esto */
+            min-width: 60px !important;
             overflow: hidden !important;
             z-index: 1038 !important;
         }
 
-        /* ── BLOQUE CONTROL (donde estaba el user-card) ──── */
         .sidebar-control-block {
             display: flex;
             align-items: center;
@@ -120,7 +164,6 @@
             min-height: 58px;
         }
 
-        /* Botón colapsar */
         .sidebar-toggle-inner {
             width: 42px;
             height: 42px;
@@ -154,7 +197,6 @@
             transform: rotate(180deg);
         }
 
-        /* Info de tamaño */
         .sidebar-control-info {
             display: flex;
             flex-direction: column;
@@ -180,7 +222,6 @@
             white-space: nowrap;
         }
 
-        /* Botones +/Normal/- */
         .sidebar-size-btns {
             display: flex;
             align-items: center;
@@ -214,7 +255,6 @@
             font-size: .65rem;
         }
 
-        /* ── MENÚ MÁS GRANDE Y MEJOR DISTRIBUIDO ─────────── */
         #dashboardSidebarScroll {
             display: flex;
             flex-direction: column;
@@ -270,7 +310,6 @@
             transform: translateX(2px);
         }
 
-        /* ── RESIZE HANDLE ───────────────────────────────── */
         @media (min-width: 992px) {
             .sidebar-resize-handle {
                 position: fixed;
@@ -291,7 +330,9 @@
             .sidebar-resize-handle::before {
                 content: "";
                 position: absolute;
-                top: 0; bottom: 0; left: 8px;
+                top: 0;
+                bottom: 0;
+                left: 8px;
                 width: 2px;
                 background: rgba(255,255,255,.35);
             }
@@ -299,8 +340,10 @@
             .sidebar-resize-handle::after {
                 content: "";
                 position: absolute;
-                top: 50%; left: 5px;
-                width: 8px; height: 52px;
+                top: 50%;
+                left: 5px;
+                width: 8px;
+                height: 52px;
                 transform: translateY(-50%);
                 border-radius: 999px;
                 background: rgba(255,255,255,.18);
@@ -322,10 +365,10 @@
             }
         }
 
-        /* ── MÓVIL ───────────────────────────────────────── */
         @media (max-width: 991.98px) {
-            html, body {
-                min-width: 0 !important; /* en móvil sí permitimos responsive normal */
+            html,
+            body {
+                min-width: 0 !important;
             }
 
             .dashboard-menu {
@@ -351,249 +394,260 @@
             }
         }
 
-    /* =========================================================
-       TOPBAR ESTUDIANTE
-    ========================================================= */
+        .student-topbar {
+            position: relative !important;
+            z-index: 80 !important;
+            min-height: 68px !important;
+            margin: 0 0 10px !important;
+            padding: 10px 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+            overflow: visible !important;
+            background:
+                radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.13), transparent 28%),
+                linear-gradient(90deg, #0f3370 0%, #1c4f9d 50%, #174487 100%) !important;
+            border-bottom: 3px solid #ffd21f !important;
+            border-radius: 0 0 16px 0 !important;
+            box-shadow:
+                0 10px 24px rgba(8, 35, 78, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
 
-    .student-topbar {
-        position: relative !important;
-        z-index: 80 !important;
-        min-height: 68px !important;
-        margin: 0 0 10px !important;
-        padding: 10px 18px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 14px !important;
-        overflow: visible !important;
-        background:
-            radial-gradient(circle at 92% 0%, rgba(255, 210, 31, 0.13), transparent 28%),
-            linear-gradient(90deg, #0f3370 0%, #1c4f9d 50%, #174487 100%) !important;
-        border-bottom: 3px solid #ffd21f !important;
-        border-radius: 0 0 16px 0 !important;
-        box-shadow:
-            0 10px 24px rgba(8, 35, 78, 0.16),
-            inset 0 1px 0 rgba(255,255,255,0.10) !important;
-    }
+        .student-topbar::before {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            border-radius: 0 0 16px 0 !important;
+            background:
+                linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%, rgba(255,255,255,0.04) 72%, transparent),
+                linear-gradient(135deg, transparent 0 62%, rgba(9, 43, 105, 0.18) 62% 72%, transparent 72%) !important;
+            pointer-events: none !important;
+        }
 
-    .student-topbar::before {
-        content: "" !important;
-        position: absolute !important;
-        inset: 0 !important;
-        border-radius: 0 0 16px 0 !important;
-        background:
-            linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%, rgba(255,255,255,0.04) 72%, transparent),
-            linear-gradient(135deg, transparent 0 62%, rgba(9, 43, 105, 0.18) 62% 72%, transparent 72%) !important;
-        pointer-events: none !important;
-    }
+        .student-topbar::after {
+            content: "" !important;
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: -7px !important;
+            height: 7px !important;
+            background: linear-gradient(180deg, rgba(8,35,78,0.12), transparent) !important;
+            pointer-events: none !important;
+        }
 
-    .student-topbar::after {
-        content: "" !important;
-        position: absolute !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: -7px !important;
-        height: 7px !important;
-        background: linear-gradient(180deg, rgba(8,35,78,0.12), transparent) !important;
-        pointer-events: none !important;
-    }
+        .student-topbar-left,
+        .student-topbar-right {
+            position: relative !important;
+            z-index: 2 !important;
+        }
 
-    .student-topbar-left,
-    .student-topbar-right {
-        position: relative !important;
-        z-index: 2 !important;
-    }
+        .student-topbar-left {
+            display: flex !important;
+            align-items: center !important;
+            min-width: 0 !important;
+        }
 
-    .student-topbar-left {
-        display: flex !important;
-        align-items: center !important;
-        min-width: 0 !important;
-    }
+        .student-topbar-right {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+        }
 
-    .student-topbar-right {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: 8px !important;
-        min-width: 0 !important;
-    }
+        .topbar-left-copy {
+            display: flex !important;
+            align-items: center !important;
+        }
 
-    .topbar-breadcrumb {
-        min-height: 40px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        padding: 0 16px !important;
-        border-radius: 14px !important;
-        background: rgba(255, 255, 255, 0.10) !important;
-        border: 1px solid rgba(255, 255, 255, 0.18) !important;
-        color: rgba(255,255,255,0.90) !important;
-        font-size: 13px !important;
-        font-weight: 800 !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
-    }
+        .topbar-breadcrumb {
+            min-height: 40px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 0 16px !important;
+            border-radius: 14px !important;
+            background: rgba(255, 255, 255, 0.10) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            color: rgba(255,255,255,0.90) !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
 
-    .topbar-breadcrumb i {
-        font-size: 12px !important;
-        color: rgba(255,255,255,0.84) !important;
-    }
+        .topbar-breadcrumb i {
+            font-size: 12px !important;
+            color: rgba(255,255,255,0.84) !important;
+        }
 
-    .topbar-breadcrumb-active {
-        color: #ffd21f !important;
-        font-weight: 900 !important;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.16) !important;
-    }
+        .topbar-breadcrumb-link {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            color: rgba(255,255,255,0.90) !important;
+            text-decoration: none !important;
+            font-weight: 800 !important;
+        }
 
-    .topbar-action-group {
-        position: relative !important;
-        display: inline-flex !important;
-        align-items: center !important;
-    }
+        .topbar-breadcrumb-link:hover {
+            color: #ffd21f !important;
+            text-decoration: none !important;
+        }
 
-    .topbar-icon-btn {
-        width: 42px !important;
-        height: 42px !important;
-        border-radius: 14px !important;
-        border: 1px solid rgba(255,255,255,0.18) !important;
-        background: rgba(255,255,255,0.10) !important;
-        color: #ffffff !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
-        transition: all .18s ease !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
-    }
+        .topbar-breadcrumb-link i {
+            color: inherit !important;
+        }
 
-    .topbar-icon-btn:hover,
-    .student-user-chip:hover {
-        background: rgba(255,255,255,0.17) !important;
-        border-color: rgba(255,210,31,0.48) !important;
-        transform: translateY(-1px) !important;
-    }
+        .topbar-breadcrumb-active {
+            color: #ffd21f !important;
+            font-weight: 900 !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.16) !important;
+        }
 
-    .topbar-icon-btn i {
-        font-size: 15px !important;
-        color: #ffffff !important;
-    }
+        .topbar-action-group {
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
 
-    .topbar-badge {
-        position: absolute !important;
-        top: -7px !important;
-        right: -7px !important;
-        min-width: 18px !important;
-        height: 18px !important;
-        padding: 0 5px !important;
-        border-radius: 999px !important;
-        background: #e63946 !important;
-        color: #ffffff !important;
-        font-size: 10px !important;
-        font-weight: 900 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border: 2px solid #1c4f9d !important;
-        box-shadow: 0 4px 9px rgba(0,0,0,0.24) !important;
-    }
+        .topbar-icon-btn {
+            width: 42px !important;
+            height: 42px !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.10) !important;
+            color: #ffffff !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
 
-    .topbar-badge.gold {
-        background: #ffd21f !important;
-        color: #123674 !important;
-    }
+        .topbar-icon-btn:hover,
+        .student-user-chip:hover {
+            background: rgba(255,255,255,0.17) !important;
+            border-color: rgba(255,210,31,0.48) !important;
+            transform: translateY(-1px) !important;
+        }
 
-    /* Oculta completamente el badge de notificaciones cuando no hay pendientes */
-    #notifBadge.notif-hidden {
-        display: none !important;
-    }
+        .topbar-icon-btn i {
+            font-size: 15px !important;
+            color: #ffffff !important;
+        }
 
-    #notifBadge:not(.notif-hidden) {
-        display: flex !important;
-    }
+        .topbar-badge {
+            position: absolute !important;
+            top: -7px !important;
+            right: -7px !important;
+            min-width: 18px !important;
+            height: 18px !important;
+            padding: 0 5px !important;
+            border-radius: 999px !important;
+            background: #e63946 !important;
+            color: #ffffff !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 2px solid #1c4f9d !important;
+            box-shadow: 0 4px 9px rgba(0,0,0,0.24) !important;
+        }
 
-    #mensajesBadge.notif-hidden,
-    .topbar-badge.notif-hidden {
-        display: none !important;
-    }
+        .topbar-badge.gold {
+            background: #ffd21f !important;
+            color: #123674 !important;
+        }
 
-    #mensajesBadge:not(.notif-hidden) {
-        display: flex !important;
-    }
+        #notifBadge.notif-hidden,
+        #mensajesBadge.notif-hidden,
+        .topbar-badge.notif-hidden {
+            display: none !important;
+        }
 
-    #sidebarMensajesBadge {
-        background: #ffd21f !important;
-        color: #123674 !important;
-        font-size: 10px !important;
-        font-weight: 900 !important;
-        border-radius: 999px !important;
-        padding: 4px 7px !important;
-    }
+        #notifBadge:not(.notif-hidden),
+        #mensajesBadge:not(.notif-hidden) {
+            display: flex !important;
+        }
 
-    .topbar-divider {
-        width: 1px !important;
-        height: 34px !important;
-        margin: 0 5px !important;
-        background: rgba(255,255,255,0.20) !important;
-    }
+        #sidebarMensajesBadge {
+            background: #ffd21f !important;
+            color: #123674 !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            border-radius: 999px !important;
+            padding: 4px 7px !important;
+        }
 
-    .student-user-chip {
-        min-height: 44px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        padding: 5px 14px 5px 7px !important;
-        border-radius: 15px !important;
-        border: 1px solid rgba(255,255,255,0.18) !important;
-        background: rgba(255,255,255,0.11) !important;
-        color: #ffffff !important;
-        cursor: pointer !important;
-        transition: all .18s ease !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
-    }
+        .topbar-divider {
+            width: 1px !important;
+            height: 34px !important;
+            margin: 0 5px !important;
+            background: rgba(255,255,255,0.20) !important;
+        }
 
-    .student-user-chip-avatar {
-        width: 36px !important;
-        height: 36px !important;
-        border-radius: 13px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: #ffd21f !important;
-        color: #123674 !important;
-        font-weight: 900 !important;
-        font-size: 13px !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
-    }
+        .student-user-chip {
+            min-height: 44px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 5px 14px 5px 7px !important;
+            border-radius: 15px !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: rgba(255,255,255,0.11) !important;
+            color: #ffffff !important;
+            cursor: pointer !important;
+            transition: all .18s ease !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        }
 
-    .student-user-chip-info {
-        display: flex !important;
-        flex-direction: column !important;
-        line-height: 1.08 !important;
-        min-width: 0 !important;
-    }
+        .student-user-chip-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #ffd21f !important;
+            color: #123674 !important;
+            font-weight: 900 !important;
+            font-size: 13px !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
+        }
 
-    .student-user-chip-name {
-        max-width: 190px !important;
-        color: #ffffff !important;
-        font-size: 12.5px !important;
-        font-weight: 900 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
+        .student-user-chip-info {
+            display: flex !important;
+            flex-direction: column !important;
+            line-height: 1.08 !important;
+            min-width: 0 !important;
+        }
 
-    .student-user-chip-role {
-        margin-top: 3px !important;
-        color: rgba(255,255,255,0.74) !important;
-        font-size: 10.5px !important;
-        font-weight: 800 !important;
-    }
+        .student-user-chip-name {
+            max-width: 190px !important;
+            color: #ffffff !important;
+            font-size: 12.5px !important;
+            font-weight: 900 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
 
-    .student-user-chip-arrow {
-        font-size: 11px !important;
-        color: rgba(255,255,255,0.78) !important;
-    }
+        .student-user-chip-role {
+            margin-top: 3px !important;
+            color: rgba(255,255,255,0.74) !important;
+            font-size: 10.5px !important;
+            font-weight: 800 !important;
+        }
 
-        /* ── DROPDOWNS TOPBAR ─────────────────────────────── */
+        .student-user-chip-arrow {
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.78) !important;
+        }
+
         .topbar-dropdown {
             position: absolute !important;
             top: calc(100% + 10px) !important;
@@ -700,7 +754,6 @@
             color: #198754 !important;
         }
 
-
         .topbar-dropdown-icon.red {
             background: rgba(198, 40, 40, .13) !important;
             color: #c62828 !important;
@@ -768,7 +821,6 @@
             }
         }
 
-        /* ── MENÚ DE USUARIO ─────────────────────────────── */
         .user-profile-dropdown {
             width: 315px !important;
         }
@@ -966,10 +1018,6 @@
             box-shadow: 0 8px 18px rgba(198, 40, 40, 0.22) !important;
         }
 
-        /* =========================================================
-           CORRECCIÓN FINAL: MENÚ SIEMPRE EN UNA SOLA COLUMNA
-        ========================================================= */
-
         .main-sidebar,
         .main-sidebar .sidebar,
         #dashboardSidebarScroll,
@@ -1064,7 +1112,6 @@
             display: none !important;
         }
 
-        /* ── MODAL DE SESIÓN ─────────────────────────────── */
         .session-timeout-modal .modal-content {
             border: none;
             border-radius: 18px;
@@ -1141,7 +1188,6 @@
             font-weight: 700;
         }
 
-        /* ── SHELL DEL CONTENIDO ─────────────────────────── */
         .content-wrapper > .content.dashboard-shell {
             padding: 0 !important;
         }
@@ -1204,7 +1250,7 @@
         <div class="sidebar-overlay"></div>
 
         {{-- Logo --}}
-        <a href="{{ route('dashboard') }}" class="brand-link">
+        <a href="{{ $dashboardUrl }}" class="brand-link">
             <div class="brand-top-glow"></div>
             <div class="brand-logo-wrap">
                 <img src="{{ asset('images/Logo.png') }}" alt="Logo PumaGestión" class="brand-logo-img">
@@ -1254,32 +1300,32 @@
                         data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('dashboard') }}"
-                               class="nav-link {{ request()->routeIs('dashboard') || request()->is('dashboard*') ? 'active' : '' }}">
+                            <a href="{{ $dashboardUrl }}"
+                               class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-house"></i>
                                 <p>Inicio</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ url('/equivalencias') }}"
-                               class="nav-link {{ request()->is('equivalencias') || request()->is('equivalencias*') ? 'active' : '' }}">
+                            <a href="{{ $equivalenciasUrl }}"
+                               class="nav-link {{ $equivalenciasActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-shuffle"></i>
                                 <p>Equivalencias</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('mis.tramites') }}"
-                               class="nav-link {{ request()->routeIs('mis.tramites') || request()->is('mis-tramites') ? 'active' : '' }}">
+                            <a href="{{ $misTramitesUrl }}"
+                               class="nav-link {{ $misTramitesActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-folder-open"></i>
                                 <p>Mis trámites</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('mensajes.index') }}"
-                               class="nav-link {{ request()->routeIs('mensajes.*') ? 'active' : '' }}">
+                            <a href="{{ $mensajesUrl }}"
+                               class="nav-link {{ $mensajesActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-envelope"></i>
                                 <p>
                                     Mensajes
@@ -1292,16 +1338,16 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                            <a href="{{ $configuracionUrl }}"
+                               class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ url('/soporte') }}"
-                               class="nav-link {{ request()->is('soporte') || request()->is('soporte*') ? 'active' : '' }}">
+                            <a href="{{ $soporteUrl }}"
+                               class="nav-link {{ $soporteActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-headset"></i>
                                 <p>Soporte</p>
                             </a>
@@ -1322,135 +1368,143 @@
     <div class="content-wrapper">
         <section class="content dashboard-shell">
 
-    {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
-    <div class="student-topbar">
+            {{-- ══ TOPBAR ══════════════════════════════════════════ --}}
+            <div class="student-topbar">
 
-        <div class="student-topbar-left">
-            <div class="topbar-left-copy">
-                <div class="topbar-breadcrumb">
-                    <i class="fas fa-house"></i>
-                    <span>Inicio</span>
-                    <i class="fas fa-chevron-right"></i>
-                    <span class="topbar-breadcrumb-active">@yield('titulo', 'Panel del Alumno')</span>
-                </div>
-            </div>
-        </div>
+                <div class="student-topbar-left">
+                    <div class="topbar-left-copy">
+                        <div class="topbar-breadcrumb">
+                            <a href="{{ $dashboardUrl }}" class="topbar-breadcrumb-link">
+                                <i class="fas fa-house"></i>
+                                <span>Inicio</span>
+                            </a>
 
-        <div class="student-topbar-right">
+                            <i class="fas fa-chevron-right"></i>
 
-            <div class="topbar-action-group">
-                <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
-                    <i class="fas fa-bell"></i>
-                    <span class="topbar-badge notif-hidden" id="notifBadge"></span>
-                </button>
-
-                <div class="topbar-dropdown" id="dropNotif">
-                    <div class="topbar-dropdown-header">
-                        <span>Notificaciones</span>
-                        <a href="#" class="topbar-dropdown-mark" id="btnMarcarTodasNotif">Marcar todas</a>
-                    </div>
-
-                    <ul class="topbar-dropdown-list" id="notifList">
-                        <li class="topbar-dropdown-item">
-                            <div class="topbar-dropdown-icon blue">
-                                <i class="fas fa-spinner fa-spin"></i>
-                            </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Cargando...</strong>
-                                <span>Obteniendo tus notificaciones.</span>
-                                <small>Un momento</small>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="topbar-dropdown-footer">
-                        <a href="{{ route('notificaciones.index') }}">Ver todas las notificaciones</a>
+                            <span class="topbar-breadcrumb-active">
+                                {{ $pageTitle }}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="topbar-action-group">
-                <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
-                    <i class="fas fa-envelope"></i>
-                    <span class="topbar-badge gold notif-hidden" id="mensajesBadge"></span>
-                </button>
+                <div class="student-topbar-right">
 
-                <div class="topbar-dropdown" id="dropMsg">
-                    <div class="topbar-dropdown-header">
-                        <span>Mensajes</span>
-                        <a href="{{ route('mensajes.index') }}" class="topbar-dropdown-mark">
-                            Ver todos
-                        </a>
-                    </div>
+                    <div class="topbar-action-group">
+                        <button class="topbar-icon-btn" id="btnNotif" title="Notificaciones">
+                            <i class="fas fa-bell"></i>
+                            <span class="topbar-badge notif-hidden" id="notifBadge"></span>
+                        </button>
 
-                    <ul class="topbar-dropdown-list" id="mensajesList">
-                        <li class="topbar-dropdown-item">
-                            <div class="topbar-dropdown-icon blue">
-                                <i class="fas fa-spinner fa-spin"></i>
+                        <div class="topbar-dropdown" id="dropNotif">
+                            <div class="topbar-dropdown-header">
+                                <span>Notificaciones</span>
+                                <a href="#" class="topbar-dropdown-mark" id="btnMarcarTodasNotif">
+                                    Marcar todas
+                                </a>
                             </div>
-                            <div class="topbar-dropdown-text">
-                                <strong>Cargando...</strong>
-                                <span>Obteniendo tus mensajes recientes.</span>
-                                <small>Un momento</small>
+
+                            <ul class="topbar-dropdown-list" id="notifList">
+                                <li class="topbar-dropdown-item">
+                                    <div class="topbar-dropdown-icon blue">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </div>
+                                    <div class="topbar-dropdown-text">
+                                        <strong>Cargando...</strong>
+                                        <span>Obteniendo tus notificaciones.</span>
+                                        <small>Un momento</small>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="topbar-dropdown-footer">
+                                <a href="{{ $notificacionesUrl }}">Ver todas las notificaciones</a>
                             </div>
-                        </li>
-                    </ul>
-
-                    <div class="topbar-dropdown-footer">
-                        <a href="{{ route('mensajes.index') }}">Ir a mensajes</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="topbar-divider"></div>
-
-            <div class="topbar-action-group">
-                <button class="student-user-chip" id="btnUser" title="Mi perfil">
-                    <div class="student-user-chip-avatar">{{ $initials ?? 'A' }}</div>
-                    <div class="student-user-chip-info">
-                        <span class="student-user-chip-name">{{ $displayName ?? 'Alumno' }}</span>
-                        <span class="student-user-chip-role">Estudiante</span>
-                    </div>
-                    <i class="fas fa-chevron-down student-user-chip-arrow"></i>
-                </button>
-
-                <div class="topbar-dropdown align-right user-profile-dropdown" id="dropUser">
-                    <div class="user-dropdown-header">
-                        <div class="user-dropdown-avatar">{{ $initials ?? 'A' }}</div>
-                        <div class="user-dropdown-info">
-                            <strong>{{ $displayName ?? 'Alumno' }}</strong>
-                            <span>{{ $correoInstitucional }}</span>
-                            <small>Estudiante</small>
                         </div>
                     </div>
 
-                    <div class="user-dropdown-body">
-                        <a href="{{ url('/estudiante/mi-perfil') }}" class="user-dropdown-option">
-                            <span class="user-dropdown-option-icon">
-                                <i class="fas fa-user"></i>
-                            </span>
-                            <span>
-                                <strong>Mi perfil</strong>
-                                <small>Ver información personal</small>
-                            </span>
-                            <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
-                        </a>
+                    <div class="topbar-action-group">
+                        <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
+                            <i class="fas fa-envelope"></i>
+                            <span class="topbar-badge gold notif-hidden" id="mensajesBadge"></span>
+                        </button>
+
+                        <div class="topbar-dropdown" id="dropMsg">
+                            <div class="topbar-dropdown-header">
+                                <span>Mensajes</span>
+                                <a href="{{ $mensajesUrl }}" class="topbar-dropdown-mark">
+                                    Ver todos
+                                </a>
+                            </div>
+
+                            <ul class="topbar-dropdown-list" id="mensajesList">
+                                <li class="topbar-dropdown-item">
+                                    <div class="topbar-dropdown-icon blue">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </div>
+                                    <div class="topbar-dropdown-text">
+                                        <strong>Cargando...</strong>
+                                        <span>Obteniendo tus mensajes recientes.</span>
+                                        <small>Un momento</small>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="topbar-dropdown-footer">
+                                <a href="{{ $mensajesUrl }}">Ir a mensajes</a>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="user-dropdown-footer">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="user-logout-btn">
-                                <i class="fas fa-right-from-bracket"></i>
-                                <span>Cerrar sesión</span>
-                            </button>
-                        </form>
+                    <div class="topbar-divider"></div>
+
+                    <div class="topbar-action-group">
+                        <button class="student-user-chip" id="btnUser" title="Mi perfil">
+                            <div class="student-user-chip-avatar">{{ $initials ?? 'A' }}</div>
+                            <div class="student-user-chip-info">
+                                <span class="student-user-chip-name">{{ $displayName ?? 'Alumno' }}</span>
+                                <span class="student-user-chip-role">Estudiante</span>
+                            </div>
+                            <i class="fas fa-chevron-down student-user-chip-arrow"></i>
+                        </button>
+
+                        <div class="topbar-dropdown align-right user-profile-dropdown" id="dropUser">
+                            <div class="user-dropdown-header">
+                                <div class="user-dropdown-avatar">{{ $initials ?? 'A' }}</div>
+                                <div class="user-dropdown-info">
+                                    <strong>{{ $displayName ?? 'Alumno' }}</strong>
+                                    <span>{{ $correoInstitucional }}</span>
+                                    <small>Estudiante</small>
+                                </div>
+                            </div>
+
+                            <div class="user-dropdown-body">
+                                <a href="{{ $perfilEstudianteUrl }}" class="user-dropdown-option">
+                                    <span class="user-dropdown-option-icon">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <span>
+                                        <strong>Mi perfil</strong>
+                                        <small>Ver información personal</small>
+                                    </span>
+                                    <i class="fas fa-chevron-right user-dropdown-option-arrow"></i>
+                                </a>
+                            </div>
+
+                            <div class="user-dropdown-footer">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="user-logout-btn">
+                                        <i class="fas fa-right-from-bracket"></i>
+                                        <span>Cerrar sesión</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
-
-        </div>
-    </div>
 
             <div class="dashboard-shell-body">
                 @yield('content')
@@ -1481,7 +1535,9 @@
 
             <div class="session-timeout-body">
                 <p>Tu sesión está por expirar por inactividad.</p>
-                <p class="session-timeout-note">Presiona <strong>"Continuar sesión"</strong> para seguir trabajando.</p>
+                <p class="session-timeout-note">
+                    Presiona <strong>"Continuar sesión"</strong> para seguir trabajando.
+                </p>
 
                 <div class="session-timeout-countdown">
                     <i class="fas fa-hourglass-half"></i>
@@ -1490,11 +1546,15 @@
             </div>
 
             <div class="session-timeout-footer">
-                <button type="button" class="btn btn-outline-secondary btn-session-logout" id="sessionLogoutNowBtn">
+                <button type="button"
+                        class="btn btn-outline-secondary btn-session-logout"
+                        id="sessionLogoutNowBtn">
                     Cerrar sesión
                 </button>
 
-                <button type="button" class="btn btn-session-continue" id="sessionContinueBtn">
+                <button type="button"
+                        class="btn btn-session-continue"
+                        id="sessionContinueBtn">
                     Continuar sesión
                 </button>
             </div>
@@ -1563,13 +1623,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const notifList = document.getElementById('notifList');
     const btnMarcarTodas = document.getElementById('btnMarcarTodasNotif');
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUTAS DE NOTIFICACIONES
-    |--------------------------------------------------------------------------
-    | Usamos rutas relativas para evitar problemas cuando APP_URL no coincide
-    | con el puerto real del navegador, por ejemplo localhost vs localhost:8080.
-    */
     const URL_NOTIF_RECIENTES = "/api/notificaciones/recientes";
     const URL_MARCAR_TODAS = "/api/notificaciones/marcar-todas-leidas";
     const URL_ABRIR_BASE = "/notificaciones/abrir";
@@ -1659,14 +1712,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!response.ok) {
-                console.error('Error HTTP notificaciones:', response.status, response.statusText);
                 throw new Error('No se pudieron cargar las notificaciones.');
             }
 
             const data = await response.json();
 
             if (!data.ok) {
-                console.error('Respuesta inválida de notificaciones:', data);
                 throw new Error('Respuesta inválida de notificaciones.');
             }
 
@@ -1705,7 +1756,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!response.ok) {
-                console.error('Error HTTP marcar todas:', response.status, response.statusText);
                 throw new Error('No se pudieron marcar las notificaciones.');
             }
 
@@ -1727,25 +1777,27 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const root         = document.documentElement;
-    const body         = document.body;
-    const toggleBtn    = document.getElementById('sidebarToggleBtn');
-    const btnDown      = document.getElementById('sidebarSizeDown');
-    const btnReset     = document.getElementById('sidebarSizeReset');
-    const btnUp        = document.getElementById('sidebarSizeUp');
+    const root = document.documentElement;
+    const body = document.body;
+    const toggleBtn = document.getElementById('sidebarToggleBtn');
+    const btnDown = document.getElementById('sidebarSizeDown');
+    const btnReset = document.getElementById('sidebarSizeReset');
+    const btnUp = document.getElementById('sidebarSizeUp');
     const resizeHandle = document.getElementById('sidebarResizeHandle');
 
-    const STORAGE_WIDTH_KEY    = 'student_sidebar_width';
+    const STORAGE_WIDTH_KEY = 'student_sidebar_width';
     const STORAGE_COLLAPSE_KEY = 'student_sidebar_collapsed';
 
-    const MIN_WIDTH     = 280;
-    const MAX_WIDTH     = 460;
+    const MIN_WIDTH = 280;
+    const MAX_WIDTH = 460;
     const DEFAULT_WIDTH = 350;
-    const STEP          = 20;
+    const STEP = 20;
 
     let isResizing = false;
 
-    function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+    function clamp(v, min, max) {
+        return Math.min(Math.max(v, min), max);
+    }
 
     function applyWidth(w) {
         root.style.setProperty('--student-sidebar-width', clamp(w, MIN_WIDTH, MAX_WIDTH) + 'px');
@@ -1829,16 +1881,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function ajustarSidebarScroll() {
-        const brand      = document.querySelector('.main-sidebar .brand-link');
-        const control    = document.querySelector('.sidebar-control-block');
+        const brand = document.querySelector('.main-sidebar .brand-link');
+        const control = document.querySelector('.sidebar-control-block');
         const scrollArea = document.getElementById('dashboardSidebarScroll');
+
         if (!brand || !scrollArea) return;
 
-        const brandH   = brand.offsetHeight;
+        const brandH = brand.offsetHeight;
         const controlH = control ? control.offsetHeight : 0;
-        const libre    = window.innerHeight - brandH - controlH;
+        const libre = window.innerHeight - brandH - controlH;
 
-        scrollArea.style.height    = Math.max(libre, 120) + 'px';
+        scrollArea.style.height = Math.max(libre, 120) + 'px';
         scrollArea.style.maxHeight = Math.max(libre, 120) + 'px';
     }
 
@@ -1850,6 +1903,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .observe(body, { attributes: true, attributeFilter: ['class'] });
 
     const pushMenu = document.querySelector('[data-widget="pushmenu"]');
+
     if (pushMenu) {
         pushMenu.addEventListener('click', () => {
             setTimeout(() => {
@@ -1869,7 +1923,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const WARNING_TIME_MS = 28 * 60 * 1000;
-    const LOGOUT_TIME_MS  = 31 * 60 * 1000;
+    const LOGOUT_TIME_MS = 31 * 60 * 1000;
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const modalElement = $('#sessionTimeoutModal');
@@ -1902,6 +1956,7 @@ document.addEventListener('DOMContentLoaded', function () {
         countdownInterval = setInterval(() => {
             secondsLeft--;
             updateCountdownText();
+
             if (secondsLeft <= 0) {
                 clearInterval(countdownInterval);
             }
@@ -1916,7 +1971,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function hideWarningModal() {
         modalVisible = false;
-        if (countdownInterval) clearInterval(countdownInterval);
+
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+
         modalElement.modal('hide');
     }
 
