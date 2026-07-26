@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const formulario = document.getElementById(
-        'formFiltrosBitacora'
+        'formFiltrosBitacoraCoordinador'
     );
 
     if (!formulario) {
@@ -20,23 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     const errorFechaInicio = document.getElementById(
-        'errorFechaInicioBitacora'
+        'errorFechaInicioCoordinador'
     );
 
-    const errorFechas = document.getElementById(
-        'errorFechasBitacora'
+    const errorFechaFin = document.getElementById(
+        'errorFechaFinCoordinador'
     );
 
     const errorTramite = document.getElementById(
-        'errorTramiteBitacora'
+        'errorTramiteCoordinador'
     );
 
     const botonBuscar = document.getElementById(
-        'btnBuscarBitacora'
+        'btnBuscarBitacoraCoordinador'
     );
 
     const camposOpcionales = formulario.querySelectorAll(
-        '[data-bita-optional]'
+        '[data-coord-bita-optional]'
     );
 
     const contenidoOriginalBoton = botonBuscar
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         : '';
 
     /**
-     * Agrega o elimina el estado visual de error.
+     * Muestra u oculta el estado visual de error.
      */
     const mostrarError = (
         campo,
@@ -52,19 +52,19 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrar
     ) => {
         campo?.classList.toggle(
-            'bita-invalid',
+            'coord-bita-invalid',
             mostrar
         );
 
         elementoError?.classList.toggle(
-            'bita-error--visible',
+            'coord-bita-error--visible',
             mostrar
         );
     };
 
     /**
-     * Coloca la fecha inicial como mínimo permitido
-     * para la fecha final.
+     * Establece la fecha inicial como límite mínimo
+     * para seleccionar la fecha final.
      */
     const actualizarFechaMinima = () => {
         if (!fechaInicio || !fechaFin) {
@@ -75,8 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Valida que ambas fechas hayan sido seleccionadas
-     * y que el rango sea correcto.
+     * Valida las fechas seleccionadas.
      */
     const validarFechas = () => {
         if (!fechaInicio || !fechaFin) {
@@ -96,10 +95,12 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         if (finVacio) {
-            fechaFin.classList.add('bita-invalid');
+            fechaFin.classList.add(
+                'coord-bita-invalid'
+            );
 
-            errorFechas?.classList.remove(
-                'bita-error--visible'
+            errorFechaFin?.classList.remove(
+                'coord-bita-error--visible'
             );
 
             return false;
@@ -114,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mostrarError(
             fechaFin,
-            errorFechas,
+            errorFechaFin,
             !rangoValido
         );
 
@@ -122,8 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Valida el número de trámite solamente cuando
-     * se haya ingresado un valor.
+     * Valida el número de trámite cuando se haya
+     * ingresado algún valor.
      */
     const validarTramite = () => {
         if (!idTramite) {
@@ -158,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Elimina espacios innecesarios en los filtros
-     * de tipo texto.
+     * Elimina espacios al inicio y al final de los
+     * campos de texto.
      */
     const limpiarCamposTexto = () => {
         formulario
@@ -170,8 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Deshabilita temporalmente los filtros opcionales
-     * vacíos para que no se envíen en la URL.
+     * Deshabilita los filtros opcionales vacíos para
+     * evitar parámetros innecesarios en la URL.
      */
     const deshabilitarCamposVacios = () => {
         camposOpcionales.forEach((campo) => {
@@ -195,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Coloca el botón en estado de carga.
+     * Cambia el botón de búsqueda al estado de carga.
      */
     const mostrarCarga = () => {
         if (!botonBuscar) {
@@ -211,8 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Restaura el botón después de regresar mediante
-     * el historial del navegador.
+     * Restaura el botón al volver mediante el historial
+     * del navegador.
      */
     const restaurarBoton = () => {
         habilitarCamposOpcionales();
@@ -263,10 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tramiteValido =
             validarTramite();
 
-        if (
-            !fechasValidas
-            || !tramiteValido
-        ) {
+        if (!fechasValidas || !tramiteValido) {
             event.preventDefault();
             event.stopPropagation();
 
@@ -301,13 +299,17 @@ document.addEventListener('DOMContentLoaded', () => {
      * Oculta automáticamente las alertas de éxito.
      */
     document
-        .querySelectorAll('[data-bita-auto-close]')
+        .querySelectorAll(
+            '[data-coord-bita-auto-close]'
+        )
         .forEach((alerta) => {
             window.setTimeout(() => {
                 alerta.style.transition =
-                    'opacity 0.3s ease, transform 0.3s ease';
+                    'opacity 0.3s ease, '
+                    + 'transform 0.3s ease';
 
                 alerta.style.opacity = '0';
+
                 alerta.style.transform =
                     'translateY(-6px)';
 

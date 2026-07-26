@@ -3,114 +3,199 @@
 namespace App\Http\Controllers;
 
 use App\Models\Graficas;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class EmpleadoController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Identificadores de roles
+    |--------------------------------------------------------------------------
+    |
+    | 1 = Secretaría General
+    | 3 = Secretaría Académica
+    | 4 = Coordinador
+    | 5 = Secretaría de Carrera
+    |
+    */
+
+    private const ROL_SECRETARIA_GENERAL = 1;
+    private const ROL_SECRETARIA_ACADEMICA = 3;
+    private const ROL_COORDINADOR = 4;
+    private const ROL_SECRETARIA_CARRERA = 5;
+
     protected Graficas $graficas;
 
+    /**
+     * Inyecta el modelo encargado de consultar
+     * la información utilizada en los paneles.
+     */
     public function __construct(Graficas $graficas)
     {
         $this->graficas = $graficas;
     }
 
-    public function index(Request $request)
+    /**
+     * Muestra el panel correspondiente al rol
+     * del empleado autenticado.
+     */
+    public function index(Request $request): View|RedirectResponse
     {
         if (!Auth::check()) {
-            return redirect()->route('portal'); // ✅ corregido: era route('login') que no existe
+            return redirect('/portal');
         }
 
-        $user = Auth::user();
+        $usuario = Auth::user();
+        $idRol = (int) ($usuario->id_rol ?? 0);
 
-        $rol = strtolower(trim((string) (session('rol_texto') ?? 'sin_rol')));
+        $rolTexto = strtolower(
+            trim(
+                (string) (
+                    session('rol_texto')
+                    ?? session('tipo_usuario')
+                    ?? $this->obtenerTextoRol($idRol)
+                )
+            )
+        );
 
-        $anio = $request->get('anio');
-        $aniosDisponibles = $this->graficas->obtenerAniosDisponibles();
+        $anio = (int) $request->input(
+            'anio',
+            now()->year
+        );
+
+        $aniosDisponibles = $this->graficas
+            ->obtenerAniosDisponibles();
+
+        $nombreUsuario = $this->obtenerNombreUsuario(
+            $usuario
+        );
 
         $data = [
-            'titulo'           => 'Gestión de Carrera - FCEAC',
-            'userName'         => $user->persona->nombre_persona ?? ($user->name ?? 'Usuario'),
-            'userRole'         => $rol,
-            'anio'             => $anio,
+            'titulo' => 'Gestión de Carrera - FCEAC',
+            'userName' => $nombreUsuario,
+            'userRole' => $rolTexto,
+            'anio' => $anio,
             'aniosDisponibles' => $aniosDisponibles,
         ];
 
-        return match ($rol) {
-            'secretario'         => $this->vistaSecretariaCarrera($data),
-            'secretaria_general' => $this->vistaSecretariaAcademica($data),
-            'coordinador',
-            'administrador'      => $this->vistaCoordinador($data),
-            default              => view('dashboard', $data),
+        return match ($idRol) {
+            self::ROL_COORDINADOR =>
+                $this->vistaCoordinador($data),
+
+            self::ROL_SECRETARIA_CARRERA =>
+                $this->vistaSecretariaCarrera($data),
+
+            self::ROL_SECRETARIA_GENERAL,
+            self::ROL_SECRETARIA_ACADEMICA =>
+                $this->vistaSecretariaAcademica($data),
+
+            default =>
+                view('dashboard', $data),
         };
     }
 
     /*
     |--------------------------------------------------------------------------
-    | VISTA COORDINADOR / ADMINISTRADOR
+    | VISTA DEL COORDINADOR
     |--------------------------------------------------------------------------
     */
-    protected function vistaCoordinador(array $data)
+
+    /**
+     * Muestra la vista principal del coordinador.
+     *
+     * Archivo:
+     * resources/views/coordinador_carrera.blade.php
+     */
+    protected function vistaCoordinador(array $data): View
     {
-        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+        $idCarreraActual =
+            $this->obtenerIdCarreraEmpleadoActual();
 
-        $carreras = collect();
-        if ($idCarreraActual) {
-            $carrera = $this->graficas->obtenerCarrerasDisponibles()
-                ->firstWhere('id_carrera', $idCarreraActual);
+        $carreras = $this->obtenerCarrerasDelEmpleado(
+            $idCarreraActual
+        );
 
-            if ($carrera) {
-                $carreras = collect([$carrera]);
-            }
-        }
-
-        return view('coordinador_carrera', array_merge($data, [
-            'carreras'              => $carreras,
-            'idCarreraSeleccionada' => $idCarreraActual,
-        ]));
+        return view(
+            'coordinador_carrera',
+            array_merge(
+                $data,
+                [
+                    'carreras' => $carreras,
+                    'idCarreraSeleccionada' =>
+                        $idCarreraActual,
+                ]
+            )
+        );
     }
 
     /*
     |--------------------------------------------------------------------------
-    | VISTA SECRETARÍA DE CARRERA
+    | VISTA DE SECRETARÍA DE CARRERA
     |--------------------------------------------------------------------------
     */
-    protected function vistaSecretariaCarrera(array $data)
+
+    /**
+     * Muestra el panel principal de Secretaría de Carrera.
+     */
+    protected function vistaSecretariaCarrera(array $data): View
     {
-        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+        $idCarreraActual =
+            $this->obtenerIdCarreraEmpleadoActual();
 
-        $carreras = collect();
-        if ($idCarreraActual) {
-            $carrera = $this->graficas->obtenerCarrerasDisponibles()
-                ->firstWhere('id_carrera', $idCarreraActual);
+        $carreras = $this->obtenerCarrerasDelEmpleado(
+            $idCarreraActual
+        );
 
-            if ($carrera) {
-                $carreras = collect([$carrera]);
-            }
-        }
-
-        return view('secre_carrera', array_merge($data, [
-            'carreras'              => $carreras,
-            'idCarreraSeleccionada' => $idCarreraActual,
-        ]));
+        return view(
+            'secre_carrera',
+            array_merge(
+                $data,
+                [
+                    'carreras' => $carreras,
+                    'idCarreraSeleccionada' =>
+                        $idCarreraActual,
+                ]
+            )
+        );
     }
 
     /*
     |--------------------------------------------------------------------------
-    | VISTA SECRETARÍA GENERAL
+    | VISTA DE SECRETARÍA GENERAL Y ACADÉMICA
     |--------------------------------------------------------------------------
     */
-    protected function vistaSecretariaAcademica(array $data)
+
+    /**
+     * Muestra el panel principal de Secretaría General
+     * o Secretaría Académica.
+     */
+    protected function vistaSecretariaAcademica(array $data): View
     {
-        $departamentos = $this->graficas->obtenerDepartamentosDisponibles();
+        $departamentos = $this->graficas
+            ->obtenerDepartamentosDisponibles();
 
-        $idDepartamentoSeleccionado = request('id_departamento');
+        $idDepartamentoSeleccionado =
+            request()->input('id_departamento');
 
-        return view('secre_academica', array_merge($data, [
-            'departamentos'              => $departamentos,
-            'idDepartamentoSeleccionado' => $idDepartamentoSeleccionado,
-        ]));
+        return view(
+            'secre_academica',
+            array_merge(
+                $data,
+                [
+                    'departamentos' =>
+                        $departamentos,
+
+                    'idDepartamentoSeleccionado' =>
+                        $idDepartamentoSeleccionado,
+                ]
+            )
+        );
     }
 
     /*
@@ -118,57 +203,175 @@ class EmpleadoController extends Controller
     | API AUXILIAR
     |--------------------------------------------------------------------------
     */
-    public function getEstadisticas()
+
+    /**
+     * Retorna las estadísticas generales del panel.
+     */
+    public function getEstadisticas(): JsonResponse
     {
-        return response()->json(['aprobados' => 312]);
+        return response()->json([
+            'aprobados' => 312,
+        ]);
     }
 
-    public function listarPorUnidad()
+    /**
+     * Retorna el listado de empleados por unidad.
+     */
+    public function listarPorUnidad(): JsonResponse
     {
         return response()->json([]);
     }
 
-    public function getNotificaciones()
+    /**
+     * Retorna las notificaciones del empleado.
+     */
+    public function getNotificaciones(): JsonResponse
     {
         return response()->json([]);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | HELPERS
+    | MÉTODOS AUXILIARES
     |--------------------------------------------------------------------------
     */
-    protected function obtenerIdPersonaAutenticada(): ?int
-    {
-        $user = Auth::user();
 
-        if (!$user) {
-            return null;
+    /**
+     * Obtiene el nombre del usuario autenticado.
+     */
+    protected function obtenerNombreUsuario(
+        mixed $usuario
+    ): string {
+        if (!$usuario) {
+            return 'Usuario';
         }
 
-        return isset($user->id_persona) ? (int) $user->id_persona : null;
+        if (!empty($usuario->nombre_persona)) {
+            return trim(
+                (string) $usuario->nombre_persona
+            );
+        }
+
+        if (!empty($usuario->name)) {
+            return trim(
+                (string) $usuario->name
+            );
+        }
+
+        if (!empty($usuario->id_persona)) {
+            $nombrePersona = DB::table('tbl_persona')
+                ->where(
+                    'id_persona',
+                    (int) $usuario->id_persona
+                )
+                ->value('nombre_persona');
+
+            if (!empty($nombrePersona)) {
+                return trim(
+                    (string) $nombrePersona
+                );
+            }
+        }
+
+        if (!empty($usuario->email)) {
+            return trim(
+                (string) $usuario->email
+            );
+        }
+
+        return 'Usuario';
     }
 
+    /**
+     * Obtiene el identificador de la persona relacionada
+     * con el usuario autenticado.
+     */
+    protected function obtenerIdPersonaAutenticada(): ?int
+    {
+        $usuario = Auth::user();
+
+        if (
+            !$usuario
+            || empty($usuario->id_persona)
+        ) {
+            return null;
+        }
+
+        return (int) $usuario->id_persona;
+    }
+
+    /**
+     * Obtiene la carrera asignada al empleado autenticado.
+     */
     protected function obtenerIdCarreraEmpleadoActual(): ?int
     {
-        $idPersona = $this->obtenerIdPersonaAutenticada();
+        $idPersona =
+            $this->obtenerIdPersonaAutenticada();
 
-        if (!$idPersona) {
+        if ($idPersona === null) {
             return null;
         }
 
-        $res = DB::select('CALL SEL_CARRERA_EMPLEADO_POR_PERSONA(?)', [
-            $idPersona
-        ]);
+        $idCarrera = DB::table('tbl_empleados')
+            ->where(
+                'id_persona',
+                $idPersona
+            )
+            ->value('id_carrera');
 
-        $row = $res[0] ?? null;
-
-        if (!$row || ($row->resultado ?? 'ERROR') !== 'OK') {
-            return null;
-        }
-
-        return !empty($row->id_carrera)
-            ? (int) $row->id_carrera
+        return $idCarrera !== null
+            ? (int) $idCarrera
             : null;
+    }
+
+    /**
+     * Obtiene solamente la carrera asignada
+     * al empleado autenticado.
+     */
+    protected function obtenerCarrerasDelEmpleado(
+        ?int $idCarrera
+    ): Collection {
+        if ($idCarrera === null) {
+            return collect();
+        }
+
+        $carrerasDisponibles = $this->graficas
+            ->obtenerCarrerasDisponibles();
+
+        $carrera = $carrerasDisponibles->firstWhere(
+            'id_carrera',
+            $idCarrera
+        );
+
+        if ($carrera === null) {
+            return collect();
+        }
+
+        return collect([
+            $carrera,
+        ]);
+    }
+
+    /**
+     * Devuelve el texto correspondiente al rol.
+     */
+    protected function obtenerTextoRol(int $idRol): string
+    {
+        return match ($idRol) {
+            self::ROL_SECRETARIA_GENERAL =>
+                'secretaria_general',
+
+            self::ROL_SECRETARIA_ACADEMICA =>
+                'secretaria_academica',
+
+            self::ROL_COORDINADOR =>
+                'coordinador',
+
+            self::ROL_SECRETARIA_CARRERA =>
+                'secretario',
+
+            default =>
+                'sin_rol',
+        };
     }
 }

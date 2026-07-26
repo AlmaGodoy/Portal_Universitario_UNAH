@@ -1,44 +1,34 @@
 @extends('layouts.app-secretaria')
 
-@section('title', 'Auditoría Institucional')
-@section('titulo', 'Auditoría Institucional')
+@section('title', 'Auditoría de Carrera')
+@section('titulo', 'Auditoría de Carrera')
 
 @section('content')
 
 @vite([
-    'resources/css/auditoria_secretaria_academica.css',
-    'resources/js/auditoria_secretaria_academica.js'
+    'resources/css/auditoria_secretaria_carrera.css',
+    'resources/js/auditoria_secretaria_carrera.js'
 ])
 
 @php
     /*
     |--------------------------------------------------------------------------
-    | NORMALIZACIÓN DE RESULTADOS
+    | NORMALIZACIÓN DE VARIABLES
     |--------------------------------------------------------------------------
     */
 
-    $fuenteAuditorias =
-        $auditorias
-        ?? $registros
-        ?? collect();
+    $fuenteAuditorias = $auditorias ?? $registros ?? collect();
 
-    $esPaginadorCompleto =
-        $fuenteAuditorias instanceof
+    $esPaginador = $fuenteAuditorias instanceof
+        \Illuminate\Pagination\AbstractPaginator;
+
+    $esPaginadorCompleto = $fuenteAuditorias instanceof
         \Illuminate\Pagination\LengthAwarePaginator;
-
-    $esPaginadorSimple =
-        $fuenteAuditorias instanceof
-        \Illuminate\Pagination\Paginator;
-
-    $esPaginador =
-        $esPaginadorCompleto
-        || $esPaginadorSimple;
 
     $itemsAuditoria = $esPaginador
         ? collect($fuenteAuditorias->items())
         : (
-            $fuenteAuditorias instanceof
-            \Illuminate\Support\Collection
+            $fuenteAuditorias instanceof \Illuminate\Support\Collection
                 ? $fuenteAuditorias
                 : collect($fuenteAuditorias)
         );
@@ -47,104 +37,68 @@
         ? $fuenteAuditorias->total()
         : $itemsAuditoria->count();
 
-    $carrerasDisponibles =
-        $carreras
-        ?? collect();
+    $rolesDisponibles = $roles ?? collect();
+    $objetosDisponibles = $objetos ?? collect();
+    $carrerasDisponibles = $carreras ?? collect();
 
-    $rolesDisponibles =
-        $roles
-        ?? collect([
-            (object) [
-                'id_rol' => 1,
-                'nombre_rol' => 'Secretaría Académica',
-            ],
-            (object) [
-                'id_rol' => 2,
-                'nombre_rol' => 'Estudiante',
-            ],
-            (object) [
-                'id_rol' => 4,
-                'nombre_rol' => 'Coordinador de Carrera',
-            ],
-            (object) [
-                'id_rol' => 5,
-                'nombre_rol' => 'Secretaría de Carrera',
-            ],
-        ]);
+    $operacionesDisponibles = $operaciones ?? [
+        'INSERT' => 'Creación',
+        'UPDATE' => 'Actualización',
+        'DELETE' => 'Eliminación',
+        'LOGIN' => 'Inicio de sesión',
+        'LOGOUT' => 'Cierre de sesión',
+        'OTRA' => 'Otra operación',
+    ];
 
-    $objetosDisponibles =
-        $objetos
-        ?? collect();
+    $nivelesDisponibles = $niveles ?? [
+        'INFO' => 'Información',
+        'ADVERTENCIA' => 'Advertencia',
+        'ERROR' => 'Error',
+        'SEGURIDAD' => 'Seguridad',
+    ];
 
-    $operacionesDisponibles =
-        $operaciones
-        ?? [
-            'INSERT' => 'Creación',
-            'UPDATE' => 'Actualización',
-            'DELETE' => 'Eliminación',
-            'LOGIN' => 'Inicio de sesión',
-            'LOGOUT' => 'Cierre de sesión',
-            'OTRA' => 'Otra operación',
-        ];
-
-    $nivelesDisponibles =
-        $niveles
-        ?? [
-            'INFO' => 'Información',
-            'ADVERTENCIA' => 'Advertencia',
-            'ERROR' => 'Error',
-            'SEGURIDAD' => 'Seguridad',
-        ];
-
-    $fechaInicioActual = request(
-        'fecha_inicio',
-        $filtros['fecha_inicio']
-            ?? now()->subMonth()->toDateString()
-    );
-
-    $fechaFinActual = request(
-        'fecha_fin',
-        $filtros['fecha_fin']
-            ?? now()->toDateString()
-    );
+    $carreraAsignada = optional(
+        $carrerasDisponibles->first()
+    )->nombre_carrera ?? 'Carrera asignada';
 @endphp
 
-<div class="sa-aud-page">
+<div class="sc-aud-page">
 
     {{-- =====================================================
          ENCABEZADO
     ====================================================== --}}
-    <section class="sa-aud-hero">
+    <section class="sc-aud-hero">
 
-        <div class="sa-aud-hero__content">
+        <div class="sc-aud-hero__content">
 
-            <div class="sa-aud-hero__information">
+            <div class="sc-aud-hero__information">
 
-                <span class="sa-aud-hero__eyebrow">
-                    Secretaría Académica
+                <span class="sc-aud-hero__eyebrow">
+                    Secretaría de Carrera
                 </span>
 
-                <h1 class="sa-aud-hero__title">
-                    Auditoría Institucional
+                <h1 class="sc-aud-hero__title">
+                    Auditoría de Carrera
                 </h1>
 
-                <p class="sa-aud-hero__description">
-                    Consulta las operaciones y cambios relevantes
-                    registrados en todas las carreras y áreas del sistema.
+                <p class="sc-aud-hero__description">
+                    Consulta los cambios y operaciones relevantes
+                    realizados dentro de la carrera asignada.
                 </p>
 
             </div>
 
-            <div class="sa-aud-hero__actions">
+            <div class="sc-aud-hero__actions">
 
-                <span class="sa-aud-global-badge">
-                    <i class="fas fa-globe-americas"></i>
-                    Acceso global
+                <span class="sc-aud-career-badge">
+                    <i class="fas fa-graduation-cap"></i>
+
+                    {{ $carreraAsignada }}
                 </span>
 
                 <a
                     href="{{ url()->previous() }}"
-                    class="sa-aud-button sa-aud-button--back"
+                    class="sc-aud-button sc-aud-button--back"
                 >
                     <i class="fas fa-arrow-left"></i>
                     <span>Volver</span>
@@ -162,8 +116,8 @@
     @if(session('success'))
 
         <div
-            class="sa-aud-alert sa-aud-alert--success"
-            data-sa-aud-auto-close
+            class="sc-aud-alert sc-aud-alert--success"
+            data-sc-aud-auto-close
         >
             <i class="fas fa-check-circle"></i>
 
@@ -176,7 +130,7 @@
 
     @if(session('error'))
 
-        <div class="sa-aud-alert sa-aud-alert--danger">
+        <div class="sc-aud-alert sc-aud-alert--danger">
 
             <i class="fas fa-exclamation-triangle"></i>
 
@@ -190,7 +144,7 @@
 
     @if($errors->any())
 
-        <div class="sa-aud-alert sa-aud-alert--danger">
+        <div class="sc-aud-alert sc-aud-alert--danger">
 
             <i class="fas fa-circle-exclamation"></i>
 
@@ -200,7 +154,7 @@
                     No se pudo realizar la búsqueda.
                 </strong>
 
-                <ul class="sa-aud-alert__list">
+                <ul class="sc-aud-alert__list">
 
                     @foreach($errors->all() as $error)
 
@@ -221,21 +175,21 @@
     {{-- =====================================================
          RESUMEN
     ====================================================== --}}
-    <section class="sa-aud-summary">
+    <section class="sc-aud-summary">
 
-        <article class="sa-aud-summary-card">
+        <article class="sc-aud-summary-card">
 
-            <span class="sa-aud-summary-card__icon">
+            <span class="sc-aud-summary-card__icon">
                 <i class="fas fa-clipboard-check"></i>
             </span>
 
             <div>
 
-                <span class="sa-aud-summary-card__label">
+                <span class="sc-aud-summary-card__label">
                     Registros encontrados
                 </span>
 
-                <strong class="sa-aud-summary-card__value">
+                <strong class="sc-aud-summary-card__value">
                     {{ $totalRegistros }}
                 </strong>
 
@@ -243,77 +197,59 @@
 
         </article>
 
-        <article class="sa-aud-summary-card">
+        <article class="sc-aud-summary-card">
 
-            <span class="sa-aud-summary-card__icon">
-                <i class="fas fa-graduation-cap"></i>
+            <span class="sc-aud-summary-card__icon">
+                <i class="fas fa-building-columns"></i>
             </span>
 
             <div>
 
-                <span class="sa-aud-summary-card__label">
-                    Carreras disponibles
-                </span>
-
-                <strong class="sa-aud-summary-card__value">
-                    {{ $carrerasDisponibles->count() }}
-                </strong>
-
-            </div>
-
-        </article>
-
-        <article class="sa-aud-summary-card">
-
-            <span class="sa-aud-summary-card__icon">
-                <i class="fas fa-shield-halved"></i>
-            </span>
-
-            <div>
-
-                <span class="sa-aud-summary-card__label">
+                <span class="sc-aud-summary-card__label">
                     Alcance de consulta
                 </span>
 
                 <strong
                     class="
-                        sa-aud-summary-card__value
-                        sa-aud-summary-card__value--text
+                        sc-aud-summary-card__value
+                        sc-aud-summary-card__value--text
                     "
                 >
-                    Global
+                    Carrera asignada
                 </strong>
 
             </div>
 
         </article>
 
-        <article class="sa-aud-summary-card">
+        <article class="sc-aud-summary-card">
 
-            <span class="sa-aud-summary-card__icon">
+            <span class="sc-aud-summary-card__icon">
                 <i class="fas fa-calendar-days"></i>
             </span>
 
             <div>
 
-                <span class="sa-aud-summary-card__label">
+                <span class="sc-aud-summary-card__label">
                     Período consultado
                 </span>
 
                 <strong
                     class="
-                        sa-aud-summary-card__value
-                        sa-aud-summary-card__value--date
+                        sc-aud-summary-card__value
+                        sc-aud-summary-card__value--date
                     "
                 >
                     {{ \Carbon\Carbon::parse(
-                        $fechaInicioActual
+                        $filtros['fecha_inicio']
+                        ?? now()->subMonth()->toDateString()
                     )->format('d/m/Y') }}
 
                     —
 
                     {{ \Carbon\Carbon::parse(
-                        $fechaFinActual
+                        $filtros['fecha_fin']
+                        ?? now()->toDateString()
                     )->format('d/m/Y') }}
                 </strong>
 
@@ -326,25 +262,25 @@
     {{-- =====================================================
          FILTROS
     ====================================================== --}}
-    <section class="sa-aud-card">
+    <section class="sc-aud-card">
 
-        <header class="sa-aud-card__header">
+        <header class="sc-aud-card__header">
 
-            <div class="sa-aud-card__heading">
+            <div class="sc-aud-card__heading">
 
-                <span class="sa-aud-card__icon">
+                <span class="sc-aud-card__icon">
                     <i class="fas fa-filter"></i>
                 </span>
 
                 <div>
 
-                    <h2 class="sa-aud-card__title">
+                    <h2 class="sc-aud-card__title">
                         Filtros de búsqueda
                     </h2>
 
-                    <p class="sa-aud-card__subtitle">
-                        Selecciona uno o varios criterios para consultar
-                        la actividad registrada en toda la institución.
+                    <p class="sc-aud-card__subtitle">
+                        Utiliza uno o varios criterios para localizar
+                        cambios específicos dentro de la carrera.
                     </p>
 
                 </div>
@@ -353,23 +289,23 @@
 
         </header>
 
-        <div class="sa-aud-card__body">
+        <div class="sc-aud-card__body">
 
             <form
-                id="formAuditoriaSecretariaAcademica"
+                id="formAuditoriaSecretariaCarrera"
                 method="GET"
-                action="{{ route('auditoria.administrativa') }}"
+                action="{{ url()->current() }}"
                 autocomplete="off"
             >
 
-                <div class="sa-aud-filter-grid">
+                <div class="sc-aud-filter-grid">
 
                     {{-- FECHA INICIAL --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="fecha_inicio"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Fecha inicial
                         </label>
@@ -378,14 +314,17 @@
                             type="date"
                             id="fecha_inicio"
                             name="fecha_inicio"
-                            class="sa-aud-input"
-                            value="{{ $fechaInicioActual }}"
+                            class="sc-aud-input"
+                            value="{{ request(
+                                'fecha_inicio',
+                                $filtros['fecha_inicio'] ?? ''
+                            ) }}"
                             required
                         >
 
                         <span
-                            id="errorFechaInicioAuditoriaSA"
-                            class="sa-aud-error"
+                            id="errorFechaInicioAuditoriaSC"
+                            class="sc-aud-error"
                         >
                             Debe seleccionar la fecha inicial.
                         </span>
@@ -393,11 +332,11 @@
                     </div>
 
                     {{-- FECHA FINAL --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="fecha_fin"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Fecha final
                         </label>
@@ -406,14 +345,17 @@
                             type="date"
                             id="fecha_fin"
                             name="fecha_fin"
-                            class="sa-aud-input"
-                            value="{{ $fechaFinActual }}"
+                            class="sc-aud-input"
+                            value="{{ request(
+                                'fecha_fin',
+                                $filtros['fecha_fin'] ?? ''
+                            ) }}"
                             required
                         >
 
                         <span
-                            id="errorFechaFinAuditoriaSA"
-                            class="sa-aud-error"
+                            id="errorFechaFinAuditoriaSC"
+                            class="sc-aud-error"
                         >
                             La fecha final no puede ser anterior
                             a la fecha inicial.
@@ -421,54 +363,12 @@
 
                     </div>
 
-                    {{-- CARRERA --}}
-                    <div class="sa-aud-field">
-
-                        <label
-                            for="id_carrera"
-                            class="sa-aud-label"
-                        >
-                            Carrera
-                        </label>
-
-                        <select
-                            id="id_carrera"
-                            name="id_carrera"
-                            class="sa-aud-select"
-                            data-sa-aud-optional
-                        >
-
-                            <option value="">
-                                Todas las carreras
-                            </option>
-
-                            @foreach($carrerasDisponibles as $carrera)
-
-                                <option
-                                    value="{{ $carrera->id_carrera }}"
-                                    @selected(
-                                        (string) request('id_carrera')
-                                        ===
-                                        (string) $carrera->id_carrera
-                                    )
-                                >
-                                    {{ $carrera->nombre_carrera
-                                        ?? 'Carrera #'
-                                            . $carrera->id_carrera }}
-                                </option>
-
-                            @endforeach
-
-                        </select>
-
-                    </div>
-
-                    {{-- ID DE USUARIO --}}
-                    <div class="sa-aud-field">
+                    {{-- USUARIO --}}
+                    <div class="sc-aud-field">
 
                         <label
                             for="id_usuario"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             ID de usuario
                         </label>
@@ -477,17 +377,17 @@
                             type="number"
                             id="id_usuario"
                             name="id_usuario"
-                            class="sa-aud-input"
+                            class="sc-aud-input"
                             value="{{ request('id_usuario') }}"
                             min="1"
                             step="1"
-                            placeholder="Ej. 144"
-                            data-sa-aud-optional
+                            placeholder="Ej. 87"
+                            data-sc-aud-optional
                         >
 
                         <span
-                            id="errorUsuarioAuditoriaSA"
-                            class="sa-aud-error"
+                            id="errorUsuarioAuditoriaSC"
+                            class="sc-aud-error"
                         >
                             Ingrese un ID de usuario válido.
                         </span>
@@ -495,11 +395,11 @@
                     </div>
 
                     {{-- ROL --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="id_rol"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Rol
                         </label>
@@ -507,8 +407,8 @@
                         <select
                             id="id_rol"
                             name="id_rol"
-                            class="sa-aud-select"
-                            data-sa-aud-optional
+                            class="sc-aud-select"
+                            data-sc-aud-optional
                         >
 
                             <option value="">
@@ -536,11 +436,11 @@
                     </div>
 
                     {{-- OBJETO --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="id_objeto"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Objeto
                         </label>
@@ -548,8 +448,8 @@
                         <select
                             id="id_objeto"
                             name="id_objeto"
-                            class="sa-aud-select"
-                            data-sa-aud-optional
+                            class="sc-aud-select"
+                            data-sc-aud-optional
                         >
 
                             <option value="">
@@ -567,8 +467,7 @@
                                     )
                                 >
                                     {{ $objeto->nombre_objeto
-                                        ?? 'Objeto #'
-                                            . $objeto->id_objeto }}
+                                        ?? 'Objeto #' . $objeto->id_objeto }}
                                 </option>
 
                             @endforeach
@@ -578,11 +477,11 @@
                     </div>
 
                     {{-- TRÁMITE --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="id_tramite"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Número de trámite
                         </label>
@@ -591,17 +490,17 @@
                             type="number"
                             id="id_tramite"
                             name="id_tramite"
-                            class="sa-aud-input"
+                            class="sc-aud-input"
                             value="{{ request('id_tramite') }}"
                             min="1"
                             step="1"
                             placeholder="Ej. 146"
-                            data-sa-aud-optional
+                            data-sc-aud-optional
                         >
 
                         <span
-                            id="errorTramiteAuditoriaSA"
-                            class="sa-aud-error"
+                            id="errorTramiteAuditoriaSC"
+                            class="sc-aud-error"
                         >
                             Ingrese un número de trámite válido.
                         </span>
@@ -609,11 +508,11 @@
                     </div>
 
                     {{-- OPERACIÓN --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="operacion"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Operación
                         </label>
@@ -621,8 +520,8 @@
                         <select
                             id="operacion"
                             name="operacion"
-                            class="sa-aud-select"
-                            data-sa-aud-optional
+                            class="sc-aud-select"
+                            data-sc-aud-optional
                         >
 
                             <option value="">
@@ -651,11 +550,11 @@
                     </div>
 
                     {{-- TABLA AFECTADA --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="tabla_afectada"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Tabla afectada
                         </label>
@@ -664,21 +563,44 @@
                             type="text"
                             id="tabla_afectada"
                             name="tabla_afectada"
-                            class="sa-aud-input"
+                            class="sc-aud-input"
                             value="{{ request('tabla_afectada') }}"
                             maxlength="100"
                             placeholder="Ej. tbl_tramite"
-                            data-sa-aud-optional
+                            data-sc-aud-optional
+                        >
+
+                    </div>
+
+                    {{-- MÓDULO --}}
+                    <div class="sc-aud-field">
+
+                        <label
+                            for="modulo"
+                            class="sc-aud-label"
+                        >
+                            Módulo
+                        </label>
+
+                        <input
+                            type="text"
+                            id="modulo"
+                            name="modulo"
+                            class="sc-aud-input"
+                            value="{{ request('modulo') }}"
+                            maxlength="100"
+                            placeholder="Ej. Cambio de carrera"
+                            data-sc-aud-optional
                         >
 
                     </div>
 
                     {{-- ACCIÓN --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="accion"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Acción
                         </label>
@@ -687,21 +609,21 @@
                             type="text"
                             id="accion"
                             name="accion"
-                            class="sa-aud-input"
+                            class="sc-aud-input"
                             value="{{ request('accion') }}"
                             maxlength="100"
                             placeholder="Ej. ACTUALIZAR_ESTADO"
-                            data-sa-aud-optional
+                            data-sc-aud-optional
                         >
 
                     </div>
 
                     {{-- NIVEL --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="nivel"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Nivel
                         </label>
@@ -709,8 +631,8 @@
                         <select
                             id="nivel"
                             name="nivel"
-                            class="sa-aud-select"
-                            data-sa-aud-optional
+                            class="sc-aud-select"
+                            data-sc-aud-optional
                         >
 
                             <option value="">
@@ -739,11 +661,11 @@
                     </div>
 
                     {{-- REGISTROS --}}
-                    <div class="sa-aud-field">
+                    <div class="sc-aud-field">
 
                         <label
                             for="per_page"
-                            class="sa-aud-label"
+                            class="sc-aud-label"
                         >
                             Registros
                         </label>
@@ -751,7 +673,7 @@
                         <select
                             id="per_page"
                             name="per_page"
-                            class="sa-aud-select"
+                            class="sc-aud-select"
                         >
 
                             @foreach([10, 20, 50, 100] as $cantidad)
@@ -776,20 +698,26 @@
 
                 </div>
 
-                <div class="sa-aud-filter-actions">
+                <div class="sc-aud-filter-actions">
 
                     <button
                         type="submit"
-                        id="btnBuscarAuditoriaSA"
-                        class="sa-aud-button sa-aud-button--search"
+                        id="btnBuscarAuditoriaSC"
+                        class="
+                            sc-aud-button
+                            sc-aud-button--search
+                        "
                     >
                         <i class="fas fa-search"></i>
                         <span>Buscar</span>
                     </button>
 
                     <a
-                        href="{{ route('auditoria.administrativa') }}"
-                        class="sa-aud-button sa-aud-button--clear"
+                        href="{{ url()->current() }}"
+                        class="
+                            sc-aud-button
+                            sc-aud-button--clear
+                        "
                     >
                         <i class="fas fa-eraser"></i>
                         <span>Limpiar filtros</span>
@@ -806,51 +734,51 @@
     {{-- =====================================================
          RESULTADOS
     ====================================================== --}}
-    <section class="sa-aud-card">
+    <section class="sc-aud-card">
 
         <header
             class="
-                sa-aud-card__header
-                sa-aud-card__header--between
+                sc-aud-card__header
+                sc-aud-card__header--between
             "
         >
 
-            <div class="sa-aud-card__heading">
+            <div class="sc-aud-card__heading">
 
-                <span class="sa-aud-card__icon">
+                <span class="sc-aud-card__icon">
                     <i class="fas fa-clipboard-list"></i>
                 </span>
 
                 <div>
 
-                    <h2 class="sa-aud-card__title">
+                    <h2 class="sc-aud-card__title">
                         Registros de auditoría
                     </h2>
 
-                    <p class="sa-aud-card__subtitle">
+                    <p class="sc-aud-card__subtitle">
                         Se encontraron
 
                         <strong>
                             {{ $totalRegistros }}
                         </strong>
 
-                        registros en el sistema.
+                        registros relacionados con la carrera.
                     </p>
 
                 </div>
 
             </div>
 
-            <span class="sa-aud-context">
-                <i class="fas fa-building-shield"></i>
-                Consulta institucional
+            <span class="sc-aud-context">
+                <i class="fas fa-lock"></i>
+                Consulta restringida por carrera
             </span>
 
         </header>
 
-        <div class="sa-aud-table-wrapper">
+        <div class="sc-aud-table-wrapper">
 
-            <table class="sa-aud-table">
+            <table class="sc-aud-table">
 
                 <thead>
 
@@ -858,14 +786,13 @@
                         <th>ID</th>
                         <th>Responsable</th>
                         <th>Rol</th>
-                        <th>Carrera del actor</th>
-                        <th>Carrera relacionada</th>
+                        <th>Carrera</th>
                         <th>Objeto</th>
                         <th>Trámite</th>
                         <th>Estudiante</th>
-                        <th>Tabla afectada</th>
-                        <th>ID registro</th>
                         <th>Operación</th>
+                        <th>Tabla</th>
+                        <th>Módulo</th>
                         <th>Acción</th>
                         <th>Descripción</th>
                         <th>Valor anterior</th>
@@ -906,28 +833,14 @@
                                 $auditoria->nombre_rol
                                 ?? (
                                     isset($auditoria->id_rol)
-                                        ? 'Rol #'
-                                            . $auditoria->id_rol
+                                        ? 'Rol #' . $auditoria->id_rol
                                         : 'No disponible'
                                 );
 
-                            $carreraActor =
-                                $auditoria->carrera_actor
-                                ?? (
-                                    isset($auditoria->id_carrera_actor)
-                                        ? 'Carrera #'
-                                            . $auditoria->id_carrera_actor
-                                        : 'No aplica'
-                                );
-
-                            $carreraContexto =
+                            $carreraRegistro =
                                 $auditoria->carrera_contexto
-                                ?? (
-                                    isset($auditoria->id_carrera)
-                                        ? 'Carrera #'
-                                            . $auditoria->id_carrera
-                                        : 'No aplica'
-                                );
+                                ?? $auditoria->carrera_actor
+                                ?? $carreraAsignada;
 
                             $nombreObjeto =
                                 $auditoria->nombre_objeto
@@ -959,11 +872,7 @@
                                 $operacionesDisponibles[
                                     $operacionCodigo
                                 ]
-                                ?? (
-                                    $operacionCodigo === 'LEGADO'
-                                        ? 'Registro anterior'
-                                        : $operacionCodigo
-                                );
+                                ?? $operacionCodigo;
 
                             $operacionClase = match(
                                 $operacionCodigo
@@ -973,7 +882,6 @@
                                 'DELETE' => 'delete',
                                 'LOGIN' => 'login',
                                 'LOGOUT' => 'logout',
-                                'LEGADO' => 'legacy',
                                 default => 'other',
                             };
 
@@ -995,11 +903,11 @@
 
                             $tablaAfectada =
                                 $auditoria->tabla_afectada
-                                ?? 'No identificada';
+                                ?? 'No disponible';
 
-                            $idRegistro =
-                                $auditoria->id_registro
-                                ?? null;
+                            $modulo =
+                                $auditoria->modulo
+                                ?? 'General';
 
                             $accion =
                                 $auditoria->accion
@@ -1007,18 +915,24 @@
 
                             $descripcion =
                                 $auditoria->descripcion
+                                ?? $auditoria->detalle
                                 ?? 'Sin descripción disponible.';
 
                             $valorAnterior =
                                 $auditoria->valor_anterior
+                                ?? $auditoria->datos_anteriores
+                                ?? $auditoria->old_values
                                 ?? null;
 
                             $valorNuevo =
                                 $auditoria->valor_nuevo
+                                ?? $auditoria->datos_nuevos
+                                ?? $auditoria->new_values
                                 ?? null;
 
                             $direccionIp =
                                 $auditoria->ip_address
+                                ?? $auditoria->ip
                                 ?? 'No disponible';
 
                             $userAgent =
@@ -1028,29 +942,38 @@
 
                         <tr>
 
+                            {{-- ID --}}
                             <td>
-                                <span class="sa-aud-record-id">
-                                    #{{ $auditoria->id_auditoria ?? 'N/D' }}
+
+                                <span class="sc-aud-record-id">
+                                    #{{ $auditoria->id_auditoria
+                                        ?? 'N/D' }}
                                 </span>
+
                             </td>
 
+                            {{-- RESPONSABLE --}}
                             <td>
 
-                                <div class="sa-aud-person">
+                                <div class="sc-aud-person">
 
-                                    <span class="sa-aud-person__avatar">
+                                    <span class="sc-aud-person__avatar">
                                         <i class="fas fa-user"></i>
                                     </span>
 
-                                    <div class="sa-aud-person__information">
+                                    <div class="sc-aud-person__information">
 
-                                        <span class="sa-aud-person__name">
+                                        <span class="sc-aud-person__name">
                                             {{ $responsable }}
                                         </span>
 
                                         @if($correoResponsable)
 
-                                            <span class="sa-aud-person__email">
+                                            <span
+                                                class="
+                                                    sc-aud-person__email
+                                                "
+                                            >
                                                 {{ $correoResponsable }}
                                             </span>
 
@@ -1062,46 +985,60 @@
 
                             </td>
 
+                            {{-- ROL --}}
                             <td>
-                                <span class="sa-aud-tag sa-aud-tag--role">
-                                    {{ $nombreRol }}
-                                </span>
-                            </td>
 
-                            <td>
-                                <span class="sa-aud-tag sa-aud-tag--career">
-                                    {{ $carreraActor }}
-                                </span>
-                            </td>
-
-                            <td>
                                 <span
                                     class="
-                                        sa-aud-tag
-                                        sa-aud-tag--career-context
+                                        sc-aud-tag
+                                        sc-aud-tag--role
                                     "
                                 >
-                                    {{ $carreraContexto }}
+                                    {{ $nombreRol }}
                                 </span>
+
                             </td>
 
+                            {{-- CARRERA --}}
                             <td>
-                                <span class="sa-aud-tag sa-aud-tag--object">
+
+                                <span
+                                    class="
+                                        sc-aud-tag
+                                        sc-aud-tag--career
+                                    "
+                                >
+                                    {{ $carreraRegistro }}
+                                </span>
+
+                            </td>
+
+                            {{-- OBJETO --}}
+                            <td>
+
+                                <span
+                                    class="
+                                        sc-aud-tag
+                                        sc-aud-tag--object
+                                    "
+                                >
                                     {{ $nombreObjeto }}
                                 </span>
+
                             </td>
 
+                            {{-- TRÁMITE --}}
                             <td>
 
                                 @if($auditoria->id_tramite ?? null)
 
-                                    <span class="sa-aud-record-id">
+                                    <span class="sc-aud-record-id">
                                         #{{ $auditoria->id_tramite }}
                                     </span>
 
                                 @else
 
-                                    <span class="sa-aud-muted">
+                                    <span class="sc-aud-muted">
                                         No aplica
                                     </span>
 
@@ -1109,19 +1046,28 @@
 
                             </td>
 
+                            {{-- ESTUDIANTE --}}
                             <td>
 
                                 @if($estudiante !== 'No aplica')
 
-                                    <div class="sa-aud-student">
+                                    <div class="sc-aud-student">
 
-                                        <span class="sa-aud-student__name">
+                                        <span
+                                            class="
+                                                sc-aud-student__name
+                                            "
+                                        >
                                             {{ $estudiante }}
                                         </span>
 
                                         @if($correoEstudiante)
 
-                                            <span class="sa-aud-student__email">
+                                            <span
+                                                class="
+                                                    sc-aud-student__email
+                                                "
+                                            >
                                                 {{ $correoEstudiante }}
                                             </span>
 
@@ -1131,7 +1077,7 @@
 
                                 @else
 
-                                    <span class="sa-aud-muted">
+                                    <span class="sc-aud-muted">
                                         No aplica
                                     </span>
 
@@ -1139,36 +1085,13 @@
 
                             </td>
 
-                            <td>
-                                <code class="sa-aud-code">
-                                    {{ $tablaAfectada }}
-                                </code>
-                            </td>
-
-                            <td>
-
-                                @if($idRegistro !== null)
-
-                                    <span class="sa-aud-record-id">
-                                        #{{ $idRegistro }}
-                                    </span>
-
-                                @else
-
-                                    <span class="sa-aud-muted">
-                                        No disponible
-                                    </span>
-
-                                @endif
-
-                            </td>
-
+                            {{-- OPERACIÓN --}}
                             <td>
 
                                 <span
                                     class="
-                                        sa-aud-operation
-                                        sa-aud-operation--{{ $operacionClase }}
+                                        sc-aud-operation
+                                        sc-aud-operation--{{ $operacionClase }}
                                     "
                                 >
                                     {{ $operacionTexto }}
@@ -1176,12 +1099,36 @@
 
                             </td>
 
+                            {{-- TABLA --}}
+                            <td>
+
+                                <code class="sc-aud-code">
+                                    {{ $tablaAfectada }}
+                                </code>
+
+                            </td>
+
+                            {{-- MÓDULO --}}
                             <td>
 
                                 <span
                                     class="
-                                        sa-aud-tag
-                                        sa-aud-tag--action
+                                        sc-aud-tag
+                                        sc-aud-tag--module
+                                    "
+                                >
+                                    {{ $modulo }}
+                                </span>
+
+                            </td>
+
+                            {{-- ACCIÓN --}}
+                            <td>
+
+                                <span
+                                    class="
+                                        sc-aud-tag
+                                        sc-aud-tag--action
                                     "
                                 >
                                     {{ $accion }}
@@ -1189,27 +1136,27 @@
 
                             </td>
 
-                            <td class="sa-aud-description">
+                            {{-- DESCRIPCIÓN --}}
+                            <td class="sc-aud-description">
                                 {{ $descripcion }}
                             </td>
 
-                            <td class="sa-aud-value-cell">
+                            {{-- VALOR ANTERIOR --}}
+                            <td class="sc-aud-value-cell">
 
                                 @if(
                                     $valorAnterior !== null
-                                    && trim(
-                                        (string) $valorAnterior
-                                    ) !== ''
+                                    && trim((string) $valorAnterior) !== ''
                                 )
 
-                                    <pre class="sa-aud-value-preview">{{ \Illuminate\Support\Str::limit(
+                                    <pre class="sc-aud-value-preview">{{ \Illuminate\Support\Str::limit(
                                         (string) $valorAnterior,
-                                        300
+                                        250
                                     ) }}</pre>
 
                                 @else
 
-                                    <span class="sa-aud-muted">
+                                    <span class="sc-aud-muted">
                                         No disponible
                                     </span>
 
@@ -1217,23 +1164,22 @@
 
                             </td>
 
-                            <td class="sa-aud-value-cell">
+                            {{-- VALOR NUEVO --}}
+                            <td class="sc-aud-value-cell">
 
                                 @if(
                                     $valorNuevo !== null
-                                    && trim(
-                                        (string) $valorNuevo
-                                    ) !== ''
+                                    && trim((string) $valorNuevo) !== ''
                                 )
 
-                                    <pre class="sa-aud-value-preview">{{ \Illuminate\Support\Str::limit(
+                                    <pre class="sc-aud-value-preview">{{ \Illuminate\Support\Str::limit(
                                         (string) $valorNuevo,
-                                        300
+                                        250
                                     ) }}</pre>
 
                                 @else
 
-                                    <span class="sa-aud-muted">
+                                    <span class="sc-aud-muted">
                                         No disponible
                                     </span>
 
@@ -1241,12 +1187,13 @@
 
                             </td>
 
+                            {{-- NIVEL --}}
                             <td>
 
                                 <span
                                     class="
-                                        sa-aud-level
-                                        sa-aud-level--{{ $nivelClase }}
+                                        sc-aud-level
+                                        sc-aud-level--{{ $nivelClase }}
                                     "
                                 >
                                     {{ $nivel }}
@@ -1254,8 +1201,9 @@
 
                             </td>
 
+                            {{-- IP --}}
                             <td
-                                class="sa-aud-nowrap"
+                                class="sc-aud-nowrap"
                                 title="{{ $userAgent }}"
                             >
                                 <i class="fas fa-network-wired"></i>
@@ -1263,7 +1211,8 @@
                                 {{ $direccionIp }}
                             </td>
 
-                            <td class="sa-aud-nowrap">
+                            {{-- FECHA --}}
+                            <td class="sc-aud-nowrap">
 
                                 @if($fechaRegistro)
 
@@ -1275,7 +1224,7 @@
 
                                 @else
 
-                                    <span class="sa-aud-muted">
+                                    <span class="sc-aud-muted">
                                         No disponible
                                     </span>
 
@@ -1289,19 +1238,19 @@
 
                         <tr>
 
-                            <td colspan="18">
+                            <td colspan="17">
 
-                                <div class="sa-aud-empty">
+                                <div class="sc-aud-empty">
 
-                                    <span class="sa-aud-empty__icon">
+                                    <span class="sc-aud-empty__icon">
                                         <i class="fas fa-folder-open"></i>
                                     </span>
 
-                                    <h3 class="sa-aud-empty__title">
+                                    <h3 class="sc-aud-empty__title">
                                         No se encontraron registros
                                     </h3>
 
-                                    <p class="sa-aud-empty__description">
+                                    <p class="sc-aud-empty__description">
                                         Modifica el rango de fechas o los
                                         filtros seleccionados y realiza
                                         nuevamente la búsqueda.
@@ -1327,7 +1276,7 @@
             && $fuenteAuditorias->hasPages()
         )
 
-            <footer class="sa-aud-card__footer">
+            <footer class="sc-aud-card__footer">
 
                 {{ $fuenteAuditorias
                     ->appends(request()->query())

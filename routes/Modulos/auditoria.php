@@ -3,79 +3,79 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuditoriaController;
 
-Route::middleware(['auth', 'session.timeout'])->group(function () {
-    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria');
-});
 /*
 |--------------------------------------------------------------------------
-| MÓDULO: AUDITORÍA
+| MÓDULO DE AUDITORÍA
 |--------------------------------------------------------------------------
-| Rutas web + API
 */
 
-Route::middleware(['auth', 'session.timeout'])->group(function () {
+Route::middleware([
+    'auth',
+    'session.timeout',
+])->prefix('auditoria')->name('auditoria.')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | VISTA GENERAL / REDIRECCIÓN SEGÚN ROL
+    | REDIRECCIÓN SEGÚN EL ROL
     |--------------------------------------------------------------------------
     */
-    Route::get('/auditoria', [AuditoriaController::class, 'redirectAuditoria'])
-        ->name('auditoria');
+
+    Route::get('/', [AuditoriaController::class, 'index'])
+        ->name('index');
 
     /*
     |--------------------------------------------------------------------------
-    | VISTAS POR ROL
+    | SECRETARÍA ACADÉMICA / GENERAL — ROL 1
     |--------------------------------------------------------------------------
+    | Acceso global a todas las carreras.
     */
 
-    // Secretaría Administrativa
-    Route::get('/auditoria/administrativa', [AuditoriaController::class, 'administrativa'])
-        ->name('auditoria.administrativa')
-        ->middleware('roleid:1');
-
-    // Coordinador
-    Route::get('/auditoria/coordinador', [AuditoriaController::class, 'coordinador'])
-        ->name('auditoria.coordinador')
-        ->middleware('roleid:4');
-
-    // Secretaría General
-    Route::get('/auditoria/general', [AuditoriaController::class, 'general'])
-        ->name('auditoria.general')
-        ->middleware('roleid:5');
+    Route::get(
+        '/administrativa',
+        [AuditoriaController::class, 'administrativa']
+    )
+        ->middleware('roleid:1')
+        ->name('administrativa');
 
     /*
     |--------------------------------------------------------------------------
-    | API - AUDITORÍA
+    | COORDINADOR DE CARRERA — ROL 4
     |--------------------------------------------------------------------------
-    | Ajusta los nombres de métodos si en tu controlador los tienes distintos.
+    | Acceso limitado a su carrera.
     */
-    Route::prefix('api/auditoria')->name('api.auditoria.')->group(function () {
 
-        // Listado general
-        Route::get('/listar', [AuditoriaController::class, 'listar'])
-            ->name('listar');
+    Route::get(
+        '/coordinador',
+        [AuditoriaController::class, 'coordinador']
+    )
+        ->middleware('roleid:4')
+        ->name('coordinador');
 
-        // Detalle por ID
-        Route::get('/detalle/{id}', [AuditoriaController::class, 'detalle'])
-            ->whereNumber('id')
-            ->name('detalle');
+    /*
+    |--------------------------------------------------------------------------
+    | SECRETARÍA DE CARRERA — ROL 5
+    |--------------------------------------------------------------------------
+    | Acceso limitado a su carrera.
+    */
 
-        // Filtros
-        Route::get('/filtrar', [AuditoriaController::class, 'filtrar'])
-            ->name('filtrar');
+    Route::get(
+        '/secretaria-carrera',
+        [AuditoriaController::class, 'secretariaCarrera']
+    )
+        ->middleware('roleid:5')
+        ->name('secretaria_carrera');
 
-        // API por rol
-        Route::get('/administrativa', [AuditoriaController::class, 'listarAdministrativa'])
-            ->name('administrativa')
-            ->middleware('roleid:1');
+    /*
+    |--------------------------------------------------------------------------
+    | COMPATIBILIDAD CON LA RUTA ANTERIOR
+    |--------------------------------------------------------------------------
+    | Permite que /auditoria/general continúe funcionando.
+    */
 
-        Route::get('/coordinador', [AuditoriaController::class, 'listarCoordinador'])
-            ->name('coordinador')
-            ->middleware('roleid:4');
-
-        Route::get('/general', [AuditoriaController::class, 'listarGeneral'])
-            ->name('general')
-            ->middleware('roleid:5');
-    });
+    Route::get(
+        '/general',
+        [AuditoriaController::class, 'general']
+    )
+        ->middleware('roleid:5')
+        ->name('general');
 });

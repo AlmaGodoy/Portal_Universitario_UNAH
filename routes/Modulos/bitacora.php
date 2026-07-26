@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BitacoraController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -9,20 +9,32 @@ use App\Http\Controllers\BitacoraController;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'session.timeout'])->group(function () {
+Route::middleware(['auth', 'session.timeout'])
+    ->prefix('bitacora')
+    ->name('bitacora.')
+    ->group(function () {
 
-    Route::get('/bitacora', [BitacoraController::class, 'index'])
-        ->name('bitacora.index');
+        Route::get('/', [BitacoraController::class, 'index'])
+            ->name('index');
 
-    Route::get('/bitacora/coordinador', [BitacoraController::class, 'coordinador'])
-        ->name('bitacora.coordinador')
-        ->middleware('roleid:4');
+        Route::get(
+            '/coordinador',
+            [BitacoraController::class, 'coordinador']
+        )
+            ->name('coordinador')
+            ->middleware('roleid:4');
 
-    Route::get('/bitacora/secretaria-academica', [BitacoraController::class, 'secretariaAcademica'])
-        ->name('bitacora.secretaria_academica')
-        ->middleware('roleid:1');
+        Route::get(
+            '/secretaria-carrera',
+            [BitacoraController::class, 'secretariaCarrera']
+        )
+            ->name('secretaria_carrera')
+            ->middleware('roleid:5');
 
-    Route::get('/bitacora/secretaria-general', [BitacoraController::class, 'secretariaGeneral'])
-        ->name('bitacora.secretaria_general')
-        ->middleware('roleid:5');
-});
+        Route::get(
+            '/secretaria-general',
+            [BitacoraController::class, 'secretariaGeneral']
+        )
+            ->name('secretaria_general')
+            ->middleware('roleid:1');
+    });
