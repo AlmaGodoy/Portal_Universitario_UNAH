@@ -1,4 +1,11 @@
-@extends('layouts.app-estudiantes')
+@extends(
+    match ((int) (auth()->user()->id_rol ?? 0)) {
+        1 => 'layouts.app-secretaria-academica',
+        4 => 'layouts.app-coordinador',
+        5 => 'layouts.app-secretaria',
+        default => 'layouts.app-estudiantes',
+    }
+)
 
 @section('titulo', 'Nuevo mensaje')
 
@@ -7,13 +14,23 @@
 @endpush
 
 @section('content')
+@php
+    $idRolActual = (int) (auth()->user()->id_rol ?? 0);
+    $esEstudiante = $idRolActual === 2;
+@endphp
+
 <div class="mensajes-page">
 
     <div class="mensajes-header">
         <div>
             <span class="mensajes-header-label">Comunicación interna</span>
             <h1>Nuevo mensaje</h1>
-            <p>Redacta un mensaje para un empleado de la institución.</p>
+
+            @if ($esEstudiante)
+                <p>Redacta un mensaje para un empleado de la institución.</p>
+            @else
+                <p>Redacta un mensaje para estudiantes o empleados del sistema.</p>
+            @endif
         </div>
 
         <a href="{{ route('mensajes.index') }}" class="mensajes-btn mensajes-btn-secondary">
@@ -93,10 +110,11 @@
                                 ?? '';
 
                             $rolTexto = match ((int) ($destinatario->id_rol ?? 0)) {
-                                1 => 'Secretaría General',
+                                1 => 'Secretaría Académica / General',
+                                2 => 'Estudiante',
                                 4 => 'Coordinador',
                                 5 => 'Secretaría',
-                                default => 'Empleado',
+                                default => 'Usuario',
                             };
                         @endphp
 
@@ -114,7 +132,11 @@
                 @enderror
 
                 <span class="mensajes-field-help">
-                    Como estudiante, puedes enviar mensajes a empleados del sistema.
+                    @if ($esEstudiante)
+                        Como estudiante, puedes enviar mensajes a empleados del sistema.
+                    @else
+                        Como empleado, puedes enviar mensajes a estudiantes y otros empleados.
+                    @endif
                 </span>
             </div>
 
@@ -139,7 +161,9 @@
                         <span></span>
                     @enderror
 
-                    <span class="mensajes-counter" data-counter-for="asunto">0/150</span>
+                    <span class="mensajes-counter" data-counter-for="asunto">
+                        0/150
+                    </span>
                 </div>
             </div>
 
@@ -165,7 +189,9 @@
                         </span>
                     @enderror
 
-                    <span class="mensajes-counter" data-counter-for="contenido">0/5000</span>
+                    <span class="mensajes-counter" data-counter-for="contenido">
+                        0/5000
+                    </span>
                 </div>
             </div>
 
@@ -174,7 +200,9 @@
                     Cancelar
                 </a>
 
-                <button type="submit" class="mensajes-btn mensajes-btn-primary" data-submit-message>
+                <button type="submit"
+                        class="mensajes-btn mensajes-btn-primary"
+                        data-submit-message>
                     <i class="fas fa-paper-plane"></i>
                     <span>Enviar mensaje</span>
                 </button>

@@ -96,6 +96,10 @@
         ? route('soporte.vista')
         : url('/soporte');
 
+    $mensajesUrl = Route::has('mensajes.index')
+        ? route('mensajes.index')
+        : 'javascript:void(0)';
+
     $configuracionUrl = Route::has('configuracion.index')
         ? route('configuracion.index')
         : 'javascript:void(0)';
@@ -126,6 +130,7 @@
     $bitacoraActive = request()->routeIs('bitacora.coordinador')
         || request()->is('bitacora/coordinador');
     $soporteActive = request()->routeIs('soporte.vista') || request()->is('soporte') || request()->is('api/soporte*');
+    $mensajesActive = request()->routeIs('mensajes.*') || request()->is('mensajes*');
     $configuracionActive = request()->routeIs('configuracion.index') || request()->is('configuracion*');
 
     $perfilCoordinadorActive = request()->routeIs('coordinador.mi-perfil')
@@ -1764,8 +1769,22 @@
            Quita datos hipotéticos y usa tbl_notificacion vía API.
         ========================================================= */
         #notifBadge.notif-hidden,
+        #mensajesBadge.notif-hidden,
         .topbar-badge.notif-hidden {
             display: none !important;
+        }
+
+        #mensajesBadge:not(.notif-hidden) {
+            display: flex !important;
+        }
+
+        #sidebarMensajesBadge {
+            background: #ffd21f !important;
+            color: #123674 !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            border-radius: 999px !important;
+            padding: 4px 7px !important;
         }
 
         .topbar-dropdown-empty {
@@ -1958,6 +1977,19 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="{{ $mensajesUrl }}" class="nav-link {{ $mensajesActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-envelope"></i>
+                                <p>
+                                    Mensajes
+                                    <span id="sidebarMensajesBadge"
+                                          class="badge badge-warning right"
+                                          style="display: none;">
+                                    </span>
+                                </p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a href="{{ $configuracionUrl }}" class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
@@ -2029,28 +2061,31 @@
             <div class="topbar-action-group">
                 <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
                     <i class="fas fa-envelope"></i>
-                    <span class="topbar-badge gold">1</span>
+                    <span class="topbar-badge gold notif-hidden" id="mensajesBadge"></span>
                 </button>
 
                 <div class="topbar-dropdown" id="dropMsg">
                     <div class="topbar-dropdown-header">
                         <span>Mensajes</span>
-                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                        <a href="{{ $mensajesUrl }}" class="topbar-dropdown-mark">Ver todos</a>
                     </div>
 
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-avatar">SC</div>
+                    <ul class="topbar-dropdown-list" id="mensajesList">
+                        <li class="topbar-dropdown-item">
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
                             <div class="topbar-dropdown-text">
-                                <strong>Secretaría de Carrera</strong>
-                                <span>Se requiere seguimiento sobre un trámite remitido.</span>
-                                <small>Hace 30 min</small>
+                                <strong>Cargando...</strong>
+                                <span>Obteniendo tus mensajes recientes.</span>
+                                <small>Un momento</small>
                             </div>
                         </li>
                     </ul>
 
                     <div class="topbar-dropdown-footer">
-                        <a href="#">Ir a mensajes</a>
+                        <a href="{{ $mensajesUrl }}">Ir a mensajes</a>
+                        <a href="{{ route('mensajes.create') }}">Nuevo mensaje</a>
                     </div>
                 </div>
             </div>
@@ -2667,6 +2702,134 @@ document.addEventListener('DOMContentLoaded', function () {
     resetSessionTimers();
 });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mensajesBadge = document.getElementById('mensajesBadge');
+    const sidebarMensajesBadge = document.getElementById('sidebarMensajesBadge');
+    const mensajesList = document.getElementById('mensajesList');
+
+    const URL_MENSAJES_RECIENTES = "{{ route('api.mensajes.recientes') }}";
+
+    function escaparHtml(valor) {
+        return String(valor ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function actualizarBadgeMensajes(cantidad) {
+        const total = Number(cantidad || 0);
+
+        if (mensajesBadge) {
+            if (total > 0) {
+                mensajesBadge.textContent = total > 99 ? '99+' : String(total);
+                mensajesBadge.classList.remove('notif-hidden');
+            } else {
+                mensajesBadge.textContent = '';
+                mensajesBadge.classList.add('notif-hidden');
+            }
+        }
+
+        if (sidebarMensajesBadge) {
+            if (total > 0) {
+                sidebarMensajesBadge.textContent = total > 99 ? '99+' : String(total);
+                sidebarMensajesBadge.style.display = 'inline-block';
+            } else {
+                sidebarMensajesBadge.textContent = '';
+                sidebarMensajesBadge.style.display = 'none';
+            }
+        }
+    }
+
+    function renderizarMensajes(mensajes) {
+        if (!mensajesList) return;
+
+        if (!Array.isArray(mensajes) || mensajes.length === 0) {
+            mensajesList.innerHTML = `
+                <li class="topbar-dropdown-empty">
+                    <i class="fas fa-envelope-open mb-2"></i><br>
+                    No tienes mensajes recientes.
+                </li>
+            `;
+            return;
+        }
+
+        mensajesList.innerHTML = mensajes.map(function (mensaje) {
+            const remitente = escaparHtml(mensaje.remitente || 'Usuario');
+            const iniciales = escaparHtml(mensaje.iniciales || 'U');
+            const asunto = escaparHtml(mensaje.asunto || 'Sin asunto');
+            const contenido = escaparHtml(mensaje.contenido || '');
+            const tiempo = escaparHtml(mensaje.tiempo || '');
+            const url = escaparHtml(mensaje.url || '{{ $mensajesUrl }}');
+            const unreadClass = mensaje.leido ? '' : 'unread';
+
+            return `
+                <li>
+                    <a href="${url}" class="topbar-dropdown-item-link">
+                        <div class="topbar-dropdown-item ${unreadClass}">
+                            <div class="topbar-dropdown-avatar">${iniciales}</div>
+                            <div class="topbar-dropdown-text">
+                                <strong>${remitente}</strong>
+                                <span>${asunto}</span>
+                                <small>${contenido}</small>
+                                <small>${tiempo}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async function cargarMensajesRecientes() {
+        if (!mensajesBadge && !sidebarMensajesBadge && !mensajesList) return;
+
+        try {
+            const response = await fetch(URL_MENSAJES_RECIENTES, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudieron cargar los mensajes.');
+            }
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                throw new Error('Respuesta inválida de mensajes.');
+            }
+
+            actualizarBadgeMensajes(data.unread_count || 0);
+            renderizarMensajes(data.mensajes || []);
+        } catch (error) {
+            console.error('Error cargando mensajes:', error);
+
+            if (mensajesList) {
+                mensajesList.innerHTML = `
+                    <li class="topbar-dropdown-empty">
+                        <i class="fas fa-triangle-exclamation mb-2"></i><br>
+                        No se pudieron cargar los mensajes.
+                    </li>
+                `;
+            }
+
+            actualizarBadgeMensajes(0);
+        }
+    }
+
+    cargarMensajesRecientes();
+    setInterval(cargarMensajesRecientes, 15000);
+});
+</script>
+
 @stack('scripts')
 </body>
 </html>

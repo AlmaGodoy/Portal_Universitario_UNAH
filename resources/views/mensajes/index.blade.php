@@ -1,4 +1,11 @@
-@extends('layouts.app-estudiantes')
+@extends(
+    match ((int) (auth()->user()->id_rol ?? 0)) {
+        1 => 'layouts.app-secretaria-academica',
+        4 => 'layouts.app-coordinador',
+        5 => 'layouts.app-secretaria',
+        default => 'layouts.app-estudiantes',
+    }
+)
 
 @section('titulo', 'Mensajes')
 

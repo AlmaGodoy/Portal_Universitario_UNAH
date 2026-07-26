@@ -1,4 +1,11 @@
-@extends('layouts.app-estudiantes')
+@extends(
+    match ((int) (auth()->user()->id_rol ?? 0)) {
+        1 => 'layouts.app-secretaria-academica',
+        4 => 'layouts.app-coordinador',
+        5 => 'layouts.app-secretaria',
+        default => 'layouts.app-estudiantes',
+    }
+)
 
 @section('titulo', 'Conversación')
 
@@ -13,6 +20,7 @@
         <div class="mensajes-alert mensajes-alert-success">
             <i class="fas fa-circle-check"></i>
             <span>{{ session('success') }}</span>
+
             <button type="button" class="mensajes-alert-close" data-alert-close>
                 <i class="fas fa-times"></i>
             </button>
@@ -60,7 +68,13 @@
                         ?? optional($item->remitente)->email
                         ?? 'Usuario';
 
-                    $partesNombre = preg_split('/\s+/', trim($nombreRemitente), -1, PREG_SPLIT_NO_EMPTY);
+                    $partesNombre = preg_split(
+                        '/\s+/',
+                        trim($nombreRemitente),
+                        -1,
+                        PREG_SPLIT_NO_EMPTY
+                    );
+
                     $iniciales = '';
 
                     foreach (array_slice($partesNombre ?: [], 0, 2) as $parte) {
@@ -111,11 +125,23 @@
         <div class="mensajes-reply">
             <div class="mensajes-reply-title">
                 <i class="fas fa-reply"></i>
+
                 <div>
                     <strong>Responder</strong>
                     <span>Escribe tu respuesta para continuar la conversación.</span>
                 </div>
             </div>
+
+            @if ($errors->any())
+                <div class="mensajes-alert mensajes-alert-danger">
+                    <i class="fas fa-circle-exclamation"></i>
+
+                    <div>
+                        <strong>No se pudo enviar la respuesta.</strong>
+                        <span>Revisa el campo de respuesta.</span>
+                    </div>
+                </div>
+            @endif
 
             <form method="POST"
                   action="{{ route('mensajes.responder', $mensajePrincipal->id_mensaje) }}"
@@ -146,7 +172,9 @@
                 </div>
 
                 <div class="mensajes-reply-actions">
-                    <button type="submit" class="mensajes-btn mensajes-btn-primary" data-submit-message>
+                    <button type="submit"
+                            class="mensajes-btn mensajes-btn-primary"
+                            data-submit-message>
                         <i class="fas fa-paper-plane"></i>
                         <span>Enviar respuesta</span>
                     </button>

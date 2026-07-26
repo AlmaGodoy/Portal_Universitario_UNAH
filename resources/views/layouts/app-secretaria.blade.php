@@ -92,6 +92,18 @@
         ? route('configuracion.index')
         : 'javascript:void(0)';
 
+    $mensajesUrl = Route::has('mensajes.index')
+        ? route('mensajes.index')
+        : url('/mensajes');
+
+    $mensajesCrearUrl = Route::has('mensajes.create')
+        ? route('mensajes.create')
+        : url('/mensajes/crear');
+
+    $mensajesRecientesUrl = Route::has('api.mensajes.recientes')
+        ? route('api.mensajes.recientes')
+        : url('/api/mensajes/recientes');
+
     /*
     |--------------------------------------------------------------------------
     | ACTIVOS DEL MENÚ
@@ -133,6 +145,8 @@
         || request()->is('configuracion')
         || request()->is('configuracion*');
 
+    $mensajesActive = request()->routeIs('mensajes.*') || request()->is('mensajes*');
+
     $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Secretaría de Carrera')));
 @endphp
 
@@ -150,6 +164,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    @stack('styles')
 
     <style>
         :root {
@@ -1880,6 +1895,19 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a href="{{ $mensajesUrl }}" class="nav-link {{ $mensajesActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-envelope"></i>
+                                <p>
+                                    Mensajes
+                                    <span id="sidebarMensajesBadge"
+                                          class="badge badge-warning right"
+                                          style="display: none;">
+                                    </span>
+                                </p>
+                            </a>
+                        </li>
+
                         <li class="nav-item has-treeview {{ $menuRevisionOpen ? 'menu-open' : '' }}">
                             <a href="javascript:void(0)" class="nav-link {{ $menuRevisionOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-circle-check"></i>
@@ -2020,28 +2048,34 @@
             <div class="topbar-action-group">
                 <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
                     <i class="fas fa-envelope"></i>
-                    <span class="topbar-badge gold">1</span>
+                    <span id="mensajesTopbarBadge"
+                          class="topbar-badge gold"
+                          style="display: none;">
+                    </span>
                 </button>
 
                 <div class="topbar-dropdown" id="dropMsg">
                     <div class="topbar-dropdown-header">
                         <span>Mensajes</span>
-                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                        <a href="{{ $mensajesUrl }}" class="topbar-dropdown-mark">Ver todos</a>
                     </div>
 
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-avatar">CO</div>
+                    <ul class="topbar-dropdown-list" id="mensajesTopbarList">
+                        <li class="topbar-dropdown-item">
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
                             <div class="topbar-dropdown-text">
-                                <strong>Coordinación</strong>
-                                <span>Se requiere seguimiento sobre un trámite remitido.</span>
-                                <small>Hace 30 min</small>
+                                <strong>Cargando...</strong>
+                                <span>Obteniendo tus mensajes recientes.</span>
+                                <small>Un momento</small>
                             </div>
                         </li>
                     </ul>
 
                     <div class="topbar-dropdown-footer">
-                        <a href="#">Ir a mensajes</a>
+                        <a href="{{ $mensajesUrl }}">Ir a mensajes</a>
+                        <a href="{{ $mensajesCrearUrl }}">Nuevo mensaje</a>
                     </div>
                 </div>
             </div>
@@ -2199,6 +2233,129 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mensajesUrl = '{{ $mensajesUrl }}';
+    const mensajesApiUrl = '{{ $mensajesRecientesUrl }}';
+
+    const topbarBadge = document.getElementById('mensajesTopbarBadge');
+    const sidebarBadge = document.getElementById('sidebarMensajesBadge');
+    const mensajesList = document.getElementById('mensajesTopbarList');
+
+    function setBadge(element, value) {
+        if (!element) return;
+
+        const count = Number(value || 0);
+
+        if (count > 0) {
+            element.textContent = count > 99 ? '99+' : String(count);
+            element.style.display = 'flex';
+        } else {
+            element.textContent = '';
+            element.style.display = 'none';
+        }
+    }
+
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    function renderEmptyMessage() {
+        if (!mensajesList) return;
+
+        mensajesList.innerHTML = `
+            <li class="topbar-dropdown-empty">
+                <i class="fas fa-envelope-open"></i>
+                <div>No tienes mensajes recientes.</div>
+            </li>
+        `;
+    }
+
+    function renderErrorMessage() {
+        if (!mensajesList) return;
+
+        mensajesList.innerHTML = `
+            <li class="topbar-dropdown-empty">
+                <i class="fas fa-circle-exclamation"></i>
+                <div>No se pudieron cargar los mensajes.</div>
+            </li>
+        `;
+    }
+
+    function renderMensajes(mensajes) {
+        if (!mensajesList) return;
+
+        if (!Array.isArray(mensajes) || mensajes.length === 0) {
+            renderEmptyMessage();
+            return;
+        }
+
+        mensajesList.innerHTML = mensajes.map((mensaje) => {
+            const url = mensaje.url || mensajesUrl;
+            const leido = Boolean(mensaje.leido);
+            const iniciales = escapeHtml(mensaje.iniciales || 'U');
+            const remitente = escapeHtml(mensaje.remitente || 'Usuario');
+            const asunto = escapeHtml(mensaje.asunto || 'Sin asunto');
+            const contenido = escapeHtml(mensaje.contenido || '');
+            const tiempo = escapeHtml(mensaje.tiempo || '');
+
+            return `
+                <li>
+                    <a href="${url}"
+                       class="topbar-dropdown-item-link">
+                        <div class="topbar-dropdown-item ${leido ? '' : 'unread'}">
+                            <div class="topbar-dropdown-avatar">${iniciales}</div>
+
+                            <div class="topbar-dropdown-text">
+                                <strong>${remitente}</strong>
+                                <span>${asunto}${contenido ? ' — ' + contenido : ''}</span>
+                                <small>${tiempo}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async function cargarMensajesRecientes() {
+        try {
+            const response = await fetch(mensajesApiUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo cargar la mensajería.');
+            }
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                throw new Error(data.message || 'Respuesta inválida.');
+            }
+
+            setBadge(topbarBadge, data.unread_count || 0);
+            setBadge(sidebarBadge, data.unread_count || 0);
+            renderMensajes(data.mensajes || []);
+        } catch (error) {
+            setBadge(topbarBadge, 0);
+            setBadge(sidebarBadge, 0);
+            renderErrorMessage();
+        }
+    }
+
+    cargarMensajesRecientes();
+
+    window.setInterval(cargarMensajesRecientes, 60000);
+});
+</script>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -2655,6 +2812,7 @@ document.addEventListener('DOMContentLoaded', function () {
     resetSessionTimers();
 });
 </script>
+@stack('scripts')
 </body>
 </html>
 

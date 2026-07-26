@@ -1,4 +1,11 @@
-@extends('layouts.app-estudiantes')
+@extends(
+    match ((int) (auth()->user()->id_rol ?? 0)) {
+        1 => 'layouts.app-secretaria-academica',
+        4 => 'layouts.app-coordinador',
+        5 => 'layouts.app-secretaria',
+        default => 'layouts.app-estudiantes',
+    }
+)
 
 @section('titulo', 'Mensajes enviados')
 
@@ -55,6 +62,17 @@
                     </span>
                 </a>
             </nav>
+
+            <div class="mensajes-sidebar-info">
+                <div class="mensajes-sidebar-info-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+
+                <div>
+                    <strong>Mensajería interna</strong>
+                    <p>Los mensajes enviados solo pueden ser revisados por el remitente y el destinatario.</p>
+                </div>
+            </div>
         </aside>
 
         <main class="mensajes-panel">
@@ -65,18 +83,23 @@
                     <span>{{ $mensajes->total() }} mensaje(s)</span>
                 </div>
 
-                <form method="GET" action="{{ route('mensajes.enviados') }}" class="mensajes-search-form">
+                <form method="GET"
+                      action="{{ route('mensajes.enviados') }}"
+                      class="mensajes-search-form">
+
                     <div class="mensajes-search">
                         <i class="fas fa-search"></i>
 
                         <input type="text"
                                name="buscar"
-                               value="{{ $buscar }}"
+                               value="{{ $buscar ?? '' }}"
                                placeholder="Buscar mensaje enviado"
                                autocomplete="off">
 
-                        @if ($buscar !== '')
-                            <a href="{{ route('mensajes.enviados') }}" class="mensajes-search-clear">
+                        @if (($buscar ?? '') !== '')
+                            <a href="{{ route('mensajes.enviados') }}"
+                               class="mensajes-search-clear"
+                               title="Limpiar búsqueda">
                                 <i class="fas fa-times"></i>
                             </a>
                         @endif
@@ -97,7 +120,13 @@
                             ?? optional($mensaje->destinatario)->email
                             ?? 'Usuario';
 
-                        $partes = preg_split('/\s+/', trim($nombreDestinatario), -1, PREG_SPLIT_NO_EMPTY);
+                        $partes = preg_split(
+                            '/\s+/',
+                            trim($nombreDestinatario),
+                            -1,
+                            PREG_SPLIT_NO_EMPTY
+                        );
+
                         $iniciales = '';
 
                         foreach (array_slice($partes ?: [], 0, 2) as $parte) {
@@ -111,7 +140,9 @@
 
                     <article class="mensaje-row">
 
-                        <a href="{{ route('mensajes.show', $mensaje->id_mensaje) }}" class="mensaje-row-main">
+                        <a href="{{ route('mensajes.show', $mensaje->id_mensaje) }}"
+                           class="mensaje-row-main">
+
                             <div class="mensaje-avatar">
                                 {{ $iniciales }}
                             </div>
@@ -155,10 +186,13 @@
                               action="{{ route('mensajes.destroy', $mensaje->id_mensaje) }}"
                               class="mensaje-delete-form"
                               data-delete-message>
+
                             @csrf
                             @method('DELETE')
 
-                            <button type="submit" class="mensaje-action-button" title="Eliminar de enviados">
+                            <button type="submit"
+                                    class="mensaje-action-button"
+                                    title="Eliminar de enviados">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -169,12 +203,23 @@
                             <i class="fas fa-paper-plane"></i>
                         </div>
 
-                        <h3>No tienes mensajes enviados</h3>
-                        <p>Cuando envíes un mensaje aparecerá en esta sección.</p>
+                        @if (($buscar ?? '') !== '')
+                            <h3>No se encontraron mensajes enviados</h3>
+                            <p>No existen resultados para “{{ $buscar }}”.</p>
 
-                        <a href="{{ route('mensajes.create') }}" class="mensajes-btn mensajes-btn-primary">
-                            Redactar mensaje
-                        </a>
+                            <a href="{{ route('mensajes.enviados') }}"
+                               class="mensajes-btn mensajes-btn-secondary">
+                                Limpiar búsqueda
+                            </a>
+                        @else
+                            <h3>No tienes mensajes enviados</h3>
+                            <p>Cuando envíes un mensaje aparecerá en esta sección.</p>
+
+                            <a href="{{ route('mensajes.create') }}"
+                               class="mensajes-btn mensajes-btn-primary">
+                                Redactar mensaje
+                            </a>
+                        @endif
                     </div>
                 @endforelse
             </div>
