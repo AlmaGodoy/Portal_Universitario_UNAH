@@ -54,6 +54,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
+    @stack('styles')
+
     <style>
         /* =========================================================
            FIX ZOOM: Ancho mínimo del body para que el layout no
@@ -506,6 +508,24 @@
 
     #notifBadge:not(.notif-hidden) {
         display: flex !important;
+    }
+
+    #mensajesBadge.notif-hidden,
+    .topbar-badge.notif-hidden {
+        display: none !important;
+    }
+
+    #mensajesBadge:not(.notif-hidden) {
+        display: flex !important;
+    }
+
+    #sidebarMensajesBadge {
+        background: #ffd21f !important;
+        color: #123674 !important;
+        font-size: 10px !important;
+        font-weight: 900 !important;
+        border-radius: 999px !important;
+        padding: 4px 7px !important;
     }
 
     .topbar-divider {
@@ -1258,6 +1278,20 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="{{ route('mensajes.index') }}"
+                               class="nav-link {{ request()->routeIs('mensajes.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-envelope"></i>
+                                <p>
+                                    Mensajes
+                                    <span id="sidebarMensajesBadge"
+                                          class="badge badge-warning right"
+                                          style="display: none;">
+                                    </span>
+                                </p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a href="{{ route('configuracion.index') }}"
                                class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
@@ -1338,26 +1372,32 @@
             <div class="topbar-action-group">
                 <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
                     <i class="fas fa-envelope"></i>
-                    <span class="topbar-badge gold">1</span>
+                    <span class="topbar-badge gold notif-hidden" id="mensajesBadge"></span>
                 </button>
 
                 <div class="topbar-dropdown" id="dropMsg">
                     <div class="topbar-dropdown-header">
                         <span>Mensajes</span>
-                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                        <a href="{{ route('mensajes.index') }}" class="topbar-dropdown-mark">
+                            Ver todos
+                        </a>
                     </div>
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-avatar">SC</div>
+
+                    <ul class="topbar-dropdown-list" id="mensajesList">
+                        <li class="topbar-dropdown-item">
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
                             <div class="topbar-dropdown-text">
-                                <strong>Secretaría FCEAC</strong>
-                                <span>Tu expediente fue recibido correctamente.</span>
-                                <small>Hace 30 min</small>
+                                <strong>Cargando...</strong>
+                                <span>Obteniendo tus mensajes recientes.</span>
+                                <small>Un momento</small>
                             </div>
                         </li>
                     </ul>
+
                     <div class="topbar-dropdown-footer">
-                        <a href="#">Ir a mensajes</a>
+                        <a href="{{ route('mensajes.index') }}">Ir a mensajes</a>
                     </div>
                 </div>
             </div>
@@ -1974,5 +2014,132 @@ document.addEventListener('DOMContentLoaded', function () {
     resetSessionTimers();
 });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mensajesBadge = document.getElementById('mensajesBadge');
+    const sidebarMensajesBadge = document.getElementById('sidebarMensajesBadge');
+    const mensajesList = document.getElementById('mensajesList');
+
+    const URL_MENSAJES_RECIENTES = "/api/mensajes/recientes";
+
+    function escaparHtml(valor) {
+        return String(valor ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function actualizarBadgeMensajes(cantidad) {
+        const total = Number(cantidad || 0);
+
+        if (mensajesBadge) {
+            if (total > 0) {
+                mensajesBadge.textContent = total > 99 ? '99+' : String(total);
+                mensajesBadge.classList.remove('notif-hidden');
+            } else {
+                mensajesBadge.textContent = '';
+                mensajesBadge.classList.add('notif-hidden');
+            }
+        }
+
+        if (sidebarMensajesBadge) {
+            if (total > 0) {
+                sidebarMensajesBadge.textContent = total > 99 ? '99+' : String(total);
+                sidebarMensajesBadge.style.display = 'inline-block';
+            } else {
+                sidebarMensajesBadge.textContent = '';
+                sidebarMensajesBadge.style.display = 'none';
+            }
+        }
+    }
+
+    function renderizarMensajes(mensajes) {
+        if (!mensajesList) return;
+
+        if (!Array.isArray(mensajes) || mensajes.length === 0) {
+            mensajesList.innerHTML = `
+                <li class="topbar-dropdown-empty">
+                    <i class="fas fa-envelope-open mb-2"></i><br>
+                    No tienes mensajes recientes.
+                </li>
+            `;
+            return;
+        }
+
+        mensajesList.innerHTML = mensajes.map((mensaje) => {
+            const remitente = escaparHtml(mensaje.remitente || 'Usuario');
+            const iniciales = escaparHtml(mensaje.iniciales || 'U');
+            const asunto = escaparHtml(mensaje.asunto || 'Sin asunto');
+            const contenido = escaparHtml(mensaje.contenido || '');
+            const tiempo = escaparHtml(mensaje.tiempo || '');
+            const url = escaparHtml(mensaje.url || '/mensajes');
+            const unreadClass = mensaje.leido ? '' : 'unread';
+
+            return `
+                <li>
+                    <a href="${url}" class="topbar-dropdown-item-link">
+                        <div class="topbar-dropdown-item ${unreadClass}">
+                            <div class="topbar-dropdown-avatar">${iniciales}</div>
+                            <div class="topbar-dropdown-text">
+                                <strong>${remitente}</strong>
+                                <span>${asunto}</span>
+                                <small>${contenido}</small>
+                                <small>${tiempo}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async function cargarMensajesRecientes() {
+        try {
+            const response = await fetch(URL_MENSAJES_RECIENTES, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudieron cargar los mensajes.');
+            }
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                throw new Error('Respuesta inválida de mensajes.');
+            }
+
+            actualizarBadgeMensajes(data.unread_count || 0);
+            renderizarMensajes(data.mensajes || []);
+        } catch (error) {
+            console.error('Error cargando mensajes:', error);
+
+            if (mensajesList) {
+                mensajesList.innerHTML = `
+                    <li class="topbar-dropdown-empty">
+                        <i class="fas fa-triangle-exclamation mb-2"></i><br>
+                        No se pudieron cargar los mensajes.
+                    </li>
+                `;
+            }
+
+            actualizarBadgeMensajes(0);
+        }
+    }
+
+    cargarMensajesRecientes();
+    setInterval(cargarMensajesRecientes, 15000);
+});
+</script>
+
+@stack('scripts')
 </body>
 </html>
