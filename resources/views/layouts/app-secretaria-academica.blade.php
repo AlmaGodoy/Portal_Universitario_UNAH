@@ -79,6 +79,36 @@
 
     $perfilSecretariaAcademicaActive = request()->routeIs('secretaria-academica.mi-perfil')
         || request()->is('secretaria-academica/mi-perfil');
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTAS DE MENSAJERÍA INTERNA
+    |--------------------------------------------------------------------------
+    */
+    $mensajesUrl = Route::has('mensajes.index')
+        ? route('mensajes.index')
+        : url('/mensajes');
+
+    $mensajesCreateUrl = Route::has('mensajes.create')
+        ? route('mensajes.create')
+        : url('/mensajes/crear');
+
+    $mensajesApiUrl = Route::has('api.mensajes.recientes')
+        ? route('api.mensajes.recientes')
+        : url('/api/mensajes/recientes');
+
+    $mensajesActive = request()->routeIs('mensajes.*') || request()->is('mensajes*');
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUTA DEL PANEL PRINCIPAL Y TÍTULO DINÁMICO
+    |--------------------------------------------------------------------------
+    */
+    $dashboardUrl = Route::has('empleado.dashboard')
+        ? route('empleado.dashboard')
+        : 'javascript:void(0)';
+
+    $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Secretaría Académica')));
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -86,7 +116,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PumaGestión – @yield('titulo', 'Secretaría Académica')</title>
+    <title>PumaGestión – {{ $pageTitle }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -95,6 +125,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     @yield('page-assets')
+    @stack('styles')
 
     <style>
         :root {
@@ -517,6 +548,24 @@
     .topbar-breadcrumb i {
         font-size: 12px !important;
         color: rgba(255,255,255,0.82) !important;
+    }
+
+    .topbar-breadcrumb-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        color: rgba(255,255,255,0.90) !important;
+        text-decoration: none !important;
+        font-weight: 800 !important;
+    }
+
+    .topbar-breadcrumb-link:hover {
+        color: #ffd21f !important;
+        text-decoration: none !important;
+    }
+
+    .topbar-breadcrumb-link i {
+        color: inherit !important;
     }
 
     .topbar-breadcrumb-active {
@@ -1162,7 +1211,7 @@
         <div class="sidebar-overlay"></div>
 
         {{-- Logo --}}
-        <a href="{{ route('empleado.dashboard') }}" class="brand-link">
+        <a href="{{ $dashboardUrl }}" class="brand-link">
             <div class="brand-top-glow"></div>
             <div class="brand-logo-wrap">
                 <img src="{{ asset('images/Logo.png') }}" alt="Logo PumaGestión" class="brand-logo-img">
@@ -1212,10 +1261,25 @@
                         data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('empleado.dashboard') }}"
-                               class="nav-link {{ request()->routeIs('empleado.dashboard') ? 'active' : '' }}">
+                            <a href="{{ $dashboardUrl }}"
+                               class="nav-link {{ request()->routeIs('empleado.dashboard') || request()->is('empleado/dashboard*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-house"></i>
                                 <p>Inicio</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ $mensajesUrl }}"
+                               class="nav-link {{ $mensajesActive ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-envelope"></i>
+                                <p>
+                                    Mensajes
+                                    <span id="sidebarMensajesBadge"
+                                          class="badge badge-warning right"
+                                          style="display: none;">
+                                        0
+                                    </span>
+                                </p>
                             </a>
                         </li>
 
@@ -1289,10 +1353,16 @@
         <div class="student-topbar-left">
             <div class="topbar-left-copy">
                 <div class="topbar-breadcrumb">
-                    <i class="fas fa-house"></i>
-                    <span>Inicio</span>
+                    <a href="{{ $dashboardUrl }}" class="topbar-breadcrumb-link">
+                        <i class="fas fa-house"></i>
+                        <span>Inicio</span>
+                    </a>
+
                     <i class="fas fa-chevron-right"></i>
-                    <span class="topbar-breadcrumb-active">@yield('titulo', 'Secretaría Académica')</span>
+
+                    <span class="topbar-breadcrumb-active">
+                        {{ $pageTitle }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -1351,26 +1421,31 @@
             <div class="topbar-action-group">
                 <button class="topbar-icon-btn" id="btnMsg" title="Mensajes">
                     <i class="fas fa-envelope"></i>
-                    <span class="topbar-badge gold">1</span>
+                    <span class="topbar-badge gold" id="mensajesBadge" style="display: none;">0</span>
                 </button>
 
                 <div class="topbar-dropdown" id="dropMsg">
                     <div class="topbar-dropdown-header">
                         <span>Mensajes</span>
-                        <a href="#" class="topbar-dropdown-mark">Ver todos</a>
+                        <a href="{{ $mensajesUrl }}" class="topbar-dropdown-mark">Ver todos</a>
                     </div>
-                    <ul class="topbar-dropdown-list">
-                        <li class="topbar-dropdown-item unread">
-                            <div class="topbar-dropdown-avatar">DG</div>
+
+                    <ul class="topbar-dropdown-list" id="mensajesTopbarList">
+                        <li class="topbar-dropdown-item">
+                            <div class="topbar-dropdown-icon blue">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
                             <div class="topbar-dropdown-text">
-                                <strong>Dirección académica</strong>
-                                <span>Revisa el comportamiento global de los trámites del período actual.</span>
-                                <small>Hace 30 min</small>
+                                <strong>Cargando...</strong>
+                                <span>Obteniendo tus mensajes recientes.</span>
+                                <small>Un momento</small>
                             </div>
                         </li>
                     </ul>
+
                     <div class="topbar-dropdown-footer">
-                        <a href="#">Ir a mensajes</a>
+                        <a href="{{ $mensajesUrl }}">Ir a mensajes</a>
+                        <a href="{{ $mensajesCreateUrl }}">Nuevo mensaje</a>
                     </div>
                 </div>
             </div>
@@ -1528,6 +1603,136 @@ document.addEventListener('DOMContentLoaded', function () {
             closeTopbarDropdowns();
         }
     });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mensajesApiUrl = @json($mensajesApiUrl);
+    const mensajesUrl = @json($mensajesUrl);
+
+    const mensajesList = document.getElementById('mensajesTopbarList');
+    const mensajesBadge = document.getElementById('mensajesBadge');
+    const sidebarMensajesBadge = document.getElementById('sidebarMensajesBadge');
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value).replace(/`/g, '&#096;');
+    }
+
+    function actualizarBadge(element, total) {
+        if (!element) return;
+
+        const cantidad = Number(total || 0);
+
+        if (cantidad > 0) {
+            element.textContent = cantidad > 99 ? '99+' : String(cantidad);
+            element.style.display = 'flex';
+        } else {
+            element.textContent = '0';
+            element.style.display = 'none';
+        }
+    }
+
+    function renderListaVacia() {
+        if (!mensajesList) return;
+
+        mensajesList.innerHTML = `
+            <li class="topbar-dropdown-empty">
+                <i class="fas fa-envelope-open"></i>
+                <div>No tienes mensajes recientes.</div>
+            </li>
+        `;
+    }
+
+    function renderError() {
+        if (!mensajesList) return;
+
+        mensajesList.innerHTML = `
+            <li class="topbar-dropdown-empty">
+                <i class="fas fa-circle-exclamation"></i>
+                <div>No se pudieron cargar los mensajes.</div>
+            </li>
+        `;
+    }
+
+    function renderMensajes(mensajes) {
+        if (!mensajesList) return;
+
+        if (!Array.isArray(mensajes) || mensajes.length === 0) {
+            renderListaVacia();
+            return;
+        }
+
+        mensajesList.innerHTML = mensajes.map((mensaje) => {
+            const url = mensaje.url || mensajesUrl;
+            const iniciales = mensaje.iniciales || 'U';
+            const remitente = mensaje.remitente || 'Usuario';
+            const asunto = mensaje.asunto || 'Sin asunto';
+            const contenido = mensaje.contenido || '';
+            const tiempo = mensaje.tiempo || '';
+            const unreadClass = mensaje.leido ? '' : ' unread';
+
+            return `
+                <li>
+                    <a href="${escapeAttr(url)}" class="topbar-dropdown-item-link">
+                        <div class="topbar-dropdown-item${unreadClass}">
+                            <div class="topbar-dropdown-avatar">
+                                ${escapeHtml(iniciales)}
+                            </div>
+
+                            <div class="topbar-dropdown-text">
+                                <strong>${escapeHtml(remitente)}</strong>
+                                <span>${escapeHtml(asunto)}${contenido ? ' — ' + escapeHtml(contenido) : ''}</span>
+                                <small>${escapeHtml(tiempo)}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async function cargarMensajesRecientes() {
+        if (!mensajesList) return;
+
+        try {
+            const response = await fetch(mensajesApiUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo consultar la API de mensajes.');
+            }
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                throw new Error(data.message || 'Respuesta inválida.');
+            }
+
+            actualizarBadge(mensajesBadge, data.unread_count);
+            actualizarBadge(sidebarMensajesBadge, data.unread_count);
+            renderMensajes(data.mensajes || []);
+        } catch (error) {
+            actualizarBadge(mensajesBadge, 0);
+            actualizarBadge(sidebarMensajesBadge, 0);
+            renderError();
+        }
+    }
+
+    cargarMensajesRecientes();
 });
 </script>
 
@@ -1830,6 +2035,7 @@ document.addEventListener('DOMContentLoaded', function () {
     resetSessionTimers();
 });
 </script>
+@stack('scripts')
 </body>
 </html>
 
