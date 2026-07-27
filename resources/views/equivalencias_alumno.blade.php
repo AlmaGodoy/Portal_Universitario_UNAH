@@ -3,7 +3,7 @@
 @section('titulo', 'Equivalencias')
 
 @push('styles')
-    @vite(['resources/css/equivalencias_alumno.css'])
+    @vite(['resources/css/equivalencias.css'])
 @endpush
 
 @section('content')
