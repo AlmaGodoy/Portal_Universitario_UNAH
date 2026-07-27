@@ -7,18 +7,56 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
 
 class SoporteController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | VISTA GENERAL DE SOPORTE
+    |--------------------------------------------------------------------------
+    | Estudiante: carga soporte.index o soporte
+    | Empleados: redirige a soporte.secretaria
+    */
     public function vista()
     {
-        $rol = $this->obtenerRolActual();
+        $idRol = $this->obtenerIdRolActual();
+        $rolTexto = $this->obtenerRolActual();
 
-        if ($rol === 'secretario') {
-            return view('soporte_secretaria');
+        if (in_array($idRol, [1, 4, 5], true) || in_array($rolTexto, [
+            'secretario',
+            'secretaria',
+            'coordinador',
+            'coordinadora',
+            'secretaria academica',
+            'secretaría académica',
+            'secretaria general',
+            'secretaría general',
+        ], true)) {
+            return Route::has('soporte.secretaria')
+                ? redirect()->route('soporte.secretaria')
+                : redirect('/soporte/secretaria');
         }
 
-        return view('soporte');
+        return $this->renderizarVistaDisponible([
+            'soporte.index',
+            'soporte',
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | VISTA SOPORTE PARA EMPLEADOS
+    |--------------------------------------------------------------------------
+    | Secretaría Académica, Coordinador y Secretaría de Carrera.
+    */
+    public function vistaSecretaria()
+    {
+        return $this->renderizarVistaDisponible([
+            'soporte.secretaria',
+            'soporte_secretaria',
+        ]);
     }
 
     public function catalogos(): JsonResponse
@@ -101,6 +139,7 @@ class SoporteController extends Controller
         }
 
         $ticket = null;
+
         if (!empty($resultado['id_soporte'])) {
             $ticket = $model->obtenerTicketPorId((int) $resultado['id_soporte']);
         }
@@ -345,6 +384,25 @@ class SoporteController extends Controller
         return null;
     }
 
+    private function obtenerIdRolActual(): ?int
+    {
+        $usuario = Auth::user();
+
+        if ($usuario && isset($usuario->id_rol)) {
+            return (int) $usuario->id_rol;
+        }
+
+        if (session()->has('id_rol')) {
+            return (int) session('id_rol');
+        }
+
+        if (session()->has('usuario.id_rol')) {
+            return (int) session('usuario.id_rol');
+        }
+
+        return null;
+    }
+
     private function obtenerRolActual(): ?string
     {
         $usuario = Auth::user();
@@ -410,5 +468,16 @@ class SoporteController extends Controller
             ->first();
 
         return $registro->nombre_carrera ?? null;
+    }
+
+    private function renderizarVistaDisponible(array $vistas)
+    {
+        foreach ($vistas as $vista) {
+            if (View::exists($vista)) {
+                return view($vista);
+            }
+        }
+
+        return view($vistas[0]);
     }
 }

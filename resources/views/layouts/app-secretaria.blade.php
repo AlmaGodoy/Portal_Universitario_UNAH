@@ -76,9 +76,23 @@
         ? route('backup.index')
         : 'javascript:void(0)';
 
-    $auditoriaUrl = Route::has('auditoria')
-        ? route('auditoria')
-        : 'javascript:void(0)';
+    $auditoriaUrl = match ((int) ($user->id_rol ?? 0)) {
+        1 => Route::has('auditoria.administrativa')
+            ? route('auditoria.administrativa')
+            : (Route::has('auditoria') ? route('auditoria') : url('/auditoria')),
+
+        4 => Route::has('auditoria.coordinador')
+            ? route('auditoria.coordinador')
+            : (Route::has('auditoria') ? route('auditoria') : url('/auditoria')),
+
+        5 => Route::has('auditoria.secretaria')
+            ? route('auditoria.secretaria')
+            : (Route::has('auditoria') ? route('auditoria') : url('/auditoria')),
+
+        default => Route::has('auditoria')
+            ? route('auditoria')
+            : url('/auditoria'),
+    };
 
     $bitacoraUrl = Route::has('bitacora.index')
         ? route('bitacora.index')
@@ -133,7 +147,10 @@
 
     $respaldoActive = request()->routeIs('backup.*') || request()->is('respaldos*');
 
-    $auditoriaActive = request()->routeIs('auditoria') || request()->routeIs('auditoria.*');
+    $auditoriaActive = request()->routeIs('auditoria')
+        || request()->routeIs('auditoria.*')
+        || request()->is('auditoria')
+        || request()->is('auditoria/*');
 
     $bitacoraActive = request()->routeIs('bitacora.*');
 
@@ -167,6 +184,11 @@
     @stack('styles')
 
     <style>
+        html,
+        body {
+            min-width: 960px !important;
+        }
+
         :root {
             --student-sidebar-width: 350px;
             --student-sidebar-collapsed-width: 4.6rem;
@@ -192,111 +214,59 @@
             }
         }
 
-        /* ── BLOQUE CONTROL (donde estaba el user-card) ──── */
-        .sidebar-control-block {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 14px;
-            border-bottom: 1px solid rgba(255,255,255,.10);
-            position: relative;
-            z-index: 2;
-            overflow: hidden;
-            min-height: 58px;
+        .main-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            min-width: 60px !important;
+            overflow: hidden !important;
+            z-index: 1038 !important;
         }
 
-        /* Botón colapsar */
-        .sidebar-toggle-inner {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: none;
-            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%);
-            color: #17346c;
-            font-size: 1rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(239,190,26,.35);
-            transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+        /* ── BOTÓN FIJO PARA OCULTAR / MOSTRAR MENÚ ───────── */
+        .sidebar-floating-toggle {
+            position: fixed !important;
+            top: 44% !important;
+            left: calc(var(--student-sidebar-width) - 20px) !important;
+            transform: translateY(-50%) !important;
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 50% !important;
+            border: none !important;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%) !important;
+            color: #17346c !important;
+            font-size: 1rem !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 2500 !important;
+            box-shadow: 0 6px 18px rgba(8, 35, 78, 0.24) !important;
+            transition:
+                left .18s ease,
+                background .2s ease,
+                box-shadow .2s ease,
+                transform .2s ease !important;
         }
 
-        .sidebar-toggle-inner:hover {
-            background: linear-gradient(135deg, #ffd84a 0%, #e8b20e 100%);
-            transform: scale(1.08);
-            box-shadow: 0 6px 18px rgba(239,190,26,.50);
+        .sidebar-floating-toggle:hover {
+            background: linear-gradient(135deg, #ffd84a 0%, #e8b20e 100%) !important;
+            transform: translateY(-50%) scale(1.08) !important;
+            box-shadow: 0 8px 22px rgba(8, 35, 78, 0.32) !important;
         }
 
-        .sidebar-toggle-inner i {
-            transition: transform .3s ease;
-            pointer-events: none;
+        .sidebar-floating-toggle i {
+            transition: transform .25s ease !important;
+            pointer-events: none !important;
         }
 
-        body.sidebar-collapse .sidebar-toggle-inner i {
-            transform: rotate(180deg);
+        body.sidebar-collapse .sidebar-floating-toggle {
+            left: calc(var(--student-sidebar-collapsed-width) - 22px) !important;
         }
 
-        /* Info de tamaño */
-        .sidebar-control-info {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            flex: 1;
-            overflow: hidden;
-            transition: opacity .25s ease, max-width .25s ease;
-            max-width: 999px;
-        }
-
-        body.sidebar-collapse .sidebar-control-info {
-            opacity: 0;
-            max-width: 0;
-            pointer-events: none;
-        }
-
-        .sidebar-control-label {
-            font-size: .68rem;
-            font-weight: 700;
-            color: rgba(255,255,255,.45);
-            letter-spacing: .5px;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        /* Botones +/Normal/- */
-        .sidebar-size-btns {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .sidebar-size-btn {
-            border: none;
-            height: 26px;
-            border-radius: 7px;
-            background: rgba(255,255,255,.12);
-            color: rgba(255,255,255,.85);
-            font-size: .72rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 8px;
-            transition: all .18s ease;
-            white-space: nowrap;
-        }
-
-        .sidebar-size-btn:hover {
-            background: rgba(255,255,255,.24);
-            color: #fff;
-            transform: translateY(-1px);
-        }
-
-        .sidebar-size-btn i {
-            font-size: .65rem;
+        body.sidebar-collapse .sidebar-floating-toggle i {
+            transform: rotate(180deg) !important;
         }
 
         /* ── MENÚ MÁS GRANDE Y MEJOR DISTRIBUIDO ─────────── */
@@ -409,6 +379,11 @@
 
         /* ── MÓVIL ───────────────────────────────────────── */
         @media (max-width: 991.98px) {
+            html,
+            body {
+                min-width: 0 !important;
+            }
+
             .dashboard-menu {
                 gap: 6px;
                 padding: 14px 0 18px !important;
@@ -1869,37 +1844,6 @@
         </a>
 
         <div class="sidebar">
-
-            {{-- ══ BLOQUE CONTROL ══ --}}
-            <div class="sidebar-control-block d-none d-lg-flex">
-
-                <button type="button"
-                        id="sidebarToggleBtn"
-                        class="sidebar-toggle-inner"
-                        title="Colapsar / Expandir menú">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-
-                <div class="sidebar-control-info">
-                    <span class="sidebar-control-label">Tamaño del menú</span>
-                    <div class="sidebar-size-btns">
-                        <button type="button" id="sidebarSizeDown"
-                                class="sidebar-size-btn" title="Reducir">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <button type="button" id="sidebarSizeReset"
-                                class="sidebar-size-btn" title="Normal">
-                            Normal
-                        </button>
-                        <button type="button" id="sidebarSizeUp"
-                                class="sidebar-size-btn" title="Ampliar">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
             {{-- ── MENÚ ──────────────────────────────────────── --}}
             <div id="dashboardSidebarScroll" class="dashboardSidebarScroll">
                 <nav class="mt-2">
@@ -2007,6 +1951,14 @@
             </div>
         </div>
     </aside>
+
+    {{-- ── BOTÓN FIJO PARA OCULTAR / MOSTRAR MENÚ ──────────── --}}
+    <button type="button"
+            id="sidebarFloatingToggle"
+            class="sidebar-floating-toggle d-none d-lg-flex"
+            title="Ocultar / Mostrar menú">
+        <i class="fas fa-chevron-left"></i>
+    </button>
 
     {{-- ── HANDLE RESIZE ────────────────────────────────────── --}}
     <div id="sidebarResizeHandle"
@@ -2541,148 +2493,134 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const root         = document.documentElement;
-    const body         = document.body;
-    const toggleBtn    = document.getElementById('sidebarToggleBtn');
-    const btnDown      = document.getElementById('sidebarSizeDown');
-    const btnReset     = document.getElementById('sidebarSizeReset');
-    const btnUp        = document.getElementById('sidebarSizeUp');
+    const root = document.documentElement;
+    const body = document.body;
+    const toggleBtn = document.getElementById('sidebarFloatingToggle');
     const resizeHandle = document.getElementById('sidebarResizeHandle');
 
-    const STORAGE_WIDTH_KEY    = 'student_sidebar_width';
+    const STORAGE_WIDTH_KEY = 'student_sidebar_width';
     const STORAGE_COLLAPSE_KEY = 'student_sidebar_collapsed';
 
-    const MIN_WIDTH     = 280;
-    const MAX_WIDTH     = 460;
+    const MIN_WIDTH = 280;
+    const MAX_WIDTH = 460;
     const DEFAULT_WIDTH = 350;
-    const STEP          = 20;
 
     let isResizing = false;
 
-    function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
-
-    function applyWidth(w) {
-        root.style.setProperty('--student-sidebar-width', clamp(w, MIN_WIDTH, MAX_WIDTH) + 'px');
+    function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
     }
 
-    function saveWidth(w) {
-        localStorage.setItem(STORAGE_WIDTH_KEY, String(clamp(w, MIN_WIDTH, MAX_WIDTH)));
+    function applyWidth(width) {
+        const safeWidth = clamp(width, MIN_WIDTH, MAX_WIDTH);
+        root.style.setProperty('--student-sidebar-width', safeWidth + 'px');
+    }
+
+    function saveWidth(width) {
+        localStorage.setItem(STORAGE_WIDTH_KEY, String(clamp(width, MIN_WIDTH, MAX_WIDTH)));
     }
 
     function getSavedWidth() {
-        const v = parseInt(localStorage.getItem(STORAGE_WIDTH_KEY), 10);
-        return Number.isFinite(v) ? clamp(v, MIN_WIDTH, MAX_WIDTH) : DEFAULT_WIDTH;
-    }
-
-    function setCollapsed(collapsed) {
-        body.classList.toggle('sidebar-collapse', collapsed);
-        localStorage.setItem(STORAGE_COLLAPSE_KEY, collapsed ? '1' : '0');
-        setTimeout(ajustarSidebarScroll, 320);
-        setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+        const value = parseInt(localStorage.getItem(STORAGE_WIDTH_KEY), 10);
+        return Number.isFinite(value) ? clamp(value, MIN_WIDTH, MAX_WIDTH) : DEFAULT_WIDTH;
     }
 
     function getSavedCollapsed() {
         return localStorage.getItem(STORAGE_COLLAPSE_KEY) === '1';
     }
 
+    function setCollapsed(collapsed) {
+        body.classList.toggle('sidebar-collapse', collapsed);
+        localStorage.setItem(STORAGE_COLLAPSE_KEY, collapsed ? '1' : '0');
+
+        setTimeout(ajustarSidebarScroll, 320);
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+    }
+
+    function ajustarSidebarScroll() {
+        const brand = document.querySelector('.main-sidebar .brand-link');
+        const scrollArea = document.getElementById('dashboardSidebarScroll');
+
+        if (!brand || !scrollArea) return;
+
+        const brandHeight = brand.offsetHeight;
+        const availableHeight = window.innerHeight - brandHeight;
+
+        scrollArea.style.height = Math.max(availableHeight, 120) + 'px';
+        scrollArea.style.maxHeight = Math.max(availableHeight, 120) + 'px';
+    }
+
     applyWidth(getSavedWidth());
     setCollapsed(getSavedCollapsed());
 
     if (toggleBtn) {
-        toggleBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
+        toggleBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
             setCollapsed(!body.classList.contains('sidebar-collapse'));
         }, true);
     }
 
-    if (btnDown) {
-        btnDown.addEventListener('click', function () {
-            const w = clamp(getSavedWidth() - STEP, MIN_WIDTH, MAX_WIDTH);
-            applyWidth(w);
-            saveWidth(w);
-        });
-    }
-
-    if (btnReset) {
-        btnReset.addEventListener('click', function () {
-            applyWidth(DEFAULT_WIDTH);
-            saveWidth(DEFAULT_WIDTH);
-        });
-    }
-
-    if (btnUp) {
-        btnUp.addEventListener('click', function () {
-            const w = clamp(getSavedWidth() + STEP, MIN_WIDTH, MAX_WIDTH);
-            applyWidth(w);
-            saveWidth(w);
-        });
-    }
-
     if (resizeHandle) {
-        resizeHandle.addEventListener('mousedown', function (e) {
+        resizeHandle.addEventListener('mousedown', function (event) {
             if (body.classList.contains('sidebar-collapse')) return;
+
             isResizing = true;
             body.classList.add('sidebar-resizing');
-            e.preventDefault();
+            event.preventDefault();
         });
 
-        document.addEventListener('mousemove', function (e) {
+        document.addEventListener('mousemove', function (event) {
             if (!isResizing) return;
-            applyWidth(e.clientX);
+
+            const width = clamp(event.clientX, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(width);
         });
 
-        document.addEventListener('mouseup', function (e) {
+        document.addEventListener('mouseup', function (event) {
             if (!isResizing) return;
+
             isResizing = false;
             body.classList.remove('sidebar-resizing');
-            const w = clamp(e.clientX, MIN_WIDTH, MAX_WIDTH);
-            applyWidth(w);
-            saveWidth(w);
+
+            const width = clamp(event.clientX, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(width);
+            saveWidth(width);
         });
-    }
-
-    function ajustarSidebarScroll() {
-        const brand      = document.querySelector('.main-sidebar .brand-link');
-        const control    = document.querySelector('.sidebar-control-block');
-        const scrollArea = document.getElementById('dashboardSidebarScroll');
-        if (!brand || !scrollArea) return;
-
-        const brandH   = brand.offsetHeight;
-        const controlH = control ? control.offsetHeight : 0;
-        const libre    = window.innerHeight - brandH - controlH;
-
-        scrollArea.style.height    = Math.max(libre, 120) + 'px';
-        scrollArea.style.maxHeight = Math.max(libre, 120) + 'px';
     }
 
     ajustarSidebarScroll();
-    window.addEventListener('resize', ajustarSidebarScroll);
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth < 992) return;
+
+        applyWidth(getSavedWidth());
+        ajustarSidebarScroll();
+    });
+
     window.addEventListener('load', ajustarSidebarScroll);
 
     new MutationObserver(() => setTimeout(ajustarSidebarScroll, 50))
         .observe(body, { attributes: true, attributeFilter: ['class'] });
 
     const pushMenu = document.querySelector('[data-widget="pushmenu"]');
+
     if (pushMenu) {
-        pushMenu.addEventListener('click', () => {
+        pushMenu.addEventListener('click', function () {
             setTimeout(() => {
                 ajustarSidebarScroll();
                 window.dispatchEvent(new Event('resize'));
             }, 350);
         });
     }
-
-    window.addEventListener('resize', function () {
-        if (window.innerWidth < 992) return;
-        applyWidth(getSavedWidth());
-    });
 });
 </script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     /*
+
     |--------------------------------------------------------------------------
     | TIEMPOS
     |--------------------------------------------------------------------------

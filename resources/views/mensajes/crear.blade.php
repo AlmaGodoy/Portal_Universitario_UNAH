@@ -1,11 +1,37 @@
-@extends(
-    match ((int) (auth()->user()->id_rol ?? 0)) {
+@php
+    use Illuminate\Support\Facades\Route;
+
+    $usuario = auth()->user();
+    $idRolActual = (int) ($usuario->id_rol ?? 0);
+    $esEstudiante = $idRolActual === 2;
+
+    $layout = match ($idRolActual) {
         1 => 'layouts.app-secretaria-academica',
         4 => 'layouts.app-coordinador',
         5 => 'layouts.app-secretaria',
         default => 'layouts.app-estudiantes',
-    }
-)
+    };
+
+    $dashboardUrl = match ($idRolActual) {
+        1, 4, 5 => Route::has('empleado.dashboard')
+            ? route('empleado.dashboard')
+            : url('/empleado/dashboard'),
+
+        default => Route::has('dashboard')
+            ? route('dashboard')
+            : url('/dashboard'),
+    };
+
+    $mensajesIndexUrl = Route::has('mensajes.index')
+        ? route('mensajes.index')
+        : url('/mensajes');
+
+    $mensajesStoreUrl = Route::has('mensajes.store')
+        ? route('mensajes.store')
+        : url('/mensajes');
+@endphp
+
+@extends($layout)
 
 @section('titulo', 'Nuevo mensaje')
 
@@ -14,15 +40,12 @@
 @endpush
 
 @section('content')
-@php
-    $idRolActual = (int) (auth()->user()->id_rol ?? 0);
-    $esEstudiante = $idRolActual === 2;
-@endphp
 
 <div class="mensajes-page">
 
+    {{-- Encabezado --}}
     <div class="mensajes-header">
-        <div>
+        <div class="mensajes-header-copy">
             <span class="mensajes-header-label">Comunicación interna</span>
             <h1>Nuevo mensaje</h1>
 
@@ -33,12 +56,20 @@
             @endif
         </div>
 
-        <a href="{{ route('mensajes.index') }}" class="mensajes-btn mensajes-btn-secondary">
-            <i class="fas fa-arrow-left"></i>
-            <span>Volver</span>
-        </a>
+        <div class="mensajes-header-actions">
+            <a href="{{ $mensajesIndexUrl }}" class="mensajes-back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver a mensajes
+            </a>
+
+            <a href="{{ $dashboardUrl }}" class="mensajes-btn mensajes-btn-secondary">
+                <i class="fas fa-house"></i>
+                Dashboard
+            </a>
+        </div>
     </div>
 
+    {{-- Tarjeta redactar --}}
     <div class="mensajes-compose-card">
 
         <div class="mensajes-compose-header">
@@ -63,7 +94,7 @@
         @endif
 
         <form method="POST"
-              action="{{ route('mensajes.store') }}"
+              action="{{ $mensajesStoreUrl }}"
               class="mensajes-compose-form"
               data-message-form>
 
@@ -116,10 +147,12 @@
                                 5 => 'Secretaría',
                                 default => 'Usuario',
                             };
+
+                            $textoBusqueda = mb_strtolower($nombre . ' ' . $correo . ' ' . $rolTexto);
                         @endphp
 
                         <option value="{{ $destinatario->id_usuario }}"
-                                data-search="{{ mb_strtolower($nombre . ' ' . $correo . ' ' . $rolTexto) }}"
+                                data-search="{{ $textoBusqueda }}"
                                 {{ old('id_destinatario') == $destinatario->id_usuario ? 'selected' : '' }}>
                             {{ $nombre }} — {{ $rolTexto }}
                             {{ $correo !== '' ? '(' . $correo . ')' : '' }}
@@ -196,7 +229,7 @@
             </div>
 
             <div class="mensajes-compose-actions">
-                <a href="{{ route('mensajes.index') }}" class="mensajes-btn mensajes-btn-secondary">
+                <a href="{{ $mensajesIndexUrl }}" class="mensajes-btn mensajes-btn-secondary">
                     Cancelar
                 </a>
 
@@ -209,7 +242,9 @@
             </div>
         </form>
     </div>
+
 </div>
+
 @endsection
 
 @push('scripts')

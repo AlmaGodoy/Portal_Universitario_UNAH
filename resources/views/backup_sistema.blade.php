@@ -1,6 +1,37 @@
 @php
-    $layout = $layout ?? 'layouts.app-estudiantes';
-    $dashboardRoute = $dashboardRoute ?? (Route::has('dashboard') ? route('dashboard') : url('/dashboard'));
+    use Illuminate\Support\Facades\Route;
+
+    $usuario = auth()->user();
+    $idRolActual = (int) ($usuario->id_rol ?? 0);
+
+    $layout = $layout ?? match ($idRolActual) {
+        1 => 'layouts.app-secretaria-academica',
+        4 => 'layouts.app-coordinador',
+        5 => 'layouts.app-secretaria',
+        default => 'layouts.app-estudiantes',
+    };
+
+    $dashboardRoute = $dashboardRoute ?? match ($idRolActual) {
+        1, 4, 5 => Route::has('empleado.dashboard')
+            ? route('empleado.dashboard')
+            : url('/empleado/dashboard'),
+
+        default => Route::has('dashboard')
+            ? route('dashboard')
+            : url('/dashboard'),
+    };
+
+    $backupGenerarUrl = Route::has('backup.generar')
+        ? route('backup.generar')
+        : url('/respaldos/generar');
+
+    $backupProbarUrl = Route::has('backup.probar')
+        ? route('backup.probar')
+        : url('/respaldos/probar');
+
+    $historialRespaldos = collect($historial ?? []);
+    $totalRespaldos = $historialRespaldos->count();
+    $ultimoRespaldo = optional($historialRespaldos->first())->nombre_archivo ?? 'Sin registros';
 @endphp
 
 @extends($layout)
@@ -8,20 +39,15 @@
 @section('title', 'Gestión de Respaldos')
 @section('titulo', 'Gestión de Respaldos')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/backup.css') }}">
+@endpush
+
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/backup.css') }}">
 
-<div class="container-fluid backup-page">
+<div id="backupPage" class="container-fluid backup-page">
 
-    <div class="breadcrumb-bar mb-3">
-        <i class="fas fa-home"></i>
-        <a href="{{ $dashboardRoute }}">Inicio</a>
-        <span class="sep"><i class="fas fa-chevron-right"></i></span>
-        <a href="{{ $dashboardRoute }}">Panel Institucional</a>
-        <span class="sep"><i class="fas fa-chevron-right"></i></span>
-        <span class="current">Respaldos</span>
-    </div>
-
+    {{-- Alertas --}}
     @if(session('error'))
         <div class="backup-alert backup-alert-error">
             <i class="fas fa-exclamation-triangle"></i>
@@ -43,108 +69,151 @@
         </div>
     @endif
 
-    <div class="backup-hero-card">
-        <div class="backup-hero-wrap">
-            <div class="backup-hero-left">
-                <div class="backup-hero-icon">
-                    <i class="fas fa-database"></i>
-                </div>
+    {{-- Encabezado --}}
+    <section class="backup-header">
+        <div class="backup-header-copy">
+            <span class="backup-header-label">
+                <i class="fas fa-database"></i>
+                Administración del sistema
+            </span>
 
-                <div>
-                    <h1 class="backup-hero-title">Gestión de Respaldos</h1>
-                    <p class="backup-hero-subtitle">
-                        Genera, consulta y administra las copias de seguridad del sistema
-                        de manera ordenada, visual y segura.
-                    </p>
-                </div>
-            </div>
+            <h1>Gestión de Respaldos</h1>
 
-            <div class="backup-status-pill">
+            <p>
+                Genera, consulta y administra las copias de seguridad del sistema
+                de manera ordenada, visual y segura.
+            </p>
+        </div>
+
+        <div class="backup-header-actions">
+            <a href="{{ $dashboardRoute }}" class="backup-btn backup-btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Volver al dashboard
+            </a>
+
+            <span class="backup-status-pill">
                 <i class="fas fa-shield-halved"></i>
                 Sistema seguro
-            </div>
+            </span>
         </div>
-    </div>
+    </section>
 
+    {{-- Resumen y acción principal --}}
     <div class="backup-grid-top">
-        <div class="backup-action-card">
-            <div class="backup-card-title">
-                <i class="fas fa-bolt"></i>
-                Acción principal
-            </div>
 
-            <div class="backup-main-action">
-                <div class="backup-main-action-text">
-                    <h4>Generar nuevo respaldo del sistema</h4>
+        <div class="backup-card backup-action-card">
+            <div class="backup-card-header">
+                <div>
+                    <h2>
+                        <i class="fas fa-bolt"></i>
+                        Acción principal
+                    </h2>
                     <p>
-                        Crea una copia de seguridad actualizada para proteger la información
-                        registrada en el sistema. Se recomienda hacerlo antes de cambios importantes
-                        o como parte del control periódico.
+                        Crea una copia de seguridad actualizada para proteger la información registrada.
                     </p>
                 </div>
-
-                <form action="{{ route('backup.generar') }}" method="POST" style="margin: 0;" id="backup-generate-form">
-                    @csrf
-                    <button type="submit" class="btn-backup-main" id="backup-generate-btn">
-                        <i class="fas fa-download"></i>
-                        <span>Realizar Respaldo del Sistema</span>
-                    </button>
-                </form>
             </div>
 
-            <div class="mt-3">
-                <form action="{{ route('backup.probar') }}" method="POST" style="margin:0;" id="backup-test-form">
-                    @csrf
-                    <button type="submit" class="btn btn-outline-primary" id="backup-test-btn">
-                        <i class="fas fa-plug-circle-check"></i>
-                        Probar conexión
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <div class="backup-summary-card">
-            <div class="backup-card-title">
-                <i class="fas fa-chart-simple"></i>
-                Resumen rápido
-            </div>
-
-            <div class="backup-summary-list">
-                <div class="backup-stat-box">
-                    <div class="backup-stat-icon">
-                        <i class="fas fa-folder-open"></i>
+            <div class="backup-card-body">
+                <div class="backup-main-action">
+                    <div class="backup-main-action-text">
+                        <h4>Generar nuevo respaldo del sistema</h4>
+                        <p>
+                            Se recomienda generar un respaldo antes de realizar cambios importantes
+                            o como parte del control periódico de seguridad.
+                        </p>
                     </div>
-                    <div>
-                        <span class="backup-stat-label">Respaldos registrados</span>
-                        <span class="backup-stat-value" id="backup-count-top">{{ collect($historial)->count() }}</span>
-                    </div>
+
+                    <form action="{{ $backupGenerarUrl }}"
+                          method="POST"
+                          class="backup-inline-form"
+                          id="backup-generate-form">
+                        @csrf
+
+                        <button type="submit"
+                                class="backup-btn backup-btn-primary"
+                                id="backup-generate-btn">
+                            <i class="fas fa-download"></i>
+                            <span>Realizar respaldo</span>
+                        </button>
+                    </form>
                 </div>
 
-                <div class="backup-stat-box">
-                    <div class="backup-stat-icon">
-                        <i class="fas fa-clock-rotate-left"></i>
-                    </div>
-                    <div>
-                        <span class="backup-stat-label">Último respaldo visible</span>
-                        <span class="backup-stat-value backup-stat-value-sm">
-                            {{ collect($historial)->first()->nombre_archivo ?? 'Sin registros' }}
-                        </span>
-                    </div>
+                <div class="backup-test-action">
+                    <form action="{{ $backupProbarUrl }}"
+                          method="POST"
+                          class="backup-inline-form"
+                          id="backup-test-form">
+                        @csrf
+
+                        <button type="submit"
+                                class="backup-btn backup-btn-secondary"
+                                id="backup-test-btn">
+                            <i class="fas fa-plug-circle-check"></i>
+                            Probar conexión
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
+
+        <div class="backup-card backup-summary-card">
+            <div class="backup-card-header">
+                <div>
+                    <h2>
+                        <i class="fas fa-chart-simple"></i>
+                        Resumen rápido
+                    </h2>
+                    <p>
+                        Estado general del historial de respaldos.
+                    </p>
+                </div>
+            </div>
+
+            <div class="backup-card-body">
+                <div class="backup-summary-list">
+
+                    <div class="backup-stat-box">
+                        <div class="backup-stat-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+
+                        <div>
+                            <span class="backup-stat-label">Respaldos registrados</span>
+                            <span class="backup-stat-value" id="backup-count-top">
+                                {{ $totalRespaldos }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="backup-stat-box">
+                        <div class="backup-stat-icon backup-stat-icon-gold">
+                            <i class="fas fa-clock-rotate-left"></i>
+                        </div>
+
+                        <div>
+                            <span class="backup-stat-label">Último respaldo visible</span>
+                            <span class="backup-stat-value backup-stat-value-sm">
+                                {{ $ultimoRespaldo }}
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="backup-table-card">
+    {{-- Tabla --}}
+    <div class="backup-card backup-table-card">
         <div class="backup-table-header">
             <div class="backup-table-header-left">
-                <div class="backup-table-title-wrap">
-                    <h3 class="backup-table-title">
-                        <i class="fas fa-history"></i>
-                        Historial de Respaldos
-                    </h3>
-                    <span class="table-count" id="backup-count">{{ collect($historial)->count() }}</span>
-                </div>
+                <h2 class="backup-table-title">
+                    <i class="fas fa-history"></i>
+                    Historial de Respaldos
+                    <span class="table-count" id="backup-count">{{ $totalRespaldos }}</span>
+                </h2>
 
                 <p class="backup-table-subtitle">
                     Consulta las copias de seguridad generadas dentro del sistema.
@@ -153,7 +222,10 @@
 
             <div class="table-search">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Buscar archivo..." id="search-input">
+                <input type="text"
+                       placeholder="Buscar archivo..."
+                       id="search-input"
+                       autocomplete="off">
             </div>
         </div>
 
@@ -167,8 +239,14 @@
                         <th><i class="fas fa-calendar"></i> Registro</th>
                     </tr>
                 </thead>
+
                 <tbody id="backup-tbody">
-                    @forelse($historial as $log)
+                    @forelse($historialRespaldos as $log)
+                        @php
+                            $usuarioRegistro = $log->usuario ?? 'Usuario';
+                            $inicialesUsuario = strtoupper(substr(trim((string) $usuarioRegistro), 0, 2));
+                        @endphp
+
                         <tr>
                             <td>
                                 <div class="file-name">
@@ -193,9 +271,10 @@
                             <td>
                                 <div class="user-cell">
                                     <div class="user-avatar">
-                                        {{ strtoupper(substr(trim((string) ($log->usuario ?? 'US')), 0, 2)) }}
+                                        {{ $inicialesUsuario }}
                                     </div>
-                                    <span>{{ $log->usuario ?? 'Usuario' }}</span>
+
+                                    <span>{{ $usuarioRegistro }}</span>
                                 </div>
                             </td>
 
@@ -224,10 +303,16 @@
         </div>
     </div>
 
+    {{-- Recomendaciones --}}
     <div class="backup-info-card">
-        <div class="backup-card-title backup-card-title-light">
-            <i class="fas fa-circle-info"></i>
-            Recomendaciones de uso
+        <div class="backup-info-header">
+            <h2>
+                <i class="fas fa-circle-info"></i>
+                Recomendaciones de uso
+            </h2>
+            <p>
+                Buenas prácticas para mantener un control adecuado de las copias de seguridad.
+            </p>
         </div>
 
         <div class="backup-info-grid">
@@ -242,21 +327,23 @@
             <div class="backup-info-item">
                 <h5>Control periódico</h5>
                 <p>
-                    Revisa el historial para confirmar que los respaldos se están generando
-                    correctamente y que permanecen disponibles para consulta.
+                    Revisa el historial para confirmar que los respaldos se están generando correctamente.
                 </p>
             </div>
 
             <div class="backup-info-item">
                 <h5>Búsqueda rápida</h5>
                 <p>
-                    Usa el buscador para localizar archivos concretos por nombre
-                    y mantener un mejor control del historial.
+                    Usa el buscador para localizar archivos concretos por nombre y mantener mejor control.
                 </p>
             </div>
         </div>
     </div>
+
 </div>
 
-<script src="{{ asset('js/backup.js') }}"></script>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/backup.js') }}"></script>
+@endpush
