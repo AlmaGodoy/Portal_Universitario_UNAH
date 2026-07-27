@@ -1,0 +1,727 @@
+/* =========================================================
+   ESTILO GENERAL UNIFICADO PUMAGESTIÓN
+   Basado en el diseño de Configuración
+========================================================= */
+
+:root {
+    --pg-blue-dark: #102f61;
+    --pg-blue: #174a96;
+    --pg-blue-light: #2458a6;
+    --pg-gold: #d6a419;
+
+    --pg-bg: #eef3f9;
+    --pg-card: #ffffff;
+    --pg-border: #dbe5f2;
+    --pg-border-strong: #cdd9ea;
+
+    --pg-text: #20344f;
+    --pg-title: #102f61;
+    --pg-muted: #6b7b93;
+
+    --pg-success: #1d8f47;
+    --pg-danger: #c0392b;
+    --pg-warning: #b8860b;
+    --pg-info: #2458a6;
+
+    --pg-shadow: 0 10px 24px rgba(23, 74, 150, 0.10);
+    --pg-shadow-soft: 0 6px 18px rgba(23, 74, 150, 0.08);
+}
+
+/* =========================================================
+   CONTENEDOR GENERAL
+========================================================= */
+
+.config-page,
+.pg-page {
+    padding: 28px 18px 36px;
+}
+
+.config-page *,
+.pg-page * {
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   ENCABEZADO AZUL PRINCIPAL
+========================================================= */
+
+.config-header,
+.pg-header {
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--pg-blue) 0%, var(--pg-blue-light) 100%);
+    box-shadow: var(--pg-shadow);
+    border: none;
+}
+
+.config-header .card-body,
+.pg-header .card-body,
+.pg-header-body {
+    padding: 22px 24px;
+}
+
+.config-header__top,
+.pg-header__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.config-title,
+.pg-title {
+    margin: 0 0 4px;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.config-subtitle,
+.pg-subtitle {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.98rem;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   BOTONES DEL ENCABEZADO
+========================================================= */
+
+.btn-config-back,
+.btn-pg-back {
+    border-radius: 12px;
+    font-weight: 700;
+    padding: 10px 18px;
+    background: #ffffff;
+    border: 1px solid #d7e3f8;
+    color: var(--pg-blue);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    transition: all 0.18s ease;
+}
+
+.btn-config-back:hover,
+.btn-pg-back:hover {
+    background: #f4f8ff;
+    color: #123d7f;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   TARJETAS
+========================================================= */
+
+.config-card,
+.pg-card {
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--pg-card);
+    border: 1px solid var(--pg-border);
+    box-shadow: var(--pg-shadow-soft);
+}
+
+.config-card__header,
+.pg-card__header {
+    background: #f7faff;
+    border-bottom: 1px solid var(--pg-border);
+    padding: 14px 20px;
+}
+
+.config-card__title,
+.pg-card__title {
+    margin: 0;
+    color: #163b77;
+    font-size: 1.08rem;
+    font-weight: 800;
+}
+
+.config-card__subtitle,
+.pg-card__subtitle {
+    margin: 4px 0 0;
+    color: var(--pg-muted);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.config-card .card-body,
+.pg-card .card-body,
+.pg-card__body {
+    padding: 18px 20px;
+}
+
+/* =========================================================
+   GRID GENERAL
+========================================================= */
+
+.pg-grid {
+    display: grid;
+    gap: 18px;
+}
+
+.pg-grid-2 {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.35fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.pg-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+}
+
+/* =========================================================
+   ALERTAS
+========================================================= */
+
+.alert-config,
+.pg-alert {
+    border-radius: 14px;
+    border: none;
+    padding: 14px 16px;
+    font-weight: 700;
+    box-shadow: var(--pg-shadow-soft);
+}
+
+.pg-alert-success {
+    background: #ecfff1;
+    color: var(--pg-success);
+}
+
+.pg-alert-danger,
+.pg-alert-error {
+    background: #fff4f4;
+    color: var(--pg-danger);
+}
+
+.pg-alert-warning {
+    background: #fff9ea;
+    color: var(--pg-warning);
+}
+
+.pg-alert-info {
+    background: #eef5ff;
+    color: var(--pg-info);
+}
+
+/* =========================================================
+   PERFIL / INFORMACIÓN
+========================================================= */
+
+.config-profile,
+.pg-profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.config-avatar,
+.pg-avatar {
+    width: 62px;
+    height: 62px;
+    min-width: 62px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, #234f95 0%, var(--pg-gold) 100%);
+    box-shadow: 0 8px 24px rgba(23, 74, 150, 0.18);
+}
+
+.config-profile__info,
+.pg-profile__info {
+    min-width: 0;
+}
+
+.config-name,
+.pg-name {
+    margin: 0 0 4px;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--pg-title);
+}
+
+.config-email,
+.pg-email {
+    color: var(--pg-muted);
+    word-break: break-word;
+}
+
+/* =========================================================
+   LISTA DE DATOS
+========================================================= */
+
+.config-info-list,
+.pg-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.config-info-item,
+.pg-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #fbfdff;
+    border: 1px solid var(--pg-border);
+}
+
+.config-label,
+.pg-label {
+    font-weight: 700;
+    color: #143c79;
+}
+
+.config-value,
+.pg-value {
+    color: var(--pg-muted);
+    text-align: right;
+}
+
+/* =========================================================
+   FORMULARIOS
+========================================================= */
+
+.pg-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.pg-form-group,
+.config-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.pg-form-full {
+    grid-column: 1 / -1;
+}
+
+.config-form-label,
+.pg-form-label {
+    font-weight: 700;
+    color: #143c79;
+    margin-bottom: 8px;
+}
+
+.config-input-group,
+.pg-input-group {
+    position: relative;
+}
+
+.config-input,
+.pg-input,
+.pg-select,
+.pg-textarea {
+    border-radius: 12px;
+    border: 1px solid var(--pg-border-strong);
+    min-height: 46px;
+    padding: 10px 14px;
+    color: var(--pg-text);
+    box-shadow: none !important;
+    width: 100%;
+    background: #ffffff;
+}
+
+.config-input:focus,
+.pg-input:focus,
+.pg-select:focus,
+.pg-textarea:focus {
+    border-color: var(--pg-blue-light);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(36, 88, 166, 0.12) !important;
+}
+
+.pg-textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.pg-help {
+    margin-top: 6px;
+    color: var(--pg-muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.pg-error {
+    margin-top: 6px;
+    color: var(--pg-danger);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+/* =========================================================
+   BOTONES PRINCIPALES
+========================================================= */
+
+.btn-config-save,
+.btn-pg-primary,
+.pg-btn-primary {
+    border: none;
+    border-radius: 12px;
+    padding: 11px 20px;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--pg-blue) 0%, var(--pg-blue-light) 100%);
+    box-shadow: 0 10px 18px rgba(23, 74, 150, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.btn-config-save:hover,
+.btn-pg-primary:hover,
+.pg-btn-primary:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.btn-pg-secondary,
+.pg-btn-secondary {
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 700;
+    background: #ffffff;
+    border: 1px solid var(--pg-border);
+    color: var(--pg-blue);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.btn-pg-secondary:hover,
+.pg-btn-secondary:hover {
+    background: #f4f8ff;
+    color: #123d7f;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-pg-danger,
+.pg-btn-danger {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 700;
+    background: #cf4444;
+    color: #ffffff;
+    min-height: 42px;
+}
+
+.btn-pg-danger:hover,
+.pg-btn-danger:hover {
+    background: #b93636;
+    color: #ffffff;
+}
+
+/* =========================================================
+   TABLAS
+========================================================= */
+
+.pg-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.pg-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 760px;
+}
+
+.pg-table thead th {
+    background: #f7faff;
+    color: #143c79;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--pg-border);
+    white-space: nowrap;
+}
+
+.pg-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #edf2f8;
+    color: var(--pg-text);
+    font-size: 0.94rem;
+    vertical-align: middle;
+}
+
+.pg-table tbody tr:hover {
+    background: #fbfdff;
+}
+
+.pg-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================================
+   BADGES / ESTADOS
+========================================================= */
+
+.config-badge,
+.pg-badge {
+    font-size: 0.9rem;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pg-badge-success {
+    background: #ecfff1;
+    color: var(--pg-success);
+}
+
+.pg-badge-danger {
+    background: #fff4f4;
+    color: var(--pg-danger);
+}
+
+.pg-badge-warning {
+    background: #fff9ea;
+    color: var(--pg-warning);
+}
+
+.pg-badge-info {
+    background: #eef5ff;
+    color: var(--pg-info);
+}
+
+.pg-badge-muted {
+    background: #eef2f7;
+    color: var(--pg-muted);
+}
+
+/* Estados comunes */
+.pg-status-aprobada,
+.pg-status-activa,
+.pg-status-success {
+    background: #ecfff1;
+    color: var(--pg-success);
+    border: 1px solid #bfe8ca;
+}
+
+.pg-status-rechazada,
+.pg-status-danger {
+    background: #fff4f4;
+    color: var(--pg-danger);
+    border: 1px solid #f0c3c3;
+}
+
+.pg-status-pendiente,
+.pg-status-warning {
+    background: #fff9ea;
+    color: var(--pg-warning);
+    border: 1px solid #ecd8a0;
+}
+
+.pg-status-revision,
+.pg-status-info {
+    background: #eef5ff;
+    color: var(--pg-info);
+    border: 1px solid #c7d9f8;
+}
+
+/* =========================================================
+   BLOQUES DE SEGURIDAD / PREFERENCIAS
+========================================================= */
+
+.security-item,
+.pg-security-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.security-title,
+.pg-security-title {
+    margin: 0 0 4px;
+    font-size: 1.18rem;
+    font-weight: 800;
+    color: var(--pg-title);
+}
+
+.security-text,
+.pg-security-text {
+    color: var(--pg-muted);
+}
+
+.preference-box,
+.pg-preference-box {
+    height: 100%;
+    border: 1px solid var(--pg-border);
+    border-radius: 16px;
+    background: #fbfdff;
+    padding: 16px 18px;
+}
+
+.preference-text,
+.pg-preference-text {
+    margin-top: 10px;
+    color: var(--pg-muted);
+    line-height: 1.6;
+}
+
+/* =========================================================
+   VACÍOS
+========================================================= */
+
+.pg-empty {
+    min-height: 150px;
+    border: 1px dashed var(--pg-border-strong);
+    border-radius: 16px;
+    background: #fbfdff;
+    color: var(--pg-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+    padding: 24px;
+}
+
+.pg-empty i {
+    color: #6b7b93;
+    font-size: 1.4rem;
+}
+
+.pg-empty-title {
+    margin: 0;
+    color: var(--pg-title);
+    font-weight: 800;
+    font-size: 1.05rem;
+}
+
+.pg-empty-text {
+    margin: 0;
+    color: var(--pg-muted);
+}
+
+/* =========================================================
+   ACCIONES
+========================================================= */
+
+.pg-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 18px;
+}
+
+.pg-actions-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 991.98px) {
+    .config-page,
+    .pg-page {
+        padding: 20px 12px 30px;
+    }
+
+    .config-header__top,
+    .pg-header__top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .config-title,
+    .pg-title {
+        font-size: 1.6rem;
+    }
+
+    .pg-grid-2,
+    .pg-grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .pg-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .config-profile,
+    .pg-profile {
+        align-items: flex-start;
+    }
+
+    .config-name,
+    .pg-name {
+        font-size: 1.2rem;
+    }
+
+    .config-info-item,
+    .pg-info-item,
+    .security-item,
+    .pg-security-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .config-value,
+    .pg-value {
+        text-align: left;
+    }
+
+    .pg-actions,
+    .pg-actions-between {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-config-back,
+    .btn-pg-back,
+    .btn-config-save,
+    .btn-pg-primary,
+    .btn-pg-secondary,
+    .pg-btn-primary,
+    .pg-btn-secondary {
+        width: 100%;
+    }
+}

@@ -1,11 +1,38 @@
-@extends(
-    match ((int) (auth()->user()->id_rol ?? 0)) {
+@php
+    use Illuminate\Support\Facades\Route;
+
+    $usuario = auth()->user();
+    $idRolActual = (int) ($usuario->id_rol ?? 0);
+
+    $layout = match ($idRolActual) {
         1 => 'layouts.app-secretaria-academica',
         4 => 'layouts.app-coordinador',
         5 => 'layouts.app-secretaria',
         default => 'layouts.app-estudiantes',
-    }
-)
+    };
+
+    $dashboardUrl = match ($idRolActual) {
+        1, 4, 5 => Route::has('empleado.dashboard')
+            ? route('empleado.dashboard')
+            : url('/empleado/dashboard'),
+
+        default => Route::has('dashboard')
+            ? route('dashboard')
+            : url('/dashboard'),
+    };
+
+    $mensajesIndexUrl = Route::has('mensajes.index')
+        ? route('mensajes.index')
+        : url('/mensajes');
+
+    $mensajesResponderUrl = Route::has('mensajes.responder')
+        ? route('mensajes.responder', $mensajePrincipal->id_mensaje)
+        : url('/mensajes/' . $mensajePrincipal->id_mensaje . '/responder');
+
+    $idUsuarioActual = (int) ($usuario->id_usuario ?? 0);
+@endphp
+
+@extends($layout)
 
 @section('titulo', 'Conversación')
 
@@ -21,25 +48,36 @@
             <i class="fas fa-circle-check"></i>
             <span>{{ session('success') }}</span>
 
-            <button type="button" class="mensajes-alert-close" data-alert-close>
+            <button type="button"
+                    class="mensajes-alert-close"
+                    data-alert-close>
                 <i class="fas fa-times"></i>
             </button>
         </div>
     @endif
 
+    {{-- Encabezado --}}
     <div class="mensajes-header">
-        <div>
+        <div class="mensajes-header-copy">
             <span class="mensajes-header-label">Conversación</span>
             <h1>{{ $mensajePrincipal->asunto }}</h1>
             <p>Consulta el mensaje y responde dentro de la misma conversación.</p>
         </div>
 
-        <a href="{{ route('mensajes.index') }}" class="mensajes-btn mensajes-btn-secondary">
-            <i class="fas fa-arrow-left"></i>
-            <span>Volver a mensajes</span>
-        </a>
+        <div class="mensajes-header-actions">
+            <a href="{{ $mensajesIndexUrl }}" class="mensajes-back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver a mensajes
+            </a>
+
+            <a href="{{ $dashboardUrl }}" class="mensajes-btn mensajes-btn-secondary">
+                <i class="fas fa-house"></i>
+                Dashboard
+            </a>
+        </div>
     </div>
 
+    {{-- Tarjeta de conversación --}}
     <div class="mensajes-conversation-card">
 
         <div class="mensajes-conversation-header">
@@ -59,7 +97,6 @@
 
             @foreach ($conversacion as $item)
                 @php
-                    $idUsuarioActual = (int) (auth()->user()->id_usuario ?? 0);
                     $esPropio = (int) $item->id_remitente === $idUsuarioActual;
 
                     $nombreRemitente =
@@ -122,6 +159,7 @@
 
         </div>
 
+        {{-- Responder --}}
         <div class="mensajes-reply">
             <div class="mensajes-reply-title">
                 <i class="fas fa-reply"></i>
@@ -144,7 +182,7 @@
             @endif
 
             <form method="POST"
-                  action="{{ route('mensajes.responder', $mensajePrincipal->id_mensaje) }}"
+                  action="{{ $mensajesResponderUrl }}"
                   data-message-form>
 
                 @csrf

@@ -2,45 +2,51 @@
 
 @section('titulo', 'Equivalencias')
 
+@push('styles')
+    @vite(['resources/css/equivalencias.css'])
+@endpush
+
 @section('content')
-<div class="container-fluid py-3">
+<div class="container-fluid equivalencias-alumno-page">
 
-    <div class="row g-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm overflow-hidden">
-                <div class="card-body p-4" style="background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); color: #fff; border-radius: 18px;">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                        <div>
-                            <h2 class="fw-bold mb-2">Solicitud de Equivalencias</h2>
-                            <p class="mb-0" style="max-width: 780px;">
-                                Sube tu historial académico, selecciona tu plan anterior y registra las asignaturas aprobadas.
-                                El sistema mostrará equivalencias preliminares para que luego sean revisadas y validadas oficialmente.
-                            </p>
-                        </div>
+    {{-- Encabezado --}}
+    <div class="eqal-header card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="eqal-header__top">
+                <div>
+                    <h1 class="eqal-title">Solicitud de Equivalencias</h1>
+                    <p class="eqal-subtitle mb-0">
+                        Sube tu historial académico, selecciona tu plan anterior y registra las asignaturas aprobadas.
+                        El sistema mostrará equivalencias preliminares para que luego sean revisadas y validadas oficialmente.
+                    </p>
+                </div>
 
-                        <div>
-                            <a href="{{ url()->previous() }}" class="btn btn-light rounded-pill px-4 fw-semibold">
-                                <i class="fas fa-arrow-left me-2"></i>Volver atrás
-                            </a>
-                        </div>
-                    </div>
+                <div class="eqal-actions-top">
+                    <a href="{{ url()->previous() }}" class="btn eqal-btn-back">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Volver atrás
+                    </a>
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- ALERTA GLOBAL --}}
-        <div class="col-12">
-            <div id="eqAlertWrapper"></div>
-        </div>
+    {{-- Alertas dinámicas --}}
+    <div id="eqAlertWrapper"></div>
 
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pb-0">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fas fa-upload text-primary"></i>
-                        <h5 class="mb-0 fw-bold">Nueva solicitud</h5>
-                    </div>
-                    <small class="text-muted">Completa los datos y adjunta tu historial académico.</small>
+    <div class="row g-4">
+
+        {{-- Nueva solicitud --}}
+        <div class="col-12 col-lg-5">
+            <div class="card eqal-card border-0 shadow-sm h-100">
+                <div class="card-header eqal-card__header">
+                    <h3 class="eqal-card__title mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Nueva solicitud
+                    </h3>
+                    <p class="eqal-card__subtitle mb-0">
+                        Completa los datos y adjunta tu historial académico.
+                    </p>
                 </div>
 
                 <div class="card-body">
@@ -48,54 +54,63 @@
                         @csrf
 
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="version_plan_viejo" class="form-label fw-semibold">Plan viejo</label>
-                                <select id="version_plan_viejo" name="version_plan_viejo" class="form-select">
+                            <div class="col-12 col-md-6">
+                                <label for="version_plan_viejo" class="form-label eqal-form-label">
+                                    Plan viejo
+                                </label>
+                                <select id="version_plan_viejo" name="version_plan_viejo" class="form-select eqal-input">
                                     <option value="2019">Plan 2019</option>
                                     <option value="2022" selected>Plan 2022</option>
                                 </select>
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="version_plan_nuevo" class="form-label fw-semibold">Plan nuevo</label>
+                            <div class="col-12 col-md-6">
+                                <label for="version_plan_nuevo" class="form-label eqal-form-label">
+                                    Plan nuevo
+                                </label>
                                 <input
                                     type="text"
                                     id="version_plan_nuevo"
                                     name="version_plan_nuevo"
-                                    class="form-control"
+                                    class="form-control eqal-input"
                                     value="2026"
                                     readonly
                                 >
                             </div>
 
                             <div class="col-12">
-                                <label for="documento" class="form-label fw-semibold">Historial académico (PDF/JPG/PNG)</label>
+                                <label for="documento" class="form-label eqal-form-label">
+                                    Historial académico
+                                </label>
                                 <input
                                     type="file"
                                     id="documento"
                                     name="documento"
-                                    class="form-control"
+                                    class="form-control eqal-input eqal-file-input"
                                     accept=".pdf,.jpg,.jpeg,.png"
                                 >
-                                <small class="text-muted d-block mt-2">
-                                    Adjunta un archivo legible y actualizado de tu historial académico.
+                                <small class="eqal-help d-block mt-2">
+                                    Adjunta un archivo legible y actualizado en formato PDF, JPG o PNG.
                                 </small>
                             </div>
 
                             <div class="col-12">
-                                <label for="observacion_alumno" class="form-label fw-semibold">Observación</label>
+                                <label for="observacion_alumno" class="form-label eqal-form-label">
+                                    Observación
+                                </label>
                                 <textarea
                                     id="observacion_alumno"
                                     name="observacion_alumno"
-                                    class="form-control"
+                                    class="form-control eqal-input eqal-textarea"
                                     rows="4"
                                     placeholder="Opcional"
                                 ></textarea>
                             </div>
 
                             <div class="col-12">
-                                <button type="submit" id="btnCrearSolicitud" class="btn btn-primary rounded-pill px-4 fw-semibold">
-                                    <i class="fas fa-paper-plane me-2"></i>Crear solicitud
+                                <button type="submit" id="btnCrearSolicitud" class="btn eqal-btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Crear solicitud
                                 </button>
                             </div>
                         </div>
@@ -104,20 +119,23 @@
             </div>
         </div>
 
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 pb-0">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fas fa-folder-open text-primary"></i>
-                        <h5 class="mb-0 fw-bold">Mis solicitudes</h5>
-                    </div>
-                    <small class="text-muted">Consulta el estado general de tus solicitudes registradas.</small>
+        {{-- Mis solicitudes --}}
+        <div class="col-12 col-lg-7">
+            <div class="card eqal-card border-0 shadow-sm h-100">
+                <div class="card-header eqal-card__header">
+                    <h3 class="eqal-card__title mb-0">
+                        <i class="fas fa-folder-open me-2"></i>
+                        Mis solicitudes
+                    </h3>
+                    <p class="eqal-card__subtitle mb-0">
+                        Consulta el estado general de tus solicitudes registradas.
+                    </p>
                 </div>
 
                 <div class="card-body">
                     <div id="equivalenciasMisSolicitudes">
-                        <div class="text-center py-5 border rounded-4 text-muted">
-                            <i class="fas fa-folder-open mb-3 fa-lg"></i>
+                        <div class="eqal-empty">
+                            <i class="fas fa-folder-open"></i>
                             <p class="mb-0">Cargando solicitudes...</p>
                         </div>
                     </div>
@@ -125,20 +143,22 @@
             </div>
         </div>
 
-        {{-- BLOQUE DE ASIGNATURAS --}}
+        {{-- Asignaturas del plan viejo --}}
         <div class="col-12">
-            <div id="bloqueAsignaturas" class="card border-0 shadow-sm d-none">
-                <div class="card-header bg-white border-0">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fas fa-book text-primary"></i>
-                        <h5 class="mb-0 fw-bold">Asignaturas del plan viejo</h5>
-                    </div>
-                    <small class="text-muted">Selecciona las materias aprobadas que deseas registrar en la solicitud.</small>
+            <div id="bloqueAsignaturas" class="card eqal-card border-0 shadow-sm d-none">
+                <div class="card-header eqal-card__header">
+                    <h3 class="eqal-card__title mb-0">
+                        <i class="fas fa-book me-2"></i>
+                        Asignaturas del plan viejo
+                    </h3>
+                    <p class="eqal-card__subtitle mb-0">
+                        Selecciona las materias aprobadas que deseas registrar en la solicitud.
+                    </p>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table align-middle">
+                    <div class="eqal-table-wrapper">
+                        <table class="table eqal-table align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th style="width: 70px;">Sel.</th>
@@ -149,7 +169,7 @@
                             </thead>
                             <tbody id="tablaAsignaturasPlanViejo">
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">
+                                    <td colspan="4" class="eqal-empty-row">
                                         Aún no se han cargado asignaturas.
                                     </td>
                                 </tr>
@@ -157,35 +177,37 @@
                         </table>
                     </div>
 
-                    <div class="mt-3 d-flex flex-wrap gap-2">
-                        <button type="button" id="btnGuardarMaterias" class="btn btn-success rounded-pill px-4 fw-semibold">
-                            <i class="fas fa-save me-2"></i>Guardar materias
+                    <div class="eqal-actions">
+                        <button type="button" id="btnGuardarMaterias" class="btn eqal-btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Guardar materias
                         </button>
 
-                        <button type="button" id="btnVerPreliminares" class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
-                            <i class="fas fa-eye me-2"></i>Ver equivalencias preliminares
+                        <button type="button" id="btnVerPreliminares" class="btn eqal-btn-outline">
+                            <i class="fas fa-eye me-2"></i>
+                            Ver equivalencias preliminares
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- BLOQUE DE EQUIVALENCIAS PRELIMINARES --}}
+        {{-- Equivalencias preliminares --}}
         <div class="col-12">
-            <div id="bloquePreliminares" class="card border-0 shadow-sm d-none">
-                <div class="card-header bg-white border-0">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fas fa-random text-primary"></i>
-                        <h5 class="mb-0 fw-bold">Equivalencias preliminares</h5>
-                    </div>
-                    <small class="text-muted">
+            <div id="bloquePreliminares" class="card eqal-card border-0 shadow-sm d-none">
+                <div class="card-header eqal-card__header">
+                    <h3 class="eqal-card__title mb-0">
+                        <i class="fas fa-random me-2"></i>
+                        Equivalencias preliminares
+                    </h3>
+                    <p class="eqal-card__subtitle mb-0">
                         Estas equivalencias son preliminares y estarán sujetas a revisión oficial.
-                    </small>
+                    </p>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table align-middle">
+                    <div class="eqal-table-wrapper">
+                        <table class="table eqal-table align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th>Código viejo</th>
@@ -197,7 +219,7 @@
                             </thead>
                             <tbody id="tablaEquivalenciasPreliminares">
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
+                                    <td colspan="5" class="eqal-empty-row">
                                         Aún no hay equivalencias preliminares para mostrar.
                                     </td>
                                 </tr>
@@ -205,14 +227,16 @@
                         </table>
                     </div>
 
-                    <div class="mt-3">
-                        <small class="text-muted">
+                    <div class="eqal-note mt-3">
+                        <i class="fas fa-circle-info"></i>
+                        <span>
                             Recuerda que estas equivalencias pueden cambiar durante la revisión por Secretaría o Coordinación.
-                        </small>
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 @endsection
