@@ -1,19 +1,37 @@
-.stu-support-page{
-    padding: 18px 18px 70px;
+/* =========================================================
+   SOPORTE ESTUDIANTE
+   CSS exclusivo para #soporteEstudiantePage
+========================================================= */
+
+#soporteEstudiantePage {
+    padding: 28px 18px 70px;
+    color: #22314d;
 }
 
-.stu-support-hero{
-    background: linear-gradient(135deg, #102b67 0%, #1d4f9f 55%, #2a77c8 100%);
-    border-radius: 22px;
-    padding: 28px 28px;
-    color: #fff;
-    box-shadow: 0 14px 32px rgba(16, 43, 103, .18);
+#soporteEstudiantePage *,
+#soporteEstudiantePage *::before,
+#soporteEstudiantePage *::after {
+    box-sizing: border-box;
+}
+
+/* ENCABEZADO */
+
+#soporteEstudiantePage .stu-support-hero {
+    background: linear-gradient(135deg, #174a96 0%, #2458a6 100%);
+    border-radius: 18px;
+    padding: 22px 24px;
+    color: #ffffff;
+    box-shadow: 0 14px 30px rgba(18, 43, 90, .10);
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
 }
 
-.stu-support-hero::before{
+#soporteEstudiantePage .stu-support-hero::before {
     content: "";
     position: absolute;
     top: -30px;
@@ -24,7 +42,7 @@
     border-radius: 50%;
 }
 
-.stu-support-hero::after{
+#soporteEstudiantePage .stu-support-hero::after {
     content: "";
     position: absolute;
     bottom: -60px;
@@ -35,168 +53,217 @@
     border-radius: 50%;
 }
 
-.stu-support-kicker{
+#soporteEstudiantePage .stu-support-hero-content,
+#soporteEstudiantePage .stu-support-hero-actions {
+    position: relative;
+    z-index: 2;
+}
+
+#soporteEstudiantePage .stu-support-hero-content {
+    min-width: 0;
+}
+
+#soporteEstudiantePage .stu-support-hero-actions {
+    flex-shrink: 0;
+}
+
+#soporteEstudiantePage .stu-support-kicker {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.14);
-    border: 1px solid rgba(255,255,255,.18);
-    font-size: .84rem;
-    font-weight: 800;
+    margin-bottom: 12px;
+    color: rgba(255,255,255,.78);
+    font-size: .78rem;
+    font-weight: 900;
     text-transform: uppercase;
     letter-spacing: .04em;
-    margin-bottom: 14px;
 }
 
-.stu-support-hero h1{
-    margin: 0 0 10px;
+#soporteEstudiantePage .stu-support-hero h1 {
+    margin: 0 0 6px;
     font-size: 2rem;
     font-weight: 800;
-    line-height: 1.15;
-    position: relative;
-    z-index: 2;
+    line-height: 1.2;
+    color: #ffffff;
 }
 
-.stu-support-hero p{
+#soporteEstudiantePage .stu-support-hero p {
     margin: 0;
-    font-size: 1rem;
-    color: #e8efff;
-    max-width: 760px;
-    line-height: 1.65;
-    position: relative;
-    z-index: 2;
+    font-size: .98rem;
+    color: rgba(255,255,255,.92);
+    max-width: 800px;
+    line-height: 1.55;
 }
 
-.stu-support-grid{
+/* GRID */
+
+#soporteEstudiantePage .stu-support-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) minmax(300px, .9fr);
     gap: 20px;
     align-items: start;
 }
 
-.stu-support-card{
-    background: #fff;
-    border: 1px solid #e3eaf5;
-    border-radius: 20px;
-    box-shadow: 0 10px 26px rgba(18, 43, 90, .08);
+/* TARJETAS */
+
+#soporteEstudiantePage .stu-support-card {
+    background: #ffffff;
+    border: 1px solid #dbe5f2;
+    border-radius: 18px;
+    box-shadow: 0 8px 18px rgba(18, 43, 90, .06);
     overflow: hidden;
     margin-bottom: 20px;
 }
 
-.stu-support-card-header{
-    padding: 20px 22px 12px;
-    border-bottom: 1px solid #edf2f8;
+#soporteEstudiantePage .stu-support-card-header {
+    padding: 14px 20px;
+    background: #f7faff;
+    border-bottom: 1px solid #dbe5f2;
 }
 
-.stu-support-card-header h2{
-    margin: 0 0 6px;
-    font-size: 1.18rem;
+#soporteEstudiantePage .stu-support-card-header h2 {
+    margin: 0 0 5px;
+    font-size: 1.08rem;
     font-weight: 800;
-    color: #16397a;
+    color: #163b77;
 }
 
-.stu-support-card-header p{
+#soporteEstudiantePage .stu-support-card-header h2 i {
+    color: #2458a6;
+    margin-right: 8px;
+}
+
+#soporteEstudiantePage .stu-support-card-header p {
     margin: 0;
-    color: #6f7b92;
-    line-height: 1.55;
+    color: #6b7b93;
+    font-size: .92rem;
+    line-height: 1.45;
 }
 
-.stu-support-card-body{
-    padding: 22px;
+#soporteEstudiantePage .stu-support-card-body {
+    padding: 20px;
 }
 
-.stu-support-form-grid{
+/* FORMULARIO */
+
+#soporteEstudiantePage .stu-support-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
 }
 
-.stu-support-field{
+#soporteEstudiantePage .stu-support-field {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.stu-support-field-full{
+#soporteEstudiantePage .stu-support-field-full {
     grid-column: 1 / -1;
 }
 
-.stu-support-field label{
+#soporteEstudiantePage .stu-support-field label {
     margin: 0;
     font-size: .92rem;
     font-weight: 700;
-    color: #30405f;
+    color: #143c79;
 }
 
-.stu-support-field input,
-.stu-support-field select,
-.stu-support-field textarea{
+#soporteEstudiantePage .stu-support-field input,
+#soporteEstudiantePage .stu-support-field select,
+#soporteEstudiantePage .stu-support-field textarea {
     width: 100%;
-    border: 1px solid #d8e2f0;
-    border-radius: 14px;
-    background: #fff;
+    border: 1px solid #cdd9ea;
+    border-radius: 12px;
+    background: #ffffff;
     padding: 12px 14px;
     font-size: .95rem;
-    color: #22314d;
+    color: #20344f;
     outline: none;
-    transition: all .18s ease;
+    box-shadow: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
 }
 
-.stu-support-field input:focus,
-.stu-support-field select:focus,
-.stu-support-field textarea:focus{
-    border-color: #2a77c8;
-    box-shadow: 0 0 0 4px rgba(42, 119, 200, .12);
+#soporteEstudiantePage .stu-support-field input:focus,
+#soporteEstudiantePage .stu-support-field select:focus,
+#soporteEstudiantePage .stu-support-field textarea:focus {
+    border-color: #2458a6;
+    box-shadow: 0 0 0 3px rgba(36, 88, 166, .12);
 }
 
-.stu-support-field textarea{
+#soporteEstudiantePage .stu-support-field textarea {
     min-height: 150px;
     resize: vertical;
 }
 
-.stu-support-help{
+#soporteEstudiantePage .stu-support-help {
     font-size: .84rem;
     color: #7c879d;
     margin-top: 2px;
 }
 
-.stu-support-actions{
+/* BOTONES */
+
+#soporteEstudiantePage .stu-support-actions {
     margin-top: 18px;
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-.stu-btn{
+#soporteEstudiantePage .stu-btn {
     border: none;
-    border-radius: 14px;
-    min-height: 46px;
-    padding: 0 18px;
+    border-radius: 12px;
+    min-height: 42px;
+    padding: 10px 18px;
     font-weight: 800;
     font-size: .95rem;
     cursor: pointer;
     transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
 }
 
-.stu-btn:hover{
+#soporteEstudiantePage .stu-btn:hover {
     transform: translateY(-1px);
+    text-decoration: none;
 }
 
-.stu-btn-primary{
-    background: linear-gradient(135deg, #16397a 0%, #2a77c8 100%);
-    color: #fff;
-    box-shadow: 0 10px 22px rgba(29, 79, 159, .20);
+#soporteEstudiantePage .stu-btn-primary {
+    background: linear-gradient(135deg, #174a96 0%, #2458a6 100%);
+    color: #ffffff;
+    box-shadow: 0 10px 18px rgba(23, 74, 150, .18);
 }
 
-.stu-btn-light{
+#soporteEstudiantePage .stu-btn-primary:hover {
+    color: #ffffff;
+}
+
+#soporteEstudiantePage .stu-btn-light {
     background: #f4f7fb;
     color: #23324d;
     border: 1px solid #dce5f0;
 }
 
-.stu-support-message{
+#soporteEstudiantePage .stu-btn-back {
+    background: #ffffff;
+    color: #174a96;
+    border: 1px solid #d7e3f8;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+#soporteEstudiantePage .stu-btn-back:hover {
+    background: #f4f8ff;
+    color: #123d7f;
+}
+
+/* MENSAJE */
+
+#soporteEstudiantePage .stu-support-message {
     display: none;
     margin-top: 14px;
     padding: 13px 15px;
@@ -205,81 +272,30 @@
     font-size: .92rem;
 }
 
-.stu-support-message.is-success{
-    display: block;
+#soporteEstudiantePage .stu-support-message.is-success {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background: #ecf8f0;
     color: #227447;
     border: 1px solid #caebd5;
 }
 
-.stu-support-channels{
+/* FAQ */
+
+#soporteEstudiantePage .stu-support-faq {
     display: grid;
     gap: 14px;
 }
 
-.stu-support-channel{
-    border: 1px solid #e4ebf5;
-    border-radius: 16px;
-    padding: 16px;
-    background: #fbfdff;
-}
-
-.stu-support-channel-title{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    font-size: 1rem;
-    font-weight: 800;
-    color: #16397a;
-}
-
-.stu-support-channel-title i{
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    background: #eaf2ff;
-    color: #1d4f9f;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-}
-
-.stu-support-channel p{
-    margin: 0;
-    color: #5f6e88;
-    line-height: 1.6;
-}
-
-.stu-support-tips{
-    margin: 0;
-    padding-left: 18px;
-    color: #31415f;
-}
-
-.stu-support-tips li{
-    margin-bottom: 10px;
-    line-height: 1.6;
-}
-
-.stu-support-tips li:last-child{
-    margin-bottom: 0;
-}
-
-.stu-support-faq{
-    display: grid;
-    gap: 14px;
-}
-
-.stu-support-faq details{
+#soporteEstudiantePage .stu-support-faq details {
     border: 1px solid #e3ebf6;
     border-radius: 16px;
     background: #fcfdff;
     padding: 14px 16px;
 }
 
-.stu-support-faq summary{
+#soporteEstudiantePage .stu-support-faq summary {
     list-style: none;
     cursor: pointer;
     font-weight: 800;
@@ -288,11 +304,11 @@
     padding-right: 28px;
 }
 
-.stu-support-faq summary::-webkit-details-marker{
+#soporteEstudiantePage .stu-support-faq summary::-webkit-details-marker {
     display: none;
 }
 
-.stu-support-faq summary::after{
+#soporteEstudiantePage .stu-support-faq summary::after {
     content: "+";
     position: absolute;
     right: 0;
@@ -302,75 +318,103 @@
     color: #1d4f9f;
 }
 
-.stu-support-faq details[open] summary::after{
+#soporteEstudiantePage .stu-support-faq details[open] summary::after {
     content: "–";
 }
 
-.stu-support-faq p{
+#soporteEstudiantePage .stu-support-faq p {
     margin: 12px 0 0;
     color: #5d6c86;
     line-height: 1.65;
 }
 
-.stu-support-status-box{
+/* RECOMENDACIONES */
+
+#soporteEstudiantePage .stu-support-tips {
+    margin: 0;
+    padding-left: 18px;
+    color: #31415f;
+}
+
+#soporteEstudiantePage .stu-support-tips li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+#soporteEstudiantePage .stu-support-tips li:last-child {
+    margin-bottom: 0;
+}
+
+/* ESTADO */
+
+#soporteEstudiantePage .stu-support-status-box {
     display: grid;
     gap: 12px;
 }
 
-.stu-support-status-item{
+#soporteEstudiantePage .stu-support-status-item {
     border: 1px solid #e4ebf5;
     border-radius: 16px;
     padding: 14px 16px;
     background: #fbfdff;
 }
 
-.stu-support-status-item strong{
+#soporteEstudiantePage .stu-support-status-item strong {
     display: block;
     margin-bottom: 4px;
     color: #16397a;
     font-size: .96rem;
 }
 
-.stu-support-status-item span{
+#soporteEstudiantePage .stu-support-status-item span {
     color: #677791;
     font-size: .92rem;
     line-height: 1.55;
 }
 
-@media (max-width: 1199.98px){
-    .stu-support-grid{
+/* RESPONSIVE */
+
+@media (max-width: 1199.98px) {
+    #soporteEstudiantePage .stu-support-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 767.98px){
-    .stu-support-page{
+@media (max-width: 767.98px) {
+    #soporteEstudiantePage {
         padding: 14px 14px 70px;
     }
 
-    .stu-support-hero{
+    #soporteEstudiantePage .stu-support-hero {
+        flex-direction: column;
+        align-items: flex-start;
         padding: 22px 18px;
     }
 
-    .stu-support-hero h1{
+    #soporteEstudiantePage .stu-support-hero h1 {
         font-size: 1.6rem;
     }
 
-    .stu-support-form-grid{
+    #soporteEstudiantePage .stu-support-hero-actions,
+    #soporteEstudiantePage .stu-btn-back {
+        width: 100%;
+    }
+
+    #soporteEstudiantePage .stu-support-form-grid {
         grid-template-columns: 1fr;
     }
 
-    .stu-support-card-header,
-    .stu-support-card-body{
+    #soporteEstudiantePage .stu-support-card-header,
+    #soporteEstudiantePage .stu-support-card-body {
         padding-left: 16px;
         padding-right: 16px;
     }
 
-    .stu-support-actions{
+    #soporteEstudiantePage .stu-support-actions {
         flex-direction: column;
     }
 
-    .stu-btn{
+    #soporteEstudiantePage .stu-btn {
         width: 100%;
     }
 }
