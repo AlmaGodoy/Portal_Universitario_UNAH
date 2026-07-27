@@ -2080,7 +2080,7 @@
                     </div>
 
                     <div class="user-dropdown-body">
-                        <a href="#" class="user-dropdown-option">
+                        <a href="{{ url('/secretaria-carrera/mi-perfil') }}" class="user-dropdown-option">
                             <span class="user-dropdown-option-icon">
                                 <i class="fas fa-user"></i>
                             </span>
