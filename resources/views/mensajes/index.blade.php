@@ -1,11 +1,41 @@
-@extends(
-    match ((int) (auth()->user()->id_rol ?? 0)) {
+@php
+    use Illuminate\Support\Facades\Route;
+    use Illuminate\Support\Str;
+
+    $usuario = auth()->user();
+    $idRolActual = (int) ($usuario->id_rol ?? 0);
+
+    $layout = match ($idRolActual) {
         1 => 'layouts.app-secretaria-academica',
         4 => 'layouts.app-coordinador',
         5 => 'layouts.app-secretaria',
         default => 'layouts.app-estudiantes',
-    }
-)
+    };
+
+    $dashboardUrl = match ($idRolActual) {
+        1, 4, 5 => Route::has('empleado.dashboard')
+            ? route('empleado.dashboard')
+            : url('/empleado/dashboard'),
+
+        default => Route::has('dashboard')
+            ? route('dashboard')
+            : url('/dashboard'),
+    };
+
+    $mensajesIndexUrl = Route::has('mensajes.index')
+        ? route('mensajes.index')
+        : url('/mensajes');
+
+    $mensajesEnviadosUrl = Route::has('mensajes.enviados')
+        ? route('mensajes.enviados')
+        : url('/mensajes/enviados');
+
+    $mensajesCreateUrl = Route::has('mensajes.create')
+        ? route('mensajes.create')
+        : url('/mensajes/crear');
+@endphp
+
+@extends($layout)
 
 @section('titulo', 'Mensajes')
 
@@ -20,35 +50,46 @@
         <div class="mensajes-alert mensajes-alert-success">
             <i class="fas fa-circle-check"></i>
             <span>{{ session('success') }}</span>
-            <button type="button" class="mensajes-alert-close" data-alert-close>
+
+            <button type="button"
+                    class="mensajes-alert-close"
+                    data-alert-close>
                 <i class="fas fa-times"></i>
             </button>
         </div>
     @endif
 
+    {{-- Encabezado --}}
     <div class="mensajes-header">
-        <div>
+        <div class="mensajes-header-copy">
             <span class="mensajes-header-label">Comunicación interna</span>
             <h1>Bandeja de entrada</h1>
             <p>Consulta los mensajes recibidos dentro del sistema PumaGestión.</p>
         </div>
 
-        <a href="{{ route('mensajes.create') }}" class="mensajes-btn mensajes-btn-primary">
-            <i class="fas fa-pen-to-square"></i>
-            <span>Nuevo mensaje</span>
-        </a>
+        <div class="mensajes-header-actions">
+            <a href="{{ $dashboardUrl }}" class="mensajes-back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver al dashboard
+            </a>
+
+            <a href="{{ $mensajesCreateUrl }}" class="mensajes-btn mensajes-btn-primary">
+                <i class="fas fa-pen-to-square"></i>
+                <span>Nuevo mensaje</span>
+            </a>
+        </div>
     </div>
 
     <div class="mensajes-layout">
 
         <aside class="mensajes-sidebar">
-            <a href="{{ route('mensajes.create') }}" class="mensajes-compose-button">
+            <a href="{{ $mensajesCreateUrl }}" class="mensajes-compose-button">
                 <i class="fas fa-plus"></i>
                 <span>Redactar mensaje</span>
             </a>
 
             <nav class="mensajes-navigation">
-                <a href="{{ route('mensajes.index') }}" class="mensajes-navigation-item active">
+                <a href="{{ $mensajesIndexUrl }}" class="mensajes-navigation-item active">
                     <span>
                         <i class="fas fa-inbox"></i>
                         Bandeja de entrada
@@ -61,7 +102,7 @@
                     @endif
                 </a>
 
-                <a href="{{ route('mensajes.enviados') }}" class="mensajes-navigation-item">
+                <a href="{{ $mensajesEnviadosUrl }}" class="mensajes-navigation-item">
                     <span>
                         <i class="fas fa-paper-plane"></i>
                         Enviados
@@ -76,7 +117,9 @@
 
                 <div>
                     <strong>Mensajería interna</strong>
-                    <p>Los mensajes solo pueden ser revisados por el remitente y el destinatario.</p>
+                    <p>
+                        Los mensajes solo pueden ser revisados por el remitente y el destinatario.
+                    </p>
                 </div>
             </div>
         </aside>
@@ -90,7 +133,7 @@
                 </div>
 
                 <form method="GET"
-                      action="{{ route('mensajes.index') }}"
+                      action="{{ $mensajesIndexUrl }}"
                       class="mensajes-search-form">
 
                     <div class="mensajes-search">
@@ -103,7 +146,7 @@
                                autocomplete="off">
 
                         @if (($buscar ?? '') !== '')
-                            <a href="{{ route('mensajes.index') }}"
+                            <a href="{{ $mensajesIndexUrl }}"
                                class="mensajes-search-clear"
                                title="Limpiar búsqueda">
                                 <i class="fas fa-times"></i>
@@ -142,12 +185,19 @@
                         if ($iniciales === '') {
                             $iniciales = 'U';
                         }
+
+                        $mensajeShowUrl = Route::has('mensajes.show')
+                            ? route('mensajes.show', $mensaje->id_mensaje)
+                            : url('/mensajes/' . $mensaje->id_mensaje);
+
+                        $mensajeDestroyUrl = Route::has('mensajes.destroy')
+                            ? route('mensajes.destroy', $mensaje->id_mensaje)
+                            : url('/mensajes/' . $mensaje->id_mensaje);
                     @endphp
 
                     <article class="mensaje-row {{ !$mensaje->leido ? 'is-unread' : '' }}">
 
-                        <a href="{{ route('mensajes.show', $mensaje->id_mensaje) }}"
-                           class="mensaje-row-main">
+                        <a href="{{ $mensajeShowUrl }}" class="mensaje-row-main">
 
                             <div class="mensaje-avatar">
                                 {{ $iniciales }}
@@ -175,13 +225,13 @@
                                 </div>
 
                                 <div class="mensaje-preview">
-                                    {{ \Illuminate\Support\Str::limit(strip_tags($mensaje->contenido), 140) }}
+                                    {{ Str::limit(strip_tags($mensaje->contenido), 140) }}
                                 </div>
                             </div>
                         </a>
 
                         <form method="POST"
-                              action="{{ route('mensajes.destroy', $mensaje->id_mensaje) }}"
+                              action="{{ $mensajeDestroyUrl }}"
                               class="mensaje-delete-form"
                               data-delete-message>
 
@@ -205,7 +255,7 @@
                             <h3>No se encontraron mensajes</h3>
                             <p>No existen resultados para “{{ $buscar }}”.</p>
 
-                            <a href="{{ route('mensajes.index') }}"
+                            <a href="{{ $mensajesIndexUrl }}"
                                class="mensajes-btn mensajes-btn-secondary">
                                 Limpiar búsqueda
                             </a>

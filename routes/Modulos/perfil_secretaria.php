@@ -16,5 +16,4 @@ Route::middleware(['auth', 'session.timeout'])
 
         Route::get('/mi-perfil', [PerfilSecretariaController::class, 'index'])
             ->name('mi-perfil');
-
     });

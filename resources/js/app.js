@@ -21,4 +21,5 @@ import './bitacora_secretaria_general.js';
 import './auditoria_secretaria_carrera.js';
 import './auditoria_coordinador.js';
 import './auditoria_secretaria_academica.js';
+import './mis_tramites.js';
 
