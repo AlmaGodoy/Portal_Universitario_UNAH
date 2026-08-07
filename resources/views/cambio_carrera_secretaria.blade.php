@@ -47,6 +47,7 @@
                             <th>ID Trámite</th>
                             <th>Fecha</th>
                             <th>Nombre del Estudiante</th>
+                             <th>Carrera Origen</th>
                             <th>Carrera Destino</th>
                             <th>Estado Trámite</th>
                             <th>Acción</th>
@@ -54,7 +55,7 @@
                     </thead>
                     <tbody id="tbodySecretaria">
                         <tr>
-                            <td colspan="6">Cargando trámites...</td>
+                            <td colspan="7">Cargando trámites...</td>
                         </tr>
                     </tbody>
                 </table>

@@ -48,20 +48,19 @@
                         <tr>
                             <th>ID Trámite</th>
                             <th>Fecha</th>
+                            <th>Carrera Origen</th>
                             <th>Carrera Destino</th>
                             <th>Estado</th>
                             <th>Motivo por el cual solicita el cambio de carrera</th>
                             <th>Documento</th>
-
                             <th>Acciones</th>
 
                         </tr>
                     </thead>
                     <tbody id="tbodyTramites">
                         <tr>
-                            <td colspan="7">Cargando trámites...</td>
+                            <td colspan="8">Cargando trámites...</td>
 
-                            <td colspan="6">Cargando trámites...</td>
                         </tr>
                     </tbody>
                 </table>

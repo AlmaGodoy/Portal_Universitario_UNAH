@@ -153,6 +153,12 @@ const tramite = response.data;
                             </div>
 
                             <div class="estado-item">
+                               <strong>Carrera Origen</strong>
+                               <span>${tramite.carrera_origen ?? 'No disponible'}</span>
+
+                            </div>
+
+                            <div class="estado-item">
                                 <strong>Carrera Destino</strong>
                                 <span>${tramite.carrera_destino ?? ''}</span>
                             </div>

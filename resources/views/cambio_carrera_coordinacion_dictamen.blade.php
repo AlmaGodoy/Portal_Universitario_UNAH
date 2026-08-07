@@ -63,6 +63,12 @@
                 </div>
 
                 <div class="estado-item">
+                    <strong>Carrera origen</strong>
+                    <span id="dato-carrera-origen">Cargando...</span>
+                </div>
+
+
+                <div class="estado-item">
                     <strong>Carrera destino</strong>
                     <span id="dato-carrera">Cargando...</span>
                 </div>

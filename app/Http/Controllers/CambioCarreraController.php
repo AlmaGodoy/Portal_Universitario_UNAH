@@ -113,7 +113,8 @@ class CambioCarreraController extends Controller
             }
 
             $tramite = DB::table('tbl_tramite as t')
-                ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+                ->leftJoin('tbl_carrera as co', 't.id_carrera_origen', '=', 'co.id_carrera')
+                ->leftJoin('tbl_carrera as cd', 't.id_carrera_destino', '=', 'cd.id_carrera')
                 ->select(
                     't.id_tramite',
                     't.id_persona',
@@ -121,7 +122,8 @@ class CambioCarreraController extends Controller
                     't.direccion',
                     't.resolucion_de_tramite_academico as estado_tramite',
                     't.observacion_dictamen as dictamen',
-                    'c.nombre_carrera as carrera_destino',
+                    'co.nombre_carrera as carrera_origen',
+                    'cd.nombre_carrera as carrera_destino',
                     't.estado'
                 )
                 ->where('t.id_persona', $idPersona)
@@ -307,13 +309,15 @@ class CambioCarreraController extends Controller
 
         $tramites = DB::table('tbl_tramite as t')
             ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
-            ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+            ->leftJoin('tbl_carrera as co', 't.id_carrera_origen', '=', 'co.id_carrera')
+            ->leftJoin('tbl_carrera as cd', 't.id_carrera_destino', '=', 'cd.id_carrera')
             ->select(
                 't.id_tramite',
                 'p.nombre_persona as nombre_persona',
                 't.fecha_solicitud',
                 't.resolucion_de_tramite_academico as estado_tramite',
-                'c.nombre_carrera as carrera_destino'
+                'co.nombre_carrera as carrera_origen',
+                'cd.nombre_carrera as carrera_destino'
             )
             ->where('t.tipo_tramite_academico', 'cambio_carrera')
             ->where('t.estado', 1)
@@ -339,7 +343,8 @@ class CambioCarreraController extends Controller
         $tramite = DB::table('tbl_tramite as t')
             ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
             ->leftJoin('tbl_estudiante as e', 't.id_persona', '=', 'e.id_persona')
-            ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+            ->leftJoin('tbl_carrera as co', 't.id_carrera_origen', '=', 'co.id_carrera')
+            ->leftJoin('tbl_carrera as cd', 't.id_carrera_destino', '=', 'cd.id_carrera')
             ->select(
                 't.id_tramite',
                 't.id_persona',
@@ -348,7 +353,8 @@ class CambioCarreraController extends Controller
                 't.resolucion_de_tramite_academico as estado_tramite',
                 't.observacion_secretaria as observaciones_secretaria',
                 'p.nombre_persona as estudiante',
-                'c.nombre_carrera as carrera_destino',
+                'co.nombre_carrera as carrera_origen',
+                'cd.nombre_carrera as carrera_destino',
                 'e.indice_periodo',
                 'e.indice_global',
                 'e.cantidad_clases_aprobadas'
@@ -462,13 +468,15 @@ class CambioCarreraController extends Controller
 
         $tramites = DB::table('tbl_tramite as t')
             ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
-            ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+            ->leftJoin('tbl_carrera as co', 't.id_carrera_origen', '=', 'co.id_carrera')
+            ->leftJoin('tbl_carrera as cd', 't.id_carrera_destino', '=', 'cd.id_carrera')
             ->select(
                 't.id_tramite',
                 'p.nombre_persona as nombre_persona',
                 't.fecha_solicitud',
                 't.resolucion_de_tramite_academico as estado_tramite',
-                'c.nombre_carrera as carrera_destino'
+                'co.nombre_carrera as carrera_origen',
+                'cd.nombre_carrera as carrera_destino'
             )
             ->where('t.tipo_tramite_academico', 'cambio_carrera')
             ->where('t.estado', 1)
@@ -494,7 +502,8 @@ class CambioCarreraController extends Controller
         $tramite = DB::table('tbl_tramite as t')
             ->leftJoin('tbl_persona as p', 't.id_persona', '=', 'p.id_persona')
             ->leftJoin('tbl_estudiante as e', 't.id_persona', '=', 'e.id_persona')
-            ->leftJoin('tbl_carrera as c', 't.id_carrera_destino', '=', 'c.id_carrera')
+            ->leftJoin('tbl_carrera as co', 't.id_carrera_origen', '=', 'co.id_carrera')
+            ->leftJoin('tbl_carrera as cd', 't.id_carrera_destino', '=', 'cd.id_carrera')
             ->select(
                 't.id_tramite',
                 't.id_persona',
@@ -504,7 +513,8 @@ class CambioCarreraController extends Controller
                 't.observacion_dictamen',
                 't.observacion_secretaria',
                 'p.nombre_persona as estudiante',
-                'c.nombre_carrera as carrera_destino',
+                'co.nombre_carrera as carrera_origen',
+                'cd.nombre_carrera as carrera_destino',
                 'e.indice_periodo',
                 'e.indice_global',
                 'e.cantidad_clases_aprobadas'
