@@ -108,6 +108,48 @@
         ? route('empleado.dashboard')
         : 'javascript:void(0)';
 
+    $seguridadUrl = Route::has('seguridad.index')
+        ? route('seguridad.index')
+        : url('/seguridad');
+
+    $seguridadActive = request()->routeIs('seguridad.*') || request()->is('seguridad*');
+
+    $reportesGeneralesUrl = Route::has('reporte.tramites.secretaria_general.vista')
+        ? route('reporte.tramites.secretaria_general.vista')
+        : url('/reporte-tramites/secretaria-general');
+
+    $reportesGeneralesActive = request()->routeIs('reporte.tramites.secretaria_general.vista')
+        || request()->is('reporte-tramites*');
+
+    $auditoriaUrl = Route::has('auditoria.administrativa')
+        ? route('auditoria.administrativa')
+        : (Route::has('auditoria.index')
+            ? route('auditoria.index')
+            : (Route::has('auditoria')
+                ? route('auditoria')
+                : url('/auditoria')));
+
+    $auditoriaActive = request()->routeIs('auditoria')
+        || request()->routeIs('auditoria.*')
+        || request()->is('auditoria')
+        || request()->is('auditoria/*');
+
+    $bitacoraUrl = Route::has('bitacora.index')
+        ? route('bitacora.index')
+        : url('/bitacora');
+
+    $bitacoraActive = request()->routeIs('bitacora.index')
+        || request()->routeIs('bitacora.*')
+        || request()->is('bitacora*');
+
+    $configuracionUrl = Route::has('configuracion.index')
+        ? route('configuracion.index')
+        : url('/configuracion');
+
+    $configuracionActive = request()->routeIs('configuracion.index')
+        || request()->routeIs('configuracion.*')
+        || request()->is('configuracion*');
+
     $pageTitle = trim($__env->yieldContent('titulo', $__env->yieldContent('title', 'Secretaría Académica')));
 @endphp
 <!DOCTYPE html>
@@ -1186,6 +1228,182 @@
             padding: 10px 18px;
             font-weight: 700;
         }
+
+        /* =========================================================
+           AJUSTE FINAL SECRETARÍA ACADÉMICA
+           Botón flotante + ajuste de tamaño con cursor.
+        ========================================================= */
+        html,
+        body {
+            min-width: 960px !important;
+            min-height: 100% !important;
+            overflow-x: hidden !important;
+        }
+
+        .main-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            min-width: 60px !important;
+            overflow: hidden !important;
+            z-index: 1038 !important;
+        }
+
+        .main-sidebar .sidebar {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            padding-bottom: 0 !important;
+        }
+
+        .main-sidebar .sidebar .os-scrollbar,
+        .main-sidebar .sidebar .os-scrollbar-vertical,
+        .main-sidebar .sidebar .os-scrollbar-horizontal,
+        .main-sidebar .os-scrollbar,
+        .main-sidebar .os-scrollbar-vertical,
+        .main-sidebar .os-scrollbar-horizontal {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .main-sidebar .sidebar .os-host,
+        .main-sidebar .sidebar .os-padding,
+        .main-sidebar .sidebar .os-viewport,
+        .main-sidebar .sidebar .os-content {
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        #dashboardSidebarScroll {
+            width: 100% !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            overscroll-behavior: contain !important;
+            scrollbar-gutter: stable !important;
+            padding-bottom: 12px !important;
+        }
+
+        #dashboardSidebarScroll nav,
+        #dashboardSidebarScroll .dashboard-menu {
+            overflow: visible !important;
+        }
+
+        body.sidebar-collapse #dashboardSidebarScroll {
+            overflow-y: hidden !important;
+        }
+
+        .sidebar-floating-toggle {
+            position: fixed !important;
+            top: 44% !important;
+            left: calc(var(--student-sidebar-width) - 22px) !important;
+            transform: translateY(-50%) !important;
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 50% !important;
+            border: none !important;
+            background: linear-gradient(135deg, #ffe08a 0%, #f1be1a 100%) !important;
+            color: #17346c !important;
+            font-size: 1rem !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 2500 !important;
+            box-shadow: 0 6px 18px rgba(8, 35, 78, 0.24) !important;
+            transition:
+                left .18s ease,
+                background .2s ease,
+                box-shadow .2s ease,
+                transform .2s ease !important;
+        }
+
+        .sidebar-floating-toggle:hover {
+            background: linear-gradient(135deg, #ffd84a 0%, #e8b20e 100%) !important;
+            transform: translateY(-50%) scale(1.08) !important;
+            box-shadow: 0 8px 22px rgba(8, 35, 78, 0.32) !important;
+        }
+
+        .sidebar-floating-toggle i {
+            transition: transform .25s ease !important;
+            pointer-events: none !important;
+        }
+
+        body.sidebar-collapse .sidebar-floating-toggle {
+            left: calc(var(--student-sidebar-collapsed-width) - 22px) !important;
+        }
+
+        body.sidebar-collapse .sidebar-floating-toggle i {
+            transform: rotate(180deg) !important;
+        }
+
+        @media (min-width: 992px) {
+            .sidebar-resize-handle {
+                position: fixed !important;
+                top: 0 !important;
+                left: calc(var(--student-sidebar-width) - 8px) !important;
+                width: 16px !important;
+                height: 100vh !important;
+                z-index: 2100 !important;
+                cursor: col-resize !important;
+                background: rgba(255,255,255,.03) !important;
+                transition: left .18s ease, background .18s ease !important;
+            }
+
+            .sidebar-resize-handle:hover {
+                background: rgba(42,119,200,.16) !important;
+            }
+
+            .sidebar-resize-handle::before {
+                content: "" !important;
+                position: absolute !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                left: 8px !important;
+                width: 2px !important;
+                background: rgba(255,255,255,.35) !important;
+            }
+
+            .sidebar-resize-handle::after {
+                content: "" !important;
+                position: absolute !important;
+                top: 50% !important;
+                left: 5px !important;
+                width: 8px !important;
+                height: 52px !important;
+                transform: translateY(-50%) !important;
+                border-radius: 999px !important;
+                background: rgba(255,255,255,.18) !important;
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,.18) !important;
+            }
+
+            body.sidebar-collapse .sidebar-resize-handle {
+                display: none !important;
+            }
+
+            body.sidebar-resizing,
+            body.sidebar-resizing * {
+                user-select: none !important;
+                cursor: col-resize !important;
+            }
+
+            body.sidebar-resizing .sidebar-resize-handle {
+                background: rgba(42,119,200,.28) !important;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            html,
+            body {
+                min-width: 0 !important;
+            }
+        }
+
+
     </style>
 </head>
 
@@ -1223,37 +1441,6 @@
         </a>
 
         <div class="sidebar">
-
-            {{-- ══ BLOQUE CONTROL ══ --}}
-            <div class="sidebar-control-block d-none d-lg-flex">
-
-                <button type="button"
-                        id="sidebarToggleBtn"
-                        class="sidebar-toggle-inner"
-                        title="Colapsar / Expandir menú">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-
-                <div class="sidebar-control-info">
-                    <span class="sidebar-control-label">Tamaño del menú</span>
-                    <div class="sidebar-size-btns">
-                        <button type="button" id="sidebarSizeDown"
-                                class="sidebar-size-btn" title="Reducir">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <button type="button" id="sidebarSizeReset"
-                                class="sidebar-size-btn" title="Normal">
-                            Normal
-                        </button>
-                        <button type="button" id="sidebarSizeUp"
-                                class="sidebar-size-btn" title="Ampliar">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
             {{-- ── MENÚ ──────────────────────────────────────── --}}
             <div id="dashboardSidebarScroll" class="dashboardSidebarScroll">
                 <nav class="mt-2">
@@ -1285,8 +1472,8 @@
 
                         @if ($mostrarBotonSeguridad)
                             <li class="nav-item">
-                                <a href="{{ route('seguridad.index') }}"
-                                   class="nav-link {{ request()->is('seguridad*') ? 'active' : '' }}">
+                                <a href="{{ $seguridadUrl }}"
+                                   class="nav-link {{ $seguridadActive ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-shield-halved"></i>
                                     <p>Seguridad</p>
                                 </a>
@@ -1294,24 +1481,24 @@
                         @endif
 
                         <li class="nav-item">
-                            <a href="{{ route('reporte.tramites.secretaria_general.vista') }}"
-                               class="nav-link {{ request()->routeIs('reporte.tramites.secretaria_general.vista') ? 'active' : '' }}">
+                            <a href="{{ $reportesGeneralesUrl }}"
+                               class="nav-link {{ $reportesGeneralesActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-column"></i>
                                 <p>Reportes Generales</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('auditoria') }}"
-                               class="nav-link {{ request()->routeIs('auditoria') || request()->routeIs('auditoria*') ? 'active' : '' }}">
+                            <a href="{{ $auditoriaUrl }}"
+                               class="nav-link {{ $auditoriaActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-magnifying-glass-chart"></i>
                                 <p>Auditoría</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('bitacora.index') }}"
-                               class="nav-link {{ request()->routeIs('bitacora.index') || request()->routeIs('bitacora.*') ? 'active' : '' }}">
+                            <a href="{{ $bitacoraUrl }}"
+                               class="nav-link {{ $bitacoraActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Bitácora</p>
                             </a>
@@ -1326,8 +1513,8 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('configuracion.index') }}"
-                               class="nav-link {{ request()->routeIs('configuracion.index') || request()->is('configuracion') ? 'active' : '' }}">
+                            <a href="{{ $configuracionUrl }}"
+                               class="nav-link {{ $configuracionActive ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-gear"></i>
                                 <p>Configuración</p>
                             </a>
@@ -1338,6 +1525,14 @@
             </div>
         </div>
     </aside>
+
+    {{-- ── BOTÓN FIJO PARA OCULTAR / MOSTRAR MENÚ ──────────── --}}
+    <button type="button"
+            id="sidebarFloatingToggle"
+            class="sidebar-floating-toggle d-none d-lg-flex"
+            title="Ocultar / Mostrar menú">
+        <i class="fas fa-chevron-left"></i>
+    </button>
 
     {{-- ── HANDLE RESIZE ────────────────────────────────────── --}}
     <div id="sidebarResizeHandle"
@@ -1739,142 +1934,142 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const root         = document.documentElement;
-    const body         = document.body;
-    const toggleBtn    = document.getElementById('sidebarToggleBtn');
-    const btnDown      = document.getElementById('sidebarSizeDown');
-    const btnReset     = document.getElementById('sidebarSizeReset');
-    const btnUp        = document.getElementById('sidebarSizeUp');
+    const root = document.documentElement;
+    const body = document.body;
+    const toggleBtn = document.getElementById('sidebarFloatingToggle');
     const resizeHandle = document.getElementById('sidebarResizeHandle');
 
-    const STORAGE_WIDTH_KEY    = 'secretaria_academica_sidebar_width';
-    const STORAGE_COLLAPSE_KEY = 'secretaria_academica_sidebar_collapsed';
+    const STORAGE_WIDTH_KEY = 'student_sidebar_width';
+    const STORAGE_COLLAPSE_KEY = 'student_sidebar_collapsed';
 
-    const MIN_WIDTH     = 280;
-    const MAX_WIDTH     = 460;
+    const MIN_WIDTH = 280;
+    const MAX_WIDTH = 460;
     const DEFAULT_WIDTH = 350;
-    const STEP          = 20;
 
     let isResizing = false;
 
-    function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
-
-    function applyWidth(w) {
-        root.style.setProperty('--student-sidebar-width', clamp(w, MIN_WIDTH, MAX_WIDTH) + 'px');
+    function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
     }
 
-    function saveWidth(w) {
-        localStorage.setItem(STORAGE_WIDTH_KEY, String(clamp(w, MIN_WIDTH, MAX_WIDTH)));
+    function applyWidth(width) {
+        const finalWidth = clamp(width, MIN_WIDTH, MAX_WIDTH);
+        root.style.setProperty('--student-sidebar-width', finalWidth + 'px');
+    }
+
+    function saveWidth(width) {
+        localStorage.setItem(STORAGE_WIDTH_KEY, String(clamp(width, MIN_WIDTH, MAX_WIDTH)));
     }
 
     function getSavedWidth() {
-        const v = parseInt(localStorage.getItem(STORAGE_WIDTH_KEY), 10);
-        return Number.isFinite(v) ? clamp(v, MIN_WIDTH, MAX_WIDTH) : DEFAULT_WIDTH;
-    }
-
-    function setCollapsed(collapsed) {
-        body.classList.toggle('sidebar-collapse', collapsed);
-        localStorage.setItem(STORAGE_COLLAPSE_KEY, collapsed ? '1' : '0');
-        setTimeout(ajustarSidebarScroll, 320);
-        setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+        const value = parseInt(localStorage.getItem(STORAGE_WIDTH_KEY), 10);
+        return Number.isFinite(value) ? clamp(value, MIN_WIDTH, MAX_WIDTH) : DEFAULT_WIDTH;
     }
 
     function getSavedCollapsed() {
         return localStorage.getItem(STORAGE_COLLAPSE_KEY) === '1';
     }
 
+    function setCollapsed(collapsed) {
+        body.classList.toggle('sidebar-collapse', collapsed);
+        localStorage.setItem(STORAGE_COLLAPSE_KEY, collapsed ? '1' : '0');
+
+        window.setTimeout(ajustarSidebarScroll, 320);
+        window.setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+    }
+
+    function ajustarSidebarScroll() {
+        const brand = document.querySelector('.main-sidebar .brand-link');
+        const scrollArea = document.getElementById('dashboardSidebarScroll');
+
+        if (!brand || !scrollArea) {
+            return;
+        }
+
+        const brandHeight = brand.offsetHeight || 0;
+        const availableHeight = window.innerHeight - brandHeight;
+
+        scrollArea.style.height = Math.max(availableHeight, 120) + 'px';
+        scrollArea.style.maxHeight = Math.max(availableHeight, 120) + 'px';
+    }
+
     applyWidth(getSavedWidth());
     setCollapsed(getSavedCollapsed());
+    ajustarSidebarScroll();
 
     if (toggleBtn) {
-        toggleBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
+        toggleBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
             setCollapsed(!body.classList.contains('sidebar-collapse'));
         }, true);
     }
 
-    if (btnDown) {
-        btnDown.addEventListener('click', function () {
-            const w = clamp(getSavedWidth() - STEP, MIN_WIDTH, MAX_WIDTH);
-            applyWidth(w);
-            saveWidth(w);
-        });
-    }
-
-    if (btnReset) {
-        btnReset.addEventListener('click', function () {
-            applyWidth(DEFAULT_WIDTH);
-            saveWidth(DEFAULT_WIDTH);
-        });
-    }
-
-    if (btnUp) {
-        btnUp.addEventListener('click', function () {
-            const w = clamp(getSavedWidth() + STEP, MIN_WIDTH, MAX_WIDTH);
-            applyWidth(w);
-            saveWidth(w);
-        });
-    }
-
     if (resizeHandle) {
-        resizeHandle.addEventListener('mousedown', function (e) {
-            if (body.classList.contains('sidebar-collapse')) return;
+        resizeHandle.addEventListener('mousedown', function (event) {
+            if (body.classList.contains('sidebar-collapse')) {
+                return;
+            }
+
             isResizing = true;
             body.classList.add('sidebar-resizing');
-            e.preventDefault();
+            event.preventDefault();
         });
 
-        document.addEventListener('mousemove', function (e) {
-            if (!isResizing) return;
-            applyWidth(e.clientX);
+        document.addEventListener('mousemove', function (event) {
+            if (!isResizing) {
+                return;
+            }
+
+            applyWidth(event.clientX);
         });
 
-        document.addEventListener('mouseup', function (e) {
-            if (!isResizing) return;
+        document.addEventListener('mouseup', function (event) {
+            if (!isResizing) {
+                return;
+            }
+
             isResizing = false;
             body.classList.remove('sidebar-resizing');
-            const w = clamp(e.clientX, MIN_WIDTH, MAX_WIDTH);
-            applyWidth(w);
-            saveWidth(w);
+
+            const width = clamp(event.clientX, MIN_WIDTH, MAX_WIDTH);
+            applyWidth(width);
+            saveWidth(width);
+
+            ajustarSidebarScroll();
+            window.dispatchEvent(new Event('resize'));
         });
     }
 
-    function ajustarSidebarScroll() {
-        const brand      = document.querySelector('.main-sidebar .brand-link');
-        const control    = document.querySelector('.sidebar-control-block');
-        const scrollArea = document.getElementById('dashboardSidebarScroll');
-        if (!brand || !scrollArea) return;
+    window.addEventListener('resize', function () {
+        if (window.innerWidth < 992) {
+            return;
+        }
 
-        const brandH   = brand.offsetHeight;
-        const controlH = control ? control.offsetHeight : 0;
-        const libre    = window.innerHeight - brandH - controlH;
+        applyWidth(getSavedWidth());
+        ajustarSidebarScroll();
+    });
 
-        scrollArea.style.height    = Math.max(libre, 120) + 'px';
-        scrollArea.style.maxHeight = Math.max(libre, 120) + 'px';
-    }
-
-    ajustarSidebarScroll();
-    window.addEventListener('resize', ajustarSidebarScroll);
     window.addEventListener('load', ajustarSidebarScroll);
 
-    new MutationObserver(() => setTimeout(ajustarSidebarScroll, 50))
-        .observe(body, { attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(() => {
+        window.setTimeout(ajustarSidebarScroll, 50);
+    }).observe(body, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
 
     const pushMenu = document.querySelector('[data-widget="pushmenu"]');
+
     if (pushMenu) {
-        pushMenu.addEventListener('click', () => {
-            setTimeout(() => {
+        pushMenu.addEventListener('click', function () {
+            window.setTimeout(() => {
                 ajustarSidebarScroll();
                 window.dispatchEvent(new Event('resize'));
             }, 350);
         });
     }
-
-    window.addEventListener('resize', function () {
-        if (window.innerWidth < 992) return;
-        applyWidth(getSavedWidth());
-    });
 });
 </script>
 
@@ -2038,5 +2233,3 @@ document.addEventListener('DOMContentLoaded', function () {
 @stack('scripts')
 </body>
 </html>
-
-
