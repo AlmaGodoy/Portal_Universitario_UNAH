@@ -79,19 +79,17 @@
     $auditoriaUrl = match ((int) ($user->id_rol ?? 0)) {
         1 => Route::has('auditoria.administrativa')
             ? route('auditoria.administrativa')
-            : (Route::has('auditoria') ? route('auditoria') : url('/auditoria')),
+            : url('/auditoria/administrativa'),
 
         4 => Route::has('auditoria.coordinador')
             ? route('auditoria.coordinador')
-            : (Route::has('auditoria') ? route('auditoria') : url('/auditoria')),
+            : url('/auditoria/coordinador'),
 
-        5 => Route::has('auditoria.secretaria')
-            ? route('auditoria.secretaria')
-            : (Route::has('auditoria') ? route('auditoria') : url('/auditoria')),
+        5 => Route::has('auditoria.secretaria_carrera')
+            ? route('auditoria.secretaria_carrera')
+            : url('/auditoria/secretaria-carrera'),
 
-        default => Route::has('auditoria')
-            ? route('auditoria')
-            : url('/auditoria'),
+        default => url('/auditoria'),
     };
 
     $bitacoraUrl = Route::has('bitacora.index')
@@ -2080,7 +2078,7 @@
                     </div>
 
                     <div class="user-dropdown-body">
-                        <a href="#" class="user-dropdown-option">
+                        <a href="{{ url('/secretaria-carrera/mi-perfil') }}" class="user-dropdown-option">
                             <span class="user-dropdown-option-icon">
                                 <i class="fas fa-user"></i>
                             </span>
@@ -2778,5 +2776,3 @@ document.addEventListener('DOMContentLoaded', function () {
 @stack('scripts')
 </body>
 </html>
-
-

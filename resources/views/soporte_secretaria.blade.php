@@ -578,6 +578,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let tickets = [];
     let selectedId = null;
 
+    const POLLING_INTERVAL_MS = 3000;
+    let pollingTimer = null;
+    let isLoadingBandeja = false;
+
     function escapeHtml(value) {
         return String(value ?? '')
             .replace(/&/g, '&amp;')
@@ -826,19 +830,52 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function fetchJson(url, options = {}) {
-        const response = await fetch(url, options);
-        const data = await response.json();
+        const separator = url.includes('?') ? '&' : '?';
+        const noCacheUrl = `${url}${separator}_=${Date.now()}`;
+
+        const response = await fetch(noCacheUrl, {
+            ...options,
+            cache: 'no-store',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(options.headers || {})
+            }
+        });
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error(
+                `El servidor devolvió una respuesta inválida (${response.status}).`
+            );
+        }
 
         if (!response.ok || data.ok === false) {
-            throw new Error(data.message || 'Ocurrió un error al procesar la solicitud.');
+            throw new Error(
+                data.message || 'Ocurrió un error al procesar la solicitud.'
+            );
         }
 
         return data;
     }
 
-    async function loadBandeja(preserveSelection = true) {
+    async function loadBandeja(
+        preserveSelection = true,
+        silent = false
+    ) {
+        if (isLoadingBandeja) {
+            return;
+        }
+
+        isLoadingBandeja = true;
+
         try {
-            clearMessage();
+            if (!silent) {
+                clearMessage();
+            }
 
             const data = await fetchJson(endpoints.bandeja, {
                 headers: {
@@ -849,29 +886,48 @@ document.addEventListener('DOMContentLoaded', function () {
             tickets = Array.isArray(data.data) ? data.data : [];
             setResumen(data.resumen || {});
 
-            if (!preserveSelection || !tickets.some(t => String(t.id_soporte) === String(selectedId))) {
-                selectedId = tickets.length ? tickets[0].id_soporte : null;
+            if (
+                !preserveSelection
+                || !tickets.some(
+                    ticket => String(ticket.id_soporte) === String(selectedId)
+                )
+            ) {
+                selectedId = tickets.length
+                    ? tickets[0].id_soporte
+                    : null;
             }
 
             renderList();
 
             if (selectedId) {
-                await loadDetail(selectedId, false);
+                await loadDetail(selectedId, false, true);
             } else {
                 renderDetail(null);
             }
         } catch (error) {
-            supportTicketList.innerHTML = `
-                <div class="sec-empty-state">
-                    <i class="fas fa-triangle-exclamation mr-2"></i>
-                    ${escapeHtml(error.message || 'No fue posible cargar la bandeja de soporte.')}
-                </div>
-            `;
-            renderDetail(null);
+            if (!silent) {
+                supportTicketList.innerHTML = `
+                    <div class="sec-empty-state">
+                        <i class="fas fa-triangle-exclamation mr-2"></i>
+                        ${escapeHtml(
+                            error.message
+                            || 'No fue posible cargar la bandeja de soporte.'
+                        )}
+                    </div>
+                `;
+
+                renderDetail(null);
+            }
+        } finally {
+            isLoadingBandeja = false;
         }
     }
 
-    async function loadDetail(idSoporte, rerenderList = true) {
+    async function loadDetail(
+        idSoporte,
+        rerenderList = true,
+        silent = false
+    ) {
         try {
             selectedId = idSoporte;
 
@@ -887,12 +943,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             renderDetail(data.data || null);
         } catch (error) {
-            supportDetail.innerHTML = `
-                <div class="sec-empty-state">
-                    <i class="fas fa-triangle-exclamation mr-2"></i>
-                    ${escapeHtml(error.message || 'No fue posible cargar el detalle del caso.')}
-                </div>
-            `;
+            if (!silent) {
+                supportDetail.innerHTML = `
+                    <div class="sec-empty-state">
+                        <i class="fas fa-triangle-exclamation mr-2"></i>
+                        ${escapeHtml(
+                            error.message
+                            || 'No fue posible cargar el detalle del caso.'
+                        )}
+                    </div>
+                `;
+            }
         }
     }
 
@@ -929,7 +990,43 @@ document.addEventListener('DOMContentLoaded', function () {
         renderList();
     });
 
-    loadBandeja();
+    function iniciarActualizacionAutomatica() {
+        detenerActualizacionAutomatica();
+
+        pollingTimer = window.setInterval(function () {
+            if (!document.hidden) {
+                loadBandeja(true, true);
+            }
+        }, POLLING_INTERVAL_MS);
+    }
+
+    function detenerActualizacionAutomatica() {
+        if (pollingTimer !== null) {
+            window.clearInterval(pollingTimer);
+            pollingTimer = null;
+        }
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            detenerActualizacionAutomatica();
+            return;
+        }
+
+        loadBandeja(true, true);
+        iniciarActualizacionAutomatica();
+    });
+
+    window.addEventListener('focus', function () {
+        loadBandeja(true, true);
+    });
+
+    window.addEventListener('beforeunload', function () {
+        detenerActualizacionAutomatica();
+    });
+
+    loadBandeja(false, false);
+    iniciarActualizacionAutomatica();
 });
 </script>
 @endsection
