@@ -136,10 +136,13 @@
                             </button>
                         </div>
 
-                        <div class="stu-support-message" id="supportMessage">
-                            <i class="fas fa-circle-check"></i>
-                            Tu solicitud será enviada a Secretaría para su revisión.
-                        </div>
+                        <div
+                            class="stu-support-message"
+                            id="supportMessage"
+                            role="alert"
+                            aria-live="polite"
+                            style="display: none;"
+                        ></div>
                     </form>
                 </div>
             </div>
@@ -262,5 +265,160 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/soporte.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('studentSupportForm');
+    const submitButton = document.getElementById('btnEnviarSoporte');
+    const messageBox = document.getElementById('supportMessage');
+
+    const createUrl = @json(route('api.soporte.crear'));
+    const csrfToken =
+        document.querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') || '';
+
+    if (!form || !submitButton || !messageBox) {
+        return;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function showMessage(message, type = 'success') {
+        const isSuccess = type === 'success';
+
+        messageBox.style.display = 'flex';
+        messageBox.style.alignItems = 'center';
+        messageBox.style.gap = '8px';
+        messageBox.style.background = isSuccess
+            ? 'rgba(22, 163, 74, .10)'
+            : 'rgba(220, 38, 38, .10)';
+        messageBox.style.border = isSuccess
+            ? '1px solid rgba(22, 163, 74, .24)'
+            : '1px solid rgba(220, 38, 38, .24)';
+        messageBox.style.color = isSuccess
+            ? '#15803d'
+            : '#b91c1c';
+
+        messageBox.innerHTML = `
+            <i class="fas ${isSuccess
+                ? 'fa-circle-check'
+                : 'fa-triangle-exclamation'}"></i>
+            <span>${escapeHtml(message)}</span>
+        `;
+    }
+
+    function hideMessage() {
+        messageBox.style.display = 'none';
+        messageBox.innerHTML = '';
+    }
+
+    function setSubmitting(isSubmitting) {
+        submitButton.disabled = isSubmitting;
+
+        submitButton.innerHTML = isSubmitting
+            ? '<i class="fas fa-spinner fa-spin"></i> Enviando solicitud...'
+            : '<i class="fas fa-paper-plane"></i> Enviar solicitud';
+    }
+
+    async function parseResponse(response) {
+        const contentType = response.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json')) {
+            throw new Error(
+                `El servidor devolvió una respuesta inválida (${response.status}).`
+            );
+        }
+
+        return response.json();
+    }
+
+    form.addEventListener('reset', function () {
+        hideMessage();
+    });
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        hideMessage();
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        if (!csrfToken) {
+            showMessage(
+                'No se encontró el token de seguridad de la sesión.',
+                'error'
+            );
+            return;
+        }
+
+        const payload = {
+            asunto: document.getElementById('supportAsunto')?.value.trim(),
+            tipo: document.getElementById('supportTipo')?.value,
+            prioridad: document.getElementById('supportPrioridad')?.value,
+            modulo: document.getElementById('supportModulo')?.value,
+            descripcion:
+                document.getElementById('supportDescripcion')?.value.trim(),
+            canal: 'Portal estudiantil'
+        };
+
+        setSubmitting(true);
+
+        try {
+            const response = await fetch(createUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await parseResponse(response);
+
+            if (!response.ok || data.ok !== true) {
+                throw new Error(
+                    data.message ||
+                    'No fue posible registrar la solicitud de soporte.'
+                );
+            }
+
+            const code =
+                data.data?.codigo
+                || data.codigo
+                || data.id_soporte
+                || '';
+
+            const confirmation = code
+                ? `Solicitud registrada correctamente. Código: ${code}.`
+                : (
+                    data.message
+                    || 'Solicitud registrada correctamente.'
+                );
+
+            form.reset();
+            showMessage(confirmation, 'success');
+        } catch (error) {
+            showMessage(
+                error.message ||
+                'Ocurrió un error al enviar la solicitud.',
+                'error'
+            );
+        } finally {
+            setSubmitting(false);
+        }
+    });
+});
+</script>
 @endpush
