@@ -3,23 +3,34 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class RolController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | ROLES DEL SISTEMA
+    |--------------------------------------------------------------------------
+    */
+
     public function panelRoles(Request $request)
     {
         if (!$this->esCoordinador()) {
-            return redirect()
-                ->route('seguridad.index')
-                ->withErrors([
-                    'rol' => 'Solo el coordinador puede administrar roles.'
-                ]);
+            return $this->redirigirSinPermiso();
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CARRERA DEL COORDINADOR
+        |--------------------------------------------------------------------------
+        */
 
         $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
 
         if (!$idCarreraActual) {
+
             return redirect()
                 ->route('seguridad.index')
                 ->withErrors([
@@ -27,302 +38,428 @@ class RolController extends Controller
                 ]);
         }
 
-        $buscar = trim((string) $request->get('buscar', ''));
-        $estado = $request->get('estado_activo', '');
 
-        $rolesRaw = DB::select('CALL SP_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?, ?)', [
-            'LISTAR',
-            null,
-            $idCarreraActual,
-            null,
-            null,
-            ($estado !== '' && in_array($estado, ['0', '1'], true)) ? (int) $estado : null,
-            $buscar !== '' ? $buscar : null,
-            null
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | FILTROS
+        |--------------------------------------------------------------------------
+        */
 
-        $roles = collect($rolesRaw)->map(function ($rol) {
-            return (object) [
-                'id_rol_carrera' => $rol->id_rol_carrera ?? $rol->id_rol ?? null,
-                'id_rol'         => $rol->id_rol ?? $rol->id_rol_carrera ?? null,
-                'nombre_rol'     => $rol->nombre_rol ?? '',
-                'descripcion'    => $rol->descripcion ?? '',
-                'estado_activo'  => $rol->estado_activo ?? 0,
-            ];
-        });
+        $buscar = trim(
+            (string) $request->get('buscar', '')
+        );
 
-        $permisos = DB::select('CALL SEL_PERMISOS_SEGURIDAD()');
+        $estado = $request->get(
+            'estado_activo',
+            ''
+        );
 
-        $objetos = DB::select('CALL SP_OBJETO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
-            'LISTAR',
-            null,
-            $idCarreraActual,
-            null,
-            null,
-            null,
-            null
-        ]);
 
-        $rolPermisos = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
-            'LISTAR',
-            null,
-            $idCarreraActual,
-            null,
-            null,
-            null,
-            null
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | CONSULTAR ROLES
+        |--------------------------------------------------------------------------
+        |
+        | tbl_rol:
+        | Define el rol global del sistema.
+        |
+        | tbl_rol_carrera:
+        | Define si ese rol está activo en la carrera actual.
+        |
+        */
 
-        return view('rol_seguridad_roles', [
-            'roles' => $roles,
-            'permisos' => collect($permisos),
-            'objetos' => collect($objetos),
-            'rolPermisos' => collect($rolPermisos),
-            'esCoordinador' => true,
-            'esSecretariaGeneral' => false,
-            'filtros' => [
-                'buscar' => $buscar,
-                'estado_activo' => $estado,
-            ],
-        ]);
+        $query = DB::table('tbl_rol as r')
+
+            ->leftJoin(
+                'tbl_rol_carrera as rc',
+                function ($join) use ($idCarreraActual) {
+
+                    $join->on(
+                        'rc.id_rol',
+                        '=',
+                        'r.id_rol'
+                    );
+
+                    $join->where(
+                        'rc.id_carrera',
+                        '=',
+                        $idCarreraActual
+                    );
+                }
+            )
+
+            ->select(
+                'r.id_rol',
+                'r.nombre_rol',
+                'r.descripcion',
+                'r.estado_activo as estado_global',
+                'rc.id_rol_carrera',
+                DB::raw(
+                    'COALESCE(rc.estado_activo, 1) AS estado_carrera'
+                )
+            )
+
+            ->whereIn(
+                'r.id_rol',
+                [2, 4, 5]
+            )
+
+            ->where(
+                'r.estado_activo',
+                1
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUSCAR
+        |--------------------------------------------------------------------------
+        */
+
+        if ($buscar !== '') {
+
+            $query->where(
+                function ($q) use ($buscar) {
+
+                    $q->where(
+                        'r.nombre_rol',
+                        'LIKE',
+                        '%' . $buscar . '%'
+                    );
+
+                    $q->orWhere(
+                        'r.descripcion',
+                        'LIKE',
+                        '%' . $buscar . '%'
+                    );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTRO DE ESTADO EN LA CARRERA
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $estado !== ''
+            && in_array(
+                (string) $estado,
+                ['0', '1'],
+                true
+            )
+        ) {
+
+            $query->whereRaw(
+                'COALESCE(rc.estado_activo, 1) = ?',
+                [
+                    (int) $estado
+                ]
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESULTADOS
+        |--------------------------------------------------------------------------
+        */
+
+        $roles = $query
+            ->orderBy('r.id_rol')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VISTA
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'rol_seguridad_roles',
+            [
+                'roles' => $roles,
+
+                'idCarreraActual' =>
+                    $idCarreraActual,
+
+                'esCoordinador' =>
+                    true,
+
+                'esSecretariaGeneral' =>
+                    false,
+
+                'filtros' => [
+                    'buscar' => $buscar,
+                    'estado_activo' => $estado,
+                ],
+            ]
+        );
     }
 
-    public function storeRol(Request $request)
-    {
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVAR / DESACTIVAR ROL EN LA CARRERA
+    |--------------------------------------------------------------------------
+    */
+
+    public function updateEstadoRolCarrera(
+        Request $request,
+        $idRol
+    ) {
+
         if (!$this->esCoordinador()) {
+            return $this->redirigirSinPermiso();
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EL COORDINADOR NO PUEDE SER DESACTIVADO
+        |--------------------------------------------------------------------------
+        */
+
+        if ((int) $idRol === 4) {
+
             return redirect()
-                ->route('seguridad.index')
+                ->route('seguridad.roles')
                 ->withErrors([
-                    'rol' => 'Solo el coordinador puede crear roles.'
+                    'rol' => 'El rol Coordinador está protegido y no puede ser desactivado desde este módulo.'
                 ]);
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SOLO ESTUDIANTE Y SECRETARIO
+        |--------------------------------------------------------------------------
+        */
+
+        if (!in_array(
+            (int) $idRol,
+            [2, 5],
+            true
+        )) {
+
+            return redirect()
+                ->route('seguridad.roles')
+                ->withErrors([
+                    'rol' => 'El rol seleccionado no puede ser administrado desde la carrera.'
+                ]);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDACIÓN
+        |--------------------------------------------------------------------------
+        */
 
         $request->validate([
-            'nombre_rol' => 'required|string|max:100',
-            'descripcion' => 'required|string|max:255',
-            'estado_activo' => 'required|in:0,1',
-        ]);
-
-        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
-
-        if (!$idCarreraActual) {
-            return redirect()
-                ->route('seguridad.index')
-                ->withErrors([
-                    'rol' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
-                ]);
-        }
-
-        $res = DB::select('CALL SP_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?, ?)', [
-            'CREAR',
-            null,
-            $idCarreraActual,
-            $request->nombre_rol,
-            $request->descripcion,
-            (int) $request->estado_activo,
-            null,
-            auth()->id()
-        ]);
-
-        $row = $res[0] ?? null;
-        $resultado = $row->resultado ?? 'ERROR';
-        $mensaje = $row->mensaje ?? 'No se pudo crear el rol por carrera.';
-
-        if ($resultado !== 'OK') {
-            return back()->withErrors(['rol' => $mensaje])->withInput();
-        }
-
-        return redirect()->route('seguridad.roles')
-            ->with('status', $mensaje);
-    }
-
-    public function updateRol(Request $request, $id)
-    {
-        if (!$this->esCoordinador()) {
-            return redirect()
-                ->route('seguridad.index')
-                ->withErrors([
-                    'rol' => 'Solo el coordinador puede actualizar roles.'
-                ]);
-        }
-
-        $request->validate([
-            'nombre_rol' => 'required|string|max:100',
-            'descripcion' => 'required|string|max:255',
-            'estado_activo' => 'required|in:0,1',
-        ]);
-
-        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
-
-        if (!$idCarreraActual) {
-            return redirect()
-                ->route('seguridad.index')
-                ->withErrors([
-                    'rol' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
-                ]);
-        }
-
-        $res = DB::select('CALL SP_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?, ?)', [
-            'ACTUALIZAR',
-            (int) $id,
-            $idCarreraActual,
-            $request->nombre_rol,
-            $request->descripcion,
-            (int) $request->estado_activo,
-            null,
-            auth()->id()
-        ]);
-
-        $row = $res[0] ?? null;
-        $resultado = $row->resultado ?? 'ERROR';
-        $mensaje = $row->mensaje ?? 'No se pudo actualizar el rol por carrera.';
-
-        if ($resultado !== 'OK') {
-            return back()->withErrors(['rol' => $mensaje])->withInput();
-        }
-
-        return redirect()->route('seguridad.roles')
-            ->with('status', $mensaje);
-    }
-
-    public function asignarPermisosObjeto(Request $request)
-    {
-        if (!$this->esCoordinador()) {
-            return redirect()
-                ->route('seguridad.index')
-                ->withErrors([
-                    'permiso' => 'Solo el coordinador puede asignar permisos.'
-                ]);
-        }
-
-        $request->validate([
-            'id_rol_carrera' => 'required|integer',
-            'id_objeto_carrera' => 'required|integer',
-            'permisos' => 'required|array|min:1',
-            'permisos.*' => 'integer',
+            'estado_activo' =>
+                'required|in:0,1',
         ], [
-            'id_rol_carrera.required' => 'Debes seleccionar un rol.',
-            'id_objeto_carrera.required' => 'Debes seleccionar un objeto.',
-            'permisos.required' => 'Debes seleccionar al menos un acceso.',
+            'estado_activo.required' =>
+                'El estado del rol es obligatorio.',
+
+            'estado_activo.in' =>
+                'El estado seleccionado no es válido.',
         ]);
 
-        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
+
+        /*
+        |--------------------------------------------------------------------------
+        | CARRERA ACTUAL
+        |--------------------------------------------------------------------------
+        */
+
+        $idCarreraActual =
+            $this->obtenerIdCarreraEmpleadoActual();
+
 
         if (!$idCarreraActual) {
+
             return redirect()
-                ->route('seguridad.index')
+                ->route('seguridad.roles')
                 ->withErrors([
-                    'permiso' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
+                    'rol' => 'No fue posible determinar la carrera del coordinador.'
                 ]);
         }
 
-        $errores = [];
-        $creados = 0;
-        $existentes = 0;
 
-        foreach ($request->permisos as $idPermiso) {
-            $res = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
-                'CREAR',
-                null,
+        /*
+        |--------------------------------------------------------------------------
+        | PROCEDIMIENTO
+        |--------------------------------------------------------------------------
+        */
+
+        $res = DB::select(
+            'CALL UPD_ESTADO_ROL_CARRERA_SEGURIDAD(?, ?, ?, ?)',
+            [
                 $idCarreraActual,
-                (int) $request->id_rol_carrera,
-                (int) $idPermiso,
-                (int) $request->id_objeto_carrera,
-                auth()->id()
-            ]);
 
-            $row = $res[0] ?? null;
-            $resultado = $row->resultado ?? 'ERROR';
-            $mensaje = $row->mensaje ?? 'No se pudo asignar el acceso.';
+                (int) $idRol,
 
-            if ($resultado === 'OK') {
-                $creados++;
-            } elseif ($resultado === 'EXISTE') {
-                $existentes++;
-            } else {
-                $errores[] = $mensaje;
-            }
-        }
+                (int) $request->estado_activo,
 
-        if (!empty($errores)) {
-            return back()->withErrors([
-                'permiso' => implode(' | ', $errores)
-            ])->withInput();
-        }
+                Auth::id()
+            ]
+        );
 
-        $mensajeFinal = "Permisos procesados correctamente. Nuevos: {$creados}. Ya existentes: {$existentes}.";
-
-        return redirect()->route('seguridad.roles')
-            ->with('status', $mensajeFinal);
-    }
-
-    public function deleteAsignacion($id)
-    {
-        if (!$this->esCoordinador()) {
-            return redirect()
-                ->route('seguridad.index')
-                ->withErrors([
-                    'permiso' => 'Solo el coordinador puede desactivar asignaciones.'
-                ]);
-        }
-
-        $idCarreraActual = $this->obtenerIdCarreraEmpleadoActual();
-
-        if (!$idCarreraActual) {
-            return redirect()
-                ->route('seguridad.index')
-                ->withErrors([
-                    'permiso' => 'No fue posible determinar la carrera asociada al coordinador autenticado.'
-                ]);
-        }
-
-        $res = DB::select('CALL SP_ACCESO_CARRERA_SEGURIDAD(?, ?, ?, ?, ?, ?, ?)', [
-            'DESACTIVAR',
-            (int) $id,
-            $idCarreraActual,
-            null,
-            null,
-            null,
-            auth()->id()
-        ]);
 
         $row = $res[0] ?? null;
-        $resultado = $row->resultado ?? 'ERROR';
-        $mensaje = $row->mensaje ?? 'No se pudo desactivar la asignación.';
+
+
+        $resultado =
+            $row->resultado
+            ?? 'ERROR';
+
+
+        $mensaje =
+            $row->mensaje
+            ?? 'No se pudo actualizar el estado del rol.';
+
 
         if ($resultado !== 'OK') {
-            return back()->withErrors([
-                'permiso' => $mensaje
-            ]);
+
+            return redirect()
+                ->route('seguridad.roles')
+                ->withErrors([
+                    'rol' => $mensaje
+                ]);
         }
 
-        return redirect()->route('seguridad.roles')
-            ->with('status', $mensaje);
+
+        return redirect()
+            ->route('seguridad.roles')
+            ->with(
+                'status',
+                $mensaje
+            );
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROL ACTUAL
+    |--------------------------------------------------------------------------
+    */
+
+    private function rolActual(): string
+    {
+        return strtolower(
+            trim(
+                (string) session(
+                    'rol_texto',
+                    'sin_rol'
+                )
+            )
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ES COORDINADOR
+    |--------------------------------------------------------------------------
+    */
 
     private function esCoordinador(): bool
     {
-        return strtolower((string) session('rol_texto', 'sin_rol')) === 'coordinador';
+        return $this->rolActual()
+            === 'coordinador';
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PERSONA AUTENTICADA
+    |--------------------------------------------------------------------------
+    */
+
+    private function obtenerIdPersonaAutenticada(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return null;
+        }
+
+
+        return isset($user->id_persona)
+
+            ? (int) $user->id_persona
+
+            : null;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CARRERA DEL COORDINADOR
+    |--------------------------------------------------------------------------
+    */
 
     private function obtenerIdCarreraEmpleadoActual(): ?int
     {
-        $user = auth()->user();
+        $personaId =
+            $this->obtenerIdPersonaAutenticada();
 
-        if (!$user || !isset($user->id_persona)) {
+
+        if (!$personaId) {
             return null;
         }
 
-        $res = DB::select('CALL SEL_CARRERA_EMPLEADO_POR_PERSONA(?)', [
-            (int) $user->id_persona
-        ]);
+
+        $res = DB::select(
+            'CALL SEL_CARRERA_EMPLEADO_POR_PERSONA(?)',
+            [
+                $personaId
+            ]
+        );
+
 
         $row = $res[0] ?? null;
 
-        if (!$row || ($row->resultado ?? 'ERROR') !== 'OK' || empty($row->id_carrera)) {
+
+        if (
+            !$row
+            || ($row->resultado ?? 'ERROR') !== 'OK'
+            || empty($row->id_carrera)
+        ) {
+
             return null;
         }
 
+
         return (int) $row->id_carrera;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SIN PERMISO
+    |--------------------------------------------------------------------------
+    */
+
+    private function redirigirSinPermiso()
+    {
+        $ruta = session('login_tipo')
+            === 'estudiante'
+
+            ? route('dashboard')
+
+            : route('empleado.dashboard');
+
+
+        return redirect($ruta)
+            ->withErrors([
+                'seguridad' =>
+                    'No tienes permiso para acceder al módulo de Seguridad.'
+            ]);
     }
 }

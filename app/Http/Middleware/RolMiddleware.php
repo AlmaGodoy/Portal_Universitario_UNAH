@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class RolMiddleware
+class RoleIdMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
@@ -15,22 +15,20 @@ class RolMiddleware
             abort(401, 'Usuario no autenticado.');
         }
 
-        $user = Auth::user();
-        $rolActual = null;
+        $idRol = (int) (Auth::user()->id_rol ?? 0);
+        $rolesPermitidos = array_map('intval', $roles);
 
-        if (session()->has('rol_texto')) {
-            $rolActual = strtolower(trim((string) session('rol_texto')));
-        } elseif (!empty($user->rol_texto)) {
-            $rolActual = strtolower(trim((string) $user->rol_texto));
-        } elseif (!empty($user->role)) {
-            $rolActual = strtolower(trim((string) $user->role));
-        }
+        dd([
+            'id_usuario' => Auth::user()->id_usuario ?? null,
+            'id_rol_actual' => $idRol,
+            'roles_permitidos' => $rolesPermitidos,
+            'rol_texto_session' => session('rol_texto'),
+            'tipo_usuario_session' => session('tipo_usuario'),
+            'login_tipo' => session('login_tipo'),
+            'ruta_actual' => $request->path(),
+        ]);
 
-        $rolesPermitidos = array_map(function ($rol) {
-            return strtolower(trim((string) $rol));
-        }, $roles);
-
-        if (!$rolActual || !in_array($rolActual, $rolesPermitidos, true)) {
+        if (!in_array($idRol, $rolesPermitidos, true)) {
             abort(403, 'No autorizado.');
         }
 

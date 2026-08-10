@@ -4,60 +4,201 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\RolSeguridadController;
 
-/*
-|--------------------------------------------------------------------------
-| Rutas WEB de Seguridad
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'session.timeout', 'roleid:3,4'])->group(function () {
-
-    Route::get('/seguridad', [RolSeguridadController::class, 'index'])
-        ->name('seguridad.index');
-
-    Route::get('/seguridad/roles', [RolController::class, 'panelRoles'])
-        ->name('seguridad.roles');
-
-    Route::get('/seguridad/usuarios', [RolSeguridadController::class, 'usuarios'])
-        ->name('seguridad.usuarios');
-
-    Route::get('/seguridad/objetos', [RolSeguridadController::class, 'objetos'])
-        ->name('seguridad.objetos');
-
-    Route::get('/seguridad/accesos', [RolSeguridadController::class, 'accesos'])
-        ->name('seguridad.accesos');
-});
 
 /*
 |--------------------------------------------------------------------------
-| Rutas API de Seguridad
+| MÓDULO DE SEGURIDAD
 |--------------------------------------------------------------------------
 */
-Route::prefix('api/seguridad')->middleware(['auth', 'session.timeout', 'roleid:3,4'])->group(function () {
 
-    Route::post('/rol', [RolController::class, 'storeRol'])
-        ->name('seguridad.rol.store');
+Route::middleware([
+    'auth',
+    'session.timeout',
+    'cuenta.activa',
+    'roleid:4'
+])->group(function () {
 
-    Route::put('/rol/{id}', [RolController::class, 'updateRol'])
-        ->name('seguridad.rol.update');
 
-    Route::post('/asignar-permisos-objeto', [RolController::class, 'asignarPermisosObjeto'])
-        ->name('seguridad.asignar.objeto');
+    /*
+    |--------------------------------------------------------------------------
+    | PANEL PRINCIPAL
+    |--------------------------------------------------------------------------
+    */
 
-    Route::delete('/asignacion/{id}', [RolController::class, 'deleteAsignacion'])
-        ->name('seguridad.asignacion.delete');
+    Route::get(
+        '/seguridad',
+        [
+            RolSeguridadController::class,
+            'index'
+        ]
+    )->name('seguridad.index');
 
-    Route::post('/objeto', [RolSeguridadController::class, 'storeObjeto'])
-        ->name('seguridad.objeto.store');
 
-    Route::put('/objeto/{id}', [RolSeguridadController::class, 'updateObjeto'])
-        ->name('seguridad.objeto.update');
+    /*
+    |--------------------------------------------------------------------------
+    | ROLES DEL SISTEMA
+    |--------------------------------------------------------------------------
+    */
 
-    Route::put('/usuario/{id}/estado', [RolSeguridadController::class, 'updateEstadoUsuario'])
-        ->name('seguridad.usuario.estado');
+    Route::get(
+        '/seguridad/roles',
+        [
+            RolController::class,
+            'panelRoles'
+        ]
+    )->name('seguridad.roles');
 
-    Route::post('/acceso', [RolSeguridadController::class, 'storeAcceso'])
-        ->name('seguridad.acceso.store');
 
-    Route::delete('/acceso/{id}', [RolSeguridadController::class, 'deleteAcceso'])
-        ->name('seguridad.acceso.delete');
+    /*
+    | Activar / desactivar rol dentro de la carrera
+    */
+
+    Route::put(
+        '/seguridad/roles/{idRol}/estado',
+        [
+            RolController::class,
+            'updateEstadoRolCarrera'
+        ]
+    )->name('seguridad.rol.estado');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | USUARIOS DE MI CARRERA
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/seguridad/usuarios',
+        [
+            RolSeguridadController::class,
+            'usuarios'
+        ]
+    )->name('seguridad.usuarios');
+
+
+    /*
+    | Activar / desactivar cuenta
+    */
+
+    Route::put(
+        '/seguridad/usuarios/{id}/estado',
+        [
+            RolSeguridadController::class,
+            'updateEstadoUsuario'
+        ]
+    )->name('seguridad.usuario.estado');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MÓDULOS DEL SISTEMA
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/seguridad/modulos',
+        [
+            RolSeguridadController::class,
+            'objetos'
+        ]
+    )->name('seguridad.objetos');
+
+
+    /*
+    | Cambiar disponibilidad del módulo
+    | para Estudiante o Secretaría de la carrera
+    */
+
+    Route::put(
+        '/seguridad/modulos/{idObjeto}/estado-rol',
+        [
+            RolSeguridadController::class,
+            'updateEstadoModuloRol'
+        ]
+    )->name('seguridad.modulo.rol.estado');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PERMISOS POR ROL
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/seguridad/permisos',
+        [
+            RolSeguridadController::class,
+            'accesos'
+        ]
+    )->name('seguridad.accesos');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASIGNAR UNO O VARIOS PERMISOS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/seguridad/permisos',
+        [
+            RolSeguridadController::class,
+            'storeAcceso'
+        ]
+    )->name('seguridad.acceso.store');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDITAR PERMISO
+    |--------------------------------------------------------------------------
+    */
+
+    Route::put(
+        '/seguridad/permisos/{id}',
+        [
+            RolSeguridadController::class,
+            'updateAcceso'
+        ]
+    )->name('seguridad.acceso.update');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVAR / DESACTIVAR PERMISO
+    |--------------------------------------------------------------------------
+    |
+    | estado = 1 → Activar
+    | estado = 0 → Desactivar
+    |
+    */
+
+    Route::put(
+        '/seguridad/permisos/{id}/estado',
+        [
+            RolSeguridadController::class,
+            'updateEstadoAcceso'
+        ]
+    )->name('seguridad.acceso.estado');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DESACTIVAR PERMISO - COMPATIBILIDAD
+    |--------------------------------------------------------------------------
+    |
+    | Se mantiene esta ruta porque ya existía en el sistema.
+    | La nueva vista utilizará principalmente seguridad.acceso.estado.
+    |
+    */
+
+    Route::delete(
+        '/seguridad/permisos/{id}',
+        [
+            RolSeguridadController::class,
+            'deleteAcceso'
+        ]
+    )->name('seguridad.acceso.delete');
+
 });

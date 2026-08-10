@@ -1,175 +1,475 @@
 @extends('layouts.app-coordinador')
+
 @section('hide_topbar', true)
-@section('titulo', 'Gestión de Objetos')
+@section('titulo', 'Módulos del Sistema')
 
 @section('content')
+
 <div class="container py-4 security-page">
 
+    {{-- MENSAJES --}}
+
     @if(session('status'))
+
         <div class="alert alert-success shadow-sm">
             {{ session('status') }}
         </div>
+
     @endif
 
+
     @if($errors->any())
+
         <div class="alert alert-danger shadow-sm">
             {{ $errors->first() }}
         </div>
+
     @endif
 
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+    {{-- ENCABEZADO --}}
+
+    <div class="mb-4
+                d-flex
+                justify-content-between
+                align-items-center
+                flex-wrap
+                gap-2">
+
         <div>
-            <h2 class="security-title">Gestión de Objetos</h2>
-            <p class="security-subtitle">Administración de objetos o módulos correspondientes únicamente a tu carrera.</p>
+
+            <h2 class="security-title">
+                Módulos del Sistema
+            </h2>
+
+            <p class="security-subtitle mb-0">
+                Administración de la disponibilidad de los módulos para estudiantes y Secretaría de tu carrera.
+            </p>
+
         </div>
 
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="{{ route('seguridad.index') }}" class="btn btn-outline-secondary">
-                Volver a Seguridad
-            </a>
 
-            <button class="btn btn-primary" data-toggle="modal" data-target="#modalNuevoObjeto">
-                + Nuevo Objeto
-            </button>
-        </div>
+        <a
+            href="{{ route('seguridad.index') }}"
+            class="btn btn-outline-secondary"
+        >
+
+            <i class="fas fa-arrow-left me-1"></i>
+
+            Volver a Seguridad
+
+        </a>
+
     </div>
+
+
+    {{-- LISTADO --}}
 
     <div class="card shadow border-0 security-card">
-        <div class="card-header security-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="fw-bold text-white">Lista de Objetos por Carrera</span>
+
+        <div class="card-header
+                    security-header
+                    d-flex
+                    justify-content-between
+                    align-items-center
+                    flex-wrap
+                    gap-2">
+
+            <span class="fw-bold text-white">
+
+                <i class="fas fa-cubes me-2"></i>
+
+                Lista de Módulos
+
+            </span>
+
 
             <span class="badge bg-light text-dark">
-                Total objetos: {{ count($objetos) }}
+
+                Total módulos:
+                {{ count($objetos) }}
+
             </span>
+
         </div>
+
 
         <div class="card-body bg-white">
+
             <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle">
+
+                <table class="table
+                              table-bordered
+                              table-hover
+                              align-middle">
+
                     <thead class="table-light">
+
                         <tr>
-                            <th>ID Objeto Carrera</th>
-                            <th>Nombre del Objeto</th>
-                            <th>Tipo de Objeto</th>
-                            <th>Estado</th>
-                            <th class="col-acciones-sm">Acciones</th>
+
+                            <th>ID</th>
+
+                            <th>Módulo</th>
+
+                            <th>Tipo</th>
+
+                            <th>Estado General</th>
+
+                            <th>Estudiante</th>
+
+                            <th>Secretaría</th>
+
+                            <th style="min-width: 310px;">
+                                Acciones
+                            </th>
+
                         </tr>
+
                     </thead>
 
+
                     <tbody>
+
                         @forelse($objetos as $objeto)
+
+                            @php
+
+                                $tipoObjeto = strtoupper(
+                                    trim(
+                                        $objeto->tipo_objeto ?? ''
+                                    )
+                                );
+
+                                $esPantalla =
+                                    $tipoObjeto === 'PANTALLA';
+
+                            @endphp
+
+
                             <tr>
-                                <td>{{ $objeto->id_objeto_carrera }}</td>
-                                <td>{{ strtoupper($objeto->nombre_objeto) }}</td>
-                                <td>{{ strtoupper($objeto->tipo_objeto) }}</td>
+
+                                {{-- ID --}}
+
                                 <td>
+
+                                    {{ $objeto->id_objeto }}
+
+                                </td>
+
+
+                                {{-- MÓDULO --}}
+
+                                <td>
+
+                                    <span class="fw-bold">
+
+                                        {{ strtoupper(
+                                            $objeto->nombre_objeto
+                                            ?? 'SIN NOMBRE'
+                                        ) }}
+
+                                    </span>
+
+                                </td>
+
+
+                                {{-- TIPO --}}
+
+                                <td>
+
+                                    {{ $tipoObjeto ?: 'SIN TIPO' }}
+
+                                </td>
+
+
+                                {{-- ESTADO GENERAL --}}
+
+                                <td>
+
                                     @if((int)$objeto->estado_activo === 1)
-                                        <span class="badge bg-success">Activo</span>
+
+                                        <span class="badge bg-success">
+
+                                            Activo
+
+                                        </span>
+
                                     @else
-                                        <span class="badge bg-danger">Inactivo</span>
+
+                                        <span class="badge bg-danger">
+
+                                            Inactivo
+
+                                        </span>
+
                                     @endif
+
                                 </td>
+
+
+                                {{-- ESTUDIANTE --}}
+
                                 <td>
-                                    <button class="btn btn-primary btn-sm"
-                                            data-toggle="modal"
-                                            data-target="#modalEditarObjeto{{ $objeto->id_objeto_carrera }}">
-                                        Editar
-                                    </button>
+
+                                    @if(!$esPantalla)
+
+                                        <span class="badge bg-secondary">
+
+                                            No aplica
+
+                                        </span>
+
+
+                                    @elseif((int)$objeto->estado_estudiante === 1)
+
+                                        <span class="badge bg-success">
+
+                                            Disponible
+
+                                        </span>
+
+
+                                    @else
+
+                                        <span class="badge bg-warning text-dark">
+
+                                            Mantenimiento
+
+                                        </span>
+
+                                    @endif
+
                                 </td>
+
+
+                                {{-- SECRETARÍA --}}
+
+                                <td>
+
+                                    @if(!$esPantalla)
+
+                                        <span class="badge bg-secondary">
+
+                                            No aplica
+
+                                        </span>
+
+
+                                    @elseif((int)$objeto->estado_secretario === 1)
+
+                                        <span class="badge bg-success">
+
+                                            Disponible
+
+                                        </span>
+
+
+                                    @else
+
+                                        <span class="badge bg-warning text-dark">
+
+                                            Mantenimiento
+
+                                        </span>
+
+                                    @endif
+
+                                </td>
+
+
+                                {{-- ACCIONES --}}
+
+                                <td>
+
+                                    @if(!$esPantalla)
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary btn-sm"
+                                            disabled
+                                        >
+
+                                            <i class="fas fa-lock me-1"></i>
+
+                                            Protegido
+
+                                        </button>
+
+
+                                    @else
+
+                                        <div class="d-flex gap-2 flex-wrap">
+
+
+                                            {{-- =====================================
+                                                 ESTUDIANTE
+                                                 ===================================== --}}
+
+                                            <form
+                                                action="{{ route(
+                                                    'seguridad.modulo.rol.estado',
+                                                    $objeto->id_objeto
+                                                ) }}"
+                                                method="POST"
+                                                class="js-confirm-submit"
+                                                data-confirm="{{ (int)$objeto->estado_estudiante === 1
+                                                    ? '¿Deseas poner este módulo en mantenimiento para los estudiantes de tu carrera?'
+                                                    : '¿Deseas habilitar este módulo para los estudiantes de tu carrera?' }}"
+                                            >
+
+                                                @csrf
+                                                @method('PUT')
+
+
+                                                <input
+                                                    type="hidden"
+                                                    name="tipo_usuario"
+                                                    value="ESTUDIANTE"
+                                                >
+
+
+                                                <input
+                                                    type="hidden"
+                                                    name="estado"
+                                                    value="{{ (int)$objeto->estado_estudiante === 1 ? 0 : 1 }}"
+                                                >
+
+
+                                                @if((int)$objeto->estado_estudiante === 1)
+
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-warning btn-sm"
+                                                    >
+
+                                                        <i class="fas fa-user-graduate me-1"></i>
+
+                                                        Mant. Estudiante
+
+                                                    </button>
+
+
+                                                @else
+
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-success btn-sm"
+                                                    >
+
+                                                        <i class="fas fa-user-graduate me-1"></i>
+
+                                                        Habilitar Estudiante
+
+                                                    </button>
+
+                                                @endif
+
+                                            </form>
+
+
+                                            {{-- =====================================
+                                                 SECRETARÍA
+                                                 ===================================== --}}
+
+                                            <form
+                                                action="{{ route(
+                                                    'seguridad.modulo.rol.estado',
+                                                    $objeto->id_objeto
+                                                ) }}"
+                                                method="POST"
+                                                class="js-confirm-submit"
+                                                data-confirm="{{ (int)$objeto->estado_secretario === 1
+                                                    ? '¿Deseas poner este módulo en mantenimiento para Secretaría de tu carrera?'
+                                                    : '¿Deseas habilitar este módulo para Secretaría de tu carrera?' }}"
+                                            >
+
+                                                @csrf
+                                                @method('PUT')
+
+
+                                                <input
+                                                    type="hidden"
+                                                    name="tipo_usuario"
+                                                    value="SECRETARIO"
+                                                >
+
+
+                                                <input
+                                                    type="hidden"
+                                                    name="estado"
+                                                    value="{{ (int)$objeto->estado_secretario === 1 ? 0 : 1 }}"
+                                                >
+
+
+                                                @if((int)$objeto->estado_secretario === 1)
+
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-warning btn-sm"
+                                                    >
+
+                                                        <i class="fas fa-user-tie me-1"></i>
+
+                                                        Mant. Secretaría
+
+                                                    </button>
+
+
+                                                @else
+
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-success btn-sm"
+                                                    >
+
+                                                        <i class="fas fa-user-tie me-1"></i>
+
+                                                        Habilitar Secretaría
+
+                                                    </button>
+
+                                                @endif
+
+                                            </form>
+
+                                        </div>
+
+                                    @endif
+
+                                </td>
+
                             </tr>
+
+
                         @empty
+
                             <tr>
-                                <td colspan="5" class="text-center text-muted">
-                                    No hay objetos registrados para tu carrera.
+
+                                <td
+                                    colspan="7"
+                                    class="text-center text-muted py-4"
+                                >
+
+                                    <i class="fas fa-info-circle me-1"></i>
+
+                                    No hay módulos disponibles actualmente.
+
                                 </td>
+
                             </tr>
+
                         @endforelse
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </div>
+
     </div>
 
 </div>
 
-<div class="modal fade" id="modalNuevoObjeto" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content shadow">
-            <form action="{{ route('seguridad.objeto.store') }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas guardar este objeto?">
-                @csrf
-
-                <div class="modal-header security-header">
-                    <h5 class="modal-title text-white">Nuevo Objeto</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-
-                <div class="modal-body bg-white">
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Nombre del Objeto:</label>
-                        <input type="text" name="nombre_objeto" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Tipo del Objeto:</label>
-                        <input type="text" name="tipo_objeto" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@foreach($objetos as $objeto)
-<div class="modal fade" id="modalEditarObjeto{{ $objeto->id_objeto_carrera }}" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content shadow">
-            <form action="{{ route('seguridad.objeto.update', $objeto->id_objeto_carrera) }}" method="POST" class="js-confirm-submit" data-confirm="¿Deseas actualizar este objeto?">
-                @csrf
-                @method('PUT')
-
-                <div class="modal-header security-header">
-                    <h5 class="modal-title text-white">Editar Objeto</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-
-                <div class="modal-body bg-white">
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Nombre del Objeto:</label>
-                        <input type="text" name="nombre_objeto" class="form-control" value="{{ $objeto->nombre_objeto }}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Tipo del Objeto:</label>
-                        <input type="text" name="tipo_objeto" class="form-control" value="{{ $objeto->tipo_objeto }}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Estado:</label>
-                        <select name="estado_activo" class="form-select" required>
-                            <option value="1" {{ (int)$objeto->estado_activo === 1 ? 'selected' : '' }}>Activo</option>
-                            <option value="0" {{ (int)$objeto->estado_activo === 0 ? 'selected' : '' }}>Inactivo</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Actualizar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endforeach
 @endsection
-
-

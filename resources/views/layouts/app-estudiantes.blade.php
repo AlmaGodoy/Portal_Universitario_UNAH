@@ -1426,7 +1426,96 @@
             </div>
 
             <div class="dashboard-shell-body">
+
+                {{-- =========================================================
+                     AVISO DE ACCESO / MANTENIMIENTO
+                     ========================================================= --}}
+
+                @if ($errors->has('acceso'))
+
+                    @php
+                        $mensajeAcceso = $errors->first('acceso');
+
+                        $esMantenimiento = str_contains(
+                            strtolower($mensajeAcceso),
+                            'mantenimiento'
+                        );
+                    @endphp
+
+                    <div class="px-3 pt-3">
+
+                        <div
+                            class="alert alert-warning alert-dismissible fade show shadow-sm"
+                            role="alert"
+                            style="
+                                border-left: 5px solid #f0ad4e;
+                                border-radius: 12px;
+                                background: #fff8e5;
+                                color: #5c4700;
+                            "
+                        >
+
+                            <div class="d-flex align-items-start">
+
+                                <div
+                                    class="mr-3 d-flex align-items-center justify-content-center"
+                                    style="
+                                        width: 42px;
+                                        height: 42px;
+                                        min-width: 42px;
+                                        border-radius: 50%;
+                                        background: #f0ad4e;
+                                        color: #ffffff;
+                                    "
+                                >
+                                    <i class="fas {{ $esMantenimiento ? 'fa-tools' : 'fa-exclamation-triangle' }}"></i>
+                                </div>
+
+                                <div class="pr-4">
+
+                                    <strong
+                                        class="d-block mb-1"
+                                        style="font-size: 1rem;"
+                                    >
+                                        {{ $esMantenimiento
+                                            ? 'Módulo en mantenimiento'
+                                            : 'Acceso no disponible'
+                                        }}
+                                    </strong>
+
+                                    <div>
+                                        {{ $mensajeAcceso }}
+                                    </div>
+
+                                    @if ($esMantenimiento)
+                                        <small class="d-block mt-1 text-muted">
+                                            Por favor, intenta nuevamente más tarde.
+                                        </small>
+                                    @endif
+
+                                </div>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert"
+                                aria-label="Cerrar"
+                            >
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                @endif
+
+
                 @yield('content')
+
             </div>
         </section>
     </div>
