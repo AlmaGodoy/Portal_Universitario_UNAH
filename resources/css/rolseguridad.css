@@ -1,444 +1,757 @@
+/* =========================================================
+   CONFIGURACIÓN GENERAL
+   ========================================================= */
+
 body {
     font-family: Arial, sans-serif;
+
     background-image: url('/images/fondo_seguridad.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
+
     min-height: 100vh;
 }
+
+
+/* =========================================================
+   CONTENEDOR GENERAL
+   ========================================================= */
 
 .security-page {
     padding: 28px 0 40px;
 }
 
+
+/* =========================================================
+   TÍTULOS
+   ========================================================= */
+
 .security-title {
     font-weight: 800;
     margin-bottom: 6px;
+
     color: #3f342c;
+
     text-shadow:
         0 2px 4px rgba(255, 255, 255, 0.35),
         0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
+
 .security-subtitle {
     color: #5a4c43;
+
     margin-bottom: 18px;
+
     text-shadow:
         0 1px 3px rgba(255, 255, 255, 0.25),
         0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-/* ===== TARJETAS ===== */
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
 .security-page .security-card,
 .security-page .card {
+
     border-radius: 22px;
+
     background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
-    border: 1px solid rgba(59, 130, 196, 0.10);
+
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.10);
+
+    border:
+        1px solid rgba(59, 130, 196, 0.10);
+
     overflow: hidden;
 }
 
+
 .security-page .security-card {
-    transition: transform .18s ease, box-shadow .18s ease;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
 }
+
 
 .security-page .security-card:hover {
+
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.14);
 }
 
+
+/* =========================================================
+   ENCABEZADOS DE TARJETAS
+   ========================================================= */
+
 .security-header {
+
     background: #3b82c4;
-    color: #fff;
+
+    color: #ffffff;
+
     border-bottom: none;
+
     padding: 14px 20px;
 }
 
+
 .security-page .card-body {
+
     padding: 22px 22px 20px;
 }
 
-/* ===== FORMULARIOS ===== */
+
+/* =========================================================
+   FORMULARIOS
+   ========================================================= */
+
 .security-page label,
 .security-page .form-label {
+
     font-weight: 700;
+
     color: #23334d;
+
     margin-bottom: 8px;
 }
+
 
 .security-page input,
 .security-page select,
 .security-page textarea,
 .security-page button {
+
     border-radius: 12px !important;
 }
+
 
 .security-page .form-control,
 .security-page .form-select {
+
     min-height: 46px;
+
     border: 1px solid #ced8e5;
+
     box-shadow: none !important;
 }
 
+
 .security-page .form-control:focus,
 .security-page .form-select:focus {
+
     border-color: #3b82c4;
-    box-shadow: 0 0 0 0.18rem rgba(59, 130, 196, 0.15) !important;
+
+    box-shadow:
+        0 0 0 0.18rem
+        rgba(59, 130, 196, 0.15)
+        !important;
 }
 
+
 .security-page textarea.form-control {
+
     min-height: 110px;
 }
 
+
+/* =========================================================
+   CARRERA DEL COORDINADOR
+   ========================================================= */
+
 .input-highlight {
-    background-color: #eef5be;
+
+    background-color: #eef5be !important;
+
     font-weight: 700;
+
     text-transform: uppercase;
+
+    color: #263238;
 }
+
+
+/* =========================================================
+   DISTRIBUCIÓN DE FORMULARIOS
+   ========================================================= */
 
 .security-page .row.g-3 > [class*="col-"],
 .security-page .row.g-4 > [class*="col-"] {
+
     display: flex;
+
     flex-direction: column;
 }
 
-.security-page .btn,
-.security-page .btn-primary,
-.security-page .btn-success,
-.security-page .btn-outline-secondary,
-.security-page .btn-warning {
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
+.security-page .btn {
+
     border-radius: 12px !important;
+
     min-height: 44px;
+
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
+
     padding: 10px 16px;
+
     font-weight: 700;
+
+    gap: 5px;
 }
 
-/* ===== TABLAS ===== */
-.security-page .table-responsive {
-    border-radius: 16px;
-    overflow: auto;
+
+.security-page .btn-sm {
+
+    min-height: 36px;
+
+    padding: 6px 12px;
+
+    font-size: .875rem;
 }
+
+
+/* =========================================================
+   TABLAS
+   ========================================================= */
+
+.security-page .table-responsive {
+
+    border-radius: 16px;
+
+    overflow-x: auto;
+
+    overflow-y: hidden;
+}
+
 
 .security-page .table {
+
     margin-bottom: 0;
-    background: #fff;
+
+    background: #ffffff;
 }
 
+
 .security-page .table thead th {
+
     vertical-align: middle;
+
     background: #f5f8fc;
+
     color: #23334d;
-    border-bottom: 1px solid #d9e3ef;
+
+    border-bottom:
+        1px solid #d9e3ef;
+
     white-space: nowrap;
+
     font-weight: 700;
 }
+
 
 .security-page .table th,
 .security-page .table td {
+
     vertical-align: middle;
+
     padding: 14px 12px;
+
     border-color: #e2e8f0;
 }
 
+
+.security-page .table tbody tr {
+
+    transition:
+        background-color .15s ease;
+}
+
+
 .security-page .table tbody tr:hover {
+
     background: #f9fbfe;
 }
 
+
+/* =========================================================
+   COLUMNAS DE ACCIONES
+   ========================================================= */
+
 .col-acciones {
+
     width: 140px;
+
     min-width: 140px;
 }
 
+
 .col-acciones-sm {
-    width: 120px;
-    min-width: 120px;
+
+    width: 130px;
+
+    min-width: 130px;
 }
 
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+
 .security-page .badge {
+
     font-size: .78rem;
+
     font-weight: 700;
+
     padding: 6px 10px;
+
     border-radius: 999px;
 }
 
-/* ===== ALERTAS ===== */
+
+/* =========================================================
+   ALERTAS
+   ========================================================= */
+
 .security-page .alert {
+
     border-radius: 14px;
+
     border: none;
+
     padding: 14px 16px;
+
+    margin-bottom: 20px;
 }
 
-.msg {
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 6px;
-}
 
-.msg.ok {
-    background: #e8f5e9;
-    color: #2e7d32;
-}
+/* =========================================================
+   PANEL PRINCIPAL DE SEGURIDAD
+   ========================================================= */
 
-.msg.error {
-    background: #ffebee;
-    color: #c62828;
-}
-
-.info {
-    color: #444;
-    font-size: 14px;
-}
-
-.registroBox {
-    margin-top: 10px;
-}
-
-.btnLink {
-    display: inline-block;
-    margin-top: 8px;
-    background: #2e7d32;
-    color: white;
-    padding: 10px 12px;
-    border-radius: 6px;
-    text-decoration: none;
-}
-
-.btnLink:hover {
-    opacity: .9;
-    color: white;
-}
-
-/* ===== INDEX DE SEGURIDAD ===== */
 .fondo-seguridad {
-    background: rgba(255, 255, 255, 0.70);
+
+    background:
+        rgba(255, 255, 255, 0.70);
+
     border-radius: 34px;
+
     padding: 34px;
+
     backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+
+    -webkit-backdrop-filter:
+        blur(3px);
+
     min-height: 80vh;
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| TARJETAS DEL PANEL PRINCIPAL
+|--------------------------------------------------------------------------
+*/
+
 .fondo-seguridad .row.g-4 {
+
     margin-top: 34px;
+
     display: flex;
+
     flex-direction: column;
+
     gap: 12px;
 }
 
+
 .fondo-seguridad .col-md-6,
 .fondo-seguridad .col-lg-3 {
+
     max-width: 100%;
+
     flex: 0 0 100%;
+
     width: 100%;
+
     padding-left: 0;
+
     padding-right: 0;
 }
 
+
 .fondo-seguridad .security-card {
+
     width: 100%;
+
     margin-top: 0;
+
     border-radius: 24px;
 }
 
-.fondo-seguridad .security-card .card-body {
+
+.fondo-seguridad
+.security-card
+.card-body {
+
     min-height: 158px;
+
     display: grid !important;
-    grid-template-columns: 100px 1fr 210px;
+
+    grid-template-columns:
+        100px 1fr 210px;
+
     align-items: center;
+
     gap: 22px;
+
     padding: 24px 28px;
+
     text-align: left !important;
 }
 
-.fondo-seguridad .security-card .mb-3 {
+
+/*
+|--------------------------------------------------------------------------
+| ÍCONO
+|--------------------------------------------------------------------------
+*/
+
+.fondo-seguridad
+.security-card
+.mb-3 {
+
     margin-bottom: 0 !important;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 }
 
-.fondo-seguridad .security-card i {
+
+.fondo-seguridad
+.security-card i {
+
     font-size: 2.7rem;
 }
 
-.fondo-seguridad .security-card h5 {
+
+/*
+|--------------------------------------------------------------------------
+| TÍTULO
+|--------------------------------------------------------------------------
+*/
+
+.fondo-seguridad
+.security-card h5 {
+
     margin-bottom: 8px;
+
     font-size: 1.7rem;
 }
 
-.fondo-seguridad .security-card .text-muted.small {
+
+/*
+|--------------------------------------------------------------------------
+| DESCRIPCIÓN
+|--------------------------------------------------------------------------
+*/
+
+.fondo-seguridad
+.security-card
+.text-muted.small {
+
     min-height: auto;
+
     margin-bottom: 0;
+
     font-size: 1rem;
+
     line-height: 1.45;
 }
 
-.fondo-seguridad .security-card .btn,
-.fondo-seguridad .security-card .btn-primary {
+
+/*
+|--------------------------------------------------------------------------
+| BOTÓN
+|--------------------------------------------------------------------------
+*/
+
+.fondo-seguridad
+.security-card .btn {
+
     width: 100% !important;
+
     max-width: 210px;
+
     margin-left: auto;
+
     margin-top: 0 !important;
+
     border-radius: 14px !important;
+
     font-size: 1rem;
+
     padding: 12px 18px;
 }
 
-/* ===== MODALES ===== */
-.modal-content {
-    border-radius: 18px;
-    overflow: hidden;
-    border: none;
-}
 
-.modal-header.security-header {
-    padding: 14px 18px;
-}
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
 
-.modal-body {
-    padding: 20px;
-}
-
-.modal-footer {
-    padding: 14px 18px;
-    border-top: 1px solid #e5eaf1;
-}
-
-/* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
+
     .fondo-seguridad {
+
         padding: 26px;
+
         min-height: auto;
+
         border-radius: 26px;
     }
 
+
     .fondo-seguridad .row.g-4 {
+
         margin-top: 26px;
+
         gap: 16px;
     }
 
-    .fondo-seguridad .security-card .card-body {
-        grid-template-columns: 82px 1fr 170px;
+
+    .fondo-seguridad
+    .security-card
+    .card-body {
+
+        grid-template-columns:
+            82px 1fr 170px;
+
         min-height: 146px;
+
         gap: 16px;
-        padding: 22px 22px;
+
+        padding: 22px;
     }
 
-    .fondo-seguridad .security-card i {
+
+    .fondo-seguridad
+    .security-card i {
+
         font-size: 2.2rem;
     }
 
-    .fondo-seguridad .security-card h5 {
+
+    .fondo-seguridad
+    .security-card h5 {
+
         font-size: 1.45rem;
     }
 
-    .fondo-seguridad .security-card .text-muted.small {
+
+    .fondo-seguridad
+    .security-card
+    .text-muted.small {
+
         font-size: .96rem;
     }
+
 }
 
+
+/* =========================================================
+   RESPONSIVE - MÓVIL
+   ========================================================= */
+
 @media (max-width: 768px) {
+
     body {
+
         background-size: cover;
+
         background-position: center;
     }
 
+
     .security-page {
+
         padding: 18px 0 30px;
     }
 
+
     .security-title {
+
         font-size: 1.9rem;
+
         line-height: 1.15;
     }
 
+
     .security-subtitle {
+
         font-size: 1rem;
+
         line-height: 1.4;
+
         margin-bottom: 14px;
     }
 
+
     .security-page .card-body {
+
         padding: 18px;
     }
+
 
     .security-page .table th,
     .security-page .table td {
+
         padding: 12px 10px;
     }
 
+
     .fondo-seguridad {
+
         padding: 18px;
+
         border-radius: 22px;
     }
 
+
     .fondo-seguridad .row.g-4 {
+
         margin-top: 22px;
+
         gap: 14px;
     }
 
+
     .fondo-seguridad .security-card {
+
         border-radius: 20px;
     }
 
-    .fondo-seguridad .security-card .card-body {
+
+    .fondo-seguridad
+    .security-card
+    .card-body {
+
         display: flex !important;
+
         flex-direction: column !important;
+
         align-items: center;
+
         justify-content: center;
+
         text-align: center !important;
+
         min-height: auto;
+
         gap: 14px;
+
         padding: 20px 16px;
     }
 
-    .fondo-seguridad .security-card i {
+
+    .fondo-seguridad
+    .security-card i {
+
         font-size: 2.1rem;
     }
 
-    .fondo-seguridad .security-card h5 {
+
+    .fondo-seguridad
+    .security-card h5 {
+
         font-size: 1.35rem;
+
         margin-bottom: 4px;
     }
 
-    .fondo-seguridad .security-card .text-muted.small {
+
+    .fondo-seguridad
+    .security-card
+    .text-muted.small {
+
         font-size: .95rem;
+
         line-height: 1.4;
+
         text-align: center !important;
     }
 
-    .fondo-seguridad .security-card .btn,
-    .fondo-seguridad .security-card .btn-primary {
+
+    .fondo-seguridad
+    .security-card .btn {
+
         max-width: 100%;
+
         width: 100% !important;
+
         margin-left: 0;
+
         font-size: 1rem;
     }
+
 }
 
+
+/* =========================================================
+   RESPONSIVE - TELÉFONOS PEQUEÑOS
+   ========================================================= */
+
 @media (max-width: 480px) {
+
     .fondo-seguridad {
+
         padding: 14px;
+
         border-radius: 18px;
     }
 
+
     .security-title {
+
         font-size: 1.6rem;
     }
 
+
     .security-subtitle {
-        font-size: 0.95rem;
+
+        font-size: .95rem;
     }
 
-    .security-page .btn,
-    .security-page .btn-primary,
-    .security-page .btn-success,
-    .security-page .btn-outline-secondary,
-    .security-page .btn-warning {
+
+    .security-page .btn {
+
         width: 100%;
     }
+
+
+    .security-page
+    .table-responsive {
+
+        border-radius: 12px;
+    }
+
 }

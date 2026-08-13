@@ -6,6 +6,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\RoleIdMiddleware;
 use App\Http\Middleware\RolMiddleware;
 use App\Http\Middleware\SessionTimeout;
+use App\Http\Middleware\VerificarCuentaActiva;
+use App\Http\Middleware\VerificarRolCarreraActivo;
+use App\Http\Middleware\VerificarAccesoModuloCarrera;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'roleid' => RoleIdMiddleware::class,
             'rol' => RolMiddleware::class,
             'session.timeout' => SessionTimeout::class,
+            'cuenta.activa' =>
+    VerificarCuentaActiva::class,
+
+'rol.carrera.activo' =>
+    VerificarRolCarreraActivo::class,
+
+'acceso.modulo' =>
+    VerificarAccesoModuloCarrera::class,
         ]);
 
         $middleware->redirectGuestsTo(fn () => route('portal'));
