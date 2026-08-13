@@ -39,6 +39,7 @@
                     <th>ID Trámite</th>
                     <th>Fecha</th>
                     <th>Nombre del Estudiante</th>
+                    <th>Carrera Origen</th>
                     <th>Carrera Destino</th>
                     <th>Estado Trámite</th>
                     <th>Acción</th>

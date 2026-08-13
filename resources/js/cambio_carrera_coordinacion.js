@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${t.id_tramite ?? ''}</td>
                         <td>${t.fecha_solicitud ?? ''}</td>
                         <td>${t.nombre_persona ?? ''}</td>
+                        <td>${t.carrera_origen ?? 'No disponible'}</td>
                         <td>${t.carrera_destino ?? ''}</td>
                         <td>${t.estado_tramite ?? ''}</td>
                         <td>

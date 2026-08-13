@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const idPersona = parseInt(inputPersona.value, 10);
 
             if (!idPersona) {
-                tbody.innerHTML = `<tr><td colspan="7">No se encontró el id de la persona.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8">No se encontró el id de la persona.</td></tr>`;
                 return;
             }
 
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             if (!Array.isArray(data) || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7">No tienes trámites registrados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8">No tienes trámites registrados.</td></tr>`;
                 return;
             }
 
@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <td>${t.id_tramite ?? ''}</td>
                         <td>${t.fecha_solicitud ?? ''}</td>
+                        <td>${t.carrera_origen ?? ''}</td>
                         <td>${t.carrera_destino ?? ''}</td>
                         <td>${t.estado_tramite ?? ''}</td>
                         <td>${t.direccion ?? ''}</td>
@@ -193,23 +194,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error('Error cargando trámites:', err);
-            tbody.innerHTML = `<tr><td colspan="7">Error cargando trámites.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8">Error cargando trámites.</td></tr>`;
         }
     }
 
-    // =========================================================
-    // CORRECCIÓN 1:
-    // AQUÍ ESTABA EL PROBLEMA PRINCIPAL
-    //
-    // En tu HTML generado llamabas:
-    // window.cancelarTramiteCambioCarrera(id)
-    //
-    // pero esa función NO existía en tu JS.
-    //
-    // Por eso el botón "Cancelar trámite" no hacía nada.
-    // Aquí la creamos de forma global en window para que
-    // el onclick sí la encuentre.
-    // =========================================================
     window.cancelarTramiteCambioCarrera = async function(idTramite) {
         if (!idTramite) {
             setMsg('No se encontró el ID del trámite.', false);
@@ -226,11 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/cambio-carrera/eliminar/${idTramite}`, {
                 method: 'DELETE',
 
-                // =========================================================
-                // CORRECCIÓN 2:
-                // Se manda el token CSRF y cabeceras correctas
-                // para que Laravel acepte la petición DELETE.
-                // =========================================================
+              
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrf,
@@ -239,12 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // =========================================================
-            // CORRECCIÓN 3:
-            // Leemos primero como texto y luego intentamos parsear JSON,
-            // así evitamos que el JS se rompa si el backend devuelve
-            // algo inesperado.
-            // =========================================================
             const raw = await res.text();
 
             let data = null;
@@ -257,10 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // =========================================================
-            // CORRECCIÓN 4:
-            // Validación de errores del backend
-            // =========================================================
+    
             if (!res.ok || data?.resultado === 'ERROR' || data?.success === false) {
                 setMsg(obtenerMensajeError(data, 'No se pudo cancelar el trámite.'), false);
                 return;
@@ -273,11 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 true
             );
 
-            // =========================================================
-            // CORRECCIÓN 5:
-            // Recargamos la tabla después de cancelar para que
-            // desaparezca el botón o cambie el estado.
-            // =========================================================
             cargarMisTramites();
 
         } catch (error) {

@@ -74,6 +74,10 @@
                         <strong>Nombre del estudiante</strong>
                         <span id="dato-estudiante">Cargando...</span>
                     </div>
+                    <div class="estado-item">
+                       <strong>Carrera origen</strong> 
+                       <span id="dato-carrera-origen">Cargando...</span>
+                    </div>
 
                     <div class="estado-item">
                         <strong>Carrera destino</strong>
