@@ -1,6 +1,40 @@
 @extends('portal_login')
 
 @section('content')
+
+<style>
+    .password-strength-box {
+        margin-top: 8px;
+    }
+
+    .password-strength-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    #password_strength_fill {
+        height: 100%;
+        width: 0%;
+        background: #dc3545;
+        border-radius: 20px;
+        transition: width 0.25s ease, background 0.25s ease;
+    }
+
+    .password-strength-text {
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+
+    #btnRegistrar:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+</style>
+
 <div class="auth-container">
     <div class="auth-card">
 
@@ -16,6 +50,14 @@
 
         @if(session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
         @if($errors->any())
@@ -163,6 +205,16 @@
                             CARACTERES, MAYÚSCULAS, MINÚSCULAS, NÚMEROS Y SÍMBOLOS.
                         </div>
 
+                        <div class="password-strength-box">
+                            <div class="password-strength-bar">
+                                <div id="password_strength_fill"></div>
+                            </div>
+
+                            <div id="password_strength_text" class="password-strength-text text-danger">
+                                Nivel de seguridad: Débil
+                            </div>
+                        </div>
+
                         @error('contrasena')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -263,6 +315,16 @@
                             CARACTERES, MAYÚSCULAS, MINÚSCULAS, NÚMEROS Y SÍMBOLOS.
                         </div>
 
+                        <div class="password-strength-box">
+                            <div class="password-strength-bar">
+                                <div id="password_strength_fill"></div>
+                            </div>
+
+                            <div id="password_strength_text" class="password-strength-text text-danger">
+                                Nivel de seguridad: Débil
+                            </div>
+                        </div>
+
                         @error('contrasena')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -328,8 +390,109 @@
                 </div>
             @endif
 
-            <button class="btn btn-primary w-100">Registrar</button>
+            <button class="btn btn-primary w-100" id="btnRegistrar" disabled>
+                Registrar
+            </button>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('registerForm');
+    const passwordInput = document.getElementById('contrasena');
+    const confirmInput = document.getElementById('contrasena_confirmation');
+    const btnRegistrar = document.getElementById('btnRegistrar');
+    const strengthFill = document.getElementById('password_strength_fill');
+    const strengthText = document.getElementById('password_strength_text');
+    const passMismatch = document.getElementById('pass_mismatch');
+
+    function evaluatePassword(password) {
+        const checks = {
+            length: password.length >= 8,
+            upper: /[A-ZÁÉÍÓÚÑ]/.test(password),
+            lower: /[a-záéíóúñ]/.test(password),
+            number: /[0-9]/.test(password),
+            symbol: /[^A-Za-zÁÉÍÓÚáéíóúÑñ0-9]/.test(password),
+        };
+
+        const score = Object.values(checks).filter(Boolean).length;
+
+        return { checks, score };
+    }
+
+    function updatePasswordStrength() {
+        const password = passwordInput ? passwordInput.value : '';
+        const confirmation = confirmInput ? confirmInput.value : '';
+        const result = evaluatePassword(password);
+
+        let level = 'Débil';
+        let width = '25%';
+        let color = '#dc3545';
+        let textClass = 'text-danger';
+
+        if (result.score >= 3 && result.score < 5) {
+            level = 'Medio';
+            width = '60%';
+            color = '#ffc107';
+            textClass = 'text-warning';
+        }
+
+        if (result.score === 5) {
+            level = 'Alta';
+            width = '100%';
+            color = '#198754';
+            textClass = 'text-success';
+        }
+
+        if (strengthFill) {
+            strengthFill.style.width = password.length === 0 ? '0%' : width;
+            strengthFill.style.background = color;
+        }
+
+        if (strengthText) {
+            strengthText.classList.remove('text-danger', 'text-warning', 'text-success');
+            strengthText.classList.add(textClass);
+            strengthText.textContent = 'Nivel de seguridad: ' + level;
+        }
+
+        const passwordIsHigh = result.score === 5;
+        const passwordsMatch = password !== '' && password === confirmation;
+
+        if (passMismatch) {
+            if (confirmation !== '' && !passwordsMatch) {
+                passMismatch.classList.remove('hidden-field');
+            } else {
+                passMismatch.classList.add('hidden-field');
+            }
+        }
+
+        if (btnRegistrar) {
+            btnRegistrar.disabled = !(passwordIsHigh && passwordsMatch);
+        }
+
+        return passwordIsHigh && passwordsMatch;
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener('input', updatePasswordStrength);
+    }
+
+    if (confirmInput) {
+        confirmInput.addEventListener('input', updatePasswordStrength);
+    }
+
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            if (!updatePasswordStrength()) {
+                event.preventDefault();
+                alert('La contraseña debe tener nivel de seguridad alto y coincidir con la confirmación.');
+            }
+        });
+    }
+
+    updatePasswordStrength();
+});
+</script>
+
 @endsection
